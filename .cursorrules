@@ -1,0 +1,85 @@
+# Brain Game — Cursor Rules
+
+You are working on Brain Game, a web-based interactive learning experience where the player rotates a 3D brain model and catches falling words by aligning them with the correct brain region.
+
+Canonical product spec: `docs/claude/PRD.md`. Design bible: `docs/claude/BRAIN_GAME_PROJECT_INSTRUCTIONS.md`.
+
+## Critical Context
+
+This project lives at the intersection of **game design** and **cognitive neuroscience**. Every decision must satisfy both disciplines. If the science says a function maps to multiple regions, we don't pick one for simplicity — we design a mechanic that teaches the complexity. If a mechanic is fun but teaches the wrong thing, we kill it.
+
+## Aesthetic: Victorian Woodblock Engraving
+
+Every visual decision passes through this filter. We are NOT making a modern medical app. We are making something that feels like it was pulled from an 1890s anatomy journal, then given life.
+
+- Dense parallel lines and crosshatching that follow the brain's surface contours
+- Tonal variation through line density, never color gradation (in monochrome mode)
+- High contrast: dark ink (#1a1a1a) on clean white
+- Custom GLSL multi-layer hatching shader with 4 density tiers
+- Typography: Playfair Display (display), EB Garamond italic (body/labels)
+- Subtitle: "A Study in Cognition"
+- NOT neon. NOT glassmorphism. NOT Duolingo-style gamification.
+- No outline / inverted-hull pass (caused artifacts in sulci); silhouette via Fresnel + hatching
+
+## Architecture
+
+- **React + Three.js** (Vite bundled)
+- **Custom GLSL shaders** — the engraving look is a fragment shader, not post-processing
+- **Two-tier region system**: 8 physical meshes (GLB geometry) with 14 functional zones (vertex attribute `regionId`)
+- **Half-lambert lighting** wraps light around the form so no area goes solid black
+- Darkness is capped at 0.90 to always show visible linework
+- Fall speed is resolution-independent (viewport-height fraction per second)
+- Difficulty tiers 1–4; scoring 10 / 25 / 50 / 100; miss = intact fall, wrong = shatter
+
+## File Structure
+
+```
+src/
+  shaders/          — GLSL vertex + fragment shaders (the core visual identity)
+  data/regions.js   — 14 functional zones, colors, word bank (neuroscience accuracy critical)
+  utils/            — Brain loader, scene manager, orbit controls
+  game/             — Game engine (word dropping, collision, scoring)
+  App.jsx           — Victorian UI frame
+docs/claude/        — PRD, project instructions, kickoff prompt, website copy
+public/
+  brain.glb         — 3D brain model (Meshy preferred; procedural stand-in for dev)
+```
+
+## Build Sequence (Current Progress)
+
+1. ✅ GLSL engraving shader written and tuned
+2. ✅ GLB model loading with region assignment (procedural stand-in until Meshy asset)
+3. ✅ Word-catching game mechanic (fall, catch, miss/wrong/correct)
+4. ✅ Scoring system (tier multipliers)
+5. ✅ Feedback system (glow, absorb, shatter, miss fall, corrections)
+6. ✅ Victorian UI frame + Difficulty control + CSS2D annotations
+7. ✅ Mobile-oriented control reflow (touch orbit already present)
+8. 🔲 Replace procedural GLB with painted Meshy anatomical model
+9. 🔲 Word bank neuroscience review toward ~50 curated entries
+
+## Shader Tuning Parameters
+
+If the engraving look needs adjustment, these are in `src/shaders/fragmentShader.js`:
+
+- `LINE_SPACING` — pixel distance between hatch lines (currently 7.0)
+- `LINE_WIDTH` — thickness of each line (currently 0.42)
+- `DARKNESS_CAP` — prevents solid black (currently 0.90)
+- `LIGHT_FLOOR` — minimum light value (currently 0.10)
+- `FRESNEL_POWER` — edge darkening intensity (currently 2.0)
+- Smoothstep thresholds per layer control when each hatching tier activates
+
+## Neuroscience Integrity Rules
+
+1. No false simplifications. If a function involves multiple regions, acknowledge it.
+2. Do NOT reinforce "left brain = logical, right brain = creative." We teach actual lateralization.
+3. The cerebellum is not just "balance" — it plays roles in cognitive timing, emotional regulation, and language.
+4. Every claim in the word bank should be traceable to Kandel, Purves, or Nolte.
+5. The `acceptAlternates` field on word bank entries lists additional correct regions.
+
+## Development Practices
+
+- TDD: write tests first, confirm they fail, then implement
+- Never sacrifice neuroscience accuracy for clean game design
+- The production brain GLB should be Meshy AI, decimated to ~50-100K faces
+- Region classification currently uses positional heuristics (classifyVertex) — should be replaced with painted vertex colors in Blender for production accuracy
+- Regenerate the local stand-in with `npm run generate-brain` if needed

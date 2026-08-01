@@ -1,0 +1,6 @@
+Place your anatomical Meshy brain.glb here (recommended for production).
+
+A procedural stand-in is currently checked in as brain.glb for local development.
+Replace it with the Meshy model when available, or regenerate the stand-in:
+
+  npm run generate-brain
