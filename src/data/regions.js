@@ -24,7 +24,7 @@ export const REGION_COLORS = {
   auditory:                  [0.72, 0.62, 0.55],  // Warm ochre
   wernicke:                  [0.68, 0.60, 0.70],  // Lavender
   olfactory:                 [0.75, 0.70, 0.55],  // Parchment ochre
-  association:               [0.70, 0.65, 0.60],  // Warm gray
+  association:               [0.62, 0.48, 0.74],  // Victorian violet
   visual:                    [0.62, 0.70, 0.68],  // Sage slate
   cerebellum:                [0.72, 0.65, 0.58],  // Sandy ochre
 };

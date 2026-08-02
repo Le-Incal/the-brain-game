@@ -14,6 +14,10 @@ export function shouldShowHeader(gamePhase) {
   );
 }
 
+export function shouldShowInstructions(gamePhase) {
+  return gamePhase === 'ready';
+}
+
 /**
  * App — Root component
  *
@@ -151,6 +155,22 @@ export const STYLES = {
     zIndex: 11,
     pointerEvents: 'none',
     textAlign: 'left',
+  },
+  instructionTitle: {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 16,
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    color: '#1a1814',
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  instructionBody: {
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontSize: 14,
+    lineHeight: 1.55,
+    letterSpacing: '0.03em',
+    color: '#3d3932',
   },
   hoverLabel: {
     fontFamily: "'EB Garamond', Georgia, serif",
@@ -585,9 +605,30 @@ export default function App() {
         </div>
       )}
 
-      {(describedRegion || factoid || correction) && (
+      {(shouldShowInstructions(gamePhase) ||
+        describedRegion ||
+        factoid ||
+        correction) && (
         <div style={STYLES.descriptionPanel}>
-          {describedRegion && (
+          {shouldShowInstructions(gamePhase) && (
+            <div>
+              <div style={STYLES.instructionTitle}>How to Play</div>
+              <div style={STYLES.instructionBody}>
+                <p style={{ marginBottom: 10 }}>
+                  Welcome to the Brain Game, a study in anatomy and cognition.
+                </p>
+                <p style={{ marginBottom: 10 }}>
+                  Click and drag the brain to capture falling words in the
+                  correctly associated region of the brain.
+                </p>
+                <p>
+                  Turn on Colour Regions as a guide if needed. Pause the game,
+                  then click each region of the brain to explore and learn.
+                </p>
+              </div>
+            </div>
+          )}
+          {!shouldShowInstructions(gamePhase) && describedRegion && (
             <div style={STYLES.hoverLabel}>
               <span
                 style={{
@@ -620,8 +661,12 @@ export default function App() {
               )}
             </div>
           )}
-          {factoid && <div style={STYLES.factoid}>{factoid}</div>}
-          {!factoid && correction && <div style={STYLES.correction}>{correction}</div>}
+          {!shouldShowInstructions(gamePhase) && factoid && (
+            <div style={STYLES.factoid}>{factoid}</div>
+          )}
+          {!shouldShowInstructions(gamePhase) && !factoid && correction && (
+            <div style={STYLES.correction}>{correction}</div>
+          )}
         </div>
       )}
 
