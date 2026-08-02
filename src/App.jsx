@@ -191,14 +191,44 @@ export const STYLES = {
     pointerEvents: 'none',
     textTransform: 'uppercase',
   },
-  rightControls: {
+  scorePosition: {
     position: 'absolute',
     bottom: 'clamp(18px, 3vh, 28px)',
     right: 'clamp(24px, 5vw, 64px)',
+  },
+  rightControls: {
+    position: 'absolute',
+    bottom: 'clamp(18px, 3vh, 28px)',
+    right: 'calc(clamp(24px, 5vw, 64px) + 92px)',
     zIndex: 10,
     display: 'flex',
     alignItems: 'center',
     gap: 16,
+  },
+  mobileSettingsToggle: {
+    display: 'none',
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    zIndex: 14,
+    width: 32,
+    height: 29,
+    padding: '7px 8px',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    background: 'rgba(247, 240, 220, 0.94)',
+    border: '1px solid #1a1814',
+    cursor: 'pointer',
+    boxShadow: '2px 2px 0 rgba(26, 24, 20, 0.18)',
+  },
+  mobileSettingsLine: {
+    display: 'block',
+    width: '100%',
+    height: 1,
+    background: '#1a1814',
+  },
+  settingsPanel: {
+    display: 'contents',
   },
   difficulty: {
     position: 'absolute',
@@ -327,6 +357,7 @@ export default function App() {
   const [shatter, setShatter] = useState(null);
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
 
   const handleHover = useCallback((region) => {
     setHoveredRegion(region);
@@ -544,41 +575,63 @@ export default function App() {
         </div>
       )}
 
-      <div className="difficulty-controls" style={STYLES.difficulty}>
-        <span style={STYLES.difficultyLabel}>Difficulty</span>
-        {[1, 2, 3, 4].map((t) => (
-          <ToggleButton
-            key={t}
-            label={`T${t}`}
-            active={difficulty === t}
-            onClick={() => setDifficulty(t)}
-            mini
-          />
+      <button
+        type="button"
+        className="mobile-settings-toggle"
+        aria-label={`${mobileSettingsOpen ? 'Close' : 'Open'} game settings`}
+        aria-expanded={mobileSettingsOpen}
+        aria-controls="mobile-settings-panel"
+        onClick={() => setMobileSettingsOpen((open) => !open)}
+        style={STYLES.mobileSettingsToggle}
+      >
+        {[0, 1, 2].map((line) => (
+          <span key={line} aria-hidden="true" style={STYLES.mobileSettingsLine} />
         ))}
-      </div>
+      </button>
 
-      <div className="right-controls" style={STYLES.rightControls}>
-        <label className="speed-control" style={STYLES.speedControl}>
-          <span className="speed-label" style={STYLES.speedLabel}>Speed</span>
-          <input
-            className="speed-slider"
-            type="range"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={speedMultiplier}
-            onChange={(event) =>
-              setSpeedMultiplier(Number(event.target.value))
-            }
-            aria-label="Falling word speed"
-            aria-valuetext={`${speedMultiplier.toFixed(1)} times`}
-            style={STYLES.speedSlider}
-          />
-          <span className="speed-value" style={STYLES.speedValue}>
-            {speedMultiplier.toFixed(1)}×
-          </span>
-        </label>
-        <div className="score-display" style={STYLES.score}>Score: {score}</div>
+      <div
+        id="mobile-settings-panel"
+        className={`mobile-settings-panel${mobileSettingsOpen ? ' is-open' : ''}`}
+        style={STYLES.settingsPanel}
+      >
+        <div className="difficulty-controls" style={STYLES.difficulty}>
+          <span style={STYLES.difficultyLabel}>Difficulty</span>
+          {[1, 2, 3, 4].map((t) => (
+            <ToggleButton
+              key={t}
+              label={`T${t}`}
+              active={difficulty === t}
+              onClick={() => setDifficulty(t)}
+              mini
+            />
+          ))}
+        </div>
+
+        <div className="right-controls" style={STYLES.rightControls}>
+          <label className="speed-control" style={STYLES.speedControl}>
+            <span className="speed-label" style={STYLES.speedLabel}>Speed</span>
+            <input
+              className="speed-slider"
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={speedMultiplier}
+              onChange={(event) =>
+                setSpeedMultiplier(Number(event.target.value))
+              }
+              aria-label="Falling word speed"
+              aria-valuetext={`${speedMultiplier.toFixed(1)} times`}
+              style={STYLES.speedSlider}
+            />
+            <span className="speed-value" style={STYLES.speedValue}>
+              {speedMultiplier.toFixed(1)}×
+            </span>
+          </label>
+        </div>
+      </div>
+      <div className="score-display" style={{ ...STYLES.score, ...STYLES.scorePosition }}>
+        Score: {score}
       </div>
 
       {loading && <div style={STYLES.loading}>Preparing the specimen...</div>}
@@ -597,8 +650,13 @@ export default function App() {
       )}
 
       {brainReady && gamePhase === 'ready' && (
-        <div className="game-prompt" style={STYLES.gamePrompt}>
-          <button type="button" onClick={startGame} style={STYLES.startButton}>
+        <div className="game-prompt ready-prompt" style={STYLES.gamePrompt}>
+          <button
+            type="button"
+            className="start-button"
+            onClick={startGame}
+            style={STYLES.startButton}
+          >
             Begin
           </button>
         </div>
