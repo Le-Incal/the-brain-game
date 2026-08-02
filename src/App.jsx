@@ -18,6 +18,23 @@ export function shouldShowInstructions(gamePhase, selectedRegion = null) {
   return gamePhase === 'ready' && !selectedRegion;
 }
 
+export function getPrimaryControl(gamePhase, brainReady) {
+  if (gamePhase === 'ready') {
+    return brainReady
+      ? { label: 'Begin', active: true, action: 'start' }
+      : null;
+  }
+  if (gamePhase === 'playing' || gamePhase === 'paused') {
+    return {
+      label: gamePhase === 'paused' ? 'Resume' : 'Pause',
+      active: gamePhase === 'paused',
+      mobileActive: true,
+      action: 'pause',
+    };
+  }
+  return null;
+}
+
 /**
  * App — Root component
  *
@@ -211,21 +228,21 @@ export const STYLES = {
     top: 14,
     right: 14,
     zIndex: 14,
-    width: 32,
-    height: 29,
-    padding: '7px 8px',
+    width: 40,
+    height: 40,
+    padding: '12px 11px',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    background: 'rgba(247, 240, 220, 0.94)',
-    border: '1px solid #1a1814',
+    background: 'transparent',
+    border: 'none',
     cursor: 'pointer',
-    boxShadow: '2px 2px 0 rgba(26, 24, 20, 0.18)',
+    boxShadow: 'none',
   },
   mobileSettingsLine: {
     display: 'block',
     width: '100%',
     height: 1,
-    background: '#1a1814',
+    background: 'rgba(26, 24, 20, 0.62)',
   },
   settingsPanel: {
     display: 'contents',
@@ -309,10 +326,18 @@ export const STYLES = {
   },
 };
 
-function ToggleButton({ label, active, onClick, compact = false, mini = false }) {
+function ToggleButton({
+  label,
+  active,
+  onClick,
+  compact = false,
+  mini = false,
+  className,
+}) {
   return (
     <button
       type="button"
+      className={className}
       onClick={onClick}
       style={{
         fontFamily: "'Playfair Display', Georgia, serif",
@@ -533,6 +558,7 @@ export default function App() {
 
   const describedRegion = selectedRegion || hoveredRegion;
   const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
+  const primaryControl = getPrimaryControl(gamePhase, brainReady);
 
   return (
     <div style={STYLES.container}>
@@ -734,11 +760,18 @@ export default function App() {
       )}
 
       <div className="game-controls" style={STYLES.controls}>
-        {(gamePhase === 'playing' || gamePhase === 'paused') && (
+        {primaryControl && (
           <ToggleButton
-            label={gamePhase === 'paused' ? 'Resume' : 'Pause'}
-            active={gamePhase === 'paused'}
-            onClick={togglePause}
+            className={
+              primaryControl.action === 'start'
+                ? 'primary-game-control mobile-primary-control'
+                : 'primary-game-control'
+            }
+            label={primaryControl.label}
+            active={primaryControl.active}
+            onClick={
+              primaryControl.action === 'start' ? startGame : togglePause
+            }
             compact
           />
         )}

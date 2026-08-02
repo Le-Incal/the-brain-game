@@ -107,6 +107,9 @@
         border-radius: 50%;
         background: #000;
       }
+      .mobile-primary-control {
+        display: none;
+      }
       @media (max-width: 960px) {
         .description-panel {
           top: auto !important;
@@ -123,7 +126,7 @@
         .mobile-settings-panel {
           display: none !important;
           position: absolute;
-          top: calc(env(safe-area-inset-top, 0px) + 49px);
+          top: calc(env(safe-area-inset-top, 0px) + 58px);
           right: 14px;
           z-index: 13;
           width: 216px;
@@ -180,6 +183,14 @@
           transform: none !important;
           padding: 0 !important;
           flex-wrap: nowrap !important;
+          justify-content: flex-start !important;
+        }
+        .game-controls .mobile-primary-control {
+          display: block;
+        }
+        .game-controls .primary-game-control {
+          background: #1a1814 !important;
+          color: #f5f0e8 !important;
         }
         .game-controls button {
           font-size: 8px !important;
@@ -226,19 +237,7 @@
           top: calc(50% + 70px) !important;
         }
         .ready-prompt {
-          top: auto !important;
-          bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
-          left: 10px !important;
-          transform: none !important;
-        }
-        .ready-prompt .start-button {
-          font-size: 8px !important;
-          font-weight: 400 !important;
-          letter-spacing: 0.06em !important;
-          padding: 3px 7px !important;
-          background: transparent !important;
-          color: #1a1814 !important;
-          box-shadow: none !important;
+          display: none;
         }
       }
     </style>

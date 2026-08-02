@@ -14,7 +14,14 @@ describe('computeLabelLeaderWidth', () => {
 
 describe('getResponsiveSpecimenScale', () => {
   it('reduces the specimen on phone screens', () => {
-    expect(getResponsiveSpecimenScale(375)).toBe(0.68);
+    expect(getResponsiveSpecimenScale(375)).toBe(0.73);
+  });
+
+  it('steps up cleanly across phone and tablet breakpoints', () => {
+    expect(getResponsiveSpecimenScale(480)).toBe(0.73);
+    expect(getResponsiveSpecimenScale(481)).toBe(0.8);
+    expect(getResponsiveSpecimenScale(640)).toBe(0.8);
+    expect(getResponsiveSpecimenScale(641)).toBe(1);
   });
 
   it('preserves the desktop specimen scale', () => {

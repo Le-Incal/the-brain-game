@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   default as App,
+  getPrimaryControl,
   shouldShowHeader,
   shouldShowInstructions,
   STYLES,
@@ -48,6 +49,43 @@ describe('mobile viewport layout', () => {
     const scorePosition = markup.indexOf('Score:');
 
     expect(scorePosition).toBeGreaterThan(panelEnd);
+  });
+
+  it('keeps the mobile menu trigger visually unboxed', () => {
+    expect(STYLES.mobileSettingsToggle.background).toBe('transparent');
+    expect(STYLES.mobileSettingsToggle.border).toBe('none');
+    expect(STYLES.mobileSettingsToggle.boxShadow).toBe('none');
+    expect(STYLES.mobileSettingsLine.background).toBe('rgba(26, 24, 20, 0.62)');
+  });
+});
+
+describe('bottom primary control', () => {
+  it('starts with a highlighted Begin action', () => {
+    expect(getPrimaryControl('ready', true)).toEqual({
+      label: 'Begin',
+      active: true,
+      action: 'start',
+    });
+  });
+
+  it('preserves the first position for Pause and Resume', () => {
+    expect(getPrimaryControl('playing', true)).toEqual({
+      label: 'Pause',
+      active: false,
+      mobileActive: true,
+      action: 'pause',
+    });
+    expect(getPrimaryControl('paused', true)).toEqual({
+      label: 'Resume',
+      active: true,
+      mobileActive: true,
+      action: 'pause',
+    });
+  });
+
+  it('does not offer Begin until the specimen is ready', () => {
+    expect(getPrimaryControl('ready', false)).toBeNull();
+    expect(getPrimaryControl('countdown', true)).toBeNull();
   });
 });
 

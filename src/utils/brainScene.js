@@ -25,7 +25,7 @@ const BRAIN_SCALE = 0.88 * 1.1;
 const LABEL_GUTTER_PX = 40;
 
 export function getResponsiveSpecimenScale(viewportWidth) {
-  if (viewportWidth <= 480) return 0.68;
+  if (viewportWidth <= 480) return 0.73;
   if (viewportWidth <= 640) return 0.8;
   return 1;
 }
