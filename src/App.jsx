@@ -20,7 +20,7 @@ export function shouldShowHeader(gamePhase) {
  * Victorian magazine UI frame around the 3D brain; falling words and game loop.
  */
 
-const STYLES = {
+export const STYLES = {
   container: {
     width: '100vw',
     height: '100vh',
@@ -66,7 +66,7 @@ const STYLES = {
     gap: 1,
     lineHeight: 1.08,
     textAlign: 'center',
-    textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 1px 0 #fff',
+    textShadow: 'none',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90vw',
   },

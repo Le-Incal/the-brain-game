@@ -55,16 +55,28 @@ describe('region shader interpolation', () => {
       'vec3 finalColor = mix(shadedPaper, uInkColor, totalInk);'
     );
     const regionOverlay = fragmentShader.indexOf(
-      'finalColor = mix(finalColor, regionColor, regionOverlayAlpha);'
+      'finalColor = mix(finalColor, vibrantRegionColor, regionOverlayAlpha);'
     );
 
     expect(engraving).toBeGreaterThan(-1);
     expect(regionOverlay).toBeGreaterThan(engraving);
     expect(fragmentShader).toContain(
-      'float regionOverlayAlpha = selectedRegion ? 0.62 : 0.90;'
+      'float regionOverlayAlpha = feedbackActive ? 0.96 :'
     );
     expect(fragmentShader).toContain(
       'regionOverlayAlpha *= 1.0 - totalInk;'
+    );
+  });
+
+  it('uses a saturated region wash for game feedback', () => {
+    expect(fragmentShader).toContain(
+      'vec3 vibrantRegionColor = mix(vec3(regionLuma), regionColor, 1.35);'
+    );
+    expect(fragmentShader).toContain(
+      'feedbackActive ? 0.96'
+    );
+    expect(fragmentShader).toContain(
+      'finalColor = mix(finalColor, amber, 0.08);'
     );
   });
 });

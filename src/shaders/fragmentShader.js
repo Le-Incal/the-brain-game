@@ -139,6 +139,9 @@ const fragmentShader = /* glsl */ `
     // per pixel, so they no longer inherit the mesh triangle silhouette.
     int regionId = classifyRegion(vObjectPosition);
     vec3 regionColor = getRegionColor(regionId);
+    float regionLuma = dot(regionColor, vec3(0.299, 0.587, 0.114));
+    vec3 vibrantRegionColor = mix(vec3(regionLuma), regionColor, 1.35);
+    vibrantRegionColor = clamp(vibrantRegionColor, 0.0, 1.0);
 
     bool selectionActive = uSelectedRegion > -0.5;
     bool selectedRegion =
@@ -164,16 +167,19 @@ const fragmentShader = /* glsl */ `
     // Hand-tinted functional regions sit above the completed engraving as a
     // translucent wash, so dense linework cannot hide the colour layer.
     bool regionOverlayActive =
-      selectedRegion || (regionColourActive && !selectionActive);
+      feedbackActive ||
+      selectedRegion ||
+      (regionColourActive && !selectionActive);
     if (regionOverlayActive) {
-      float regionOverlayAlpha = selectedRegion ? 0.62 : 0.90;
+      float regionOverlayAlpha = feedbackActive ? 0.96 :
+        (selectedRegion ? 0.72 : 0.94);
       regionOverlayAlpha *= 1.0 - totalInk;
-      finalColor = mix(finalColor, regionColor, regionOverlayAlpha);
+      finalColor = mix(finalColor, vibrantRegionColor, regionOverlayAlpha);
     }
 
     if (feedbackActive) {
       vec3 amber = vec3(0.90, 0.67, 0.30);
-      finalColor = mix(finalColor, amber, 0.18);
+      finalColor = mix(finalColor, amber, 0.08);
     }
 
     gl_FragColor = vec4(finalColor, 1.0);

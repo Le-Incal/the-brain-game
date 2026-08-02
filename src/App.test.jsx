@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shouldShowHeader } from './App.jsx';
+import { shouldShowHeader, STYLES } from './App.jsx';
 
 describe('shouldShowHeader', () => {
   it('keeps the title mounted to fold away during countdown', () => {
@@ -13,5 +13,11 @@ describe('shouldShowHeader', () => {
   it('shows the title before play and while paused', () => {
     expect(shouldShowHeader('ready')).toBe(true);
     expect(shouldShowHeader('paused')).toBe(true);
+  });
+});
+
+describe('falling word presentation', () => {
+  it('does not draw a white halo behind falling text', () => {
+    expect(STYLES.fallingWord.textShadow).toBe('none');
   });
 });
