@@ -167,7 +167,7 @@ export const STYLES = {
   },
   instructionBody: {
     fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 1.55,
     letterSpacing: '0.03em',
     color: '#3d3932',
@@ -618,12 +618,13 @@ export default function App() {
                   Welcome to the Brain Game, a study in anatomy and cognition.
                 </p>
                 <p style={{ marginBottom: 10 }}>
-                  Click and drag the brain to capture falling words in the
-                  correctly associated region of the brain.
+                  Rotate the brain to guide each falling word to its rightful
+                  region. A correct catch illuminates the area; a wrong one
+                  shatters into the void below.
                 </p>
                 <p>
-                  Turn on Colour Regions as a guide if needed. Pause the game,
-                  then click each region of the brain to explore and learn.
+                  Toggle Colour Regions to reveal each area&apos;s hue. Pause
+                  at any time to explore the brain freely, region by region.
                 </p>
               </div>
             </div>
