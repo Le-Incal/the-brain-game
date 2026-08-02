@@ -14,8 +14,8 @@ export function shouldShowHeader(gamePhase) {
   );
 }
 
-export function shouldShowInstructions(gamePhase) {
-  return gamePhase === 'ready';
+export function shouldShowInstructions(gamePhase, selectedRegion = null) {
+  return gamePhase === 'ready' && !selectedRegion;
 }
 
 /**
@@ -27,7 +27,8 @@ export function shouldShowInstructions(gamePhase) {
 export const STYLES = {
   container: {
     width: '100vw',
-    height: '100vh',
+    height: '100dvh',
+    minHeight: '100svh',
     position: 'relative',
     overflow: 'hidden',
     fontFamily: "'Playfair Display', Georgia, serif",
@@ -500,6 +501,7 @@ export default function App() {
   };
 
   const describedRegion = selectedRegion || hoveredRegion;
+  const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
 
   return (
     <div style={STYLES.container}>
@@ -534,13 +536,15 @@ export default function App() {
           className={gamePhase === 'countdown' ? 'title-fold-up' : undefined}
           style={STYLES.header}
         >
-          <h1 style={STYLES.title}>Brain Game</h1>
-          <div style={STYLES.subtitle}>A Study in Cognition</div>
+          <h1 className="app-title" style={STYLES.title}>Brain Game</h1>
+          <div className="app-subtitle" style={STYLES.subtitle}>
+            A Study in Cognition
+          </div>
           <div style={STYLES.rule} />
         </div>
       )}
 
-      <div style={STYLES.difficulty}>
+      <div className="difficulty-controls" style={STYLES.difficulty}>
         <span style={STYLES.difficultyLabel}>Difficulty</span>
         {[1, 2, 3, 4].map((t) => (
           <ToggleButton
@@ -553,9 +557,9 @@ export default function App() {
         ))}
       </div>
 
-      <div style={STYLES.rightControls}>
-        <label style={STYLES.speedControl}>
-          <span style={STYLES.speedLabel}>Speed</span>
+      <div className="right-controls" style={STYLES.rightControls}>
+        <label className="speed-control" style={STYLES.speedControl}>
+          <span className="speed-label" style={STYLES.speedLabel}>Speed</span>
           <input
             className="speed-slider"
             type="range"
@@ -570,11 +574,11 @@ export default function App() {
             aria-valuetext={`${speedMultiplier.toFixed(1)} times`}
             style={STYLES.speedSlider}
           />
-          <span style={STYLES.speedValue}>
+          <span className="speed-value" style={STYLES.speedValue}>
             {speedMultiplier.toFixed(1)}×
           </span>
         </label>
-        <div style={STYLES.score}>Score: {score}</div>
+        <div className="score-display" style={STYLES.score}>Score: {score}</div>
       </div>
 
       {loading && <div style={STYLES.loading}>Preparing the specimen...</div>}
@@ -593,27 +597,27 @@ export default function App() {
       )}
 
       {brainReady && gamePhase === 'ready' && (
-        <div style={STYLES.gamePrompt}>
+        <div className="game-prompt" style={STYLES.gamePrompt}>
           <button type="button" onClick={startGame} style={STYLES.startButton}>
             Begin
           </button>
         </div>
       )}
       {gamePhase === 'countdown' && (
-        <div style={STYLES.gamePrompt} aria-live="assertive">
+        <div className="game-prompt" style={STYLES.gamePrompt} aria-live="assertive">
           <div style={STYLES.countdown}>{countdown}</div>
         </div>
       )}
 
-      {(shouldShowInstructions(gamePhase) ||
+      {(showInstructions ||
         describedRegion ||
         factoid ||
         correction) && (
-        <div style={STYLES.descriptionPanel}>
-          {shouldShowInstructions(gamePhase) && (
+        <div className="description-panel" style={STYLES.descriptionPanel}>
+          {showInstructions && (
             <div>
               <div style={STYLES.instructionTitle}>How to Play</div>
-              <div style={STYLES.instructionBody}>
+              <div className="instruction-body" style={STYLES.instructionBody}>
                 <p style={{ marginBottom: 10 }}>
                   Welcome to the Brain Game, a study in anatomy and cognition.
                 </p>
@@ -629,8 +633,8 @@ export default function App() {
               </div>
             </div>
           )}
-          {!shouldShowInstructions(gamePhase) && describedRegion && (
-            <div style={STYLES.hoverLabel}>
+          {!showInstructions && describedRegion && (
+            <div className="region-description" style={STYLES.hoverLabel}>
               <span
                 style={{
                   display: 'block',
@@ -662,16 +666,16 @@ export default function App() {
               )}
             </div>
           )}
-          {!shouldShowInstructions(gamePhase) && factoid && (
-            <div style={STYLES.factoid}>{factoid}</div>
+          {!showInstructions && factoid && (
+            <div className="region-description" style={STYLES.factoid}>{factoid}</div>
           )}
-          {!shouldShowInstructions(gamePhase) && !factoid && correction && (
-            <div style={STYLES.correction}>{correction}</div>
+          {!showInstructions && !factoid && correction && (
+            <div className="region-description" style={STYLES.correction}>{correction}</div>
           )}
         </div>
       )}
 
-      <div style={STYLES.controls}>
+      <div className="game-controls" style={STYLES.controls}>
         {(gamePhase === 'playing' || gamePhase === 'paused') && (
           <ToggleButton
             label={gamePhase === 'paused' ? 'Resume' : 'Pause'}

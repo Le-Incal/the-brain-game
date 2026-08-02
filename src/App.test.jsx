@@ -26,9 +26,19 @@ describe('falling word presentation', () => {
   });
 });
 
+describe('mobile viewport layout', () => {
+  it('uses the dynamic viewport height to avoid browser chrome overlap', () => {
+    expect(STYLES.container.height).toBe('100dvh');
+  });
+});
+
 describe('landing instructions', () => {
   it('shows instructions before the game starts', () => {
     expect(shouldShowInstructions('ready')).toBe(true);
+  });
+
+  it('replaces instructions with a clicked region description', () => {
+    expect(shouldShowInstructions('ready', { id: 4 })).toBe(false);
   });
 
   it('hides instructions once Begin starts the countdown', () => {

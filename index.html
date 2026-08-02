@@ -15,6 +15,9 @@
         overflow: hidden;
         background-color: #f7f0dc;
       }
+      @supports (height: 100dvh) {
+        html, body, #root { height: 100dvh; }
+      }
       @keyframes wordAbsorb {
         0% {
           opacity: 1;
@@ -104,8 +107,87 @@
         border-radius: 50%;
         background: #000;
       }
+      @media (max-width: 960px) {
+        .description-panel {
+          top: auto !important;
+          bottom: 62px !important;
+          transform: none !important;
+          width: min(300px, calc(100vw - 48px)) !important;
+        }
+      }
       @media (max-width: 640px) {
-        .brain-annotation__text { font-size: 11px; }
+        .app-title {
+          font-size: 27px !important;
+          letter-spacing: 0.13em !important;
+        }
+        .app-subtitle {
+          font-size: 13px !important;
+          letter-spacing: 0.08em !important;
+        }
+        .brain-annotation__text { font-size: 10px; }
+        .description-panel {
+          left: 16px !important;
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 78px) !important;
+          width: min(250px, calc(100vw - 32px)) !important;
+          max-height: 27dvh;
+          overflow: hidden;
+          padding: 9px 11px;
+          background: rgba(247, 240, 220, 0.92);
+          border-top: 1px solid rgba(26, 24, 20, 0.24);
+          border-bottom: 1px solid rgba(26, 24, 20, 0.24);
+        }
+        .instruction-body {
+          font-size: 13px !important;
+          line-height: 1.35 !important;
+        }
+        .region-description {
+          font-size: 12px !important;
+          line-height: 1.35 !important;
+          letter-spacing: 0.02em !important;
+        }
+        .game-controls {
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+          gap: 5px !important;
+          width: calc(100vw - 20px);
+          padding: 0 !important;
+        }
+        .game-controls button {
+          font-size: 8px !important;
+          padding: 3px 7px !important;
+          letter-spacing: 0.06em !important;
+        }
+        .difficulty-controls {
+          left: 12px !important;
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 43px) !important;
+          gap: 4px !important;
+        }
+        .difficulty-controls > span {
+          font-size: 10px !important;
+          letter-spacing: 0.06em !important;
+        }
+        .difficulty-controls button {
+          padding: 2px 5px !important;
+          font-size: 7px !important;
+        }
+        .right-controls {
+          right: 12px !important;
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 43px) !important;
+          gap: 7px !important;
+        }
+        .speed-control { gap: 3px !important; }
+        .speed-label { display: none; }
+        .speed-slider { width: 42px !important; }
+        .speed-value {
+          min-width: 22px !important;
+          font-size: 9px !important;
+        }
+        .score-display {
+          font-size: 10px !important;
+          letter-spacing: 0.06em !important;
+        }
+        .game-prompt {
+          top: calc(50% + 70px) !important;
+        }
       }
     </style>
   </head>

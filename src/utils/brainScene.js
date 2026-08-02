@@ -24,6 +24,12 @@ const BRAIN_VERTICAL_SHIFT_CSS_PX = 0;
 const BRAIN_SCALE = 0.88 * 1.1;
 const LABEL_GUTTER_PX = 40;
 
+export function getResponsiveSpecimenScale(viewportWidth) {
+  if (viewportWidth <= 480) return 0.68;
+  if (viewportWidth <= 640) return 0.8;
+  return 1;
+}
+
 export function computeLabelLeaderWidth(
   side,
   anchorX,
@@ -530,6 +536,9 @@ export class BrainScene {
   }
 
   _positionSpecimen() {
+    this.specimenRotationGroup.scale.setScalar(
+      getResponsiveSpecimenScale(this.width)
+    );
     const distance = this.camera.position.distanceTo(
       new THREE.Vector3(this.controls.target.x, this.controls.target.y, this.controls.target.z)
     );
