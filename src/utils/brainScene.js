@@ -22,6 +22,23 @@ import {
 const BRAIN_BASE_VERTICAL_OFFSET = -0.5;
 const BRAIN_VERTICAL_SHIFT_CSS_PX = 0;
 const BRAIN_SCALE = 0.88 * 1.1;
+const LABEL_GUTTER_PX = 40;
+
+export function computeLabelLeaderWidth(
+  side,
+  anchorX,
+  leftEdge,
+  rightEdge,
+  brainRadiusPx
+) {
+  const widthToEdge =
+    side === 'left' ? anchorX - leftEdge : rightEdge - anchorX;
+  return THREE.MathUtils.clamp(
+    widthToEdge + LABEL_GUTTER_PX,
+    28,
+    brainRadiusPx + 56
+  );
+}
 
 export class BrainScene {
   constructor(container, options = {}) {
@@ -30,15 +47,14 @@ export class BrainScene {
     this.height = container.clientHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xf3eee4);
 
     // Low FOV for flatter perspective (engraving-like)
     this.camera = new THREE.PerspectiveCamera(28, this.width / this.height, 0.1, 100);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(this.width, this.height);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.setClearColor(0xf3eee4, 1);
+    this.renderer.setClearColor(0xf3eee4, 0);
     // The anatomical GLB is high-poly; a modest pixel-ratio cap keeps orbit
     // interaction responsive on retina displays without a visible quality loss.
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
@@ -58,6 +74,7 @@ export class BrainScene {
     const aoMap = configureMap(textureLoader.load('/maps/brain_ao.png'));
     const cavityMap = configureMap(textureLoader.load('/maps/brain_cavity.png'));
     const curvatureMap = configureMap(textureLoader.load('/maps/brain_curvature.png'));
+    const etchingMap = configureMap(textureLoader.load('/maps/brain_etching.png'));
 
     // CSS2D overlay for annotations
     this.labelRenderer = new CSS2DRenderer();
@@ -76,6 +93,7 @@ export class BrainScene {
       uAoMap: { value: aoMap },
       uCavityMap: { value: cavityMap },
       uCurvatureMap: { value: curvatureMap },
+      uEtchingMap: { value: etchingMap },
       uLightDir1: { value: new THREE.Vector3(1.5, 1.8, 2.0).normalize() },
       uLightDir2: { value: new THREE.Vector3(-1.0, 0.5, -0.8).normalize() },
       uColorMode: { value: 0.0 },
@@ -100,11 +118,13 @@ export class BrainScene {
     this.specimenRotationGroup.add(this.specimenOrientGroup);
     this.specimenGroup.add(this.specimenRotationGroup);
     this.scene.add(this.specimenGroup);
+    this._specimenPanY = 0;
 
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
       orientGroup: this.specimenOrientGroup,
       onFirstInteraction: options.onFirstInteraction,
       onClick: (event) => this._selectRegionAtEvent(event),
+      onPan: (normalizedDelta) => this._panSpecimenVertical(normalizedDelta),
     });
     this._positionSpecimen();
 
@@ -132,6 +152,7 @@ export class BrainScene {
     this._labelCameraDirection = new THREE.Vector3();
     this._labelProjected = new THREE.Vector3();
     this._labelCenterProjected = new THREE.Vector3();
+    this._brainBoundsProjected = new THREE.Vector3();
     this._brainBoundingSphere = new THREE.Sphere();
     this.labelsVisible = false;
     this.labelGroup = new THREE.Group();
@@ -247,12 +268,37 @@ export class BrainScene {
     const distance = this.camera.position.distanceTo(this._labelCenterWorld);
     const viewportWorldHeight =
       2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    const brainRadiusPx = Math.min(
-      (this.brainBoundingRadius / viewportWorldHeight) * this.height,
-      Math.min(this.width, this.height) * 0.24
+    const brainRadiusPx =
+      (this.brainBoundingRadius / viewportWorldHeight) * this.height;
+    let leftEdge = centerX - brainRadiusPx;
+    let rightEdge = centerX + brainRadiusPx;
+    let anchorCloudLeft = Infinity;
+    let anchorCloudRight = -Infinity;
+    this.labelObjects.forEach((label) => {
+      label.userData.candidates.forEach((candidate) => {
+        this._brainBoundsProjected
+          .copy(candidate.position)
+          .applyMatrix4(this.labelGroup.matrixWorld)
+          .project(this.camera);
+        const screenX =
+          (this._brainBoundsProjected.x * 0.5 + 0.5) * this.width;
+        anchorCloudLeft = Math.min(anchorCloudLeft, screenX);
+        anchorCloudRight = Math.max(anchorCloudRight, screenX);
+      });
+    });
+    if (
+      Number.isFinite(anchorCloudLeft) &&
+      Number.isFinite(anchorCloudRight)
+    ) {
+      const cloudWidth = anchorCloudRight - anchorCloudLeft;
+      const silhouettePadding = Math.max(24, cloudWidth * 0.1);
+      leftEdge = anchorCloudLeft - silhouettePadding;
+      rightEdge = anchorCloudRight + silhouettePadding;
+    }
+    const projectedBrainRadiusPx = Math.max(
+      centerX - leftEdge,
+      rightEdge - centerX
     );
-    const leftEdge = centerX - brainRadiusPx;
-    const rightEdge = centerX + brainRadiusPx;
     const candidates = [];
     this._labelCameraDirection
       .subVectors(this.camera.position, this._labelCenterWorld)
@@ -319,12 +365,12 @@ export class BrainScene {
         label.element.style.textAlign = side === 'left' ? 'right' : 'left';
       }
 
-      const leaderWidth = THREE.MathUtils.clamp(
-        side === 'left'
-          ? anchorX - leftEdge + 14
-          : rightEdge - anchorX + 14,
-        18,
-        brainRadiusPx + 20
+      const leaderWidth = computeLabelLeaderWidth(
+        side,
+        anchorX,
+        leftEdge,
+        rightEdge,
+        projectedBrainRadiusPx
       );
       label.userData.leader.style.width = `${leaderWidth}px`;
 
@@ -489,11 +535,33 @@ export class BrainScene {
     );
     const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const shift = (BRAIN_VERTICAL_SHIFT_CSS_PX / this.height) * viewportHeight;
-    this.specimenGroup.position.y = BRAIN_BASE_VERTICAL_OFFSET + shift;
+    const baseY = BRAIN_BASE_VERTICAL_OFFSET + shift;
+    this.specimenGroup.position.y = baseY + this._specimenPanY;
     this.controls.target.x = 0;
-    this.controls.target.y = this.specimenGroup.position.y;
+    this.controls.target.y = baseY;
     this.controls.target.z = 0;
     this.controls.updateCamera();
+  }
+
+  _panSpecimenVertical(normalizedDelta) {
+    const distance = this.camera.position.distanceTo(
+      new THREE.Vector3(
+        this.controls.target.x,
+        this.controls.target.y,
+        this.controls.target.z
+      )
+    );
+    const viewportHeight =
+      2 *
+      distance *
+      Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    this._specimenPanY = THREE.MathUtils.clamp(
+      this._specimenPanY + normalizedDelta * viewportHeight,
+      -0.9,
+      0.9
+    );
+    this._positionSpecimen();
+    this._raycastDirty = true;
   }
 
   _animate() {

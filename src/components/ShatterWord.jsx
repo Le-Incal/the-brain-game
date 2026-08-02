@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 const FONT_FAMILY = "'Playfair Display', Georgia, serif";
 const TOTAL_MS = 1800;
-const CRACK_MS = 220;
+const CRACK_MS = 90;
 const GRAVITY = 520;
 const MAX_SHARDS = 96;
 
@@ -11,7 +11,7 @@ function rand(min, max) {
 }
 
 function measureFontSize() {
-  return Math.max(10, Math.min(12, window.innerWidth * 0.011));
+  return Math.max(12, Math.min(14, window.innerWidth * 0.012));
 }
 
 /** Binary-space partition into irregular glass panes. */
@@ -125,39 +125,27 @@ function splitShard(shard, now) {
   return pieces;
 }
 
-function drawCracks(ctx, w, h, progress) {
-  const cx = w / 2;
-  const cy = h / 2;
-  const rays = 9;
-  ctx.save();
-  ctx.strokeStyle = `rgba(26, 24, 20, ${0.12 + progress * 0.62})`;
-  ctx.lineWidth = 0.8 + progress * 1.4;
-  for (let i = 0; i < rays; i++) {
-    const a = (i / rays) * Math.PI * 2 + rand(-0.25, 0.25);
-    const len = Math.hypot(w, h) * (0.3 + progress * 0.62);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    let px = cx;
-    let py = cy;
-    const segments = 4;
-    for (let s = 1; s <= segments; s++) {
-      px += (Math.cos(a + rand(-0.4, 0.4)) * len) / segments;
-      py += (Math.sin(a + rand(-0.4, 0.4)) * len) / segments;
-      ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
+export function splitWordLines(text) {
+  return String(text ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
 function renderTextSource(text, font, fontSize, letterSpacing) {
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = font;
-  const tracking = letterSpacing * Math.max(0, text.length - 1);
-  const textW = measure.measureText(text).width + tracking;
+  const lines = splitWordLines(text);
+  const lineWidths = lines.map(
+    (line) =>
+      measure.measureText(line).width +
+      letterSpacing * Math.max(0, line.length - 1)
+  );
+  const textW = Math.max(...lineWidths, 1);
+  const lineHeight = fontSize * 1.24;
   const pad = 16;
   const srcW = Math.ceil(textW + pad * 2);
-  const srcH = Math.ceil(fontSize * 1.8 + pad * 2);
+  const srcH = Math.ceil(lineHeight * Math.max(lines.length, 1) + pad * 2);
 
   const source = document.createElement('canvas');
   source.width = srcW;
@@ -167,12 +155,14 @@ function renderTextSource(text, font, fontSize, letterSpacing) {
   sctx.fillStyle = '#1a1814';
   sctx.textBaseline = 'middle';
   sctx.textAlign = 'left';
-  let tx = pad;
-  const ty = srcH / 2;
-  for (const ch of text) {
-    sctx.fillText(ch, tx, ty);
-    tx += sctx.measureText(ch).width + letterSpacing;
-  }
+  lines.forEach((line, lineIndex) => {
+    let tx = (srcW - lineWidths[lineIndex]) / 2;
+    const ty = pad + lineHeight * (lineIndex + 0.5);
+    for (const ch of line) {
+      sctx.fillText(ch, tx, ty);
+      tx += sctx.measureText(ch).width + letterSpacing;
+    }
+  });
 
   return { source, srcW, srcH };
 }
@@ -214,17 +204,6 @@ export function ShatterWord({ text, x, y, onComplete }) {
 
       if (elapsed < CRACK_MS) {
         ctx.drawImage(source, ox, oy);
-        ctx.save();
-        ctx.translate(ox, oy);
-        // Glass sheen before fracture
-        const gloss = ctx.createLinearGradient(0, 0, srcW, srcH);
-        gloss.addColorStop(0, `rgba(255,255,255,${0.18 * (1 - elapsed / CRACK_MS)})`);
-        gloss.addColorStop(0.45, 'rgba(255,255,255,0)');
-        gloss.addColorStop(1, `rgba(255,255,255,${0.08 * (1 - elapsed / CRACK_MS)})`);
-        ctx.fillStyle = gloss;
-        ctx.fillRect(0, 0, srcW, srcH);
-        drawCracks(ctx, srcW, srcH, elapsed / CRACK_MS);
-        ctx.restore();
       } else {
         const next = [];
         for (const shard of shards) {

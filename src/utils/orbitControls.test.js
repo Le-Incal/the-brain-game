@@ -4,6 +4,7 @@ import {
   DEFAULT_MIN_FLIP_ANGLE,
   clampFlipAngle,
   dragToSpecimenVelocity,
+  dragToVerticalPan,
   isClickGesture,
   projectTrackballVector,
   trackballDeltaQuaternion,
@@ -21,6 +22,16 @@ describe('dragToSpecimenVelocity', () => {
 
   it('turns the specimen right for a rightward drag', () => {
     expect(dragToSpecimenVelocity(20, 0, 0.005).yaw).toBeCloseTo(0.1);
+  });
+});
+
+describe('shift-drag panning', () => {
+  it('moves the specimen upward for an upward pointer drag', () => {
+    expect(dragToVerticalPan(-50, 500)).toBeCloseTo(0.1);
+  });
+
+  it('moves the specimen downward for a downward pointer drag', () => {
+    expect(dragToVerticalPan(50, 500)).toBeCloseTo(-0.1);
   });
 });
 

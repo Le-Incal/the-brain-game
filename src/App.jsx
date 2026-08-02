@@ -2,7 +2,17 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { BrainScene } from './utils/brainScene';
 import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
-import { ShatterWord } from './components/ShatterWord';
+import { ShatterWord, splitWordLines } from './components/ShatterWord';
+
+const BASE_FALL_SPEED = 0.08;
+
+export function shouldShowHeader(gamePhase) {
+  return (
+    gamePhase === 'ready' ||
+    gamePhase === 'countdown' ||
+    gamePhase === 'paused'
+  );
+}
 
 /**
  * App — Root component
@@ -17,7 +27,11 @@ const STYLES = {
     position: 'relative',
     overflow: 'hidden',
     fontFamily: "'Playfair Display', Georgia, serif",
-    background: '#ffffff',
+    backgroundColor: '#f7f0dc',
+    backgroundImage: "url('/parchment.png')",
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
   },
   stage: {
     position: 'absolute',
@@ -41,11 +55,17 @@ const STYLES = {
     position: 'absolute',
     fontFamily: "'Playfair Display', Georgia, serif",
     fontWeight: 700,
-    fontSize: 'clamp(9px, 1vw, 11px)',
+    fontSize: 'clamp(11px, 1.15vw, 13px)',
     letterSpacing: '0.18em',
     color: '#1a1814',
     textTransform: 'uppercase',
     whiteSpace: 'nowrap',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 1,
+    lineHeight: 1.08,
+    textAlign: 'center',
     textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 1px 0 #fff',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90vw',
@@ -98,6 +118,30 @@ const STYLES = {
     maxWidth: '96vw',
     padding: '0 8px',
   },
+  speedControl: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+  },
+  speedLabel: {
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontSize: 10,
+    letterSpacing: '0.1em',
+    color: '#2a2820',
+    textTransform: 'uppercase',
+  },
+  speedSlider: {
+    width: 'clamp(54px, 6vw, 76px)',
+    margin: 0,
+    cursor: 'pointer',
+  },
+  speedValue: {
+    minWidth: 27,
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontSize: 10,
+    color: '#2a2820',
+    textAlign: 'right',
+  },
   descriptionPanel: {
     position: 'absolute',
     top: '50%',
@@ -118,9 +162,6 @@ const STYLES = {
     marginBottom: 14,
   },
   score: {
-    position: 'absolute',
-    bottom: 'clamp(18px, 3vh, 28px)',
-    right: 'clamp(24px, 5vw, 64px)',
     fontFamily: "'EB Garamond', Georgia, serif",
     fontSize: 14,
     letterSpacing: '0.1em',
@@ -128,6 +169,15 @@ const STYLES = {
     zIndex: 10,
     pointerEvents: 'none',
     textTransform: 'uppercase',
+  },
+  rightControls: {
+    position: 'absolute',
+    bottom: 'clamp(18px, 3vh, 28px)',
+    right: 'clamp(24px, 5vw, 64px)',
+    zIndex: 10,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
   },
   difficulty: {
     position: 'absolute',
@@ -242,6 +292,7 @@ export default function App() {
   const [colorMode, setColorMode] = useState(false);
   const [showLabels, setShowLabels] = useState(false);
   const [difficulty, setDifficulty] = useState(4);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -391,6 +442,12 @@ export default function App() {
     }
   }, [difficulty]);
 
+  useEffect(() => {
+    if (gameRef.current) {
+      gameRef.current.setFallSpeed(BASE_FALL_SPEED * speedMultiplier);
+    }
+  }, [speedMultiplier, brainReady]);
+
   const startGame = () => {
     if (!gameRef.current || gamePhase !== 'ready') return;
 
@@ -435,7 +492,9 @@ export default function App() {
               className={wordAnim === 'absorb' ? 'word-absorb' : undefined}
               style={STYLES.fallingWord}
             >
-              {activeWordLabel}
+              {splitWordLines(activeWordLabel).map((line, index) => (
+                <span key={`${line}-${index}`}>{line}</span>
+              ))}
             </div>
           )}
           {shatter && (
@@ -450,11 +509,16 @@ export default function App() {
         </div>
       </div>
 
-      <div style={STYLES.header}>
-        <h1 style={STYLES.title}>Brain Game</h1>
-        <div style={STYLES.subtitle}>A Study in Cognition</div>
-        <div style={STYLES.rule} />
-      </div>
+      {shouldShowHeader(gamePhase) && (
+        <div
+          className={gamePhase === 'countdown' ? 'title-fold-up' : undefined}
+          style={STYLES.header}
+        >
+          <h1 style={STYLES.title}>Brain Game</h1>
+          <div style={STYLES.subtitle}>A Study in Cognition</div>
+          <div style={STYLES.rule} />
+        </div>
+      )}
 
       <div style={STYLES.difficulty}>
         <span style={STYLES.difficultyLabel}>Difficulty</span>
@@ -469,7 +533,29 @@ export default function App() {
         ))}
       </div>
 
-      <div style={STYLES.score}>Score: {score}</div>
+      <div style={STYLES.rightControls}>
+        <label style={STYLES.speedControl}>
+          <span style={STYLES.speedLabel}>Speed</span>
+          <input
+            className="speed-slider"
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={speedMultiplier}
+            onChange={(event) =>
+              setSpeedMultiplier(Number(event.target.value))
+            }
+            aria-label="Falling word speed"
+            aria-valuetext={`${speedMultiplier.toFixed(1)} times`}
+            style={STYLES.speedSlider}
+          />
+          <span style={STYLES.speedValue}>
+            {speedMultiplier.toFixed(1)}×
+          </span>
+        </label>
+        <div style={STYLES.score}>Score: {score}</div>
+      </div>
 
       {loading && <div style={STYLES.loading}>Preparing the specimen...</div>}
       {error && (

@@ -51,6 +51,11 @@ export class GameEngine {
     this.usedWords.clear();
   }
 
+  setFallSpeed(speed) {
+    if (!Number.isFinite(speed)) return;
+    this.fallSpeed = Math.max(0.04, Math.min(0.16, speed));
+  }
+
   /**
    * Get the next word from the bank, filtered by max tier.
    */

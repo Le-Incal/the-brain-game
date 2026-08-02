@@ -62,6 +62,53 @@ export function classifyVertex(x, y, z) {
   return 0;
 }
 
+export function bakeAndNormalizeMesh(mesh, center, maxDim) {
+  const geometry = mesh.geometry;
+  const positions = geometry.getAttribute('position');
+  const normals = geometry.getAttribute('normal');
+  const regionIds = new Float32Array(positions.count);
+  const point = new THREE.Vector3();
+  const transformedNormal = new THREE.Vector3();
+  const normalMatrix = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+
+  for (let i = 0; i < positions.count; i++) {
+    point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
+    const x = (point.x - center.x) / maxDim;
+    const y = (point.y - center.y) / maxDim;
+    const z = (point.z - center.z) / maxDim;
+    positions.setXYZ(i, x, y, z);
+    regionIds[i] = classifyVertex(x, y, z);
+
+    if (normals) {
+      transformedNormal
+        .fromBufferAttribute(normals, i)
+        .applyNormalMatrix(normalMatrix);
+      normals.setXYZ(
+        i,
+        transformedNormal.x,
+        transformedNormal.y,
+        transformedNormal.z
+      );
+    }
+  }
+
+  positions.needsUpdate = true;
+  if (normals) {
+    normals.needsUpdate = true;
+  } else {
+    geometry.computeVertexNormals();
+  }
+  geometry.setAttribute('regionId', new THREE.BufferAttribute(regionIds, 1));
+
+  // The former world transform now lives in the vertex data.
+  mesh.matrixAutoUpdate = true;
+  mesh.position.set(0, 0, 0);
+  mesh.quaternion.identity();
+  mesh.scale.set(1, 1, 1);
+  mesh.updateMatrix();
+  mesh.matrixWorld.identity();
+}
+
 export const CEREBELLUM_REGION_ID = 13;
 
 /**
@@ -227,24 +274,22 @@ export async function loadBrainModel(url = '/brain.glb') {
           return;
         }
 
+        gltf.scene.updateMatrixWorld(true);
+
         // Compute the aggregate bounds directly from typed arrays. Avoid building
         // an array-of-arrays for every GLB vertex: on the production specimen that
         // causes a large allocation and browser pause on each reload.
         const bbox = new THREE.Box3();
+        const transformedPoint = new THREE.Vector3();
         let vertexCount = 0;
         meshes.forEach((mesh) => {
           const pos = mesh.geometry.attributes.position;
           vertexCount += pos.count;
           for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i);
-            const y = pos.getY(i);
-            const z = pos.getZ(i);
-            bbox.min.x = Math.min(bbox.min.x, x);
-            bbox.min.y = Math.min(bbox.min.y, y);
-            bbox.min.z = Math.min(bbox.min.z, z);
-            bbox.max.x = Math.max(bbox.max.x, x);
-            bbox.max.y = Math.max(bbox.max.y, y);
-            bbox.max.z = Math.max(bbox.max.z, z);
+            transformedPoint
+              .fromBufferAttribute(pos, i)
+              .applyMatrix4(mesh.matrixWorld);
+            bbox.expandByPoint(transformedPoint);
           }
         });
 
@@ -253,28 +298,7 @@ export async function loadBrainModel(url = '/brain.glb') {
         const maxDim = Math.max(size.x, size.y, size.z);
 
         meshes.forEach((mesh) => {
-          const geo = mesh.geometry;
-          const pos = geo.attributes.position;
-          const regionIds = new Float32Array(pos.count);
-
-          for (let i = 0; i < pos.count; i++) {
-            // Center and normalize
-            const x = (pos.getX(i) - center.x) / maxDim;
-            const y = (pos.getY(i) - center.y) / maxDim;
-            const z = (pos.getZ(i) - center.z) / maxDim;
-
-            pos.setXYZ(i, x, y, z);
-            regionIds[i] = classifyVertex(x, y, z);
-          }
-
-          pos.needsUpdate = true;
-          // Meshy GLBs ship normals. Uniform centering/scaling leaves them valid;
-          // recomputing them on a high-poly mesh blocks the main thread for no gain.
-          if (!geo.attributes.normal) geo.computeVertexNormals();
-
-          // Attach region IDs as a vertex attribute
-          geo.setAttribute('regionId', new THREE.BufferAttribute(regionIds, 1));
-
+          bakeAndNormalizeMesh(mesh, center, maxDim);
           brainGroup.add(mesh);
         });
 

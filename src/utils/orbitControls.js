@@ -30,6 +30,10 @@ export function dragToSpecimenVelocity(dx, dy, sensitivity) {
   };
 }
 
+export function dragToVerticalPan(deltaY, viewportHeight) {
+  return -deltaY / Math.max(1, viewportHeight);
+}
+
 export function isClickGesture(startX, startY, endX, endY, threshold = 5) {
   const dx = endX - startX;
   const dy = endY - startY;
@@ -80,7 +84,10 @@ export class BrainOrbitControls {
 
     this._onInteraction = options.onFirstInteraction ?? null;
     this._onClick = options.onClick ?? null;
+    this._onPan = options.onPan ?? null;
     this._hasInteracted = false;
+    this._dragMode = null;
+    this._lastPointerY = 0;
     this._pointerStartX = 0;
     this._pointerStartY = 0;
     this._maxPointerDistanceSquared = 0;
@@ -136,11 +143,15 @@ export class BrainOrbitControls {
     this.activePointerId = e.pointerId;
     this.domElement.setPointerCapture?.(e.pointerId);
     this.isDragging = true;
+    this._dragMode = e.shiftKey ? 'pan' : 'rotate';
+    this._lastPointerY = e.clientY;
     this._pointerStartX = e.clientX;
     this._pointerStartY = e.clientY;
     this._maxPointerDistanceSquared = 0;
     this.targetQuaternion.copy(this.orientGroup.quaternion);
-    this._trackballVector(e.clientX, e.clientY, this._previousTrackball);
+    if (this._dragMode === 'rotate') {
+      this._trackballVector(e.clientX, e.clientY, this._previousTrackball);
+    }
 
     if (!this._hasInteracted) {
       this._hasInteracted = true;
@@ -158,6 +169,15 @@ export class BrainOrbitControls {
       this._maxPointerDistanceSquared,
       totalDx * totalDx + totalDy * totalDy
     );
+
+    if (this._dragMode === 'pan') {
+      const rect = this.domElement.getBoundingClientRect();
+      const deltaY = e.clientY - this._lastPointerY;
+      this._lastPointerY = e.clientY;
+      this._onPan?.(dragToVerticalPan(deltaY, rect.height));
+      return;
+    }
+
     this._trackballVector(e.clientX, e.clientY, this._currentTrackball);
 
     this._deltaCamera.setFromUnitVectors(
@@ -184,7 +204,10 @@ export class BrainOrbitControls {
     this.domElement.releasePointerCapture?.(e.pointerId);
     this.activePointerId = null;
     this.isDragging = false;
+    const completedMode = this._dragMode;
+    this._dragMode = null;
     if (
+      completedMode === 'rotate' &&
       this._onClick &&
       this._maxPointerDistanceSquared <= 25 &&
       isClickGesture(

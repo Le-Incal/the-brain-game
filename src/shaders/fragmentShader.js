@@ -2,6 +2,7 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D uAoMap;
   uniform sampler2D uCavityMap;
   uniform sampler2D uCurvatureMap;
+  uniform sampler2D uEtchingMap;
 
   uniform vec3 uLightDir1;
   uniform vec3 uLightDir2;
@@ -24,8 +25,13 @@ const fragmentShader = /* glsl */ `
     float distanceToCenter = abs(cell - 0.5);
     float pixelWidth = max(fwidth(coordinate), 0.0001);
     float line = 1.0 - smoothstep(halfWidth - pixelWidth, halfWidth + pixelWidth, distanceToCenter);
-    float minificationFade = 1.0 - smoothstep(0.25, 0.55, pixelWidth);
+    float minificationFade = 1.0 - smoothstep(0.12, 0.32, pixelWidth);
     return line * minificationFade;
+  }
+
+  float antialiasedThreshold(float value, float threshold) {
+    float filterWidth = clamp(fwidth(value) * 0.75, 0.025, 0.12);
+    return smoothstep(threshold - filterWidth, threshold + filterWidth, value);
   }
 
   float hatchPlane(vec2 position, float angle, float density, float halfWidth) {
@@ -87,11 +93,6 @@ const fragmentShader = /* glsl */ `
     return 0;
   }
 
-  // Victorian hand-tint wash — bright enough to read beneath linework.
-  vec3 regionPaperTint(vec3 regionColor) {
-    return clamp(mix(regionColor, vec3(1.0), 0.05) * 1.15, 0.0, 1.0);
-  }
-
   void main() {
     vec3 normal = normalize(vWorldNormal);
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
@@ -104,24 +105,35 @@ const fragmentShader = /* glsl */ `
     float ao = texture2D(uAoMap, vUv0).r;
     float cavity = texture2D(uCavityMap, vUv0).r;
     float curvature = texture2D(uCurvatureMap, vUv0).r;
+    // Implicit derivatives select and blend mip levels continuously. A forced
+    // sharp mip bias makes the 4K strokes glitter as the surface rotates.
+    float etching = texture2D(uEtchingMap, vUv0).r;
 
     float shadow = 1.0 - light;
-    float tonalDarkness = shadow * 0.32 + (1.0 - ao) * 0.46;
+    float tonalDarkness = shadow * 0.24 + (1.0 - ao) * 0.34;
     tonalDarkness = clamp(tonalDarkness, 0.0, 1.0);
 
-    float cavityLine = smoothstep(0.12, 0.48, cavity);
-    float curvatureLine = smoothstep(0.20, 0.58, curvature);
-    float anatomicalInk = max(cavityLine * 0.58, curvatureLine * 0.34);
+    // Cavity and curvature are sparse positive-detail masks, not grayscale
+    // multipliers. Their useful values sit well below the old thresholds.
+    float cavityInk = smoothstep(0.05, 0.28, cavity) * 0.78;
+    float curvatureInk = smoothstep(0.14, 0.34, curvature) * 0.52;
+    float structuralInk = max(cavityInk, curvatureInk);
 
     float viewFacing = clamp(dot(normal, viewDirection), 0.0, 1.0);
-    float silhouette = pow(1.0 - viewFacing, 3.2) * 0.42;
+    float silhouette = pow(1.0 - viewFacing, 3.2) * 0.48;
+    structuralInk = max(structuralInk, silhouette);
 
     float hatchMask = smoothstep(0.42, 0.74, tonalDarkness);
     float deepHatchMask = smoothstep(0.62, 0.88, tonalDarkness);
 
-    float hatch1 = triplanarHatch(vWorldPosition, normal, 0.72, 26.0, 0.055) * hatchMask * 0.22;
-    float hatch2 = triplanarHatch(vWorldPosition, normal, -0.48, 31.0, 0.045) * deepHatchMask * 0.16;
+    float hatch1 = triplanarHatch(vWorldPosition, normal, 0.72, 26.0, 0.055) * hatchMask * 0.34;
+    float hatch2 = triplanarHatch(vWorldPosition, normal, -0.48, 31.0, 0.045) * deepHatchMask * 0.26;
     float hatchInk = max(hatch1, hatch2);
+    // Restore roughly 20 percentage points of etched coverage while derivative
+    // filtering keeps close strokes crisp and suppresses subpixel shimmer.
+    float etchedLine = antialiasedThreshold(etching, 0.80);
+    float bakedEtching = etchedLine * 0.60;
+    float engravedInk = max(hatchInk, bakedEtching);
 
     // Classifying the interpolated object-space position evaluates boundaries
     // per pixel, so they no longer inherit the mesh triangle silhouette.
@@ -137,29 +149,31 @@ const fragmentShader = /* glsl */ `
       uHighlight > -0.5 &&
       abs(float(regionId) - uHighlight) < 0.5;
 
-    vec3 paper = regionColourActive
-      ? regionPaperTint(regionColor)
-      : uPaperColor;
-
-    if (feedbackActive) {
-      vec3 amber = vec3(0.90, 0.67, 0.30);
-      paper = mix(paper, amber, 0.18);
-    }
-
-    vec3 shadedPaper = paper * (1.0 - tonalDarkness * 0.15);
-    float inkStrength =
-      (regionColourActive || feedbackActive) ? 0.32 : 1.0;
-    float totalInk = clamp(
-      (anatomicalInk + silhouette + hatchInk) * inkStrength,
-      0.0,
-      0.88
-    );
+    vec3 shadedPaper = uPaperColor * (1.0 - tonalDarkness * 0.10);
+    // Ink is the top layer. Max-composition preserves line contrast and avoids
+    // several translucent masks summing into a broad gray cast.
+    float totalInk = max(structuralInk, engravedInk);
     vec3 finalColor = mix(shadedPaper, uInkColor, totalInk);
 
     // Preserve only a ghost of the surrounding anatomy while a functional
     // region is selected, keeping context without competing with the subject.
     if (selectionActive && !selectedRegion) {
       finalColor = mix(uPaperColor, finalColor, 0.08);
+    }
+
+    // Hand-tinted functional regions sit above the completed engraving as a
+    // translucent wash, so dense linework cannot hide the colour layer.
+    bool regionOverlayActive =
+      selectedRegion || (regionColourActive && !selectionActive);
+    if (regionOverlayActive) {
+      float regionOverlayAlpha = selectedRegion ? 0.62 : 0.90;
+      regionOverlayAlpha *= 1.0 - totalInk;
+      finalColor = mix(finalColor, regionColor, regionOverlayAlpha);
+    }
+
+    if (feedbackActive) {
+      vec3 amber = vec3(0.90, 0.67, 0.30);
+      finalColor = mix(finalColor, amber, 0.18);
     }
 
     gl_FragColor = vec4(finalColor, 1.0);
