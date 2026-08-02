@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   computeLabelLeaderWidth,
   getResponsiveSpecimenScale,
+  getResponsiveSpecimenVerticalOffset,
 } from './brainScene.js';
 
 describe('computeLabelLeaderWidth', () => {
@@ -18,5 +19,10 @@ describe('getResponsiveSpecimenScale', () => {
 
   it('preserves the desktop specimen scale', () => {
     expect(getResponsiveSpecimenScale(1200)).toBe(1);
+  });
+
+  it('moves the phone specimen below the description panel', () => {
+    expect(getResponsiveSpecimenVerticalOffset(375)).toBe(-0.2);
+    expect(getResponsiveSpecimenVerticalOffset(1200)).toBe(0);
   });
 });

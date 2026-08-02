@@ -30,6 +30,12 @@ export function getResponsiveSpecimenScale(viewportWidth) {
   return 1;
 }
 
+export function getResponsiveSpecimenVerticalOffset(viewportWidth) {
+  if (viewportWidth <= 480) return -0.2;
+  if (viewportWidth <= 640) return -0.12;
+  return 0;
+}
+
 export function computeLabelLeaderWidth(
   side,
   anchorX,
@@ -545,7 +551,10 @@ export class BrainScene {
     const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const shift = (BRAIN_VERTICAL_SHIFT_CSS_PX / this.height) * viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET + shift;
-    this.specimenGroup.position.y = baseY + this._specimenPanY;
+    this.specimenGroup.position.y =
+      baseY +
+      this._specimenPanY +
+      getResponsiveSpecimenVerticalOffset(this.width);
     this.controls.target.x = 0;
     this.controls.target.y = baseY;
     this.controls.target.z = 0;

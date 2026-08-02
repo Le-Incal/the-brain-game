@@ -3,10 +3,10 @@ import { REGION_COLORS } from './regions.js';
 
 describe('region palette', () => {
   it('uses a faded violet for the temporal association cortex', () => {
-    expect(REGION_COLORS.association).toEqual([0.66, 0.58, 0.78]);
+    expect(REGION_COLORS.association).toEqual([0.69, 0.63, 0.77]);
   });
 
   it('distinguishes primary auditory cortex with a brighter pink', () => {
-    expect(REGION_COLORS.auditory).toEqual([0.86, 0.60, 0.70]);
+    expect(REGION_COLORS.auditory).toEqual([0.82, 0.62, 0.69]);
   });
 });
