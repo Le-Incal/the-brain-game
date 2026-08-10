@@ -336,6 +336,8 @@ export class BrainScene {
     this.hoveredRegion = null;
     this.onHoverChange = options.onHoverChange || null;
     this.onRegionSelect = options.onRegionSelect || null;
+    this.onNavigatingChange = options.onNavigatingChange || null;
+    this._isNavigating = false;
     this.selectedRegionId = -1;
     this._highlightUntil = 0;
     this._highlightStartedAt = 0;
@@ -766,6 +768,18 @@ export class BrainScene {
     this.camera.updateMatrixWorld();
   }
 
+  _syncNavigatingState() {
+    const navigating = Boolean(this.controls?.isDragging);
+    if (navigating === this._isNavigating) return;
+    this._isNavigating = navigating;
+    // Gripping to orbit should never pin a hover title over falling words.
+    if (navigating && this.hoveredRegion) {
+      this.hoveredRegion = null;
+      if (this.onHoverChange) this.onHoverChange(null);
+    }
+    if (this.onNavigatingChange) this.onNavigatingChange(navigating);
+  }
+
   _updateRaycast() {
     if (this.brainMeshes.length === 0 || !this._raycastDirty) return;
     // Full-mesh picking on the high-poly anatomical model can stall a frame.
@@ -853,6 +867,7 @@ export class BrainScene {
     requestAnimationFrame(() => this._animate());
 
     this.controls.update();
+    this._syncNavigatingState();
     this._updateHighlightFeedback();
     this._updateRaycast();
     this._updateLabelLayout();

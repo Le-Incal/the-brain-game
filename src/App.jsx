@@ -19,6 +19,16 @@ export function shouldShowInstructions(gamePhase, selectedRegion = null) {
   return gamePhase === 'ready' && !selectedRegion;
 }
 
+/** Hover/click region copy yields while the specimen is being gripped to orbit. */
+export function getDescribedRegion({
+  isNavigating = false,
+  selectedRegion = null,
+  hoveredRegion = null,
+} = {}) {
+  if (isNavigating) return null;
+  return selectedRegion || hoveredRegion;
+}
+
 export function getPrimaryControl(gamePhase, brainReady) {
   if (gamePhase === 'ready') {
     return brainReady
@@ -382,6 +392,7 @@ export default function App() {
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [score, setScore] = useState(0);
@@ -411,12 +422,17 @@ export default function App() {
     setSelectedRegion(region);
   }, []);
 
+  const handleNavigatingChange = useCallback((navigating) => {
+    setIsNavigating(navigating);
+  }, []);
+
   useEffect(() => {
     if (!mountRef.current) return;
 
     const brainScene = new BrainScene(mountRef.current, {
       onHoverChange: handleHover,
       onRegionSelect: handleRegionSelect,
+      onNavigatingChange: handleNavigatingChange,
     });
     sceneRef.current = brainScene;
     // Atlas work needs to drive the viewer from outside React: setting a known
@@ -514,7 +530,7 @@ export default function App() {
       sceneRef.current = null;
       setBrainReady(false);
     };
-  }, [handleHover, handleRegionSelect]);
+  }, [handleHover, handleRegionSelect, handleNavigatingChange]);
 
   useEffect(() => () => window.clearTimeout(countdownTimerRef.current), []);
 
@@ -597,7 +613,11 @@ export default function App() {
     }
   };
 
-  const describedRegion = selectedRegion || hoveredRegion;
+  const describedRegion = getDescribedRegion({
+    isNavigating,
+    selectedRegion,
+    hoveredRegion,
+  });
   const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
   const primaryControl = getPrimaryControl(gamePhase, brainReady);
 
