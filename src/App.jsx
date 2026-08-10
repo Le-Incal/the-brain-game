@@ -338,6 +338,7 @@ function ToggleButton({
     <button
       type="button"
       className={className}
+      aria-pressed={active}
       onClick={onClick}
       style={{
         fontFamily: "'Playfair Display', Georgia, serif",
@@ -358,6 +359,13 @@ function ToggleButton({
   );
 }
 
+// Easy already names the lobe when a catch lands in the right neighbourhood, so
+// the palette belongs on screen to teach it. Hard asks the player to find the
+// region on the engraving alone, so the colour comes away with it.
+export function colorModeForDifficulty(difficulty) {
+  return difficulty === 'easy';
+}
+
 export default function App() {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
@@ -365,9 +373,11 @@ export default function App() {
   const wordRef = useRef(null);
   const countdownTimerRef = useRef(null);
 
-  const [colorMode, setColorMode] = useState(false);
-  const [showLabels, setShowLabels] = useState(false);
   const [difficulty, setDifficulty] = useState('easy');
+  const [colorMode, setColorMode] = useState(() =>
+    colorModeForDifficulty('easy')
+  );
+  const [showLabels, setShowLabels] = useState(false);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -383,6 +393,14 @@ export default function App() {
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+
+  // Picking a difficulty resets the palette to that difficulty's default. The
+  // Colour Regions toggle still overrides it afterwards, so a player who wants
+  // the hues in hard mode can have them.
+  const chooseDifficulty = useCallback((mode) => {
+    setDifficulty(mode);
+    setColorMode(colorModeForDifficulty(mode));
+  }, []);
 
   const handleHover = useCallback((region) => {
     setHoveredRegion(region);
@@ -649,7 +667,7 @@ export default function App() {
               key={mode}
               label={mode === 'easy' ? 'Easy' : 'Hard'}
               active={difficulty === mode}
-              onClick={() => setDifficulty(mode)}
+              onClick={() => chooseDifficulty(mode)}
               mini
             />
           ))}

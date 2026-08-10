@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   default as App,
+  colorModeForDifficulty,
   getPrimaryControl,
   shouldShowHeader,
   shouldShowInstructions,
@@ -102,5 +103,35 @@ describe('landing instructions', () => {
     expect(shouldShowInstructions('countdown')).toBe(false);
     expect(shouldShowInstructions('playing')).toBe(false);
     expect(shouldShowInstructions('paused')).toBe(false);
+  });
+});
+
+describe('difficulty and the region palette', () => {
+  function toggleState(markup, label) {
+    const match = markup.match(
+      new RegExp(`<button[^>]*aria-pressed="(true|false)"[^>]*>${label}</button>`)
+    );
+    return match ? match[1] === 'true' : null;
+  }
+
+  it('shows the palette on easy and withdraws it on hard', () => {
+    // Easy names the lobe, so the lobes are worth seeing; hard asks the player
+    // to find the region unaided.
+    expect(colorModeForDifficulty('easy')).toBe(true);
+    expect(colorModeForDifficulty('hard')).toBe(false);
+  });
+
+  it('opens on easy with the colours already showing', () => {
+    const markup = renderToStaticMarkup(<App />);
+
+    expect(toggleState(markup, 'Easy')).toBe(true);
+    expect(toggleState(markup, 'Colour Regions')).toBe(true);
+  });
+
+  it('reports the state of every toggle to assistive technology', () => {
+    const markup = renderToStaticMarkup(<App />);
+
+    expect(toggleState(markup, 'Hard')).toBe(false);
+    expect(toggleState(markup, 'Annotations')).toBe(false);
   });
 });

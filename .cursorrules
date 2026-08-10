@@ -35,6 +35,8 @@ Every visual decision passes through this filter. We are NOT making a modern med
 - Two difficulties, starting on Easy. Easy accepts any region within the target's division
   (lobe, cerebellum or brain stem) and then names the precise region in the feedback, so it
   stays a teaching aid; Hard requires the region itself. Both meet the whole word bank
+- Difficulty carries the palette with it: Easy shows Colour Regions, Hard withdraws them so
+  the player reads the engraving alone. The toggle still overrides the default afterwards
 - Word tiers 1–4 drive scoring only: 10 / 25 / 50 / 100; miss = intact fall, wrong = shatter
 
 ## File Structure
