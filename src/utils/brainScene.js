@@ -217,6 +217,15 @@ export function computeLabelLeaderWidth(
   );
 }
 
+/**
+ * Catch/miss feedback pulse for the highlighted region's colour wash.
+ * Returns 0–1; never fully extinguishes the target colour.
+ */
+export function computeHighlightPulse(elapsedMs) {
+  const wave = 0.5 + 0.5 * Math.sin((elapsedMs / 1000) * Math.PI * 2 * 1.25);
+  return 0.35 + 0.65 * wave;
+}
+
 export class BrainScene {
   constructor(container, options = {}) {
     this.container = container;
@@ -285,6 +294,7 @@ export class BrainScene {
       uRegionColors: { value: regionColors },
       uRegionIds: { value: regionIds },
       uHighlight: { value: -1.0 },
+      uHighlightPulse: { value: 0.0 },
       uSelectedRegion: { value: -1.0 },
       uInkColor: { value: new THREE.Color(0x1a1a1a) },
       uPaperColor: { value: new THREE.Color(0xf3eee4) },
@@ -328,6 +338,7 @@ export class BrainScene {
     this.onRegionSelect = options.onRegionSelect || null;
     this.selectedRegionId = -1;
     this._highlightUntil = 0;
+    this._highlightStartedAt = 0;
     this.labelObjects = [];
     this._labelWorldPosition = new THREE.Vector3();
     this._labelCenterWorld = new THREE.Vector3();
@@ -704,16 +715,28 @@ export class BrainScene {
   }
 
   beginHighlightFeedback(regionId, durationMs = 2000, _options = {}) {
-    this._highlightUntil = performance.now() + durationMs;
+    const now = performance.now();
+    this._highlightUntil = now + durationMs;
+    this._highlightStartedAt = now;
     this.uniforms.uHighlight.value = regionId ?? -1.0;
+    this.uniforms.uHighlightPulse.value = computeHighlightPulse(0);
   }
 
-  _clearExpiredFeedback() {
+  _updateHighlightFeedback() {
+    if (!this._highlightUntil) return;
+
     const now = performance.now();
-    if (this._highlightUntil && now >= this._highlightUntil) {
+    if (now >= this._highlightUntil) {
       this.uniforms.uHighlight.value = -1.0;
+      this.uniforms.uHighlightPulse.value = 0.0;
       this._highlightUntil = 0;
+      this._highlightStartedAt = 0;
+      return;
     }
+
+    this.uniforms.uHighlightPulse.value = computeHighlightPulse(
+      now - this._highlightStartedAt
+    );
   }
 
   getRegionIdAtNormalized(nx, ny) {
@@ -830,7 +853,7 @@ export class BrainScene {
     requestAnimationFrame(() => this._animate());
 
     this.controls.update();
-    this._clearExpiredFeedback();
+    this._updateHighlightFeedback();
     this._updateRaycast();
     this._updateLabelLayout();
 

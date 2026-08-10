@@ -12,6 +12,9 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uRegionColors[20];
   uniform float uRegionIds[20];
   uniform float uHighlight;
+  // 0–1 wash strength for the highlighted region's colour during catch/miss
+  // feedback. Driven from the render loop so the colour can pulse.
+  uniform float uHighlightPulse;
   uniform float uSelectedRegion;
 
   uniform vec3 uInkColor;
@@ -21,6 +24,8 @@ const fragmentShader = /* glsl */ `
   // colour. The handoff colour rule asks for 35-45% palette, but that read as
   // washed out on screen, so the artist called for more saturation.
   const float REGION_PARCHMENT_BLEND = 0.45;
+  // Non-target engraving during feedback: still readable, clearly recessed.
+  const float FEEDBACK_OTHER_INK = 0.38;
 
   varying vec2 vUv0;
   varying vec2 vUvRegionId;
@@ -155,16 +160,22 @@ const fragmentShader = /* glsl */ `
     bool selectionActive = uSelectedRegion > -0.5;
     int selectedRegionId = int(floor(uSelectedRegion + 0.5));
     bool selectedRegion = selectionActive && regionId == selectedRegionId;
-    bool feedbackActive =
-      uHighlight > -0.5 &&
-      abs(float(regionId) - uHighlight) < 0.5;
-    bool colourRegionsActive = uColorMode > 0.5 && !selectionActive && validRegion;
+    bool feedbackMode = uHighlight > -0.5;
+    int highlightRegionId = int(floor(uHighlight + 0.5));
+    bool feedbackRegion = feedbackMode && validRegion && regionId == highlightRegionId;
+    bool otherDuringFeedback = feedbackMode && !feedbackRegion;
+    // Feedback isolates the answer: withdraw every other colour wash.
+    bool colourRegionsActive =
+      uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion;
 
     vec3 shadedPaper = uPaperColor * (1.0 - tonalDarkness * 0.10);
     // Ink is the top layer. Max-composition preserves line contrast and avoids
     // several translucent masks summing into a broad gray cast.
     float totalInk = max(structuralInk, engravedInk);
-    vec3 finalColor = mix(shadedPaper, uInkColor, totalInk);
+    // Dim non-target engraving so the pulsed region reads as the focus; the
+    // highlighted region's etching stays at full strength.
+    float displayInk = otherDuringFeedback ? totalInk * FEEDBACK_OTHER_INK : totalInk;
+    vec3 finalColor = mix(shadedPaper, uInkColor, displayInk);
 
     // Colour Regions: the authored palette under the engraving. The linework
     // is composited last and is never changed by colour.
@@ -174,10 +185,17 @@ const fragmentShader = /* glsl */ `
 
     // Selection tints the chosen region only. Every other region keeps the
     // engraving it already had, so the specimen never flattens into tone.
-    if (selectedRegion) {
+    // Feedback takes priority: pulse the answer's colour under full etching,
+    // never a solid colour flash that erases the woodblock lines.
+    if (feedbackRegion) {
+      vec3 pulsedFill = mix(
+        shadedPaper,
+        tintedRegionColor,
+        clamp(uHighlightPulse, 0.0, 1.0)
+      );
+      finalColor = mix(pulsedFill, uInkColor, totalInk);
+    } else if (!feedbackMode && selectedRegion) {
       finalColor = mix(tintedRegionColor, uInkColor, totalInk);
-    } else if (!selectionActive && feedbackActive && validRegion) {
-      finalColor = tintedRegionColor;
     }
 
     gl_FragColor = vec4(finalColor, 1.0);

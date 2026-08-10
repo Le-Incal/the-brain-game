@@ -82,7 +82,10 @@ describe('region shader interpolation', () => {
     expect(fragmentShader).not.toContain('uRegionColorMap');
     expect(fragmentShader).not.toContain('maskColor');
     expect(fragmentShader).toContain(
-      'bool colourRegionsActive = uColorMode > 0.5 && !selectionActive && validRegion;'
+      'bool colourRegionsActive ='
+    );
+    expect(fragmentShader).toContain(
+      'uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion'
     );
     // Linework is composited last and is never changed by colour.
     expect(fragmentShader).toContain(
@@ -134,13 +137,33 @@ describe('region shader interpolation', () => {
     expect(fragmentShader).not.toContain('selectedRegion ? selectedColor');
   });
 
+  it('isolates catch feedback without a solid colour flash', () => {
+    // Feedback withdraws other colour washes, dims non-target etching, and
+    // pulses the answer's colour under full-strength linework.
+    expect(fragmentShader).toContain('uniform float uHighlightPulse;');
+    expect(fragmentShader).toContain('const float FEEDBACK_OTHER_INK = 0.38;');
+    expect(fragmentShader).toContain(
+      'float displayInk = otherDuringFeedback ? totalInk * FEEDBACK_OTHER_INK : totalInk;'
+    );
+    expect(fragmentShader).toContain(
+      'vec3 pulsedFill = mix('
+    );
+    expect(fragmentShader).toContain(
+      'finalColor = mix(pulsedFill, uInkColor, totalInk);'
+    );
+    // The old path painted a solid tint and erased the woodblock lines.
+    expect(fragmentShader).not.toContain(
+      'finalColor = tintedRegionColor;'
+    );
+  });
+
   it('rejects black UV gutters while preserving sparse interaction IDs', () => {
     expect(fragmentShader).toContain(
       'bool validRegion = regionId > 0;'
     );
     expect(fragmentShader).toContain('int selectedRegionId = int(floor(uSelectedRegion + 0.5));');
     expect(fragmentShader).toContain(
-      'abs(float(regionId) - uHighlight) < 0.5'
+      'bool feedbackRegion = feedbackMode && validRegion && regionId == highlightRegionId;'
     );
   });
 });

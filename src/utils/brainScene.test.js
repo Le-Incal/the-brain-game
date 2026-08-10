@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import {
   configureColorMap,
   configureRegionIdMap,
+  computeHighlightPulse,
   computeLabelLeaderWidth,
   createRegionPaletteUniforms,
   getAtlasViewForDirection,
@@ -23,6 +24,16 @@ describe('BrainScene startup data', () => {
     expect(regionIds).not.toBe(REGION_IDS);
     expect(regionColors).toHaveLength(REGIONS.length);
     expect(regionColors.every((color) => color.isColor)).toBe(true);
+  });
+});
+
+describe('computeHighlightPulse', () => {
+  it('keeps the target colour visible while oscillating', () => {
+    const samples = [0, 200, 400, 600, 800].map(computeHighlightPulse);
+
+    expect(Math.min(...samples)).toBeGreaterThanOrEqual(0.35);
+    expect(Math.max(...samples)).toBeLessThanOrEqual(1);
+    expect(new Set(samples.map((value) => value.toFixed(3))).size).toBeGreaterThan(1);
   });
 });
 
