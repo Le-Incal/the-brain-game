@@ -1,0 +1,122 @@
+{
+  "axonometricTaxonomy": {
+    "naming": "axon_{top|bottom}_{left|right}_{front|rear} \u2014 the camera position octant in anatomical terms; anatomical left = +x, superior = +y, anterior = +z.",
+    "cameras": {
+      "axon_top_left_front": [
+        -1,
+        -0.85,
+        -1
+      ],
+      "axon_top_right_front": [
+        1,
+        -0.85,
+        -1
+      ],
+      "axon_top_left_rear": [
+        -1,
+        -0.85,
+        1
+      ],
+      "axon_top_right_rear": [
+        1,
+        -0.85,
+        1
+      ],
+      "axon_bottom_left_front": [
+        -1,
+        0.85,
+        -1
+      ],
+      "axon_bottom_right_front": [
+        1,
+        0.85,
+        -1
+      ],
+      "axon_bottom_left_rear": [
+        -1,
+        0.85,
+        1
+      ],
+      "axon_bottom_right_rear": [
+        1,
+        0.85,
+        1
+      ]
+    },
+    "note": "Vector is the camera LOOK direction (normalize before use); world up (0,1,0); orthographic."
+  },
+  "orthographicViews": {
+    "left_elevation": {
+      "look": [
+        -1,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "right_elevation": {
+      "look": [
+        1,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "front_elevation": {
+      "look": [
+        0,
+        0,
+        -1
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "rear_elevation": {
+      "look": [
+        0,
+        0,
+        1
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "top_plan": {
+      "look": [
+        0,
+        -1,
+        0
+      ],
+      "up": [
+        1,
+        0,
+        0
+      ]
+    },
+    "under_plan": {
+      "look": [
+        0,
+        1,
+        0
+      ],
+      "up": [
+        -1,
+        0,
+        0
+      ]
+    }
+  }
+}

@@ -367,7 +367,7 @@ export default function App() {
 
   const [colorMode, setColorMode] = useState(false);
   const [showLabels, setShowLabels] = useState(false);
-  const [difficulty, setDifficulty] = useState(4);
+  const [difficulty, setDifficulty] = useState('easy');
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -400,27 +400,49 @@ export default function App() {
       onRegionSelect: handleRegionSelect,
     });
     sceneRef.current = brainScene;
+    // Atlas work needs to drive the viewer from outside React: setting a known
+    // orbit angle and reading back what the surface shows there is how a paint
+    // change is checked against the model rather than against a memory of it.
+    if (import.meta.env.DEV) window.__brainScene = brainScene;
 
     loadBrainModel('/brain.glb')
-      .then(({ group, faceCount, vertexCount }) => {
+      .then(({ group, faceCount, vertexCount, atlasVertexAttributesValid }) => {
         brainScene.addBrainGeometry(group);
         console.info(
           `[Brain Game] Loaded specimen — ${Math.round(faceCount)} faces, ${vertexCount} verts`
         );
+        if (!atlasVertexAttributesValid) {
+          console.warn(
+            '[Brain Game] GLB COLOR_1 atlas is absent or invalid; interactions use the canonical UV mask.'
+          );
+        }
 
         const game = new GameEngine(brainScene, {
-          tier: 4,
+          difficulty: 'easy',
           onScoreChange: (s) => setScore(s),
           onWordDrop: (entry) => {
             setActiveWordLabel(entry.word);
             setWordAnim(null);
             setCorrection(null);
           },
-          onCorrect: ({ factoid: text, region }) => {
+          onCorrect: ({ factoid: text, region, targetRegion, matchedBy }) => {
             setFactoid(text);
             setWordAnim('absorb');
-            brainScene.beginHighlightFeedback(region?.id ?? -1, 2400, { warm: true });
+            // In easy mode the lobe is enough to score, so name the precise
+            // region that was sought; the catch still teaches the anatomy.
+            setCorrection(
+              matchedBy === 'division' && targetRegion
+                ? `Precisely: ${targetRegion.name}`
+                : null
+            );
+            // Illuminate what was sought, so the eye learns the right area.
+            brainScene.beginHighlightFeedback(
+              (matchedBy === 'division' ? targetRegion?.id : region?.id) ?? -1,
+              2400,
+              { warm: true }
+            );
             window.setTimeout(() => setFactoid(null), 4000);
+            window.setTimeout(() => setCorrection(null), 4000);
             window.setTimeout(() => {
               setWordAnim(null);
               setActiveWordLabel('');
@@ -515,7 +537,7 @@ export default function App() {
 
   useEffect(() => {
     if (gameRef.current) {
-      gameRef.current.setTier(difficulty);
+      gameRef.current.setDifficulty(difficulty);
     }
   }, [difficulty]);
 
@@ -622,12 +644,12 @@ export default function App() {
       >
         <div className="difficulty-controls" style={STYLES.difficulty}>
           <span style={STYLES.difficultyLabel}>Difficulty</span>
-          {[1, 2, 3, 4].map((t) => (
+          {['easy', 'hard'].map((mode) => (
             <ToggleButton
-              key={t}
-              label={`T${t}`}
-              active={difficulty === t}
-              onClick={() => setDifficulty(t)}
+              key={mode}
+              label={mode === 'easy' ? 'Easy' : 'Hard'}
+              active={difficulty === mode}
+              onClick={() => setDifficulty(mode)}
               mini
             />
           ))}

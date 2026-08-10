@@ -5,10 +5,10 @@
  * 1. Drops words from the top of the screen
  * 2. Detects collision with brain regions via raycasting
  * 3. Handles correct / wrong / miss feedback
- * 4. Scoring by difficulty tier (10 / 25 / 50 / 100)
+ * 4. Scoring by word tier (10 / 25 / 50 / 100)
  */
 
-import { WORD_BANK, REGIONS } from '../data/regions';
+import { WORD_BANK, getRegionById } from '../data/regions';
 
 export class GameEngine {
   constructor(brainScene, options = {}) {
@@ -36,8 +36,12 @@ export class GameEngine {
     this._nextDropAt = null;
     this._remainingDropDelay = null;
     this._scheduledDropCallback = null;
-    /** Max difficulty tier included in the pool (1–4). Default: all tiers. */
-    this.tier = options.tier ?? 4;
+    /**
+     * 'easy' accepts any region within the target's division, so a player who
+     * knows the lobe but not the area still scores. 'hard' requires the region
+     * itself. Both modes meet the whole word bank.
+     */
+    this.difficulty = options.difficulty === 'hard' ? 'hard' : 'easy';
     this.usedWords = new Set();
     this.onScoreChange = options.onScoreChange ?? null;
     this.onWordDrop = options.onWordDrop ?? null;
@@ -46,8 +50,9 @@ export class GameEngine {
     this.onMiss = options.onMiss ?? null;
   }
 
-  setTier(tier) {
-    this.tier = Math.max(1, Math.min(4, tier));
+  setDifficulty(difficulty) {
+    if (difficulty !== 'easy' && difficulty !== 'hard') return;
+    this.difficulty = difficulty;
     this.usedWords.clear();
   }
 
@@ -57,12 +62,10 @@ export class GameEngine {
   }
 
   /**
-   * Get the next word from the bank, filtered by max tier.
+   * Get the next unused word from the bank.
    */
   getNextWord() {
-    const available = WORD_BANK.filter(
-      (w) => w.tier <= this.tier && !this.usedWords.has(w.word)
-    );
+    const available = WORD_BANK.filter((w) => !this.usedWords.has(w.word));
     if (available.length === 0) {
       this.usedWords.clear();
       return this.getNextWord();
@@ -171,9 +174,14 @@ export class GameEngine {
     if (!this.currentWord) return null;
 
     const targetId = this.currentWord.targetRegion;
-    const alternates = this.currentWord.acceptAlternates || [];
+    // A word carries the regions its own function spans; the atlas carries the
+    // regions the literature contests for that target. Both score as correct.
+    const alternates = [
+      ...(this.currentWord.acceptAlternates || []),
+      ...(getRegionById(targetId)?.acceptAlternates || []),
+    ];
     const base = {
-      targetRegion: REGIONS[targetId],
+      targetRegion: getRegionById(targetId),
       factoid: this.currentWord.factoid,
     };
 
@@ -182,13 +190,23 @@ export class GameEngine {
       if (this.onMiss) {
         this.onMiss({
           word: this.currentWord,
-          correctRegion: REGIONS[targetId],
+          correctRegion: getRegionById(targetId),
         });
       }
       return { ...base, outcome: 'miss', correct: false };
     }
 
-    const correct = regionId === targetId || alternates.includes(regionId);
+    const exact = regionId === targetId || alternates.includes(regionId);
+    // Easy widens the target to the whole lobe, cerebellum or brain stem the
+    // region belongs to, so a player who knows the neighbourhood still scores.
+    const sameDivision =
+      this.difficulty === 'easy' &&
+      getRegionById(regionId)?.divisionId ===
+        getRegionById(targetId)?.divisionId;
+    const correct = exact || sameDivision;
+    // The feedback names the precise region when only the lobe was found, so
+    // easy mode still teaches the anatomy rather than blurring it.
+    base.matchedBy = exact ? 'region' : 'division';
 
     if (correct) {
       this.score += this.getPointValue();
@@ -197,7 +215,9 @@ export class GameEngine {
       if (this.onCorrect) {
         this.onCorrect({
           word: this.currentWord,
-          region: REGIONS[regionId],
+          region: getRegionById(regionId),
+          targetRegion: getRegionById(targetId),
+          matchedBy: base.matchedBy,
           factoid: this.currentWord.factoid,
         });
       }
@@ -207,8 +227,8 @@ export class GameEngine {
     if (this.onIncorrect) {
       this.onIncorrect({
         word: this.currentWord,
-        landedRegion: REGIONS[regionId],
-        correctRegion: REGIONS[targetId],
+        landedRegion: getRegionById(regionId),
+        correctRegion: getRegionById(targetId),
       });
     }
     return { ...base, outcome: 'wrong', correct: false };

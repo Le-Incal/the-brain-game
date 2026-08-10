@@ -25,36 +25,47 @@ Every visual decision passes through this filter. We are NOT making a modern med
 
 - **React + Three.js** (Vite bundled)
 - **Custom GLSL shaders** — the engraving look is a fragment shader, not post-processing
-- **Two-tier region system**: 8 physical meshes (GLB geometry) with 14 functional zones (vertex attribute `regionId`)
+- **Painted region atlas**: one 109K-vertex mesh carrying the artist's paint in `COLOR_1`
+  (regionId, divisionId as uint16) across 20 regions in 7 divisions. The id texture
+  (`brain_region_ids_4096.png`, sampled on `uv3` with NEAREST) is the visual authority;
+  `COLOR_1` is the identity authority for picking and game logic.
 - **Half-lambert lighting** wraps light around the form so no area goes solid black
 - Darkness is capped at 0.90 to always show visible linework
 - Fall speed is resolution-independent (viewport-height fraction per second)
-- Difficulty tiers 1–4; scoring 10 / 25 / 50 / 100; miss = intact fall, wrong = shatter
+- Two difficulties, starting on Easy. Easy accepts any region within the target's division
+  (lobe, cerebellum or brain stem) and then names the precise region in the feedback, so it
+  stays a teaching aid; Hard requires the region itself. Both meet the whole word bank
+- Word tiers 1–4 drive scoring only: 10 / 25 / 50 / 100; miss = intact fall, wrong = shatter
 
 ## File Structure
 
 ```
 src/
   shaders/          — GLSL vertex + fragment shaders (the core visual identity)
-  data/regions.js   — 14 functional zones, colors, word bank (neuroscience accuracy critical)
+  data/             — brainRegions.json (authored handoff, never hand-edited),
+                      regionGeometry.json (generated from COLOR_1), regions.js (adapter
+                      + word bank; neuroscience accuracy critical)
   utils/            — Brain loader, scene manager, orbit controls
   game/             — Game engine (word dropping, collision, scoring)
   App.jsx           — Victorian UI frame
 docs/claude/        — PRD, project instructions, kickoff prompt, website copy
+docs/handoff/       — Painted model handoff, integration rules, reference renders
 public/
-  brain.glb         — 3D brain model (Meshy preferred; procedural stand-in for dev)
+  brain.glb         — painted master model (v17)
+  maps/             — engraving maps, brain_region_ids_4096.png (uv3 id texture),
+                      brain_vertex_regions.bin (generated identity data)
 ```
 
 ## Build Sequence (Current Progress)
 
 1. ✅ GLSL engraving shader written and tuned
-2. ✅ GLB model loading with region assignment (procedural stand-in until Meshy asset)
+2. ✅ GLB model loading with region assignment (painted COLOR_1 atlas)
 3. ✅ Word-catching game mechanic (fall, catch, miss/wrong/correct)
 4. ✅ Scoring system (tier multipliers)
 5. ✅ Feedback system (glow, absorb, shatter, miss fall, corrections)
 6. ✅ Victorian UI frame + Difficulty control + CSS2D annotations
 7. ✅ Mobile-oriented control reflow (touch orbit already present)
-8. 🔲 Replace procedural GLB with painted Meshy anatomical model
+8. ✅ Painted master model (v17) with authoritative COLOR_1 paint and id texture
 9. 🔲 Word bank neuroscience review toward ~50 curated entries
 
 ## Shader Tuning Parameters
@@ -80,6 +91,22 @@ If the engraving look needs adjustment, these are in `src/shaders/fragmentShader
 
 - TDD: write tests first, confirm they fail, then implement
 - Never sacrifice neuroscience accuracy for clean game design
-- The production brain GLB should be Meshy AI, decimated to ~50-100K faces
-- Region classification currently uses positional heuristics (classifyVertex) — should be replaced with painted vertex colors in Blender for production accuracy
-- Regenerate the local stand-in with `npm run generate-brain` if needed
+- The production brain GLB is the artist's painted master (109K vertices, 99.7K triangles)
+- Region identity comes from the artist's paint, never from heuristics. After a new model
+  drop, run `npm run generate-region-identity` and `npm run generate-region-geometry`,
+  then `npm run audit:atlas` (it must report no errors)
+- The atlas packs charts without a UV gutter, so a texture lookup near a chart border can
+  read unrelated cortex. Each triangle carries its one-hop label set and the shader will
+  not display a region outside it; this is what keeps stray colour flecks off the surface
+- A region is anatomy, so it occupies whole patches of cortex: one, or one per hemisphere.
+  A few vertices of one region stranded inside another are within their triangle's label
+  set, so the shader shows them — as a speck of colour away from the region, or a pinhole
+  inside it. `npm run clean-paint-specks -- --apply` hands any patch under 48 vertices to
+  whichever region surrounds it, then corrects the id texture over those triangles; the
+  audit fails if a stranded patch survives
+- Where a triangle's three corners name one region there is no border to draw, so the id
+  texture must name that region too. COLOR_1 and the texture were baked separately and
+  disagree in places, which the candidate check cannot catch because the region is a
+  legitimate neighbour. `npm run reconcile-id-texture -- --apply` corrects those texels and
+  leaves every border triangle alone, so no line the artist drew moves; the audit fails on
+  any remaining disagreement

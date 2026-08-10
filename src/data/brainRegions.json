@@ -1,0 +1,359 @@
+{
+  "project": "Brain Game \u2014 A Study in Cognition",
+  "version": "v17",
+  "regionCount": 20,
+  "divisions": [
+    {
+      "id": 1,
+      "name": "Frontal Lobe",
+      "regions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Parietal Lobe",
+      "regions": [
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Temporal Lobe",
+      "regions": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Limbic Lobe",
+      "regions": [
+        16
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Occipital Lobe",
+      "regions": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Cerebellum",
+      "regions": [
+        19
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Brain Stem",
+      "regions": [
+        20
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "id": 1,
+      "name": "Prefrontal Cortex",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#d26477",
+      "hemisphere": "bilateral",
+      "subtitle": "Seat of Deliberation",
+      "annotationLabel": "Prefrontal Cortex \u2014 planning & judgment",
+      "clickDescription": "The prefrontal cortex orchestrates planning, decision-making, working memory, and the regulation of social conduct. It matures latest of all cortical territories and coordinates nearly every complex act of will.",
+      "factoid": "The Prefrontal Cortex, most expanded in humankind. The seat of deliberation and foresight.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 2,
+      "name": "Orbitofrontal Cortex",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#dc93a0",
+      "hemisphere": "bilateral",
+      "subtitle": "Arbiter of Value",
+      "annotationLabel": "Orbitofrontal Cortex \u2014 valuation & restraint",
+      "clickDescription": "Resting above the orbits of the eyes, the orbitofrontal cortex weighs reward and consequence, tempering impulse with expected value. Damage here famously alters temperament while sparing intellect.",
+      "factoid": "The Orbitofrontal Cortex, resting upon the orbits of the eyes. Arbiter of appetite and restraint.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 3,
+      "name": "Premotor Cortex",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#f59a1d",
+      "hemisphere": "bilateral",
+      "subtitle": "Rehearsal of Movement",
+      "annotationLabel": "Premotor Cortex \u2014 movement preparation",
+      "clickDescription": "The premotor cortex assembles the plan of a movement before it is executed, selecting and sequencing actions with guidance from the senses.",
+      "factoid": "The Premotor Cortex, where intended action is rehearsed before its performance.",
+      "acceptAlternates": [
+        5
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Supplementary Motor Area",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#fabb14",
+      "hemisphere": "bilateral",
+      "subtitle": "Conductor of Sequences",
+      "annotationLabel": "Supplementary Motor Area \u2014 internally guided sequences",
+      "clickDescription": "The supplementary motor area coordinates sequences of movement generated from internal intention rather than external cue, including the coordination of the two hands.",
+      "factoid": "The Supplementary Motor Area, conductor of self-initiated sequences.",
+      "acceptAlternates": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Primary Motor Cortex",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#dd8a5a",
+      "hemisphere": "bilateral",
+      "subtitle": "The Great Descending Command",
+      "annotationLabel": "Primary Motor Cortex \u2014 voluntary movement",
+      "clickDescription": "The primary motor cortex issues the final cortical command for voluntary movement, its territory mapped body part by body part along the precentral gyrus.",
+      "factoid": "The Primary Motor Cortex, from which the great descending commands of voluntary motion depart.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 6,
+      "name": "Broca's Area",
+      "division": "Frontal Lobe",
+      "divisionId": 1,
+      "hex": "#b6557d",
+      "hemisphere": "left",
+      "subtitle": "The Articulate Engine",
+      "annotationLabel": "Broca's Area \u2014 speech production (left hemisphere)",
+      "clickDescription": "Broca's area assembles the motor program of speech and contributes to grammar and language production. In nearly all right-handed persons it resides in the left hemisphere.",
+      "factoid": "Broca's Area, named for Pierre Paul Broca, 1861. The seat of articulate speech.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 7,
+      "name": "Primary Somatosensory Cortex",
+      "division": "Parietal Lobe",
+      "divisionId": 2,
+      "hex": "#6ec763",
+      "hemisphere": "bilateral",
+      "subtitle": "The Feeling Map",
+      "annotationLabel": "Primary Somatosensory Cortex \u2014 touch & body sense",
+      "clickDescription": "The primary somatosensory cortex receives touch, temperature, pain, and the sense of body position, arranged as a distorted map of the body along the postcentral gyrus.",
+      "factoid": "The Primary Somatosensory Cortex, whereon the body is drawn anew in feeling.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 8,
+      "name": "Somatosensory Association Cortex",
+      "division": "Parietal Lobe",
+      "divisionId": 2,
+      "hex": "#59c2aa",
+      "hemisphere": "bilateral",
+      "subtitle": "Interpreter of Touch",
+      "annotationLabel": "Somatosensory Association Cortex \u2014 integrating body sense",
+      "clickDescription": "This association territory interprets and integrates bodily sensation, allowing an object to be known by touch alone and the body to be located in space.",
+      "factoid": "The Somatosensory Association Cortex, interpreter of the language of touch.",
+      "acceptAlternates": [
+        7
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Angular Gyrus",
+      "division": "Parietal Lobe",
+      "divisionId": 2,
+      "hex": "#3c9693",
+      "hemisphere": "bilateral",
+      "subtitle": "Crossroads of Meaning",
+      "annotationLabel": "Angular Gyrus \u2014 reading, number & spatial meaning",
+      "clickDescription": "The angular gyrus stands at the crossroads of vision, hearing, and touch, serving reading, calculation, and the binding of words to meaning and space.",
+      "factoid": "The Angular Gyrus, crossroads where the senses trade their meanings.",
+      "acceptAlternates": [
+        13
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Precuneus",
+      "division": "Parietal Lobe",
+      "divisionId": 2,
+      "hex": "#a3d7bf",
+      "hemisphere": "bilateral",
+      "subtitle": "The Inward Eye",
+      "annotationLabel": "Precuneus \u2014 imagery & self-reflection",
+      "clickDescription": "Hidden on the medial surface, the precuneus serves visuospatial imagery, episodic memory retrieval, and reflection upon the self.",
+      "factoid": "The Precuneus, the inward eye of memory and imagination.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 11,
+      "name": "Primary Auditory Cortex",
+      "division": "Temporal Lobe",
+      "divisionId": 3,
+      "hex": "#8b93c4",
+      "hemisphere": "bilateral",
+      "subtitle": "The Listening Chamber",
+      "annotationLabel": "Primary Auditory Cortex \u2014 hearing",
+      "clickDescription": "The primary auditory cortex receives sound from the ears, arranged by pitch, and begins the analysis of rhythm, tone, and voice.",
+      "factoid": "The Primary Auditory Cortex, the listening chamber of the temporal lobe.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 12,
+      "name": "Superior Temporal Gyrus",
+      "division": "Temporal Lobe",
+      "divisionId": 3,
+      "hex": "#b4bcd6",
+      "hemisphere": "bilateral",
+      "subtitle": "Hall of Voices",
+      "annotationLabel": "Superior Temporal Gyrus \u2014 voices & auditory scenes",
+      "clickDescription": "The superior temporal gyrus analyses complex sound, voices, and the melody of speech, and contributes to social perception.",
+      "factoid": "The Superior Temporal Gyrus, hall of voices and of melody.",
+      "acceptAlternates": [
+        11
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Wernicke's Area",
+      "division": "Temporal Lobe",
+      "divisionId": 3,
+      "hex": "#add5da",
+      "hemisphere": "left",
+      "subtitle": "The Comprehending Ear",
+      "annotationLabel": "Wernicke's Area \u2014 language comprehension (left hemisphere)",
+      "clickDescription": "Wernicke's area serves the comprehension of spoken and written language, binding sound to sense. Like Broca's area it is strongly lateralized to the left hemisphere.",
+      "factoid": "Wernicke's Area, named for Carl Wernicke, 1874. Where heard words find their meaning.",
+      "acceptAlternates": [
+        9,
+        12
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Inferior Temporal Cortex",
+      "division": "Temporal Lobe",
+      "divisionId": 3,
+      "hex": "#c787c8",
+      "hemisphere": "bilateral",
+      "subtitle": "Gallery of Forms",
+      "annotationLabel": "Inferior Temporal Cortex \u2014 object & face recognition",
+      "clickDescription": "The inferior temporal cortex recognises objects and faces, the terminus of the ventral visual stream, and traffics with memory in the naming of things seen.",
+      "factoid": "The Inferior Temporal Cortex, gallery wherein all seen forms are catalogued.",
+      "acceptAlternates": [
+        18
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Piriform Cortex",
+      "division": "Temporal Lobe",
+      "divisionId": 3,
+      "hex": "#dcb5c8",
+      "hemisphere": "bilateral",
+      "subtitle": "The Ancient Nose-Brain",
+      "annotationLabel": "Piriform Cortex \u2014 smell",
+      "clickDescription": "The piriform cortex, among the most ancient of cortical territories, receives the sense of smell directly, without the thalamic relay required of the other senses.",
+      "factoid": "The Piriform Cortex, the ancient seat of smell, older than memory itself.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 16,
+      "name": "Cingulate Cortex",
+      "division": "Limbic Lobe",
+      "divisionId": 4,
+      "hex": "#965a96",
+      "hemisphere": "bilateral",
+      "subtitle": "The Emotional Girdle",
+      "annotationLabel": "Cingulate Cortex \u2014 emotion & conflict monitoring",
+      "clickDescription": "The cingulate cortex girdles the corpus callosum, weaving emotion into attention, registering conflict and error, and lending feeling its urgency.",
+      "factoid": "The Cingulate Cortex, the girdle of emotion about the brain's great commissure.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 17,
+      "name": "Primary Visual Cortex",
+      "division": "Occipital Lobe",
+      "divisionId": 5,
+      "hex": "#a88573",
+      "hemisphere": "bilateral",
+      "subtitle": "The First Light",
+      "annotationLabel": "Primary Visual Cortex \u2014 sight",
+      "clickDescription": "The primary visual cortex receives the first cortical impression of sight, decomposing the world into edges, orientations, and contrasts before any object is known.",
+      "factoid": "The Primary Visual Cortex, where light first becomes vision.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 18,
+      "name": "Visual Association Cortex",
+      "division": "Occipital Lobe",
+      "divisionId": 5,
+      "hex": "#d3b497",
+      "hemisphere": "bilateral",
+      "subtitle": "The Composing Eye",
+      "annotationLabel": "Visual Association Cortex \u2014 assembling the visual scene",
+      "clickDescription": "The visual association cortex composes edges and contrasts into colour, motion, depth, and finally the recognisable scene, in commerce with the parietal and temporal lobes.",
+      "factoid": "The Visual Association Cortex, wherein sight is composed into scenes.",
+      "acceptAlternates": [
+        17
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Cerebellum",
+      "division": "Cerebellum",
+      "divisionId": 6,
+      "hex": "#ffdc64",
+      "hemisphere": "bilateral",
+      "subtitle": "The Little Brain, Vastly Peopled",
+      "annotationLabel": "Cerebellum \u2014 coordination, timing & cognitive rhythm",
+      "clickDescription": "The cerebellum coordinates movement, balance, and motor learning, and holds the majority of the brain's neurons. Modern science finds it equally engaged in the timing of thought, language, and emotion.",
+      "factoid": "The Cerebellum, the little brain, containing more neurons than all the rest together.",
+      "acceptAlternates": []
+    },
+    {
+      "id": 20,
+      "name": "Brain Stem",
+      "division": "Brain Stem",
+      "divisionId": 7,
+      "hex": "#a8a9ac",
+      "hemisphere": "bilateral",
+      "subtitle": "The Stalk of Life",
+      "annotationLabel": "Brain Stem \u2014 vital rhythms & the great conduits",
+      "clickDescription": "The brain stem carries every fibre passing between brain and body and keeps the vital rhythms of breath, heartbeat, and wakefulness.",
+      "factoid": "The Brain Stem, the stalk of life, keeper of breath and heartbeat.",
+      "acceptAlternates": []
+    }
+  ],
+  "gameplayNotes": {
+    "lateralized": [
+      6,
+      13
+    ],
+    "lateralizedRule": "Regions 6 and 13 exist only on the anatomical left hemisphere (+x in model space).",
+    "acceptAlternatesRule": "When a falling word's primary region is contested in the literature, ids listed in acceptAlternates also score as correct.",
+    "annotationsToggle": "When Annotations are ON, show annotationLabel with a leader line to the region centroid.",
+    "clickBehavior": "On region click or correct catch, show name, subtitle, clickDescription; factoid is the short Victorian typeset line for catch feedback."
+  }
+}

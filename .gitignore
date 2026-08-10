@@ -4,3 +4,10 @@ dist/
 *.local
 .env
 .env.*
+
+# Working scratch from atlas paint sessions: projections, pick maps and
+# before/after renders. Useful while a boundary is being settled, far too heavy
+# to carry in history once it is.
+docs/handoff/markup/
+docs/handoff/reference/renders/
+docs/handoff/*.pre-*.png

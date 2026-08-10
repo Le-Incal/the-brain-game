@@ -4,11 +4,16 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "audit:atlas": "python3 scripts/audit-atlas.py",
     "build": "vite build",
+    "dev": "vite",
+    "generate-brain": "node scripts/generate-dev-brain.mjs",
+    "clean-paint-specks": "python3 scripts/clean-paint-specks.py",
+    "reconcile-id-texture": "python3 scripts/reconcile-id-texture.py",
+    "generate-region-geometry": "python3 scripts/generate-region-geometry.py",
+    "generate-region-identity": "python3 scripts/generate-region-identity.py",
     "preview": "vite preview",
-    "test": "vitest",
-    "generate-brain": "node scripts/generate-dev-brain.mjs"
+    "test": "vitest"
   },
   "dependencies": {
     "react": "^18.3.1",

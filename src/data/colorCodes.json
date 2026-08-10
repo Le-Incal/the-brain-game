@@ -1,0 +1,31 @@
+{
+  "palette": {
+    "1": "#d26477",
+    "2": "#dc93a0",
+    "3": "#f59a1d",
+    "4": "#fabb14",
+    "5": "#dd8a5a",
+    "6": "#b6557d",
+    "7": "#6ec763",
+    "8": "#59c2aa",
+    "9": "#3c9693",
+    "10": "#a3d7bf",
+    "11": "#8b93c4",
+    "12": "#b4bcd6",
+    "13": "#add5da",
+    "14": "#c787c8",
+    "15": "#dcb5c8",
+    "16": "#965a96",
+    "17": "#a88573",
+    "18": "#d3b497",
+    "19": "#ffdc64",
+    "20": "#a8a9ac"
+  },
+  "colorRule": {
+    "idTexture": "textures/brain_region_ids_4096.png \u2014 single channel; pixel value 1..20 is the region id, 0 = off-surface gutter (padded with nearest region for bleed safety).",
+    "uvChannel": "TEXCOORD_3 (the GLB's baked-texture atlas). Sample with NEAREST filtering; do not use mipmaps or linear filtering on the id texture.",
+    "vertexEncoding": "COLOR_1 per vertex, uint16 normalized: floor(COLOR_1.r*65535+0.5)=regionId, floor(COLOR_1.g*65535+0.5)=divisionId. Use for raycast hit lookup and game logic; the texture is the visual authority.",
+    "regionTint": "In Colour Mode, blend palette hex at ~35-45% opacity beneath the engraving linework; linework never changes.",
+    "highlight": "On hover/correct catch, drive the shader highlight uniform for the matching regionId sampled from the id texture."
+  }
+}

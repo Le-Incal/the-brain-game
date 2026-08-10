@@ -1,250 +1,116 @@
-/**
- * Brain Region Data
- * 
- * Two-tier architecture:
- * - Tier 1: 8 physical meshes (the GLB geometry)
- * - Tier 2: 14 functional zones (painted via vertex color/regionId attribute)
- * 
- * This file defines the functional zones, their display properties,
- * and the word bank for the game.
- */
+import brainRegions from './brainRegions.json';
+import regionGeometry from './regionGeometry.json';
 
-// ── Region Color Palette ────────────────────────────────────
-// Victorian hand-tinted anatomical illustration colors.
-// Semi-transparent washes that blend behind the dark linework.
-export const REGION_COLORS = {
-  prefrontal:                [0.82, 0.72, 0.50],  // Dusty gold
-  motor:                     [0.65, 0.75, 0.60],  // Sage green
-  broca:                     [0.72, 0.58, 0.68],  // Mauve
-  eyeMotor:                  [0.60, 0.65, 0.72],  // Slate blue
-  emotional:                 [0.78, 0.60, 0.50],  // Terra cotta
-  sensory:                   [0.75, 0.65, 0.62],  // Muted rose
-  somatosensoryAssociation:  [0.70, 0.72, 0.65],  // Parchment sage
-  sensoryAssociation:        [0.65, 0.68, 0.72],  // Cool slate
-  auditory:                  [0.82, 0.62, 0.69],  // Muted antique rose
-  wernicke:                  [0.68, 0.60, 0.70],  // Lavender
-  olfactory:                 [0.75, 0.70, 0.55],  // Parchment ochre
-  association:               [0.69, 0.63, 0.77],  // Pale blue-violet
-  visual:                    [0.62, 0.70, 0.68],  // Sage slate
-  cerebellum:                [0.72, 0.65, 0.58],  // Sandy ochre
-};
+export const ATLAS = brainRegions;
+export const DIVISIONS = brainRegions.divisions;
+export const GAMEPLAY_NOTES = brainRegions.gameplayNotes;
 
-// ── Functional Zone Definitions ─────────────────────────────
-export const REGIONS = [
-  {
-    id: 0,
-    key: 'prefrontal',
-    name: 'Higher Mental Functions',
-    subtitle: 'Prefrontal Cortex',
-    parentMesh: 'frontal',
-    color: REGION_COLORS.prefrontal,
-    description: 'Planning, decision-making, personality, complex thought',
-    labelPosition: [0.45, 0.55, 0.35],
-  },
-  {
-    id: 1,
-    key: 'motor',
-    name: 'Motor Function Area',
-    subtitle: 'Primary Motor Cortex',
-    parentMesh: 'frontal',
-    color: REGION_COLORS.motor,
-    description: 'Voluntary movement initiation and control',
-    labelPosition: [0.15, 0.65, 0.20],
-  },
-  {
-    id: 2,
-    key: 'broca',
-    name: "Broca's Area",
-    subtitle: 'Inferior Frontal Gyrus (Left)',
-    parentMesh: 'frontal_left',
-    color: REGION_COLORS.broca,
-    description: 'Speech production, language processing',
-    labelPosition: [0.35, 0.25, 0.55],
-  },
-  {
-    id: 3,
-    key: 'eyeMotor',
-    name: 'Eye Motor Area',
-    subtitle: 'Frontal Eye Fields',
-    parentMesh: 'frontal',
-    color: REGION_COLORS.eyeMotor,
-    description: 'Voluntary eye movement and tracking',
-    labelPosition: [0.30, 0.50, 0.40],
-  },
-  {
-    id: 4,
-    key: 'emotional',
-    name: 'Emotional Area',
-    subtitle: 'Orbitofrontal / Ventromedial Prefrontal',
-    parentMesh: 'frontal',
-    color: REGION_COLORS.emotional,
-    description: 'Emotional regulation, social behavior',
-    labelPosition: [0.40, 0.10, 0.45],
-  },
-  {
-    id: 5,
-    key: 'sensory',
-    name: 'Sensory Area',
-    subtitle: 'Primary Somatosensory Cortex',
-    parentMesh: 'parietal',
-    color: REGION_COLORS.sensory,
-    description: 'Touch, temperature, pain processing',
-    labelPosition: [-0.05, 0.65, 0.18],
-  },
-  {
-    id: 6,
-    key: 'somatosensoryAssociation',
-    name: 'Somatosensory Association Area',
-    subtitle: 'Superior Parietal Lobule',
-    parentMesh: 'parietal',
-    color: REGION_COLORS.somatosensoryAssociation,
-    description: 'Integration of sensory information, spatial awareness',
-    labelPosition: [-0.20, 0.60, 0.10],
-  },
-  {
-    id: 7,
-    key: 'sensoryAssociation',
-    name: 'Sensory Association Area',
-    subtitle: 'Inferior Parietal Lobule',
-    parentMesh: 'parietal',
-    color: REGION_COLORS.sensoryAssociation,
-    description: 'Higher-order sensory interpretation',
-    labelPosition: [-0.30, 0.45, 0.25],
-  },
-  {
-    id: 8,
-    key: 'auditory',
-    name: 'Auditory Area',
-    subtitle: 'Primary Auditory Cortex',
-    parentMesh: 'temporal',
-    color: REGION_COLORS.auditory,
-    description: 'Primary sound processing',
-    labelPosition: [0.05, -0.10, 0.60],
-  },
-  {
-    id: 9,
-    key: 'wernicke',
-    name: "Wernicke's Area",
-    subtitle: 'Posterior Superior Temporal Gyrus (Left)',
-    parentMesh: 'temporal_left',
-    color: REGION_COLORS.wernicke,
-    description: 'Language comprehension, semantic processing',
-    labelPosition: [-0.15, -0.05, 0.55],
-  },
-  {
-    id: 10,
-    key: 'olfactory',
-    name: 'Olfactory Area',
-    subtitle: 'Piriform Cortex',
-    parentMesh: 'temporal',
-    color: REGION_COLORS.olfactory,
-    description: 'Smell processing',
-    labelPosition: [0.25, -0.25, 0.50],
-  },
-  {
-    id: 11,
-    key: 'association',
-    name: 'Association Area',
-    subtitle: 'Temporal Association Cortex',
-    parentMesh: 'temporal',
-    color: REGION_COLORS.association,
-    description: 'Memory formation, object recognition',
-    labelPosition: [-0.05, -0.20, 0.45],
-  },
-  {
-    id: 12,
-    key: 'visual',
-    name: 'Visual Area',
-    subtitle: 'Primary & Associative Visual Cortex',
-    parentMesh: 'occipital',
-    color: REGION_COLORS.visual,
-    description: 'Primary and associative visual processing',
-    labelPosition: [-0.55, 0.20, 0.15],
-  },
-  {
-    id: 13,
-    key: 'cerebellum',
-    name: 'Motor Functions',
-    subtitle: 'Cerebellum',
-    parentMesh: 'cerebellum',
-    color: REGION_COLORS.cerebellum,
-    description: 'Balance, coordination, motor learning, timing',
-    labelPosition: [-0.55, -0.30, 0.20],
-  },
-];
+// Regions 6 and 13 are painted on the anatomical left hemisphere only, because
+// language is lateralised. A click on the mirrored right-hand tissue is a
+// different region, not the same one seen from the other side.
+export const LATERALIZED_REGION_IDS = new Set(
+  brainRegions.gameplayNotes.lateralized
+);
 
-// ── Word Bank ───────────────────────────────────────────────
-// Each word maps to a primary target region.
-// acceptAlternates: additional region IDs that are also scientifically correct.
-// tier: 1=obvious, 2=functional, 3=nuanced, 4=expert
-// factoid: shown on correct placement (Victorian typeset)
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
+export function hexToRgb(hex) {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+export const REGIONS = brainRegions.regions.map((region) => {
+  const geometry = regionGeometry.regions[String(region.id)];
+  const rgb = hexToRgb(region.hex);
+  return {
+    ...region,
+    key: slugify(region.name),
+    rgb,
+    color: rgb.map((channel) => channel / 255),
+    // The panel copy and the anchor are authored and measured respectively;
+    // neither is invented here.
+    description: region.clickDescription,
+    centroid: geometry.anchor,
+    vertices: geometry.vertexCount,
+  };
+});
+
+export const REGION_IDS = REGIONS.map(({ id }) => id);
+export const REGION_ID_SET = new Set(REGION_IDS);
+export const REGION_BY_ID = new Map(REGIONS.map((region) => [region.id, region]));
+export const getRegionById = (id) => REGION_BY_ID.get(Number(id)) ?? null;
+
+export const LABELS_PER_VIEW = regionGeometry.labelsPerView;
+export const VIEW_LABEL_IDS = Object.fromEntries(
+  Object.entries(regionGeometry.labelsPerView).map(([view, labels]) => [
+    view,
+    labels.map(({ id }) => id),
+  ])
+);
+
+// Each entry targets an exact atlas region. Alternates are included only where
+// the named behaviour genuinely depends on another represented atlas region.
 export const WORD_BANK = [
-  // ── Tier 1: Obvious ──
-  { word: 'VISION', targetRegion: 12, tier: 1, factoid: 'The primary visual cortex, area V1, contains a retinotopic map of the visual field.' },
-  { word: 'HEARING', targetRegion: 8, tier: 1, factoid: 'The primary auditory cortex is arranged tonotopically, mapping sound frequency to spatial location.' },
-  { word: 'SPEECH', targetRegion: 2, tier: 1, factoid: "Broca's Area, named for Pierre Paul Broca, 1861. The seat of articulate speech." },
-  { word: 'TOUCH', targetRegion: 5, tier: 1, factoid: 'The somatosensory cortex contains a distorted body map where hands and lips claim disproportionate territory.' },
-  { word: 'MOVEMENT', targetRegion: 1, tier: 1, factoid: 'The primary motor cortex sends descending signals through the corticospinal tract to drive voluntary movement.' },
-  { word: 'BALANCE', targetRegion: 13, tier: 1, factoid: 'The cerebellum contains more neurons than the entire cerebral cortex combined.' },
-  { word: 'SMELL', targetRegion: 10, tier: 1, factoid: 'Olfaction is the only sense that bypasses the thalamus, projecting directly to cortex.' },
+  { word: 'VISION', targetRegion: 17, tier: 1, factoid: 'Primary visual cortex contains a retinotopic map of the visual field.' },
+  { word: 'HEARING', targetRegion: 11, tier: 1, factoid: 'Primary auditory cortex is tonotopically organised by sound frequency.' },
+  { word: 'SPEECH', targetRegion: 6, tier: 1, acceptAlternates: [5], factoid: "Broca's area participates in articulatory planning within a distributed language network." },
+  { word: 'TOUCH', targetRegion: 7, tier: 1, factoid: 'Primary somatosensory cortex contains a body map that magnifies the hands and lips.' },
+  { word: 'MOVEMENT', targetRegion: 5, tier: 1, acceptAlternates: [3, 4, 19], factoid: 'Primary motor cortex executes voluntary movement while premotor, supplementary motor and cerebellar systems shape it.' },
+  { word: 'BALANCE', targetRegion: 19, tier: 1, factoid: 'The cerebellum integrates vestibular and proprioceptive signals for posture and balance.' },
+  { word: 'SMELL', targetRegion: 15, tier: 1, factoid: 'Piriform cortex is primary olfactory cortex.' },
+  { word: 'SEEING COLOUR', targetRegion: 18, tier: 1, factoid: 'Colour constancy depends on visual association cortex beyond V1.' },
+  { word: 'LISTENING TO MUSIC', targetRegion: 11, tier: 1, acceptAlternates: [12], factoid: 'Music begins with auditory cortical analysis and recruits temporal association systems.' },
+  { word: 'SAYING HELLO', targetRegion: 6, tier: 1, acceptAlternates: [5], factoid: 'Speech production links Broca-region planning with motor execution.' },
+  { word: 'FEELING HEAT', targetRegion: 7, tier: 1, factoid: 'Thermal signals contribute to processing in primary somatosensory cortex.' },
+  { word: 'KEEPING BALANCE', targetRegion: 19, tier: 1, factoid: 'Cerebellar circuits continuously adjust posture and movement timing.' },
 
-  // ── Tier 2: Functional ──
-  { word: 'PLANNING A TRIP', targetRegion: 0, tier: 2, factoid: 'The prefrontal cortex orchestrates thoughts and actions in accordance with internal goals.' },
-  { word: 'CATCHING A BALL', targetRegion: 13, tier: 2, acceptAlternates: [1], factoid: 'The cerebellum computes precise timing predictions essential for intercepting moving objects.' },
-  { word: 'READING ALOUD', targetRegion: 2, tier: 2, acceptAlternates: [12, 9], factoid: 'Reading aloud requires visual decoding, semantic comprehension, and motor speech planning in concert.' },
-  { word: 'FEELING EMOTION', targetRegion: 4, tier: 2, factoid: 'The ventromedial prefrontal cortex integrates emotional signals into decision-making.' },
-  { word: 'UNDERSTANDING WORDS', targetRegion: 9, tier: 2, factoid: "Wernicke's area transforms acoustic patterns into meaning, described by Carl Wernicke in 1874." },
-  { word: 'RECOGNISING A FACE', targetRegion: 11, tier: 2, acceptAlternates: [12], factoid: 'Face recognition depends on the fusiform face area in the temporal lobe, discovered by Nancy Kanwisher.' },
-  { word: 'LOOKING LEFT', targetRegion: 3, tier: 2, factoid: 'The frontal eye fields coordinate voluntary saccadic eye movements.' },
+  { word: 'PLANNING A TRIP', targetRegion: 1, tier: 2, factoid: 'Prefrontal cortex supports goal-directed planning and working memory.' },
+  { word: 'CATCHING A BALL', targetRegion: 19, tier: 2, acceptAlternates: [3, 5, 8], factoid: 'Catching recruits cerebellar prediction, visuospatial transformation and motor systems.' },
+  { word: 'READING ALOUD', targetRegion: 9, tier: 2, acceptAlternates: [6, 13, 18], factoid: 'Reading aloud links visual word forms and meaning to language and articulatory networks.' },
+  { word: 'FEELING EMOTION', targetRegion: 2, tier: 2, acceptAlternates: [16, 1], factoid: 'Orbitofrontal, cingulate and prefrontal systems contribute distinct parts of emotional regulation.' },
+  { word: 'UNDERSTANDING WORDS', targetRegion: 13, tier: 2, acceptAlternates: [9, 12], factoid: "Wernicke's region is one node in a distributed lexical-semantic network." },
+  { word: 'RECOGNISING A FACE', targetRegion: 14, tier: 2, acceptAlternates: [18], factoid: "Inferior temporal cortex contains a fusiform patch strongly specialised for face recognition." },
+  { word: 'WALKING', targetRegion: 5, tier: 2, acceptAlternates: [3, 4, 19], factoid: 'Locomotion depends on coordinated cortical, brain-stem and cerebellar systems.' },
+  { word: 'DECIDING WHAT TO EAT', targetRegion: 2, tier: 2, acceptAlternates: [1], factoid: 'Orbitofrontal cortex updates subjective value while prefrontal systems maintain goals.' },
+  { word: 'NAMING AN OBJECT', targetRegion: 14, tier: 2, acceptAlternates: [13], factoid: 'Object identity and lexical access recruit temporal and language networks.' },
+  { word: 'TYPING ON A KEYBOARD', targetRegion: 5, tier: 2, acceptAlternates: [3, 4, 19], factoid: 'Skilled finger sequences recruit motor planning, execution and cerebellar prediction.' },
+  { word: 'REMEMBERING A SMELL', targetRegion: 15, tier: 2, acceptAlternates: [14], factoid: 'Piriform cortex connects olfactory identity to medial temporal memory systems.' },
+  { word: 'FEELING EMPATHY', targetRegion: 1, tier: 2, acceptAlternates: [16, 2], factoid: 'Empathy is distributed across social-cognitive and affective networks.' },
+  { word: 'READING A MAP', targetRegion: 8, tier: 2, acceptAlternates: [9, 18], factoid: 'Parietal cortex integrates visuospatial relationships and reference frames.' },
+  { word: 'ERROR DETECTION', targetRegion: 16, tier: 2, acceptAlternates: [1], factoid: 'Cingulate cortex signals conflict and the need for greater control.' },
+  { word: 'STARTING A SEQUENCE', targetRegion: 4, tier: 2, acceptAlternates: [3], factoid: 'Supplementary motor area is especially important for internally generated sequences.' },
 
-  // ── Tier 3: Nuanced ──
-  { word: 'UNDERSTANDING SARCASM', targetRegion: 11, tier: 3, acceptAlternates: [0], factoid: 'Sarcasm comprehension requires integrating tone, context, and social knowledge across multiple networks.' },
-  { word: 'PHONE VIBRATING IN POCKET', targetRegion: 5, tier: 3, acceptAlternates: [6], factoid: 'Phantom phone vibrations reveal how the brain constantly predicts and interprets sensory input.' },
-  { word: 'KNOWING WHERE YOUR HAND IS', targetRegion: 6, tier: 3, factoid: 'Proprioception, the sixth sense, depends on somatosensory association areas integrating muscle and joint signals.' },
-  { word: 'PLAYING PIANO FROM MEMORY', targetRegion: 13, tier: 3, acceptAlternates: [1, 0], factoid: 'Motor learning in the cerebellum converts conscious sequences into automatic procedural memory.' },
-  { word: 'JUDGING DISTANCE', targetRegion: 7, tier: 3, acceptAlternates: [12], factoid: 'The inferior parietal lobule integrates visual and proprioceptive cues for spatial judgments.' },
+  { word: 'UNDERSTANDING SARCASM', targetRegion: 12, tier: 3, acceptAlternates: [1, 13], factoid: 'Sarcasm comprehension integrates prosody, language, context and social inference.' },
+  { word: 'PHONE VIBRATING IN POCKET', targetRegion: 7, tier: 3, acceptAlternates: [8], factoid: 'Somatosensory signals are interpreted against predictive body models.' },
+  { word: 'KNOWING WHERE YOUR HAND IS', targetRegion: 8, tier: 3, acceptAlternates: [7], factoid: "Somatosensory association cortex integrates proprioception into a body-centred spatial map." },
+  { word: 'PLAYING PIANO FROM MEMORY', targetRegion: 19, tier: 3, acceptAlternates: [3, 4, 5], factoid: 'Practised sequences depend on cortico-cerebellar timing and motor planning.' },
+  { word: 'JUDGING DISTANCE', targetRegion: 8, tier: 3, acceptAlternates: [18], factoid: 'Distance judgments combine visual depth cues with parietal spatial computation.' },
+  { word: 'DETECTING A LIE', targetRegion: 1, tier: 3, acceptAlternates: [16, 12], factoid: 'There is no lie centre; monitoring and social inference recruit a distributed network.' },
+  { word: 'MENTAL ROTATION', targetRegion: 8, tier: 3, acceptAlternates: [18], factoid: "Mental rotation strongly recruits parietal visuospatial systems." },
+  { word: 'HEARING YOUR NAME IN NOISE', targetRegion: 11, tier: 3, acceptAlternates: [1, 13], factoid: 'Selective listening links auditory analysis with attention and language.' },
+  { word: 'WRITING YOUR SIGNATURE', targetRegion: 5, tier: 3, acceptAlternates: [3, 4, 19], factoid: 'An overlearned signature is produced by coordinated motor planning and execution.' },
+  { word: 'RECOGNISING A MELODY', targetRegion: 12, tier: 3, acceptAlternates: [11], factoid: 'Melody recognition extends from auditory cortex into temporal association cortex.' },
+  { word: 'POINTING TO A STAR', targetRegion: 8, tier: 3, acceptAlternates: [3, 5, 18], factoid: 'Visually guided reaching transforms retinal coordinates into body-centred action.' },
+  { word: 'IMAGINING A SCENE', targetRegion: 10, tier: 3, acceptAlternates: [18], factoid: 'Precuneus contributes to first-person visuospatial imagery.' },
+  { word: 'VALUE REVERSAL', targetRegion: 2, tier: 3, factoid: 'Orbitofrontal cortex revises outcome values when contingencies change.' },
 
-  // ── Tier 4: Expert ──
-  { word: 'PHANTOM LIMB SENSATION', targetRegion: 6, tier: 4, factoid: 'Ramachandran demonstrated that cortical remapping after amputation generates phantom sensations.' },
-  { word: 'TIP-OF-THE-TONGUE', targetRegion: 9, tier: 4, acceptAlternates: [11], factoid: 'Tip-of-the-tongue states reveal the separation between semantic knowledge and phonological retrieval.' },
-  { word: 'ABSOLUTE PITCH', targetRegion: 8, tier: 4, acceptAlternates: [11], factoid: 'Absolute pitch involves an enlarged left planum temporale and unique patterns of auditory cortical activation.' },
-  { word: 'MORAL REASONING', targetRegion: 0, tier: 4, acceptAlternates: [4], factoid: 'Patients with prefrontal damage can know moral rules yet fail to apply them, as in the case of Phineas Gage.' },
-
-  // ── Expanded bank (~50) for V1 testing ──
-  // Tier 1
-  { word: 'SEEING COLOUR', targetRegion: 12, tier: 1, factoid: 'Colour vision depends on cone photoreceptors feeding specialised pathways into visual cortex.' },
-  { word: 'WALKING', targetRegion: 1, tier: 1, acceptAlternates: [13], factoid: 'Locomotion recruits primary motor cortex alongside cerebellar timing circuits.' },
-  { word: 'TASTE OF LEMON', targetRegion: 10, tier: 1, acceptAlternates: [4], factoid: 'Gustation and olfaction intertwine; piriform cortex sits at the hub of smell, with orbitofrontal valuation.' },
-  { word: 'LISTENING TO MUSIC', targetRegion: 8, tier: 1, factoid: 'Primary auditory cortex in Heschl\'s gyrus is the first cortical stop for sound.' },
-  { word: 'SAYING HELLO', targetRegion: 2, tier: 1, factoid: 'Articulating speech recruits Broca\'s area and adjacent motor speech networks.' },
-  { word: 'FEELING HEAT', targetRegion: 5, tier: 1, factoid: 'Thermosensory signals arrive in primary somatosensory cortex via the spinothalamic pathway.' },
-  { word: 'KEEPING BALANCE', targetRegion: 13, tier: 1, factoid: 'Vestibular and proprioceptive streams converge in the cerebellum for postural control.' },
-
-  // Tier 2
-  { word: 'DECIDING WHAT TO EAT', targetRegion: 0, tier: 2, acceptAlternates: [4], factoid: 'Prefrontal and orbitofrontal cortex weigh options against goals and affective value.' },
-  { word: 'TRACKING A BIRD', targetRegion: 3, tier: 2, acceptAlternates: [12], factoid: 'Smooth pursuit and saccades are guided by frontal eye fields working with visual cortex.' },
-  { word: 'NAMING AN OBJECT', targetRegion: 9, tier: 2, acceptAlternates: [11], factoid: 'Lexical retrieval links temporal association cortex with Wernicke\'s comprehension networks.' },
-  { word: 'TYPING ON A KEYBOARD', targetRegion: 1, tier: 2, acceptAlternates: [13], factoid: 'Skilled finger sequences engage motor cortex and cerebellar predictive control.' },
-  { word: 'REMEMBERING A SMELL', targetRegion: 10, tier: 2, acceptAlternates: [11], factoid: 'Olfactory memory tightly couples piriform cortex with medial temporal systems.' },
-  { word: 'FEELING EMPATHY', targetRegion: 4, tier: 2, acceptAlternates: [0], factoid: 'Social-affective processing recruits ventromedial prefrontal and related networks.' },
-  { word: 'READING A MAP', targetRegion: 6, tier: 2, acceptAlternates: [7], factoid: 'Spatial layouts draw on superior parietal and inferior parietal association cortex.' },
-
-  // Tier 3
-  { word: 'DETECTING A LIE', targetRegion: 0, tier: 3, acceptAlternates: [11], factoid: 'Lie detection is a network problem: prefrontal monitoring plus temporal social cognition.' },
-  { word: 'MENTAL ROTATION', targetRegion: 6, tier: 3, acceptAlternates: [7], factoid: 'Imagining object rotation is a classic parietal spatial computation.' },
-  { word: 'HEARING YOUR NAME IN NOISE', targetRegion: 8, tier: 3, acceptAlternates: [0], factoid: 'Cocktail-party listening blends auditory cortex with prefrontal attentional selection.' },
-  { word: 'WRITING YOUR SIGNATURE', targetRegion: 1, tier: 3, acceptAlternates: [13], factoid: 'Overlearned motor programs live in cortico-cerebellar loops once practiced.' },
-  { word: 'RECOGNISING A MELODY', targetRegion: 8, tier: 3, acceptAlternates: [11], factoid: 'Melody recognition spans auditory cortex and superior temporal association areas.' },
-  { word: 'KNOWING YOU ARE HUNGRY', targetRegion: 4, tier: 3, acceptAlternates: [0], factoid: 'Interoceptive drives are integrated in orbitofrontal and medial prefrontal circuits.' },
-  { word: 'POINTING TO A STAR', targetRegion: 7, tier: 3, acceptAlternates: [12, 1], factoid: 'Visually guided reaching binds parietal spatial maps to motor output.' },
-
-  // Tier 4
-  { word: 'SYNAESTHESIA', targetRegion: 7, tier: 4, acceptAlternates: [12, 8], factoid: 'Cross-modal synaesthesia likely reflects atypical connectivity among sensory association cortices.' },
-  { word: 'PROSODY OF SPEECH', targetRegion: 11, tier: 4, acceptAlternates: [8], factoid: 'Emotional tone of speech is often right-lateralised in temporal association cortex.' },
-  { word: 'BLINDSIGHT', targetRegion: 12, tier: 4, factoid: 'Residual visual guidance after V1 damage shows subcortical and extrastriate routes can still act.' },
-  { word: 'CEREBELLAR TIMING', targetRegion: 13, tier: 4, factoid: 'The cerebellum contributes millisecond-scale timing far beyond balance alone.' },
-  { word: 'WORKING MEMORY SPAN', targetRegion: 0, tier: 4, factoid: 'Dorsolateral prefrontal cortex maintains and manipulates information over brief delays.' },
-  { word: 'BODY SCHEMA UPDATE', targetRegion: 6, tier: 4, acceptAlternates: [5], factoid: 'The body schema is a parietal construct continuously updated by somatosensory input.' },
-  { word: 'SEMANTIC PRIMING', targetRegion: 9, tier: 4, acceptAlternates: [11], factoid: 'Meaning spreads through temporal language networks before a word is fully retrieved.' },
+  { word: 'PHANTOM LIMB SENSATION', targetRegion: 7, tier: 4, acceptAlternates: [8], factoid: 'Cortical remapping is one contributor to phantom limb sensation.' },
+  { word: 'TIP-OF-THE-TONGUE', targetRegion: 13, tier: 4, acceptAlternates: [12, 6], factoid: 'Tip-of-the-tongue states expose separable semantic and phonological retrieval processes.' },
+  { word: 'ABSOLUTE PITCH', targetRegion: 11, tier: 4, acceptAlternates: [12], factoid: 'Absolute pitch is associated with specialised auditory and temporal network organisation.' },
+  { word: 'MORAL REASONING', targetRegion: 1, tier: 4, acceptAlternates: [2, 16], factoid: 'Moral judgment integrates rule representation, value and affect rather than residing in one centre.' },
+  { word: 'PROSODY OF SPEECH', targetRegion: 12, tier: 4, acceptAlternates: [11, 13], factoid: 'Speech prosody depends strongly on temporal auditory association systems.' },
+  { word: 'BLINDSIGHT', targetRegion: 17, tier: 4, acceptAlternates: [18], factoid: 'Residual visual guidance after V1 damage reveals alternate subcortical and extrastriate routes.' },
+  { word: 'CEREBELLAR TIMING', targetRegion: 19, tier: 4, factoid: 'The cerebellum contributes precise timing to movement, cognition and language.' },
+  { word: 'WORKING MEMORY SPAN', targetRegion: 1, tier: 4, factoid: 'Prefrontal cortex maintains task-relevant information in the absence of sensory input.' },
+  { word: 'BODY SCHEMA UPDATE', targetRegion: 8, tier: 4, acceptAlternates: [7], factoid: 'Parietal body maps are continuously updated by somatosensory input.' },
+  { word: 'SEMANTIC PRIMING', targetRegion: 14, tier: 4, acceptAlternates: [9, 13], factoid: 'Semantic priming reflects spreading activation across distributed temporal-language networks.' },
+  { word: 'LOCKED-IN SYNDROME', targetRegion: 20, tier: 4, factoid: 'Ventral pontine injury can abolish voluntary movement while preserving cognition.' },
+  { word: 'PAIN UNPLEASANTNESS', targetRegion: 16, tier: 4, factoid: 'Cingulate cortex contributes to the affective unpleasantness of pain.' },
+  { word: 'SELF-REFERENTIAL THOUGHT', targetRegion: 10, tier: 4, acceptAlternates: [1, 16], factoid: 'Precuneus is a highly connected node of the default mode network.' },
 ];

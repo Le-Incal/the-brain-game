@@ -3,22 +3,32 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D uCavityMap;
   uniform sampler2D uCurvatureMap;
   uniform sampler2D uEtchingMap;
+  uniform sampler2D uRegionIdMap;
 
   uniform vec3 uLightDir1;
   uniform vec3 uLightDir2;
 
   uniform float uColorMode;
-  uniform vec3 uRegionColors[14];
+  uniform vec3 uRegionColors[20];
+  uniform float uRegionIds[20];
   uniform float uHighlight;
   uniform float uSelectedRegion;
 
   uniform vec3 uInkColor;
   uniform vec3 uPaperColor;
 
+  // How far each region tint is blended toward parchment: lower is stronger
+  // colour. The handoff colour rule asks for 35-45% palette, but that read as
+  // washed out on screen, so the artist called for more saturation.
+  const float REGION_PARCHMENT_BLEND = 0.45;
+
   varying vec2 vUv0;
+  varying vec2 vUvRegionId;
   varying vec3 vObjectPosition;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  varying float vAtlasRegionId;
+  varying vec4 vAtlasRegionCandidates;
 
   float antialiasedStripe(float coordinate, float halfWidth) {
     float cell = fract(coordinate);
@@ -49,48 +59,45 @@ const fragmentShader = /* glsl */ `
     return hatchX * weights.x + hatchY * weights.y + hatchZ * weights.z;
   }
 
+  // Atlas charts abut without a UV gutter, so a lookup within half a texel of a
+  // chart border can read a region from unrelated cortex. Each triangle carries
+  // the label set of its own one-hop surface neighbourhood, which is the only
+  // vocabulary a fragment of that triangle may display.
+  bool isRegionCandidate(int regionId) {
+    return
+      abs(vAtlasRegionCandidates.x - float(regionId)) < 0.5 ||
+      abs(vAtlasRegionCandidates.y - float(regionId)) < 0.5 ||
+      abs(vAtlasRegionCandidates.z - float(regionId)) < 0.5 ||
+      abs(vAtlasRegionCandidates.w - float(regionId)) < 0.5;
+  }
+
+  // Interpolated identity is meaningless between two differently labelled
+  // corners, so snap to the candidate it lies closest to.
+  int nearestCandidateRegion() {
+    float best = vAtlasRegionCandidates.x;
+    float bestDistance = abs(vAtlasRegionId - vAtlasRegionCandidates.x);
+    float others[3];
+    others[0] = vAtlasRegionCandidates.y;
+    others[1] = vAtlasRegionCandidates.z;
+    others[2] = vAtlasRegionCandidates.w;
+    for (int i = 0; i < 3; i++) {
+      float distance = abs(vAtlasRegionId - others[i]);
+      if (others[i] > 0.5 && distance < bestDistance) {
+        best = others[i];
+        bestDistance = distance;
+      }
+    }
+    return int(floor(best + 0.5));
+  }
+
   vec3 getRegionColor(int regionId) {
     vec3 color = uRegionColors[0];
-    for (int i = 1; i < 14; i++) {
-      if (i == regionId) {
+    for (int i = 0; i < 20; i++) {
+      if (int(floor(uRegionIds[i] + 0.5)) == regionId) {
         color = uRegionColors[i];
       }
     }
     return color;
-  }
-
-  int classifyRegion(vec3 position) {
-    float x = position.x;
-    float y = position.y;
-    float z = position.z;
-    float absX = abs(x);
-
-    // Keep this ordering aligned with classifyVertex() in brainLoader.js.
-    if (y < -0.28 && z < -0.15) return 13;
-    if (y < -0.45) return 13;
-
-    if (absX > 0.22 && y < 0.12 && z > -0.35 && z < 0.45) {
-      if (z > 0.18 && y < 0.05) return 10;
-      if (x < -0.22 && z <= 0.12) return 9;
-      if (z > 0.05 && y > -0.12) return 8;
-      return 11;
-    }
-
-    if (z < -0.38) return 12;
-
-    if (z < 0.12 && y > -0.05) {
-      if (z > -0.12 && y > 0.05) return 5;
-      if (y > 0.22) return 6;
-      return 7;
-    }
-
-    if (z > 0.22 && y > 0.15) return 0;
-    if (z > -0.05 && z < 0.18 && y > 0.15) return 1;
-    if (x < -0.18 && z > 0.08 && y < 0.18) return 2;
-    if (z > 0.12 && y > 0.25) return 3;
-    if (y < 0.05 && z > 0.15) return 4;
-
-    return 0;
   }
 
   void main() {
@@ -129,28 +136,29 @@ const fragmentShader = /* glsl */ `
     float hatch1 = triplanarHatch(vWorldPosition, normal, 0.72, 26.0, 0.055) * hatchMask * 0.34;
     float hatch2 = triplanarHatch(vWorldPosition, normal, -0.48, 31.0, 0.045) * deepHatchMask * 0.26;
     float hatchInk = max(hatch1, hatch2);
-    // Restore roughly 20 percentage points of etched coverage while derivative
-    // filtering keeps close strokes crisp and suppresses subpixel shimmer.
+    // Keep the baked strokes modestly lighter without changing their threshold;
+    // derivative filtering preserves sharpness and suppresses subpixel shimmer.
     float etchedLine = antialiasedThreshold(etching, 0.80);
-    float bakedEtching = etchedLine * 0.60;
+    float bakedEtching = etchedLine * 0.54;
     float engravedInk = max(hatchInk, bakedEtching);
 
-    // Classifying the interpolated object-space position evaluates boundaries
-    // per pixel, so they no longer inherit the mesh triangle silhouette.
-    int regionId = classifyRegion(vObjectPosition);
+    // The painted id texture is the visual authority. It is baked against
+    // TEXCOORD_3 and read with NEAREST, so a region id is never interpolated
+    // into an id that does not exist.
+    int atlasRegionId = int(floor(texture2D(uRegionIdMap, vUvRegionId).r * 255.0 + 0.5));
+    bool atlasRegionAllowed = atlasRegionId > 0 && isRegionCandidate(atlasRegionId);
+    int regionId = atlasRegionAllowed ? atlasRegionId : nearestCandidateRegion();
+    bool validRegion = regionId > 0;
     vec3 regionColor = getRegionColor(regionId);
-    float regionLuma = dot(regionColor, vec3(0.299, 0.587, 0.114));
-    vec3 vibrantRegionColor = mix(vec3(regionLuma), regionColor, 1.35);
-    vibrantRegionColor = clamp(vibrantRegionColor, 0.0, 1.0);
+    vec3 tintedRegionColor = mix(regionColor, uPaperColor, REGION_PARCHMENT_BLEND);
 
     bool selectionActive = uSelectedRegion > -0.5;
-    bool selectedRegion =
-      selectionActive &&
-      abs(float(regionId) - uSelectedRegion) < 0.5;
-    bool regionColourActive = uColorMode > 0.5 || selectedRegion;
+    int selectedRegionId = int(floor(uSelectedRegion + 0.5));
+    bool selectedRegion = selectionActive && regionId == selectedRegionId;
     bool feedbackActive =
       uHighlight > -0.5 &&
       abs(float(regionId) - uHighlight) < 0.5;
+    bool colourRegionsActive = uColorMode > 0.5 && !selectionActive && validRegion;
 
     vec3 shadedPaper = uPaperColor * (1.0 - tonalDarkness * 0.10);
     // Ink is the top layer. Max-composition preserves line contrast and avoids
@@ -158,28 +166,18 @@ const fragmentShader = /* glsl */ `
     float totalInk = max(structuralInk, engravedInk);
     vec3 finalColor = mix(shadedPaper, uInkColor, totalInk);
 
-    // Preserve only a ghost of the surrounding anatomy while a functional
-    // region is selected, keeping context without competing with the subject.
-    if (selectionActive && !selectedRegion) {
-      finalColor = mix(uPaperColor, finalColor, 0.08);
+    // Colour Regions: the authored palette under the engraving. The linework
+    // is composited last and is never changed by colour.
+    if (colourRegionsActive) {
+      finalColor = mix(tintedRegionColor, uInkColor, totalInk);
     }
 
-    // Hand-tinted functional regions sit above the completed engraving as a
-    // translucent wash, so dense linework cannot hide the colour layer.
-    bool regionOverlayActive =
-      feedbackActive ||
-      selectedRegion ||
-      (regionColourActive && !selectionActive);
-    if (regionOverlayActive) {
-      float regionOverlayAlpha = feedbackActive ? 0.96 :
-        (selectedRegion ? 0.72 : 0.94);
-      regionOverlayAlpha *= 1.0 - totalInk;
-      finalColor = mix(finalColor, vibrantRegionColor, regionOverlayAlpha);
-    }
-
-    if (feedbackActive) {
-      vec3 amber = vec3(0.90, 0.67, 0.30);
-      finalColor = mix(finalColor, amber, 0.08);
+    // Selection tints the chosen region only. Every other region keeps the
+    // engraving it already had, so the specimen never flattens into tone.
+    if (selectedRegion) {
+      finalColor = mix(tintedRegionColor, uInkColor, totalInk);
+    } else if (!selectionActive && feedbackActive && validRegion) {
+      finalColor = tintedRegionColor;
     }
 
     gl_FragColor = vec4(finalColor, 1.0);

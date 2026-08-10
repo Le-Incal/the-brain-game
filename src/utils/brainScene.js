@@ -9,20 +9,185 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { vertexShader, fragmentShader } from '../shaders';
-import { REGIONS } from '../data/regions';
+import {
+  REGIONS,
+  REGION_IDS,
+  VIEW_LABEL_IDS,
+  getRegionById,
+} from '../data/regions';
 import { BrainOrbitControls } from './orbitControls';
 import {
-  classifyVertex,
+  applyVertexRegionAttributes,
+  computeAtlasAnnotationAnchors,
   computeCerebrumPivot,
-  computeRegionLabelAnchors,
+  createAtlasAnnotationDefinitions,
 } from './brainLoader';
 
-// Keep the specimen at the lower base composition. This is 96 CSS pixels
-// below the previous presentation, which added a 96-pixel upward shift.
+// Where the orbit target sits. The camera turns about this point, so the
+// specimen is displaced from it rather than moved with it.
 const BRAIN_BASE_VERTICAL_OFFSET = -0.5;
-const BRAIN_VERTICAL_SHIFT_CSS_PX = 0;
-const BRAIN_SCALE = 0.88 * 1.1;
+// Negative moves the specimen down the page. 48 CSS pixels is half an inch.
+const BRAIN_VERTICAL_SHIFT_CSS_PX = -48;
+const BRAIN_SCALE = 1.278;
 const LABEL_GUTTER_PX = 40;
+
+function configureMap(texture, anisotropy, colorSpace) {
+  texture.colorSpace = colorSpace;
+  texture.flipY = false;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = anisotropy;
+  return texture;
+}
+
+export function configureColorMap(texture, anisotropy) {
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.flipY = false;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 1;
+  return texture;
+}
+
+export function configureRegionIdMap(texture) {
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.flipY = false;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.NearestFilter;
+  texture.magFilter = THREE.NearestFilter;
+  texture.anisotropy = 1;
+  return texture;
+}
+
+const hitBarycoord = new THREE.Vector3();
+const hitLocalPoint = new THREE.Vector3();
+const hitCornerA = new THREE.Vector3();
+const hitCornerB = new THREE.Vector3();
+const hitCornerC = new THREE.Vector3();
+const hitTextureUv = new THREE.Vector2();
+
+/**
+ * Resolve which region a raycast hit belongs to.
+ *
+ * COLOR_1 is the painted identity of the vertex and cannot drift, so it decides
+ * the triangle's vocabulary. The id texture is the visual authority and decides
+ * which of those the player actually sees, but only when it names a region the
+ * triangle genuinely touches: charts abut without a gutter, so a lookup near a
+ * chart border can return unrelated cortex.
+ */
+export function resolveHitRegionId(hit, sampleRegionIdAtUv = null) {
+  const geometry = hit?.object?.geometry;
+  const face = hit?.face;
+  if (!geometry || !face || !hit.point) return null;
+  const regionIds = geometry.getAttribute('atlasRegionId');
+  const positions = geometry.getAttribute('position');
+  if (!regionIds || !positions) return null;
+
+  hitLocalPoint.copy(hit.point);
+  hit.object.worldToLocal(hitLocalPoint);
+  hitCornerA.fromBufferAttribute(positions, face.a);
+  hitCornerB.fromBufferAttribute(positions, face.b);
+  hitCornerC.fromBufferAttribute(positions, face.c);
+  const barycoord = THREE.Triangle.getBarycoord(
+    hitLocalPoint,
+    hitCornerA,
+    hitCornerB,
+    hitCornerC,
+    hitBarycoord
+  );
+  if (!barycoord) return null;
+
+  const corners = [face.a, face.b, face.c];
+  const weights = [barycoord.x, barycoord.y, barycoord.z];
+  let nearest = corners[0];
+  let nearestWeight = weights[0];
+  for (let i = 1; i < corners.length; i++) {
+    if (weights[i] > nearestWeight) {
+      nearestWeight = weights[i];
+      nearest = corners[i];
+    }
+  }
+  const vertexRegionId = Math.round(regionIds.getX(nearest));
+  if (!sampleRegionIdAtUv) return vertexRegionId || null;
+
+  const uv3 = geometry.getAttribute('uv3');
+  if (!uv3) return vertexRegionId || null;
+  hitTextureUv.set(0, 0);
+  for (let i = 0; i < corners.length; i++) {
+    hitTextureUv.x += uv3.getX(corners[i]) * weights[i];
+    hitTextureUv.y += uv3.getY(corners[i]) * weights[i];
+  }
+
+  const textureRegionId = sampleRegionIdAtUv(hitTextureUv);
+  const painted = corners.map((corner) => Math.round(regionIds.getX(corner)));
+  if (textureRegionId && painted.includes(textureRegionId)) {
+    return textureRegionId;
+  }
+  return vertexRegionId || null;
+}
+
+export function createRegionPaletteUniforms() {
+  return {
+    regionColors: REGIONS.map((region) => new THREE.Color(region.hex)),
+    regionIds: [...REGION_IDS],
+  };
+}
+
+export function matchRegionColorSrgb(rgb) {
+  if (!rgb || Math.max(...rgb) < 64) return null;
+  let bestId = null;
+  let bestDistance = Infinity;
+  let tied = false;
+
+  REGIONS.forEach((region) => {
+    const distance = region.rgb.reduce(
+      (sum, channel, index) => sum + (rgb[index] - channel) ** 2,
+      0
+    );
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestId = region.id;
+      tied = false;
+    } else if (distance === bestDistance) {
+      tied = true;
+    }
+  });
+
+  return tied ? null : bestId;
+}
+
+export function sampleRegionIdPixelsAtUv(pixels, width, height, uv) {
+  if (!uv || !pixels || !width || !height) return null;
+  const x = THREE.MathUtils.clamp(
+    Math.floor(uv.x * width),
+    0,
+    width - 1
+  );
+  const y = THREE.MathUtils.clamp(
+    Math.floor(uv.y * height),
+    0,
+    height - 1
+  );
+  const regionId = pixels[(y * width + x) * 4];
+  return getRegionById(regionId) ? regionId : null;
+}
+
+export function getAtlasViewForDirection(direction) {
+  const absolute = {
+    x: Math.abs(direction.x),
+    y: Math.abs(direction.y),
+    z: Math.abs(direction.z),
+  };
+  if (absolute.x >= absolute.y && absolute.x >= absolute.z) {
+    return direction.x >= 0 ? 'left_lateral' : 'right_lateral';
+  }
+  if (absolute.y >= absolute.z) {
+    return direction.y >= 0 ? 'superior' : 'inferior';
+  }
+  return direction.z >= 0 ? 'anterior' : 'posterior';
+}
 
 export function getResponsiveSpecimenScale(viewportWidth) {
   if (viewportWidth <= 480) return 0.73;
@@ -72,21 +237,26 @@ export class BrainScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
     container.appendChild(this.renderer.domElement);
 
+    this._regionMaskPixels = null;
+    this._regionMaskWidth = 0;
+    this._regionMaskHeight = 0;
     const textureLoader = new THREE.TextureLoader();
-    const configureMap = (texture) => {
-      texture.colorSpace = THREE.NoColorSpace;
-      texture.flipY = false;
-      texture.generateMipmaps = true;
-      texture.minFilter = THREE.LinearMipmapLinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-      return texture;
-    };
+    const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    const configureDataMap = (texture) =>
+      configureMap(texture, maxAnisotropy, THREE.NoColorSpace);
 
-    const aoMap = configureMap(textureLoader.load('/maps/brain_ao.png'));
-    const cavityMap = configureMap(textureLoader.load('/maps/brain_cavity.png'));
-    const curvatureMap = configureMap(textureLoader.load('/maps/brain_curvature.png'));
-    const etchingMap = configureMap(textureLoader.load('/maps/brain_etching.png'));
+    const aoMap = configureDataMap(textureLoader.load('/maps/brain_ao.png'));
+    const cavityMap = configureDataMap(textureLoader.load('/maps/brain_cavity.png'));
+    const curvatureMap = configureDataMap(textureLoader.load('/maps/brain_curvature.png'));
+    const etchingMap = configureDataMap(textureLoader.load('/maps/brain_etching.png'));
+    const regionIdMap = configureRegionIdMap(
+      textureLoader.load('/maps/brain_region_ids_4096.png', (texture) => {
+        this._setRegionMaskImage(texture.image);
+      })
+    );
+
+    this._vertexRegionBuffer = null;
+    this._loadVertexRegionAttributes();
 
     // CSS2D overlay for annotations
     this.labelRenderer = new CSS2DRenderer();
@@ -99,17 +269,21 @@ export class BrainScene {
     });
     container.appendChild(this.labelRenderer.domElement);
 
-    const regionColorArray = REGIONS.map((r) => new THREE.Vector3(...r.color));
+    // THREE.Color converts authored sRGB hex values to the linear working
+    // colour space expected by shader uniforms.
+    const { regionColors, regionIds } = createRegionPaletteUniforms();
 
     this.uniforms = {
       uAoMap: { value: aoMap },
       uCavityMap: { value: cavityMap },
       uCurvatureMap: { value: curvatureMap },
       uEtchingMap: { value: etchingMap },
+      uRegionIdMap: { value: regionIdMap },
       uLightDir1: { value: new THREE.Vector3(1.5, 1.8, 2.0).normalize() },
       uLightDir2: { value: new THREE.Vector3(-1.0, 0.5, -0.8).normalize() },
       uColorMode: { value: 0.0 },
-      uRegionColors: { value: regionColorArray },
+      uRegionColors: { value: regionColors },
+      uRegionIds: { value: regionIds },
       uHighlight: { value: -1.0 },
       uSelectedRegion: { value: -1.0 },
       uInkColor: { value: new THREE.Color(0x1a1a1a) },
@@ -143,7 +317,6 @@ export class BrainScene {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2(-9, -9);
     this._pickVec = new THREE.Vector2();
-    this._hitLocalPoint = new THREE.Vector3();
     this._raycastDirty = true;
     // Pointer events can arrive at display-frame cadence; cap hover picking so
     // a high-poly specimen is never raycast every rendered frame.
@@ -162,6 +335,8 @@ export class BrainScene {
     this._labelSurfaceDirection = new THREE.Vector3();
     this._labelViewDirection = new THREE.Vector3();
     this._labelCameraDirection = new THREE.Vector3();
+    this._atlasViewDirection = new THREE.Vector3();
+    this._labelWorldInverse = new THREE.Matrix4();
     this._labelProjected = new THREE.Vector3();
     this._labelCenterProjected = new THREE.Vector3();
     this._brainBoundsProjected = new THREE.Vector3();
@@ -179,6 +354,58 @@ export class BrainScene {
 
     this._animating = true;
     this._animate();
+  }
+
+  async _loadVertexRegionAttributes(url = '/maps/brain_vertex_regions.bin') {
+    if (typeof fetch !== 'function') return;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return;
+      this._vertexRegionBuffer = await response.arrayBuffer();
+      this._applyVertexRegionAttributes();
+    } catch {
+      // The shader falls back to the categorical texture when identity data is
+      // unavailable, so a failed fetch degrades quality rather than breaking.
+    }
+  }
+
+  _applyVertexRegionAttributes() {
+    if (!this._vertexRegionBuffer || this.brainMeshes.length === 0) return 0;
+    return applyVertexRegionAttributes(
+      this.brainMeshes,
+      this._vertexRegionBuffer
+    );
+  }
+
+  _setRegionMaskImage(image) {
+    if (!image?.width || !image?.height) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return;
+    context.drawImage(image, 0, 0);
+    this._regionMaskPixels = context.getImageData(
+      0,
+      0,
+      image.width,
+      image.height
+    ).data;
+    this._regionMaskWidth = image.width;
+    this._regionMaskHeight = image.height;
+    if (this.brainGroup) {
+      this._refreshRegionLabelAnchors();
+      this._buildLabels();
+    }
+  }
+
+  _getMaskRegionIdAtUv(uv) {
+    return sampleRegionIdPixelsAtUv(
+      this._regionMaskPixels,
+      this._regionMaskWidth,
+      this._regionMaskHeight,
+      uv
+    );
   }
 
   addBrainGeometry(input) {
@@ -204,19 +431,17 @@ export class BrainScene {
       });
     }
 
+    this._applyVertexRegionAttributes();
     brainGroup.scale.setScalar(BRAIN_SCALE);
     this.brainGroup = brainGroup;
+    this.brainNormalization = input?.userData?.normalization ?? null;
     this.specimenOrientGroup.add(brainGroup);
 
     const pivot = computeCerebrumPivot(this.brainMeshes);
     const pivotOffset = pivot.clone().multiplyScalar(-BRAIN_SCALE);
     brainGroup.position.copy(pivotOffset);
     this.labelGroup.position.copy(pivotOffset);
-    this.regionLabelAnchors = computeRegionLabelAnchors(
-      this.brainMeshes,
-      REGIONS.length,
-      brainGroup
-    );
+    this._refreshRegionLabelAnchors();
     brainGroup.updateMatrixWorld(true);
     new THREE.Box3()
       .setFromObject(brainGroup)
@@ -227,32 +452,43 @@ export class BrainScene {
     this._positionSpecimen();
   }
 
+  _refreshRegionLabelAnchors() {
+    this.regionLabelAnchors = computeAtlasAnnotationAnchors({
+      meshes: this.brainMeshes,
+      regions: REGIONS,
+      normalization: this.brainNormalization,
+      root: this.brainGroup,
+      sampleRegionIdAtUv: this._regionMaskPixels
+        ? (uv) => this._getMaskRegionIdAtUv(uv)
+        : null,
+    });
+  }
+
   _buildLabels() {
     this.labelObjects.forEach((obj) => this.labelGroup.remove(obj));
     this.labelObjects = [];
 
-    REGIONS.forEach((region) => {
+    createAtlasAnnotationDefinitions(
+      REGIONS,
+      this.regionLabelAnchors
+    ).forEach(({ region, anchor }) => {
       const wrap = document.createElement('div');
       wrap.className = 'brain-annotation';
-      wrap.innerHTML = `
-        <span class="brain-annotation__leader"></span>
-        <span class="brain-annotation__text">${region.name}</span>
-      `;
+      const leader = document.createElement('span');
+      leader.className = 'brain-annotation__leader';
+      const text = document.createElement('span');
+      text.className = 'brain-annotation__text';
+      // The authored annotation names the region and what it does; it carries
+      // punctuation, so it is set as text rather than markup.
+      text.textContent = region.annotationLabel ?? region.name;
+      wrap.append(leader, text);
 
       const label = new CSS2DObject(wrap);
-      const anchor = this.regionLabelAnchors?.[region.id];
-      if (anchor) {
-        label.position.copy(anchor).multiplyScalar(BRAIN_SCALE);
-      } else {
-        const [x, y, z] = region.labelPosition;
-        label.position.set(x * BRAIN_SCALE, y * BRAIN_SCALE, z * BRAIN_SCALE);
-      }
+      label.position.copy(anchor).multiplyScalar(BRAIN_SCALE);
       label.userData.screenSide = null;
       label.userData.regionId = region.id;
-      label.userData.regionCenter = anchor
-        ? anchor.clone().multiplyScalar(BRAIN_SCALE)
-        : label.position.clone();
-      label.userData.candidates = (anchor?.candidates || [anchor])
+      label.userData.regionCenter = anchor.clone().multiplyScalar(BRAIN_SCALE);
+      label.userData.candidates = (anchor.candidates || [anchor])
         .filter(Boolean)
         .map((candidate) => ({
           position: candidate.clone().multiplyScalar(BRAIN_SCALE),
@@ -315,9 +551,16 @@ export class BrainScene {
     this._labelCameraDirection
       .subVectors(this.camera.position, this._labelCenterWorld)
       .normalize();
+    this._labelWorldInverse.copy(this.labelGroup.matrixWorld).invert();
+    this._atlasViewDirection
+      .copy(this._labelCameraDirection)
+      .transformDirection(this._labelWorldInverse);
+    const atlasView = getAtlasViewForDirection(this._atlasViewDirection);
+    const visibleAtlasIds = new Set(VIEW_LABEL_IDS[atlasView]);
 
     this.labelObjects.forEach((label) => {
       label.visible = false;
+      if (!visibleAtlasIds.has(label.userData.regionId)) return;
       this._labelWorldPosition
         .copy(label.userData.regionCenter)
         .applyMatrix4(this.labelGroup.matrixWorld);
@@ -386,7 +629,8 @@ export class BrainScene {
       );
       label.userData.leader.style.width = `${leaderWidth}px`;
 
-      const region = REGIONS[label.userData.regionId];
+      const region = getRegionById(label.userData.regionId);
+      if (!region) return;
       const textWidth = Math.max(70, region.name.length * 6.4);
       const textLeft = side === 'left'
         ? anchorX - leaderWidth - textWidth
@@ -429,15 +673,10 @@ export class BrainScene {
   }
 
   _getHitRegionId(hit) {
-    if (!hit?.point || !hit.object) return null;
-    this._hitLocalPoint.copy(hit.point);
-    hit.object.worldToLocal(this._hitLocalPoint);
-    const regionId = classifyVertex(
-      this._hitLocalPoint.x,
-      this._hitLocalPoint.y,
-      this._hitLocalPoint.z
+    return resolveHitRegionId(
+      hit,
+      this._regionMaskPixels ? (uv) => this._getMaskRegionIdAtUv(uv) : null
     );
-    return regionId >= 0 && regionId < REGIONS.length ? regionId : null;
   }
 
   _selectRegionAtEvent(event) {
@@ -453,14 +692,14 @@ export class BrainScene {
     const hit = this.raycaster.intersectObjects(this.brainMeshes)[0];
 
     const hitRegionId = this._getHitRegionId(hit);
-    const region = hitRegionId === null ? null : REGIONS[hitRegionId];
+    const region = hitRegionId === null ? null : getRegionById(hitRegionId);
 
     const nextRegionId =
       region && region.id !== this.selectedRegionId ? region.id : -1;
     this.selectedRegionId = nextRegionId;
     this.uniforms.uSelectedRegion.value = nextRegionId;
     if (this.onRegionSelect) {
-      this.onRegionSelect(nextRegionId >= 0 ? REGIONS[nextRegionId] : null);
+      this.onRegionSelect(nextRegionId >= 0 ? getRegionById(nextRegionId) : null);
     }
   }
 
@@ -522,7 +761,7 @@ export class BrainScene {
     let newRegion = null;
     if (intersects.length > 0) {
       const regionId = this._getHitRegionId(intersects[0]);
-      newRegion = regionId === null ? null : REGIONS[regionId];
+      newRegion = regionId === null ? null : getRegionById(regionId);
     }
 
     if (newRegion !== this.hoveredRegion) {
@@ -549,10 +788,14 @@ export class BrainScene {
       new THREE.Vector3(this.controls.target.x, this.controls.target.y, this.controls.target.z)
     );
     const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    // Moving the orbit target would carry the camera with it and leave the
+    // specimen where it was, so the composition shift offsets the specimen from
+    // the target, as the responsive offset and pan already do.
     const shift = (BRAIN_VERTICAL_SHIFT_CSS_PX / this.height) * viewportHeight;
-    const baseY = BRAIN_BASE_VERTICAL_OFFSET + shift;
+    const baseY = BRAIN_BASE_VERTICAL_OFFSET;
     this.specimenGroup.position.y =
       baseY +
+      shift +
       this._specimenPanY +
       getResponsiveSpecimenVerticalOffset(this.width);
     this.controls.target.x = 0;
@@ -590,6 +833,7 @@ export class BrainScene {
     this._clearExpiredFeedback();
     this._updateRaycast();
     this._updateLabelLayout();
+
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
   }
