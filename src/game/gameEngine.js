@@ -16,8 +16,8 @@ export class GameEngine {
     this.score = 0;
     this.currentWord = null;
     this.wordPosition = { x: 0, y: 0 }; // normalized 0–1 within stage (top-left origin)
-    /** Viewport height fraction per second (e.g. 0.08 ≈ 12.5s top to bottom). */
-    this.fallSpeed = options.fallSpeed ?? 0.08;
+    /** Viewport height fraction per second (e.g. 0.04 ≈ 25s top to bottom). */
+    this.fallSpeed = options.fallSpeed ?? 0.04;
     /** Horizontal band where the word is “caught” (normalized Y from top). */
     this.catchLineY = options.catchLineY ?? 0.48;
     /** Continue falling after a miss until off-screen. */
@@ -58,7 +58,8 @@ export class GameEngine {
 
   setFallSpeed(speed) {
     if (!Number.isFinite(speed)) return;
-    this.fallSpeed = Math.max(0.04, Math.min(0.16, speed));
+    // Slider range is 0.5×–2.0× of the 0.04 base → 0.02–0.08.
+    this.fallSpeed = Math.max(0.02, Math.min(0.08, speed));
   }
 
   /**

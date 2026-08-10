@@ -4,7 +4,8 @@ import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
 
-const BASE_FALL_SPEED = 0.08;
+/** Viewport-height fraction/sec at 1.0× — half the former 0.08 base. */
+const BASE_FALL_SPEED = 0.04;
 
 export function shouldShowHeader(gamePhase) {
   return (
