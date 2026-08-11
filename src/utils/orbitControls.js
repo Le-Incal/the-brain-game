@@ -4,7 +4,8 @@
  * Tailored for the brain game interaction model:
  * - A fixed, stable camera paired with specimen rotation
  * - Grab-and-drag: the surface follows the pointer in screen space
- * - Scroll to zoom
+ * - Scroll / pinch to zoom
+ * - Two-finger drag to pan (touch)
  * - Auto-rotation stops on first interaction
  */
 
@@ -12,6 +13,8 @@ import * as THREE from 'three';
 
 export const DEFAULT_MIN_FLIP_ANGLE = 0;
 export const DEFAULT_MAX_FLIP_ANGLE = Math.PI;
+/** Pinch distance change → camera radius delta. Spread in = zoom in. */
+export const PINCH_ZOOM_SENSITIVITY = 0.012;
 
 export function clampFlipAngle(
   angle,
@@ -32,6 +35,38 @@ export function dragToSpecimenVelocity(dx, dy, sensitivity) {
 
 export function dragToVerticalPan(deltaY, viewportHeight) {
   return -deltaY / Math.max(1, viewportHeight);
+}
+
+export function pointerDistance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.hypot(dx, dy);
+}
+
+export function pointerMidpoint(a, b) {
+  return {
+    x: (a.x + b.x) * 0.5,
+    y: (a.y + b.y) * 0.5,
+  };
+}
+
+/** Normalized pan from a midpoint drag. Screen-up → positive Y. */
+export function dragToPan(deltaX, deltaY, viewportWidth, viewportHeight) {
+  return {
+    x: deltaX / Math.max(1, viewportWidth),
+    y: -deltaY / Math.max(1, viewportHeight),
+  };
+}
+
+/**
+ * Pinch spread increases distance and should zoom in (smaller orbit radius).
+ */
+export function pinchDistanceToRadiusDelta(
+  previousDistance,
+  currentDistance,
+  sensitivity = PINCH_ZOOM_SENSITIVITY
+) {
+  return (previousDistance - currentDistance) * sensitivity;
 }
 
 export function isClickGesture(startX, startY, endX, endY, threshold = 5) {
@@ -74,6 +109,8 @@ export class BrainOrbitControls {
     this.autoRotate = options.autoRotate ?? true;
     this.autoRotateSpeed = options.autoRotateSpeed ?? 0.003;
     this.activePointerId = null;
+    /** @type {Map<number, { x: number, y: number }>} */
+    this._pointers = new Map();
     // High enough to track the pointer within roughly one frame, while the
     // render-loop interpolation still filters uneven pointer-event timing.
     this.rotationSmoothing = options.rotationSmoothing ?? 55;
@@ -87,10 +124,13 @@ export class BrainOrbitControls {
     this._onPan = options.onPan ?? null;
     this._hasInteracted = false;
     this._dragMode = null;
+    this._lastPointerX = 0;
     this._lastPointerY = 0;
     this._pointerStartX = 0;
     this._pointerStartY = 0;
     this._maxPointerDistanceSquared = 0;
+    this._pinchPreviousDistance = 0;
+    this._pinchPreviousMidpoint = { x: 0, y: 0 };
 
     this._previousTrackball = new THREE.Vector3();
     this._currentTrackball = new THREE.Vector3();
@@ -121,6 +161,44 @@ export class BrainOrbitControls {
     el.addEventListener('wheel', this._wheelHandler, { passive: false });
   }
 
+  _markInteracted() {
+    if (this._hasInteracted) return;
+    this._hasInteracted = true;
+    this.autoRotate = false;
+    if (this._onInteraction) this._onInteraction();
+  }
+
+  _primaryPointers() {
+    return [...this._pointers.values()].slice(0, 2);
+  }
+
+  _beginPinchGesture() {
+    const [a, b] = this._primaryPointers();
+    if (!a || !b) return;
+    this._dragMode = 'pinch';
+    this.activePointerId = null;
+    this.isDragging = true;
+    // A second finger means this was never a region click.
+    this._maxPointerDistanceSquared = Number.POSITIVE_INFINITY;
+    this._pinchPreviousDistance = pointerDistance(a, b);
+    this._pinchPreviousMidpoint = pointerMidpoint(a, b);
+  }
+
+  _beginRotateGesture(pointerId, clientX, clientY, { shiftPan = false } = {}) {
+    this.activePointerId = pointerId;
+    this.isDragging = true;
+    this._dragMode = shiftPan ? 'pan' : 'rotate';
+    this._lastPointerX = clientX;
+    this._lastPointerY = clientY;
+    this._pointerStartX = clientX;
+    this._pointerStartY = clientY;
+    this._maxPointerDistanceSquared = 0;
+    this.targetQuaternion.copy(this.orientGroup.quaternion);
+    if (this._dragMode === 'rotate') {
+      this._trackballVector(clientX, clientY, this._previousTrackball);
+    }
+  }
+
   _trackballVector(clientX, clientY, target) {
     const rect = this.domElement.getBoundingClientRect();
 
@@ -136,33 +214,63 @@ export class BrainOrbitControls {
     return projectTrackballVector(x, y, target);
   }
 
+  _applyRadiusDelta(delta) {
+    this.radius = Math.max(
+      this.minRadius,
+      Math.min(this.maxRadius, this.radius + delta)
+    );
+    this.updateCamera();
+  }
+
   _onPointerDown(e) {
     e.preventDefault();
-    if (!this.orientGroup || this.activePointerId !== null) return;
+    if (!this.orientGroup || this._pointers.has(e.pointerId)) return;
 
-    this.activePointerId = e.pointerId;
+    this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.domElement.setPointerCapture?.(e.pointerId);
-    this.isDragging = true;
-    this._dragMode = e.shiftKey ? 'pan' : 'rotate';
-    this._lastPointerY = e.clientY;
-    this._pointerStartX = e.clientX;
-    this._pointerStartY = e.clientY;
-    this._maxPointerDistanceSquared = 0;
-    this.targetQuaternion.copy(this.orientGroup.quaternion);
-    if (this._dragMode === 'rotate') {
-      this._trackballVector(e.clientX, e.clientY, this._previousTrackball);
+    this._markInteracted();
+
+    if (this._pointers.size >= 2) {
+      this._beginPinchGesture();
+      return;
     }
 
-    if (!this._hasInteracted) {
-      this._hasInteracted = true;
-      this.autoRotate = false;
-      if (this._onInteraction) this._onInteraction();
-    }
+    this._beginRotateGesture(e.pointerId, e.clientX, e.clientY, {
+      shiftPan: e.shiftKey,
+    });
   }
 
   _onPointerMove(e) {
-    if (!this.isDragging || e.pointerId !== this.activePointerId) return;
+    if (!this._pointers.has(e.pointerId)) return;
     e.preventDefault();
+    this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (this._dragMode === 'pinch') {
+      if (this._pointers.size < 2) return;
+      const [a, b] = this._primaryPointers();
+      const distance = pointerDistance(a, b);
+      const midpoint = pointerMidpoint(a, b);
+      const rect = this.domElement.getBoundingClientRect();
+
+      this._applyRadiusDelta(
+        pinchDistanceToRadiusDelta(this._pinchPreviousDistance, distance)
+      );
+
+      const pan = dragToPan(
+        midpoint.x - this._pinchPreviousMidpoint.x,
+        midpoint.y - this._pinchPreviousMidpoint.y,
+        rect.width,
+        rect.height
+      );
+      this._onPan?.(pan);
+
+      this._pinchPreviousDistance = distance;
+      this._pinchPreviousMidpoint = midpoint;
+      return;
+    }
+
+    if (!this.isDragging || e.pointerId !== this.activePointerId) return;
+
     const totalDx = e.clientX - this._pointerStartX;
     const totalDy = e.clientY - this._pointerStartY;
     this._maxPointerDistanceSquared = Math.max(
@@ -172,9 +280,11 @@ export class BrainOrbitControls {
 
     if (this._dragMode === 'pan') {
       const rect = this.domElement.getBoundingClientRect();
+      const deltaX = e.clientX - this._lastPointerX;
       const deltaY = e.clientY - this._lastPointerY;
+      this._lastPointerX = e.clientX;
       this._lastPointerY = e.clientY;
-      this._onPan?.(dragToVerticalPan(deltaY, rect.height));
+      this._onPan?.(dragToPan(deltaX, deltaY, rect.width, rect.height));
       return;
     }
 
@@ -200,8 +310,27 @@ export class BrainOrbitControls {
   }
 
   _onPointerUp(e) {
-    if (e.pointerId !== this.activePointerId) return;
+    if (!this._pointers.has(e.pointerId)) return;
     this.domElement.releasePointerCapture?.(e.pointerId);
+    this._pointers.delete(e.pointerId);
+
+    if (this._dragMode === 'pinch') {
+      if (this._pointers.size >= 2) {
+        this._beginPinchGesture();
+        return;
+      }
+      if (this._pointers.size === 1) {
+        const [pointerId, point] = this._pointers.entries().next().value;
+        this._beginRotateGesture(pointerId, point.x, point.y);
+        return;
+      }
+      this.activePointerId = null;
+      this.isDragging = false;
+      this._dragMode = null;
+      return;
+    }
+
+    if (e.pointerId !== this.activePointerId) return;
     this.activePointerId = null;
     this.isDragging = false;
     const completedMode = this._dragMode;
@@ -223,17 +352,8 @@ export class BrainOrbitControls {
 
   _onWheel(e) {
     e.preventDefault();
-    this.radius = Math.max(
-      this.minRadius,
-      Math.min(this.maxRadius, this.radius + e.deltaY * 0.005)
-    );
-    this.updateCamera();
-
-    if (!this._hasInteracted) {
-      this._hasInteracted = true;
-      this.autoRotate = false;
-      if (this._onInteraction) this._onInteraction();
-    }
+    this._applyRadiusDelta(e.deltaY * 0.005);
+    this._markInteracted();
   }
 
   update() {

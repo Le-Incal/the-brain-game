@@ -3,9 +3,13 @@ import {
   DEFAULT_MAX_FLIP_ANGLE,
   DEFAULT_MIN_FLIP_ANGLE,
   clampFlipAngle,
+  dragToPan,
   dragToSpecimenVelocity,
   dragToVerticalPan,
   isClickGesture,
+  pinchDistanceToRadiusDelta,
+  pointerDistance,
+  pointerMidpoint,
   projectTrackballVector,
   trackballDeltaQuaternion,
 } from './orbitControls.js';
@@ -32,6 +36,26 @@ describe('shift-drag panning', () => {
 
   it('moves the specimen downward for a downward pointer drag', () => {
     expect(dragToVerticalPan(50, 500)).toBeCloseTo(-0.1);
+  });
+});
+
+describe('two-finger pan and pinch', () => {
+  it('measures the span and midpoint between two contact points', () => {
+    expect(pointerDistance({ x: 0, y: 0 }, { x: 30, y: 40 })).toBe(50);
+    expect(pointerMidpoint({ x: 0, y: 10 }, { x: 40, y: 50 })).toEqual({
+      x: 20,
+      y: 30,
+    });
+  });
+
+  it('pans with the two-finger midpoint in screen space', () => {
+    // Rightward + upward midpoint motion relocates the specimen that way.
+    expect(dragToPan(40, -20, 400, 500)).toEqual({ x: 0.1, y: 0.04 });
+  });
+
+  it('zooms in when the pinch spreads and out when it contracts', () => {
+    expect(pinchDistanceToRadiusDelta(100, 140, 0.01)).toBeCloseTo(-0.4);
+    expect(pinchDistanceToRadiusDelta(140, 100, 0.01)).toBeCloseTo(0.4);
   });
 });
 
