@@ -323,13 +323,14 @@ export class BrainScene {
     this.specimenRotationGroup.add(this.specimenOrientGroup);
     this.specimenGroup.add(this.specimenRotationGroup);
     this.scene.add(this.specimenGroup);
+    this._specimenPanX = 0;
     this._specimenPanY = 0;
 
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
       orientGroup: this.specimenOrientGroup,
       onFirstInteraction: options.onFirstInteraction,
       onClick: (event) => this._selectRegionAtEvent(event),
-      onPan: (normalizedDelta) => this._panSpecimenVertical(normalizedDelta),
+      onPan: (delta) => this._panSpecimen(delta),
     });
     this._positionSpecimen();
 
@@ -841,6 +842,7 @@ export class BrainScene {
       (getCompositionVerticalShiftCssPx(this.width) / this.height) *
       viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET;
+    this.specimenGroup.position.x = this._specimenPanX;
     this.specimenGroup.position.y =
       baseY +
       shift +
@@ -852,7 +854,9 @@ export class BrainScene {
     this.controls.updateCamera();
   }
 
-  _panSpecimenVertical(normalizedDelta) {
+  _panSpecimen(delta) {
+    const normalized =
+      typeof delta === 'number' ? { x: 0, y: delta } : delta ?? {};
     const distance = this.camera.position.distanceTo(
       new THREE.Vector3(
         this.controls.target.x,
@@ -864,8 +868,14 @@ export class BrainScene {
       2 *
       distance *
       Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    const viewportWidth = viewportHeight * this.camera.aspect;
+    this._specimenPanX = THREE.MathUtils.clamp(
+      this._specimenPanX + (normalized.x ?? 0) * viewportWidth,
+      -0.9,
+      0.9
+    );
     this._specimenPanY = THREE.MathUtils.clamp(
-      this._specimenPanY + normalizedDelta * viewportHeight,
+      this._specimenPanY + (normalized.y ?? 0) * viewportHeight,
       -0.9,
       0.9
     );
