@@ -201,6 +201,15 @@ export function getResponsiveSpecimenVerticalOffset(viewportWidth) {
   return 0;
 }
 
+/**
+ * Desktop/laptop composition drop in CSS pixels. Phones keep the pre-drop
+ * height so the specimen is not pushed further down a short viewport.
+ */
+export function getCompositionVerticalShiftCssPx(viewportWidth) {
+  if (viewportWidth <= 480) return 0;
+  return BRAIN_VERTICAL_SHIFT_CSS_PX;
+}
+
 export function computeLabelLeaderWidth(
   side,
   anchorX,
@@ -828,7 +837,9 @@ export class BrainScene {
     // Moving the orbit target would carry the camera with it and leave the
     // specimen where it was, so the composition shift offsets the specimen from
     // the target, as the responsive offset and pan already do.
-    const shift = (BRAIN_VERTICAL_SHIFT_CSS_PX / this.height) * viewportHeight;
+    const shift =
+      (getCompositionVerticalShiftCssPx(this.width) / this.height) *
+      viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET;
     this.specimenGroup.position.y =
       baseY +

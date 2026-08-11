@@ -8,6 +8,7 @@ import {
   computeLabelLeaderWidth,
   createRegionPaletteUniforms,
   getAtlasViewForDirection,
+  getCompositionVerticalShiftCssPx,
   getResponsiveSpecimenScale,
   getResponsiveSpecimenVerticalOffset,
   matchRegionColorSrgb,
@@ -63,6 +64,14 @@ describe('getResponsiveSpecimenScale', () => {
   it('moves the phone specimen below the description panel', () => {
     expect(getResponsiveSpecimenVerticalOffset(375)).toBe(-0.2);
     expect(getResponsiveSpecimenVerticalOffset(1200)).toBe(0);
+  });
+
+  it('keeps the desktop composition drop off the phone', () => {
+    // Laptop/desktop stay half an inch lower; phone returns to the pre-drop height.
+    expect(getCompositionVerticalShiftCssPx(375)).toBe(0);
+    expect(getCompositionVerticalShiftCssPx(480)).toBe(0);
+    expect(getCompositionVerticalShiftCssPx(481)).toBe(-48);
+    expect(getCompositionVerticalShiftCssPx(1200)).toBe(-48);
   });
 });
 
