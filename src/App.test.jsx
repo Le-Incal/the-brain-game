@@ -31,6 +31,14 @@ describe('falling word presentation', () => {
   });
 });
 
+describe('countdown presentation', () => {
+  it('sits above the brain without a white halo', () => {
+    expect(STYLES.countdownPrompt.top).toBe('clamp(72px, 14vh, 128px)');
+    expect(STYLES.countdown.textShadow).toBe('none');
+    expect(STYLES.countdown.background).toBe('transparent');
+  });
+});
+
 describe('mobile viewport layout', () => {
   it('uses the dynamic viewport height to avoid browser chrome overlap', () => {
     expect(STYLES.container.height).toBe('100dvh');
