@@ -314,6 +314,16 @@ export const STYLES = {
     zIndex: 12,
     textAlign: 'center',
   },
+  countdownPrompt: {
+    position: 'absolute',
+    top: 'clamp(72px, 14vh, 128px)',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 12,
+    textAlign: 'center',
+    background: 'transparent',
+    pointerEvents: 'none',
+  },
   startButton: {
     fontFamily: "'Playfair Display', Georgia, serif",
     fontSize: 'clamp(13px, 2vw, 16px)',
@@ -333,7 +343,8 @@ export const STYLES = {
     fontWeight: 900,
     color: '#1a1814',
     lineHeight: 1,
-    textShadow: '0 0 16px #fff, 0 0 32px #fff',
+    background: 'transparent',
+    textShadow: 'none',
   },
 };
 
@@ -749,7 +760,11 @@ export default function App() {
         </div>
       )}
       {gamePhase === 'countdown' && (
-        <div className="game-prompt" style={STYLES.gamePrompt} aria-live="assertive">
+        <div
+          className="countdown-prompt"
+          style={STYLES.countdownPrompt}
+          aria-live="assertive"
+        >
           <div style={STYLES.countdown}>{countdown}</div>
         </div>
       )}
