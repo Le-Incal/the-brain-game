@@ -1,0 +1,3 @@
+code: NO_PRIMARY
+why: Face recognition loses its only primary region and is not marked distributed.
+patch: [ { op: set, id: assert:face-recognition--fusiform, path: props.role, value: contributing } ]

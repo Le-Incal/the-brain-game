@@ -1,0 +1,7 @@
+code: TEXT_TOO_LONG
+why: The child register is capped at 30 words.
+patch:
+  - op: set
+    id: structure:fusiform-gyrus
+    path: text.child
+    value: "This is a long fold on the underside of my temporal lobe that helps you recognise faces and words and objects, and it works with many other parts of me to do that job well every single day."

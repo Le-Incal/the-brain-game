@@ -1,0 +1,62 @@
+# Reusable value types. Field types use the grammar:
+#   string | int | number | bool | date (YYYY-MM-DD) | year | id
+#   ref:ClassA|ClassB      a reference to a node or assertion id of those classes
+#   vocab:<list>           a term from vocabulary.yaml
+#   list<T>                a list of T
+#   nullable<T>            T or null
+#   <ValueType>            one of the types below
+
+Text:
+  optional:
+    child: string
+    curious: string
+    expert: string
+  limits: { child: 30, curious: 80, expert: 200 }   # max words
+
+Pronunciation:
+  required: { respelling: string }
+  optional: { ipa: string }
+
+Alias:
+  required: { text: string, kind: vocab:aliasKind }
+
+Xref:
+  required:
+    scheme: vocab:xrefScheme
+    value: string
+    matchType: vocab:matchType
+    verified: bool
+  optional:
+    verifiedOn: date
+
+Quantity:
+  required:
+    name: string           # e.g. neuronCount
+    value: number
+    unit: string
+    approx: bool
+    sources: list<ref:Source>
+  optional:
+    low: number
+    high: number
+    validAsOf: date
+    reviewBy: date
+    audience: vocab:audience
+    note: string
+
+Provenance:
+  required:
+    sources: list<ref:Source>
+    locator: string        # where in the source material the claim was found
+    license: vocab:license
+    method: vocab:method
+    assertedBy: string     # extractor:claude | steward:kyle | reviewer:<name>
+    assertedOn: date
+    status: vocab:status
+  optional:
+    approvedBy: string
+    approvedOn: date
+    supersededBy: id
+    supersededOn: date
+    replacedBy: id
+    reviewNote: string

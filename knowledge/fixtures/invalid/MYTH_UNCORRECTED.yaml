@@ -1,0 +1,3 @@
+code: MYTH_UNCORRECTED
+why: A myth with no approved fact correcting it.
+patch: [ { op: remove, id: assert:debunk--left-right-brain--language } ]

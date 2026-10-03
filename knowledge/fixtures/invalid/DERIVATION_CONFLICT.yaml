@@ -1,0 +1,5 @@
+code: DERIVATION_CONFLICT
+why: A part-of cycle (midbrain inside substantia nigra inside midbrain).
+patch:
+  - op: addAssertion
+    record: { id: assert:midbrain--part-of--substantia-nigra, predicate: PART_OF, subject: structure:midbrain, object: structure:substantia-nigra, provenance: { locator: fixture, license: own, method: ai_extracted, assertedBy: "extractor:claude", assertedOn: 2026-10-02, status: proposed, sources: [source:kandel-pns-6e] } }

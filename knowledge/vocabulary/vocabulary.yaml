@@ -1,0 +1,66 @@
+# Closed vocabulary for the Brain Game ontology.
+# Every enumerated value in data must come from here. Adding a term is a schema
+# change: bump knowledge/schema/VERSION and log it in knowledge/CHANGELOG.md.
+
+role: [primary, contributing]
+evidence: [lesion, stimulation, imaging, textbook]
+lateralization: [left, right, bilateral]
+visibility: [surface, partly, hidden, not_present]
+
+structureKind:
+  - brain_division   # forebrain, midbrain, hindbrain, diencephalon
+  - lobe
+  - gyrus
+  - sulcus
+  - fissure
+  - cortex_area      # Brodmann areas, FEF, VWFA, Heschl's gyrus cortex
+  - nucleus
+  - nuclear_group    # basal ganglia, thalamus, raphe
+  - ventricle
+  - membrane         # meninges
+  - gland            # pituitary, pineal
+  - cranial_nerve
+  - nerve
+  - cord             # spinal cord
+  - sense_organ      # retina, cochlea
+  - cell_layer
+  - system           # central nervous system, limbic system
+  - tissue           # grey matter, white matter, choroid plexus
+
+tractKind: [association, commissural, projection]
+cellKind: [neuron, glia, progenitor]
+moleculeKind: [neurotransmitter, neuromodulator, neuropeptide, receptor, ion_channel, transporter, hormone, protein]
+processKind: [signalling, plasticity, development, maintenance, homeostasis]
+conditionKind: [neurodegenerative, vascular, seizure, injury, tumour, developmental, syndrome, infectious]
+networkRole: [hub, node]
+endpoint: [origin, termination, via]
+confidence: [established, approximate, debated]
+stance: [asserts, disputes]   # disputes = the sources argue against this claim
+matchType: [exact, close, broader, narrower, related]
+xrefScheme: [uberon, desikan, brodmann, hcp_mmp, neuronames, cognitive_atlas, yeo7, yeo17]
+sourceType: [textbook, peer_reviewed, reference_atlas, plain_language, official]
+status: [proposed, approved, rejected, superseded]
+method: [human, ai_extracted, derived]
+audience: [all, teen, adult]
+aliasKind: [common, abbreviation, historical, spoken, misnomer]
+register: [child, curious, expert]
+viewId: [left_lateral, right_lateral, anterior, posterior, superior, inferior]
+license:
+  - own                  # our paraphrase of cited facts
+  - cc-by-3.0
+  - cc-by-4.0
+  - cc-by-sa-3.0         # share-alike: must live in data/share-alike/
+  - odbl-1.0             # share-alike: must live in data/share-alike/
+  - mit
+  - bsd-3
+  - bsd-like
+  - hcp-open-access
+  - all-rights-reserved  # cited and paraphrased only, never quoted at length
+  - permission-required
+  - public-domain
+
+# Policy lists (not values that appear in data).
+shareAlikeLicenses: [cc-by-sa-3.0, odbl-1.0]
+forbiddenSourceTypes: [news, blog, pop_science, encyclopedia, press_release]
+forbiddenSourceHosts: [wikipedia.org, neurapod.com, aol.com, medium.com, substack.com]
+audienceRank: { all: 0, teen: 1, adult: 2 }

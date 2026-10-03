@@ -1,0 +1,3 @@
+code: MISSING_PROVENANCE
+why: An assertion without an assertion date.
+patch: [ { op: unset, id: assert:fusiform--part-of--region-14, path: provenance.assertedOn } ]

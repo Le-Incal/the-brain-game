@@ -1,0 +1,3 @@
+code: NAME_DRIFT
+why: The KB calls region 14 by a structure name it only contains.
+patch: [ { op: docReplace, path: kb/anatomy/lobes.md, from: "14 Inferior Temporal Cortex", to: "14 Fusiform" } ]

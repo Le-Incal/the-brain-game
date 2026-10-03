@@ -1,0 +1,3 @@
+code: UNPOINTABLE
+why: The hippocampus is hidden and nothing tells the guide where to turn.
+patch: [ { op: remove, id: assert:hippocampus--beneath--region-14 } ]

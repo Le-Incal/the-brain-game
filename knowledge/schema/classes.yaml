@@ -1,0 +1,108 @@
+# Node classes. Every node record carries `id`, `class` and `provenance`.
+# `labelRequired: false` means the label comes from a system of record by join.
+# `requiresSources: true` means provenance.sources must hold at least one Source.
+# `synthesized` classes are created by the loader from systems of record; data
+# records of those classes may only annotate (aliases, xrefs, notes).
+
+common:
+  required:
+    id: id
+    class: string
+    provenance: Provenance
+  optional:
+    label: string
+    aliases: list<Alias>
+    pronunciation: Pronunciation
+    text: Text
+    audience: vocab:audience
+    xrefs: list<Xref>
+    quantities: list<Quantity>
+    notes: string
+
+classes:
+  Region:
+    idPattern: '^region:([1-9]|1[0-9]|20)$'
+    synthesized: src/data/brainRegions.json
+    labelRequired: false
+    requiresSources: false
+    forbidden: [label, name, description, clickDescription, subtitle, factoid, hex, hemisphere, division, divisionId, text]
+
+  Division:
+    idPattern: '^division:[1-7]$'
+    synthesized: src/data/brainRegions.json
+    labelRequired: false
+    requiresSources: false
+    forbidden: [label, name]
+
+  View:
+    idPattern: '^view:(left_lateral|right_lateral|anterior|posterior|superior|inferior)$'
+    synthesized: vocabulary.viewId
+    labelRequired: false
+    requiresSources: false
+
+  Structure:
+    required: { kind: vocab:structureKind, visibility: vocab:visibility }
+    optional: { lateralization: vocab:lateralization }
+
+  Function:
+    required: { plainDefinition: string }
+    optional: { distributed: bool }
+
+  Phenomenon:
+    required: { plainDefinition: string }
+
+  Network:
+    required: { atlas: string }
+    optional: { yeoLabel: string }
+
+  Tract:
+    required: { kind: vocab:tractKind }
+    optional: { debated: bool }
+
+  Circuit:
+    required: { summary: string }
+
+  CellType:
+    required: { kind: vocab:cellKind }
+
+  Molecule:
+    required: { kind: vocab:moleculeKind }
+
+  Process:
+    required: { kind: vocab:processKind }
+
+  Artery: {}
+
+  Condition:
+    required: { kind: vocab:conditionKind, informationalOnly: bool }
+    defaultAudience: teen
+
+  Myth:
+    required: { statement: string, correction: Text }
+
+  Person:
+    required: { born: year, died: nullable<year> }
+    optional: { statusCheckedOn: date, knownFor: string }
+
+  Source:
+    required: { type: string, citation: string, license: vocab:license }
+    optional: { authors: string, year: year, title: string, publisher: string, edition: string, doi: string, url: string }
+    requiresSources: false
+
+  Doc:
+    required: { path: string, kbId: string, about: list<id> }
+    optional: { registers: list<vocab:register> }
+    requiresSources: false
+
+  Word:
+    required: { text: string, tier: int }
+    labelRequired: false
+    requiresSources: false
+
+  Guide:
+    required: { anchorRegions: list<ref:Region> }
+    requiresSources: false
+
+defaults:
+  labelRequired: true
+  requiresSources: true

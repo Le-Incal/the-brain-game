@@ -1,0 +1,43 @@
+# Competency questions over the real knowledge base. A question that stops
+# returning its answer is a regression. These also seed the M5 voice eval.
+# Region ids follow repo canon (src/data/brainRegions.json).
+- { id: q01, question: "Which region is primary for speech production?", call: regionsFor, args: [function:speech-production, primary], expect: { includes: [region:6] } }
+- { id: q02, question: "Is there a right-hemisphere Broca's area?", call: lateralityOf, args: [region:6], expect: { equals: left } }
+- { id: q03, question: "Is Wernicke's area lateralized?", call: lateralityOf, args: [region:13], expect: { equals: left } }
+- { id: q04, question: "Which region is primary for language comprehension?", call: regionsFor, args: [function:language-comprehension, primary], expect: { includes: [region:13] } }
+- { id: q05, question: "Where does the guide point for the hippocampus?", call: pointTo, args: [structure:hippocampus], expect: { notNull: true } }
+- { id: q06, question: "Where does the guide point for the insula?", call: pointTo, args: [structure:insula], expect: { notNull: true } }
+- { id: q07, question: "Where does the guide point for the thalamus?", call: pointTo, args: [structure:thalamus], expect: { notNull: true } }
+- { id: q08, question: "Where does the guide point for the spinal cord?", call: pointTo, args: [structure:spinal-cord], expect: { isNull: true } }
+- { id: q09, question: "Which tract connects Broca's and Wernicke's?", call: tractsConnecting, args: [region:6, region:13], expect: { includes: [tract:arcuate-fasciculus] } }
+- { id: q10, question: "Which tract carries movement commands from motor cortex down through the brain stem?", call: tractsConnecting, args: [region:5, region:20], expect: { includes: [tract:corticospinal-tract] } }
+- { id: q11, question: "Which networks include the precuneus?", call: networksOf, args: [region:10], expect: { includes: [network:default-mode] } }
+- { id: q12, question: "Which network does the superior parietal territory belong to?", call: networksOf, args: [region:8], expect: { includes: [network:dorsal-attention] } }
+- { id: q13, question: "Which region recognises faces (through the fusiform gyrus)?", call: regionsFor, args: [function:face-recognition, primary], expect: { includes: [region:14] } }
+- { id: q14, question: "What does region 20 contain?", call: partsOf, args: [region:20], expect: { includes: [structure:midbrain, structure:pons, structure:medulla-oblongata] } }
+- { id: q15, question: "Which cells in region 19 send its output?", call: cellsIn, args: [region:19], expect: { includes: [celltype:purkinje] } }
+- { id: q16, question: "What do Purkinje cells release?", call: releases, args: [celltype:purkinje], expect: { includes: [molecule:gaba] } }
+- { id: q17, question: "What does Parkinson's disease affect?", call: affects, args: [condition:parkinsons-disease], expect: { includes: [structure:substantia-nigra] } }
+- { id: q18, question: "What does Parkinson's disease impair?", call: impairs, args: [condition:parkinsons-disease], expect: { includes: [function:motor-control] } }
+- { id: q19, question: "Which artery supplies Broca's area?", call: suppliedBy, args: [region:6], expect: { includes: [artery:middle-cerebral] } }
+- { id: q20, question: "Which artery supplies primary visual cortex?", call: suppliedBy, args: [region:17], expect: { includes: [artery:posterior-cerebral] } }
+- { id: q21, question: "Is 'we use 10% of our brain' corrected?", call: isCorrected, args: [myth:ten-percent-brain], expect: { equals: true } }
+- { id: q22, question: "Is the left-brain/right-brain myth corrected?", call: isCorrected, args: [myth:left-right-brain], expect: { equals: true } }
+- { id: q23, question: "Is adult hippocampal neurogenesis presented as debated?", call: debatesAbout, args: [structure:hippocampus], expect: { includes: [process:adult-neurogenesis] } }
+- { id: q24, question: "Who is Sylvi anchored on and named after?", call: guide, args: [guide:sylvi], expect: { matches: { anchor: structure:lateral-fissure, namedAfter: person:franciscus-sylvius } } }
+- { id: q25, question: "Who is Rollo anchored on and named after?", call: guide, args: [guide:rollo], expect: { matches: { anchor: structure:central-sulcus, namedAfter: person:luigi-rolando } } }
+- { id: q26, question: "Is Brenda Milner living?", call: personStatus, args: [person:brenda-milner], expect: { matches: { living: true } } }
+- { id: q27, question: "Who described region 6, and when?", call: describedBy, args: [region:6], expect: { includes: [ { person: person:paul-broca, year: 1861 } ] } }
+- { id: q28, question: "What explains phantom limb sensation?", call: explainedBy, args: [phenomenon:phantom-limb], expect: { includes: [region:7] } }
+- { id: q29, question: "Which region is primary for vision?", call: regionsFor, args: [function:vision, primary], expect: { includes: [region:17] } }
+- { id: q30, question: "Which region is primary for hearing?", call: regionsFor, args: [function:hearing, primary], expect: { includes: [region:11] } }
+- { id: q31, question: "Which region is primary for smell?", call: regionsFor, args: [function:smell, primary], expect: { includes: [region:15] } }
+- { id: q32, question: "Which region is primary for touch?", call: regionsFor, args: [function:touch, primary], expect: { includes: [region:7] } }
+- { id: q33, question: "Which region is primary for balance?", call: regionsFor, args: [function:balance, primary], expect: { includes: [region:19] } }
+- { id: q34, question: "Which region is primary for motor control?", call: regionsFor, args: [function:motor-control, primary], expect: { includes: [region:5] } }
+- { id: q35, question: "Which bank words accept region 15?", call: wordsAccepting, args: [region:15], expect: { includes: [word:smell] } }
+- { id: q36, question: "Aliases: the little brain", call: resolveAlias, args: ["the little brain"], expect: { equals: region:19 } }
+- { id: q37, question: "Aliases: Sylvian fissure", call: resolveAlias, args: ["Sylvian fissure"], expect: { equals: structure:lateral-fissure } }
+- { id: q38, question: "Aliases: fusiform resolves to the structure, not the region", call: resolveAlias, args: ["fusiform gyrus"], expect: { equals: structure:fusiform-gyrus } }
+- { id: q39, question: "Which regions are prominent from above?", call: visibleFrom, args: [view:superior], expect: { includes: [region:5, region:7] } }
+- { id: q40, question: "Does the cerebellum do more than balance?", call: functionsOf, args: [region:19], expect: { includes: [function:balance, function:procedural-memory] } }

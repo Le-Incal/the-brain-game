@@ -1,0 +1,5 @@
+code: FORBIDDEN_SOURCE
+why: Encyclopedias are not admissible sources.
+patch:
+  - op: addNode
+    record: { id: source:wikipedia-broca, class: Source, label: Wikipedia Broca, type: encyclopedia, citation: "Wikipedia, Broca's area.", url: "https://en.wikipedia.org/wiki/Broca%27s_area", license: cc-by-sa-3.0, provenance: { locator: fixture, license: own, method: ai_extracted, assertedBy: "extractor:claude", assertedOn: 2026-10-02, status: proposed, sources: [] } }

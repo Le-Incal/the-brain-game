@@ -1,0 +1,3 @@
+code: AUDIENCE_LEAK
+why: Adult-only content must not carry a child-register line.
+patch: [ { op: set, id: condition:parkinsons-disease, path: audience, value: adult } ]

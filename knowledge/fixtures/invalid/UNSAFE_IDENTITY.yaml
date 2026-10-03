@@ -1,0 +1,3 @@
+code: UNSAFE_IDENTITY
+why: An exact match to an external concept that has not been verified.
+patch: [ { op: set, id: structure:fusiform-gyrus, path: xrefs.0.matchType, value: exact } ]

@@ -1,0 +1,371 @@
+# Valid fixture set. Real facts, one or more records per class and relation.
+# Every record here must validate with zero errors.
+# Shared provenance block for extracted fixtures:
+x-prov: &prov
+  locator: "fixture"
+  license: own
+  method: ai_extracted
+  assertedBy: extractor:claude
+  assertedOn: 2026-10-02
+  status: proposed
+
+nodes:
+  # ---------- Sources ----------
+  - id: source:kandel-pns-6e
+    class: Source
+    label: Principles of Neural Science, 6th edition
+    type: textbook
+    citation: "Kandel ER, Koester JD, Mack SH, Siegelbaum SA (eds). Principles of Neural Science, 6th ed. McGraw Hill, 2021."
+    year: 2021
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:nolte-human-brain-7e
+    class: Source
+    label: Nolte's The Human Brain, 7th edition
+    type: textbook
+    citation: "Vanderah TW, Gould DJ. Nolte's The Human Brain, 7th ed. Elsevier, 2016."
+    year: 2016
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:dronkers-2007
+    class: Source
+    label: Dronkers et al. 2007
+    type: peer_reviewed
+    citation: "Dronkers NF, Plaisant O, Iba-Zizen MT, Cabanis EA. Paul Broca's historic cases: high resolution MR imaging of the brains of Leborgne and Lelong. Brain 2007;130:1432-1441."
+    year: 2007
+    doi: 10.1093/brain/awm042
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:catani-2005
+    class: Source
+    label: Catani et al. 2005
+    type: peer_reviewed
+    citation: "Catani M, Jones DK, ffytche DH. Perisylvian language networks of the human brain. Annals of Neurology 2005;57:8-16."
+    year: 2005
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:yeo-2011
+    class: Source
+    label: Yeo et al. 2011
+    type: peer_reviewed
+    citation: "Yeo BTT et al. The organization of the human cerebral cortex estimated by intrinsic functional connectivity. Journal of Neurophysiology 2011;106:1125-1165."
+    year: 2011
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:raichle-2001
+    class: Source
+    label: Raichle et al. 2001
+    type: peer_reviewed
+    citation: "Raichle ME et al. A default mode of brain function. PNAS 2001;98:676-682."
+    year: 2001
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:scoville-milner-1957
+    class: Source
+    label: Scoville and Milner 1957
+    type: peer_reviewed
+    citation: "Scoville WB, Milner B. Loss of recent memory after bilateral hippocampal lesions. J Neurol Neurosurg Psychiatry 1957;20:11-21."
+    year: 1957
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:sorrells-2018
+    class: Source
+    label: Sorrells et al. 2018
+    type: peer_reviewed
+    citation: "Sorrells SF et al. Human hippocampal neurogenesis drops sharply in children to undetectable levels in adults. Nature 2018;555:377-381."
+    year: 2018
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:moreno-jimenez-2019
+    class: Source
+    label: Moreno-Jimenez et al. 2019
+    type: peer_reviewed
+    citation: "Moreno-Jimenez EP et al. Adult hippocampal neurogenesis is abundant in neurologically healthy subjects and drops sharply in patients with Alzheimer's disease. Nature Medicine 2019;25:554-560."
+    year: 2019
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:azevedo-2009
+    class: Source
+    label: Azevedo et al. 2009
+    type: peer_reviewed
+    citation: "Azevedo FAC et al. Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. J Comp Neurol 2009;513:532-541."
+    year: 2009
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+  - id: source:mcgill-neuropsych-day-2026
+    class: Source
+    label: McGill Neuropsychology Day 2026
+    type: official
+    citation: "The Neuro, McGill University. 27th Annual Neuropsychology Day booklet, 11 May 2026."
+    year: 2026
+    url: https://www.mcgill.ca/neuro/files/neuro/neuropsychology_day_booklet_2026.pdf
+    license: all-rights-reserved
+    provenance: { <<: *prov, sources: [] }
+
+  # ---------- Region annotations (base nodes come from brainRegions.json) ----------
+  - id: region:6
+    class: Region
+    aliases: [ { text: "Broca's region", kind: common } ]
+    xrefs: [ { scheme: brodmann, value: "44, 45", matchType: close, verified: false } ]
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: region:19
+    class: Region
+    aliases: [ { text: "the little brain", kind: spoken } ]
+    quantities:
+      - { name: neuronCount, value: 69000000000, unit: neurons, approx: true, sources: [source:azevedo-2009] }
+    provenance: { <<: *prov, sources: [source:azevedo-2009] }
+
+  # ---------- Structures ----------
+  - id: structure:fusiform-gyrus
+    class: Structure
+    label: Fusiform Gyrus
+    kind: gyrus
+    visibility: partly
+    aliases: [ { text: lateral occipitotemporal gyrus, kind: common } ]
+    pronunciation: { respelling: FYOO-zih-form }
+    text: { child: "A long fold on the underside of my temporal lobe that helps you recognise faces." }
+    xrefs: [ { scheme: uberon, value: "UBERON:0002766", matchType: close, verified: false } ]
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:pars-opercularis
+    class: Structure
+    label: Pars Opercularis
+    kind: gyrus
+    visibility: surface
+    pronunciation: { respelling: parz oh-PER-kyu-LAIR-iss }
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:hippocampus
+    class: Structure
+    label: Hippocampus
+    kind: cortex_area
+    visibility: hidden
+    pronunciation: { respelling: hip-oh-KAM-pus }
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: structure:midbrain
+    class: Structure
+    label: Midbrain
+    kind: brain_division
+    visibility: partly
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:substantia-nigra
+    class: Structure
+    label: Substantia Nigra
+    kind: nucleus
+    visibility: hidden
+    pronunciation: { respelling: sub-STAN-shee-uh NYE-gruh }
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: structure:central-sulcus
+    class: Structure
+    label: Central Sulcus
+    kind: sulcus
+    visibility: surface
+    aliases: [ { text: fissure of Rolando, kind: historical } ]
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:lateral-fissure
+    class: Structure
+    label: Lateral Fissure
+    kind: fissure
+    visibility: surface
+    aliases: [ { text: Sylvian fissure, kind: historical } ]
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:spinal-cord
+    class: Structure
+    label: Spinal Cord
+    kind: cord
+    visibility: not_present
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+
+  # ---------- Functions and phenomena ----------
+  - id: function:speech-production
+    class: Function
+    label: Speech Production
+    plainDefinition: "Planning and saying words."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: function:face-recognition
+    class: Function
+    label: Face Recognition
+    plainDefinition: "Knowing whose face you are looking at."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: function:episodic-memory
+    class: Function
+    label: Episodic Memory
+    plainDefinition: "Remembering events from your own life."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: function:movement
+    class: Function
+    label: Voluntary Movement
+    plainDefinition: "Planning and carrying out the movements you choose to make."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: phenomenon:phantom-limb
+    class: Phenomenon
+    label: Phantom Limb Sensation
+    plainDefinition: "Feeling a limb that is no longer there."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+
+  # ---------- Networks, tracts, circuits ----------
+  - id: network:default-mode
+    class: Network
+    label: Default Mode Network
+    atlas: yeo7
+    yeoLabel: Default
+    provenance: { <<: *prov, sources: [source:yeo-2011, source:raichle-2001] }
+  - id: tract:arcuate-fasciculus
+    class: Tract
+    label: Arcuate Fasciculus
+    kind: association
+    pronunciation: { respelling: AR-kyoo-ate fuh-SIK-yoo-lus }
+    provenance: { <<: *prov, sources: [source:catani-2005] }
+  - id: circuit:papez
+    class: Circuit
+    label: Papez Circuit
+    summary: "A loop through the hippocampus, mammillary bodies, thalamus and cingulate cortex, first proposed for emotion and now linked mainly to memory."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+
+  # ---------- Cells, molecules, processes, arteries ----------
+  - id: celltype:purkinje
+    class: CellType
+    label: Purkinje Cell
+    kind: neuron
+    pronunciation: { respelling: pur-KIN-jee }
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: molecule:gaba
+    class: Molecule
+    label: GABA
+    kind: neurotransmitter
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: molecule:dopamine
+    class: Molecule
+    label: Dopamine
+    kind: neuromodulator
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: molecule:d2-receptor
+    class: Molecule
+    label: Dopamine D2 Receptor
+    kind: receptor
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: process:long-term-potentiation
+    class: Process
+    label: Long-Term Potentiation
+    kind: plasticity
+    aliases: [ { text: LTP, kind: abbreviation } ]
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: process:adult-neurogenesis
+    class: Process
+    label: Adult Neurogenesis
+    kind: plasticity
+    provenance: { <<: *prov, sources: [source:sorrells-2018, source:moreno-jimenez-2019] }
+  - id: artery:middle-cerebral
+    class: Artery
+    label: Middle Cerebral Artery
+    aliases: [ { text: MCA, kind: abbreviation } ]
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+
+  # ---------- Conditions, myths, people ----------
+  - id: condition:parkinsons-disease
+    class: Condition
+    label: Parkinson's Disease
+    kind: neurodegenerative
+    informationalOnly: true
+    audience: teen
+    text: { child: "An illness where some movement-helping cells deep in my midbrain slowly stop working." }
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: myth:left-right-brain
+    class: Myth
+    label: Left-brained and right-brained people
+    statement: "People are either left-brained (logical) or right-brained (creative)."
+    correction:
+      child: "Both halves of your brain work together on almost everything you do."
+      curious: "Some jobs lean to one side, like language to the left in most people, but nobody is left-brained or right-brained. Both hemispheres share nearly every task."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: person:paul-broca
+    class: Person
+    label: Paul Broca
+    born: 1824
+    died: 1880
+    pronunciation: { respelling: BROH-kuh }
+    provenance: { <<: *prov, sources: [source:dronkers-2007] }
+  - id: person:brenda-milner
+    class: Person
+    label: Brenda Milner
+    born: 1918
+    died: null
+    statusCheckedOn: 2026-10-02
+    provenance: { <<: *prov, sources: [source:mcgill-neuropsych-day-2026] }
+  - id: person:franciscus-sylvius
+    class: Person
+    label: Franciscus Sylvius
+    born: 1614
+    died: 1672
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: person:luigi-rolando
+    class: Person
+    label: Luigi Rolando
+    born: 1773
+    died: 1831
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+
+  # ---------- Docs, words, guides ----------
+  - id: doc:anatomy.lobes
+    class: Doc
+    label: Lobes of the Brain
+    path: kb/anatomy/lobes.md
+    kbId: anatomy.lobes
+    about: [structure:lateral-fissure, structure:central-sulcus]
+    provenance: { <<: *prov, sources: [] }
+  - id: word:speech
+    class: Word
+    text: SPEECH
+    tier: 1
+    provenance: { <<: *prov, sources: [] }
+  - id: guide:sylvi
+    class: Guide
+    label: Sylvi
+    anchorRegions: [region:11, region:12]
+    provenance: { <<: *prov, method: human, sources: [] }
+  - id: guide:rollo
+    class: Guide
+    label: Rollo
+    anchorRegions: [region:5, region:7]
+    provenance: { <<: *prov, method: human, sources: [] }
+
+assertions:
+  - { id: assert:fusiform--part-of--region-14, predicate: PART_OF, subject: structure:fusiform-gyrus, object: region:14, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:pars-opercularis--part-of--region-6, predicate: PART_OF, subject: structure:pars-opercularis, object: region:6, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:midbrain--part-of--region-20, predicate: PART_OF, subject: structure:midbrain, object: region:20, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:substantia-nigra--part-of--midbrain, predicate: PART_OF, subject: structure:substantia-nigra, object: structure:midbrain, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:hippocampus--beneath--region-14, predicate: LIES_BENEATH, subject: structure:hippocampus, object: region:14, props: { hint: "deep inside my temporal lobe, on its inner side" }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:central-sulcus--bounds--region-5, predicate: BOUNDS, subject: structure:central-sulcus, object: region:5, props: { side: behind }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:lateral-fissure--bounds--region-12, predicate: BOUNDS, subject: structure:lateral-fissure, object: region:12, props: { side: above }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:region-5--adjacent--region-7, predicate: ADJACENT_TO, subject: region:5, object: region:7, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:speech-production--region-6, predicate: SUPPORTED_BY, subject: function:speech-production, object: region:6, props: { role: primary, evidence: [lesion, stimulation], lateralization: left, confidence: established }, provenance: { <<: *prov, sources: [source:dronkers-2007, source:kandel-pns-6e] } }
+  - { id: assert:speech-production--region-5, predicate: SUPPORTED_BY, subject: function:speech-production, object: region:5, props: { role: primary, evidence: [stimulation], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:face-recognition--fusiform, predicate: SUPPORTED_BY, subject: function:face-recognition, object: structure:fusiform-gyrus, props: { role: primary, evidence: [lesion, stimulation, imaging], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:episodic-memory--hippocampus, predicate: SUPPORTED_BY, subject: function:episodic-memory, object: structure:hippocampus, props: { role: primary, evidence: [lesion], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:scoville-milner-1957] } }
+  - { id: assert:episodic-memory--region-10, predicate: SUPPORTED_BY, subject: function:episodic-memory, object: region:10, props: { role: contributing, evidence: [imaging], lateralization: bilateral, confidence: approximate }, provenance: { <<: *prov, sources: [source:raichle-2001] } }
+  - { id: assert:movement--region-5, predicate: SUPPORTED_BY, subject: function:movement, object: region:5, props: { role: primary, evidence: [lesion, stimulation], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:phantom-limb--region-7, predicate: EXPLAINED_BY, subject: phenomenon:phantom-limb, object: region:7, props: { confidence: approximate }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:region-10--default-mode, predicate: MEMBER_OF, subject: region:10, object: network:default-mode, props: { role: hub, confidence: approximate }, provenance: { <<: *prov, sources: [source:yeo-2011, source:raichle-2001] } }
+  - { id: assert:default-mode--episodic-memory, predicate: SUBSERVES, subject: network:default-mode, object: function:episodic-memory, props: { confidence: approximate }, provenance: { <<: *prov, sources: [source:raichle-2001] } }
+  - { id: assert:arcuate--region-13, predicate: CONNECTS, subject: tract:arcuate-fasciculus, object: region:13, props: { endpoint: origin }, provenance: { <<: *prov, sources: [source:catani-2005] } }
+  - { id: assert:arcuate--region-6, predicate: CONNECTS, subject: tract:arcuate-fasciculus, object: region:6, props: { endpoint: termination }, provenance: { <<: *prov, sources: [source:catani-2005] } }
+  - { id: assert:arcuate--region-9, predicate: CONNECTS, subject: tract:arcuate-fasciculus, object: region:9, props: { endpoint: via }, provenance: { <<: *prov, sources: [source:catani-2005] } }
+  - { id: assert:papez--hippocampus, predicate: INCLUDES, subject: circuit:papez, object: structure:hippocampus, props: { order: 1 }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:region-19--purkinje, predicate: CONTAINS_CELL, subject: region:19, object: celltype:purkinje, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:purkinje--gaba, predicate: RELEASES, subject: celltype:purkinje, object: molecule:gaba, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:dopamine--d2, predicate: ACTS_ON, subject: molecule:dopamine, object: molecule:d2-receptor, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:dopamine--substantia-nigra, predicate: PRODUCED_IN, subject: molecule:dopamine, object: structure:substantia-nigra, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:hippocampus--ltp, predicate: PARTICIPATES_IN, subject: structure:hippocampus, object: process:long-term-potentiation, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:region-6--mca, predicate: SUPPLIED_BY, subject: region:6, object: artery:middle-cerebral, props: { portion: superior division }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:parkinsons--substantia-nigra, predicate: AFFECTS, subject: condition:parkinsons-disease, object: structure:substantia-nigra, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:parkinsons--movement, predicate: IMPAIRS, subject: condition:parkinsons-disease, object: function:movement, props: { sign: "slowness, stiffness and tremor" }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:broca--described--region-6, predicate: DESCRIBED, subject: person:paul-broca, object: region:6, props: { year: 1861 }, provenance: { <<: *prov, sources: [source:dronkers-2007] } }
+  - { id: assert:milner--described--hippocampus, predicate: DESCRIBED, subject: person:brenda-milner, object: structure:hippocampus, props: { year: 1957 }, provenance: { <<: *prov, sources: [source:scoville-milner-1957] } }
+  - { id: assert:region-6--named-after--broca, predicate: NAMED_AFTER, subject: region:6, object: person:paul-broca, provenance: { <<: *prov, sources: [source:dronkers-2007] } }
+  - { id: assert:sylvi--named-after--sylvius, predicate: NAMED_AFTER, subject: guide:sylvi, object: person:franciscus-sylvius, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:rollo--named-after--rolando, predicate: NAMED_AFTER, subject: guide:rollo, object: person:luigi-rolando, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:sylvi--anchored--lateral-fissure, predicate: ANCHORED_ON, subject: guide:sylvi, object: structure:lateral-fissure, provenance: { <<: *prov, method: human, sources: [] } }
+  - { id: assert:rollo--anchored--central-sulcus, predicate: ANCHORED_ON, subject: guide:rollo, object: structure:central-sulcus, provenance: { <<: *prov, method: human, sources: [] } }
+  - { id: assert:debunk--left-right-brain--language, predicate: DEBUNKS, subject: assert:speech-production--region-6, object: myth:left-right-brain, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:hippocampus--adult-neurogenesis--asserts, predicate: PARTICIPATES_IN, subject: structure:hippocampus, object: process:adult-neurogenesis, props: { confidence: debated, stance: asserts }, provenance: { <<: *prov, sources: [source:moreno-jimenez-2019] } }
+  - { id: assert:hippocampus--adult-neurogenesis--disputes, predicate: PARTICIPATES_IN, subject: structure:hippocampus, object: process:adult-neurogenesis, props: { confidence: debated, stance: disputes }, provenance: { <<: *prov, sources: [source:sorrells-2018] } }
+  - { id: assert:neurogenesis-debate, predicate: CONTESTS, subject: assert:hippocampus--adult-neurogenesis--disputes, object: assert:hippocampus--adult-neurogenesis--asserts, provenance: { <<: *prov, sources: [source:sorrells-2018, source:moreno-jimenez-2019] } }
+  - { id: assert:word-speech--speech-production, predicate: EXPRESSES, subject: word:speech, object: function:speech-production, provenance: { <<: *prov, sources: [] } }

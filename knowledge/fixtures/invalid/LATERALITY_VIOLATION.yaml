@@ -1,0 +1,3 @@
+code: LATERALITY_VIOLATION
+why: Broca's area exists only on the left.
+patch: [ { op: set, id: assert:speech-production--region-6, path: props.lateralization, value: right } ]

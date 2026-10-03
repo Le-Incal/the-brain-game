@@ -1,0 +1,3 @@
+code: REGION_REDEFINED
+why: Region names belong to brainRegions.json.
+patch: [ { op: set, id: region:6, path: label, value: Broca Area } ]

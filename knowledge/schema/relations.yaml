@@ -1,0 +1,65 @@
+# Relation types. Every relation is an assertion record:
+#   id (assert:...), predicate, subject, object, provenance; optional props,
+#   debateNote, validAsOf, reviewBy, audience.
+# `Assertion` in a domain or range means the endpoint is another assertion.
+# `derivedOnly` relations are produced by the reasoner and may not be asserted.
+
+assertion:
+  required: { id: id, predicate: string, subject: id, object: id, provenance: Provenance }
+  optional: { props: object, debateNote: string, validAsOf: date, reviewBy: date, audience: vocab:audience }
+
+# Optional on every relation unless the relation declares it required.
+universalProps:
+  confidence: { type: vocab:confidence }
+  stance: { type: vocab:stance }
+
+relations:
+  PART_OF:         { domain: [Structure], range: [Region, Structure] }
+  LIES_BENEATH:    { domain: [Structure], range: [Region], props: { hint: { type: string, required: true, maxWords: 20 } } }
+  BOUNDS:          { domain: [Structure], range: [Region, Structure], props: { side: { type: string } } }
+  ADJACENT_TO:     { domain: [Region, Structure], range: [Region, Structure], symmetric: true }
+  SUPPORTED_BY:
+    domain: [Function]
+    range: [Region, Structure]
+    props:
+      role: { type: vocab:role, required: true }
+      evidence: { type: list<vocab:evidence>, required: true }
+      lateralization: { type: vocab:lateralization, required: true }
+      confidence: { type: vocab:confidence, required: true }
+  EXPLAINED_BY:    { domain: [Phenomenon], range: [Function, Region, Structure], props: { confidence: { type: vocab:confidence, required: true } } }
+  MEMBER_OF:
+    domain: [Region, Structure]
+    range: [Network]
+    props:
+      role: { type: vocab:networkRole, required: true }
+      confidence: { type: vocab:confidence, required: true }
+  SUBSERVES:       { domain: [Network], range: [Function], props: { confidence: { type: vocab:confidence, required: true } } }
+  CONNECTS:        { domain: [Tract], range: [Region, Structure], props: { endpoint: { type: vocab:endpoint, required: true } } }
+  INCLUDES:        { domain: [Circuit], range: [Region, Structure, Tract], props: { order: { type: int } } }
+  CONTAINS_CELL:   { domain: [Region, Structure], range: [CellType] }
+  RELEASES:        { domain: [CellType], range: [Molecule] }
+  ACTS_ON:         { domain: [Molecule], range: [Molecule] }
+  PRODUCED_IN:     { domain: [Molecule], range: [Structure, Region] }
+  PARTICIPATES_IN: { domain: [Structure, Region, CellType, Molecule], range: [Process] }
+  SUPPLIED_BY:     { domain: [Region, Structure], range: [Artery], props: { portion: { type: string } } }
+  AFFECTS:         { domain: [Condition], range: [Region, Structure, CellType] }
+  IMPAIRS:         { domain: [Condition], range: [Function], props: { sign: { type: string, required: true, maxWords: 25 } } }
+  DESCRIBED:       { domain: [Person], range: [any], props: { year: { type: year, required: true } } }
+  NAMED_AFTER:     { domain: [Region, Structure, Phenomenon, Condition, Guide], range: [Person] }
+  DEBUNKS:         { domain: [Assertion], range: [Myth] }
+  CONTESTS:        { domain: [Assertion], range: [Assertion] }
+  ANCHORED_ON:     { domain: [Guide], range: [Structure], requiresSources: false }
+  EXPRESSES:       { domain: [Word], range: [Function, Phenomenon, Condition], requiresSources: false }
+  VISIBLE_FROM:    { domain: [Region], range: [View], derivedOnly: true }
+  ABOUT:           { domain: [Doc], range: [any], derivedOnly: true }
+
+# Inverses emitted by reasoner rule R2.
+inverses:
+  PART_OF: HAS_PART
+  LIES_BENEATH: COVERS
+  SUPPORTED_BY: SUPPORTS
+  MEMBER_OF: HAS_MEMBER
+  CONNECTS: CONNECTED_BY
+  INCLUDES: IN_CIRCUIT
+  AFFECTS: AFFECTED_BY
+  SUPPLIED_BY: SUPPLIES

@@ -1,0 +1,3 @@
+code: SHARE_ALIKE_LEAK
+why: Share-alike content outside data/share-alike/.
+patch: [ { op: set, id: function:face-recognition, path: provenance.license, value: cc-by-sa-3.0 } ]

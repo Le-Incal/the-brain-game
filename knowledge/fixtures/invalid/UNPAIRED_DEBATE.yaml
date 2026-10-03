@@ -1,0 +1,3 @@
+code: UNPAIRED_DEBATE
+why: Debated claims without their contesting partner.
+patch: [ { op: remove, id: assert:neurogenesis-debate } ]

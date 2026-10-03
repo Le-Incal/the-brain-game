@@ -1,0 +1,5 @@
+code: DUPLICATE_ID
+why: Two records claim the same id.
+patch:
+  - op: addNode
+    record: { id: structure:hippocampus, class: Structure, label: Hippocampus, kind: cortex_area, visibility: hidden, provenance: { locator: fixture, license: own, method: ai_extracted, assertedBy: "extractor:claude", assertedOn: 2026-10-02, status: proposed, sources: [source:kandel-pns-6e] } }

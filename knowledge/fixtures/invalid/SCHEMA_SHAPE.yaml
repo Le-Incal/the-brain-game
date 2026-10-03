@@ -1,0 +1,3 @@
+code: SCHEMA_SHAPE
+why: A Structure is missing its required kind.
+patch: [ { op: unset, id: structure:fusiform-gyrus, path: kind } ]

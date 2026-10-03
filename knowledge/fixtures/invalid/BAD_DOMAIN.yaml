@@ -1,0 +1,3 @@
+code: BAD_DOMAIN
+why: ACTS_ON must join two molecules, not a molecule and a cell type.
+patch: [ { op: set, id: assert:dopamine--d2, path: object, value: celltype:purkinje } ]

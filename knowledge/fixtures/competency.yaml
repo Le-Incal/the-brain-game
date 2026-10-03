@@ -1,0 +1,33 @@
+# Competency questions over the valid fixture set. One per reasoner rule and
+# per class at minimum. expect ops: equals (set equality for lists), includes,
+# excludes, isNull, matches (partial object).
+- { id: f01, question: "Which regions are primary for speech production?", call: regionsFor, args: [function:speech-production, primary], expect: { equals: [region:5, region:6] } }
+- { id: f02, question: "Is region 6 lateralized?", call: lateralityOf, args: [region:6], expect: { equals: left } }
+- { id: f03, question: "R4: what side is the pars opercularis on?", call: lateralityOf, args: [structure:pars-opercularis], expect: { equals: left } }
+- { id: f04, question: "R3: where does the guide point for the hippocampus?", call: pointTo, args: [structure:hippocampus], expect: { matches: { region: region:14, hint: "deep inside my temporal lobe, on its inner side" } } }
+- { id: f05, question: "R3: where does the guide point for the spinal cord?", call: pointTo, args: [structure:spinal-cord], expect: { isNull: true } }
+- { id: f06, question: "R3 transitive: where for the substantia nigra?", call: pointTo, args: [structure:substantia-nigra], expect: { matches: { region: region:20 } } }
+- { id: f07, question: "R6: which tract connects Broca's and Wernicke's?", call: tractsConnecting, args: [region:6, region:13], expect: { equals: [tract:arcuate-fasciculus] } }
+- { id: f08, question: "Which networks is the precuneus a hub of?", call: networksOf, args: [region:10, hub], expect: { equals: [network:default-mode] } }
+- { id: f09, question: "R5: what is the precuneus involved in through its networks?", call: involvedIn, args: [region:10], expect: { includes: [function:episodic-memory] } }
+- { id: f10, question: "Which region recognises faces (through its structures)?", call: regionsFor, args: [function:face-recognition, primary], expect: { equals: [region:14] } }
+- { id: f11, question: "R1/R2: what does region 20 contain?", call: partsOf, args: [region:20], expect: { equals: [structure:midbrain, structure:substantia-nigra] } }
+- { id: f12, question: "Which cells live in region 19?", call: cellsIn, args: [region:19], expect: { equals: [celltype:purkinje] } }
+- { id: f13, question: "What do Purkinje cells release?", call: releases, args: [celltype:purkinje], expect: { equals: [molecule:gaba] } }
+- { id: f14, question: "What does Parkinson's disease affect?", call: affects, args: [condition:parkinsons-disease], expect: { equals: [structure:substantia-nigra] } }
+- { id: f15, question: "What does Parkinson's disease impair?", call: impairs, args: [condition:parkinsons-disease], expect: { equals: [function:movement] } }
+- { id: f16, question: "Which artery supplies region 6?", call: suppliedBy, args: [region:6], expect: { equals: [artery:middle-cerebral] } }
+- { id: f17, question: "Is the left-brain/right-brain myth corrected?", call: isCorrected, args: [myth:left-right-brain], expect: { equals: true } }
+- { id: f18, question: "R10: which myths touch region 6?", call: mythsFor, args: [region:6], expect: { equals: [myth:left-right-brain] } }
+- { id: f19, question: "Is adult neurogenesis in the hippocampus debated?", call: debatesAbout, args: [structure:hippocampus], expect: { equals: [process:adult-neurogenesis] } }
+- { id: f20, question: "Who is Sylvi anchored on and named after?", call: guide, args: [guide:sylvi], expect: { matches: { anchor: structure:lateral-fissure, namedAfter: person:franciscus-sylvius, regions: [region:11, region:12] } } }
+- { id: f21, question: "Is Brenda Milner living?", call: personStatus, args: [person:brenda-milner], expect: { matches: { living: true, checkedOn: "2026-10-02" } } }
+- { id: f22, question: "R8: which regions are prominent from behind?", call: visibleFrom, args: [view:posterior], expect: { includes: [region:17, region:19] } }
+- { id: f23, question: "R7: which bank words accept region 6?", call: wordsAccepting, args: [region:6], expect: { includes: [word:speech] } }
+- { id: f24, question: "Who described region 6, and when?", call: describedBy, args: [region:6], expect: { equals: [ { person: person:paul-broca, year: 1861 } ] } }
+- { id: f25, question: "What explains phantom limb sensation?", call: explainedBy, args: [phenomenon:phantom-limb], expect: { equals: [region:7] } }
+- { id: f26, question: "R9: caveat on imaging-only evidence", call: caveat, args: [assert:episodic-memory--region-10], expect: { equals: reverse_inference } }
+- { id: f27, question: "R9: no caveat when lesion evidence exists", call: caveat, args: [assert:speech-production--region-6], expect: { isNull: true } }
+- { id: f28, question: "Aliases resolve: the little brain", call: resolveAlias, args: ["the little brain"], expect: { equals: region:19 } }
+- { id: f29, question: "Aliases resolve: Sylvian fissure", call: resolveAlias, args: ["Sylvian fissure"], expect: { equals: structure:lateral-fissure } }
+- { id: f30, question: "Disputed claims never count as positive facts", call: participatesIn, args: [structure:hippocampus], expect: { equals: [process:long-term-potentiation] } }

@@ -1,0 +1,5 @@
+code: FALSE_POINTER
+why: The spinal cord is not on the model, so it must not point at a painted region.
+patch:
+  - op: addAssertion
+    record: { id: assert:spinal-cord--part-of--region-20, predicate: PART_OF, subject: structure:spinal-cord, object: region:20, provenance: { locator: fixture, license: own, method: ai_extracted, assertedBy: "extractor:claude", assertedOn: 2026-10-02, status: proposed, sources: [source:kandel-pns-6e] } }
