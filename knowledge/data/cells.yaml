@@ -1,0 +1,4813 @@
+# Brain Game knowledge base: cells. Extracted 2026-10-02; every record is proposed until the steward approves it.
+nodes:
+- id: celltype:neuron
+  class: CellType
+  label: Neuron
+  kind: neuron
+  aliases:
+  - text: nerve cell
+    kind: common
+  pronunciation:
+    respelling: NOOR-on
+  text:
+    child: Neurons are my messenger cells. Each one gathers signals on its branches and, when enough arrive, fires a quick electric pulse down a long wire.
+    curious: A neuron collects input on branching dendrites, adds it up in the cell body and, if the total crosses a threshold, fires a pulse along its axon. At the axon tips the pulse becomes a chemical message for the next cell. I hold about 86 billion neurons, and most of them are packed into my cerebellum.
+    expert: 'Isotropic fractionation of four adult male brains gave about 86 billion neurons, with individual brains between 78.8 and 95.4 billion: roughly 69 billion in the cerebellum and 16 billion in the cerebral cortex. The popular figure of 100 billion falls outside the measured range. Synapses form on dendritic spines, cell bodies and axon initial segments, and whole-brain synapse estimates span about 100 to 1,000 trillion. Most neurons are never replaced, and many neurons release more than one transmitter.'
+  quantities:
+  - name: neuronCount
+    value: 86000000000
+    unit: neurons
+    approx: true
+    sources:
+    - source:azevedo-2009
+    low: 78800000000
+    high: 95400000000
+    note: Four adult male brains aged 50 to 71 (86.1 plus or minus 8.1 billion); low and high are the individual-brain extremes.
+  - name: cerebellarNeuronCount
+    value: 69000000000
+    unit: neurons
+    approx: true
+    sources:
+    - source:azevedo-2009
+    note: Roughly 80 percent of all neurons; most are cerebellar granule cells.
+  - name: corticalNeuronCount
+    value: 16000000000
+    unit: neurons
+    approx: true
+    sources:
+    - source:azevedo-2009
+    note: Cerebral cortex.
+  - name: totalSynapseCount
+    value: 100000000000000
+    unit: synapses
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 100000000000000
+    high: 1000000000000000
+    note: Estimates range from about 100 to 1,000 trillion; value is the low end of the stated range.
+  notes: Use about 86 billion, never 100 billion (Lent et al. 2012 note 100 billion is outside the measured range). Co-transmission is common; Dale's principle (same transmitter set at all terminals) still largely holds. Some neurons, such as retinal amacrine cells, lack a classic axon.
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:lent-2012
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron.md; R1 TL;DR; R1 Key Findings (Neuron and glia counts); R1 §17c Glossary (Neuron); KB physiology/how_neurons_signal.md (Scale)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:glia
+  class: CellType
+  label: Glia
+  kind: glia
+  aliases:
+  - text: glial cells
+    kind: common
+  pronunciation:
+    respelling: GLEE-uh
+  text:
+    child: Glia are my helper cells. They feed and protect neurons, tidy up waste, fight germs and wrap wires so messages travel fast.
+    curious: Glia are all the nervous-system cells that are not neurons. They do not usually fire spikes, yet they manage the chemistry around synapses, insulate axons, defend against infection and help build the brain. Across my whole brain there is roughly one glial cell per neuron, not the ten to one that older books repeat.
+    expert: Central types are astrocytes, oligodendrocytes, microglia, ependymal cells and oligodendrocyte precursor (NG2) cells, with specialists such as Bergmann glia, Muller glia and tanycytes; Schwann cells myelinate peripheral nerves. Microglia come from yolk-sac immune precursors, not neural progenitors. The whole-brain glia-to-neuron ratio is near 1:1, but outside the cerebellum, where granule cells dominate the neuron count, it can reach about 4:1. Glia signal through calcium waves and gliotransmitters, and most primary malignant brain tumours arise from glial lineages.
+  quantities:
+  - name: gliaToNeuronRatio
+    value: 1
+    unit: ratio
+    approx: true
+    sources:
+    - source:azevedo-2009
+    - source:von-bartheld-2016
+    note: Whole brain, roughly 1:1; varies by region. The 10:1 figure is a myth.
+  - name: gliaToNeuronRatioOutsideCerebellum
+    value: 4
+    unit: ratio
+    approx: true
+    sources:
+    - source:von-bartheld-2016
+    note: Upper figure (up to about 4:1) for the brain excluding the cerebellum.
+  - name: nonNeuronalCellCount
+    value: 85000000000
+    unit: cells
+    approx: true
+    sources:
+    - source:azevedo-2009
+    note: Azevedo counted non-neuronal cells, a category not limited to glia.
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:von-bartheld-2016
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md; R1 Key Findings (Neuron and glia counts); R1 §17a Myths 8; R1 §17c Glossary (Glia); KB SOURCES_AND_CORRECTIONS.md (QBI What is a neuron?)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:pyramidal-neuron
+  class: CellType
+  label: Pyramidal Neuron
+  kind: neuron
+  aliases:
+  - text: pyramidal cell
+    kind: common
+  pronunciation:
+    respelling: pih-RAM-ih-dal
+  text:
+    child: Cone-shaped neurons that make up most of my outer layer. Their long wires carry go signals to faraway brain areas.
+    curious: Pyramidal neurons are the main projection cells of the cortex, about four in every five cortical neurons. Their long axons excite distant targets with glutamate, and one cell can carry thousands of synapses. They fill layers II, III and V, and the giant Betz cells of my motor strip are an extreme example.
+  quantities:
+  - name: shareOfCorticalNeurons
+    value: 80
+    unit: percent
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    note: Cortical projection neurons; local interneurons make up the remaining roughly 20 percent.
+  - name: synapsesPerCell
+    value: 10000
+    unit: synapses
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    note: Stated as several thousand to over ten thousand for a typical cortical pyramidal neuron.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons); R2 C1 The six neocortical layers; KB physiology/how_neurons_signal.md (Scale); KB SOURCES_AND_CORRECTIONS.md (How do neurons work?)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:betz
+  class: CellType
+  label: Betz Cell
+  kind: neuron
+  pronunciation:
+    respelling: BETS
+  text:
+    child: Giant cells in my movement strip. Their long wires reach down toward your spinal cord to help move your muscles.
+    curious: Betz cells are giant pyramidal neurons in layer V of the primary motor cortex and rank among the biggest neurons anywhere in your nervous system. Despite their fame they supply only a small share of the fibres in the pathway to the spinal cord, roughly 3 to 5 percent.
+  quantities:
+  - name: cellCount
+    value: 34000
+    unit: cells
+    approx: true
+    sources:
+    - source:kandel-pns
+    note: Classic counts (Lassek); R2 F marks this as not re-verified.
+  - name: shareOfCorticospinalAxons
+    value: 4
+    unit: percent
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    low: 3
+    high: 5
+    note: R1 gives about 3 to 5 percent; R2 F gives roughly 3 percent (about 34,000 Betz cells against about 1 million pyramidal tract axons). Value is the midpoint; not re-verified.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:qbi-brain-basics
+    locator: R1 §1.5 Primary motor cortex (Key cells); R2 C1; R2 C2 Motor versus sensory cortex; R2 F Verification (Betz cell share); KB cells/neuron_types.md (Signature neurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:purkinje
+  class: CellType
+  label: Purkinje Cell
+  kind: neuron
+  pronunciation:
+    respelling: pur-KIN-jee
+  text:
+    child: Big, fan-shaped cells in my cerebellum. They gather huge amounts of information and send calming signals that keep your movements smooth.
+    curious: Purkinje cells carry every signal that leaves the cerebellar cortex. Each has a flat, fan-like dendritic tree that can receive up to about 200,000 parallel-fibre inputs. They release GABA, so their message is inhibitory, and lasting changes at their synapses help you learn and fine-tune movements.
+  quantities:
+  - name: parallelFibreSynapsesPerCell
+    value: 200000
+    unit: synapses
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:qbi-brain-basics
+    note: Up to about 200,000 per cell.
+  notes: Purkinje cells inhibit the deep cerebellar nuclei (main outputs); some flocculonodular and vermal Purkinje cells project directly to the vestibular nuclei.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R1 §1.19 Cerebellum (Anatomy); R1 §17c Glossary (Purkinje cell); KB cells/neuron_types.md (Signature neurons); KB anatomy/hindbrain.md (For the expert); R2 B2 Cerebro-cerebellar loop
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:cerebellar-granule-cell
+  class: CellType
+  label: Cerebellar Granule Cell
+  kind: neuron
+  text:
+    child: Tiny cells packed by the billions into my cerebellum. There are more of them than any other kind of neuron in me.
+    curious: Granule cells make up most of the cerebellum's roughly 69 billion neurons, which makes them the most numerous neurons in the brain. Unusually, most are born after birth, during the first year of life. Mossy fibres drive them, and their parallel fibres excite Purkinje cells with glutamate.
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R1 §1.19 Cerebellum (What); R2 B2 Cerebro-cerebellar loop; KB physiology/neurogenesis.md (Before birth); KB SOURCES_AND_CORRECTIONS.md (Independent fact-check)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:interneuron
+  class: CellType
+  label: Interneuron
+  kind: neuron
+  pronunciation:
+    respelling: IN-ter-noor-on
+  text:
+    child: Connector neurons that link other neurons together and help shape the timing of their signals.
+    curious: The word has two uses. Broadly it means any neuron that is neither sensory nor motor, by far the largest group in the brain. In the narrower sense it means local circuit cells, about one in five cortical neurons, which are mostly inhibitory, use GABA and shape timing and rhythm. In the spinal cord, some inhibitory interneurons use glycine.
+  quantities:
+  - name: shareOfCorticalNeurons
+    value: 20
+    unit: percent
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    note: Local (narrow-sense) interneurons of the cortex.
+  notes: 'Two senses: broad (any neuron neither sensory nor motor) and narrow (local circuit cell). RELEASES assertions refer to the narrow, local sense.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (How they function; Projection neurons vs local interneurons); R2 B9 Spinal reflex arcs; KB physiology/neurotransmitters.md (Glycine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:basket-cell
+  class: CellType
+  label: Basket Cell
+  kind: neuron
+  text:
+    curious: A classic local interneuron of the cortex, one of the mostly inhibitory cells that shape when nearby neurons fire.
+  notes: Example of a local (narrow-sense) interneuron.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:chandelier-cell
+  class: CellType
+  label: Chandelier Cell
+  kind: neuron
+  text:
+    curious: A classic local interneuron of the cortex, one of the mostly inhibitory cells that shape the timing and rhythm of cortical activity.
+  notes: Example of a local (narrow-sense) interneuron.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:spiny-stellate-cell
+  class: CellType
+  label: Spiny Stellate Cell
+  kind: neuron
+  text:
+    curious: The main cell of layer IV, the neocortical layer that receives core input from the thalamus. Receiving areas such as primary touch, hearing and visual cortex have a thick layer IV, while motor cortex has almost none.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 C1 The six neocortical layers (layer IV); R2 C2 Motor versus sensory cortex
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:motor-neuron
+  class: CellType
+  label: Motor Neuron
+  kind: neuron
+  aliases:
+  - text: lower motor neuron
+    kind: common
+  text:
+    child: Neurons that carry go signals from your spinal cord and brainstem out to your muscles.
+    curious: Motor neurons in the spinal cord and brainstem send axons out to skeletal muscle, where acetylcholine makes the muscle contract. Upper motor neurons from the cortex command them. Damage to them causes weakness, wasting and lost reflexes. Smooth muscle, the heart and glands are run by autonomic neurons instead.
+  notes: In the KB's everyday sense this is the lower motor neuron (spinal cord and brainstem to skeletal muscle). Somatic motor neurons drive skeletal muscle only (correction applied to QBI).
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md; KB anatomy/spinal_cord.md (Internal layout); KB physiology/neurotransmitters.md (Acetylcholine); R2 B9 Spinal reflex arcs; KB SOURCES_AND_CORRECTIONS.md (Types of neurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:upper-motor-neuron
+  class: CellType
+  label: Upper Motor Neuron
+  kind: neuron
+  text:
+    curious: Upper motor neurons start in my primary motor cortex and in the brainstem and run down to the spinal cord, where they command lower motor neurons. Damage to them causes stiffness and brisk reflexes rather than wasting.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Upper vs lower motor neurons; On the model)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:sensory-neuron
+  class: CellType
+  label: Sensory Neuron
+  kind: neuron
+  text:
+    child: Neurons that notice touch, heat, light, sound and smells, then carry the news inward to your spinal cord and brain.
+    curious: 'Sensory neurons respond when pressure, warmth, light or chemicals reach their endings, then relay the news inward. Their shapes differ: touch and body-position neurons have one process that splits in two, while vision, smell and hearing rely on bipolar neurons.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md; KB SOURCES_AND_CORRECTIONS.md (Types of neurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:dopaminergic-neuron
+  class: CellType
+  label: Dopamine Neuron
+  kind: neuron
+  aliases:
+  - text: dopaminergic neuron
+    kind: common
+  text:
+    child: Neurons deep in my midbrain that make dopamine, a chemical that helps you move smoothly and learn what is worth doing again.
+    curious: 'Dopamine neurons cluster in the substantia nigra and the ventral tegmental area of the midbrain. Nigral cells feed the striatum and support movement; losing them causes Parkinson''s disease. VTA cells reach reward and frontal areas. Their firing tracks surprise: a burst for an unexpected reward, a dip when an expected one fails to come.'
+  notes: Substantia nigra dopamine neurons contain the dark pigment neuromelanin.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:schultz-1997
+    locator: KB anatomy/midbrain.md; KB physiology/neurotransmitters.md (Dopamine); R1 §1.15b Midbrain (Parts); R1 §16 Scope candidates (Parkinson's disease); R2 B6 Mesolimbic and mesocortical dopamine reward circuit; R2 B7 Nigrostriatal pathway
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:cholinergic-neuron
+  class: CellType
+  label: Acetylcholine Neuron
+  kind: neuron
+  aliases:
+  - text: cholinergic neuron
+    kind: common
+  text:
+    curious: Neurons that release acetylcholine. In the brain they sit in the basal forebrain and in nuclei of the pons, and they help keep the cortex awake and support attention and memory.
+  notes: Basal forebrain acetylcholine neurons decline in Alzheimer's disease, but this is a consequence, not the cause. Basal forebrain containment held back pending structure:basal-forebrain.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Acetylcholine); R2 B11 Ascending arousal system; R1 §4 Function index (Sleep and wakefulness)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:orexin-neuron
+  class: CellType
+  label: Orexin Neuron
+  kind: neuron
+  aliases:
+  - text: hypocretin neuron
+    kind: common
+  text:
+    curious: Neurons of the lateral hypothalamus that release orexin, which stabilises the switch between sleep and waking. Losing them causes narcolepsy type 1.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system; R1 §4 Function index (Sleep and wakefulness)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:place-cell
+  class: CellType
+  label: Place Cell
+  kind: neuron
+  text:
+    child: Cells in my hippocampus that switch on when you are in one particular spot, like pins on a map in your head.
+    curious: Each place cell in the hippocampus fires when an animal is in a particular location, so together they map a space. John O'Keefe reported them in 1971. With grid cells next door in the entorhinal cortex, they form a navigation system.
+  provenance:
+    sources:
+    - source:okeefe-1971
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R1 §5 Hidden and deep structures (Hippocampus); R1 §4 Function index (Spatial navigation); KB anatomy/limbic_system.md (Hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:grid-cell
+  class: CellType
+  label: Grid Cell
+  kind: neuron
+  text:
+    child: Cells right next to my hippocampus that team up with place cells to help you find your way around.
+    curious: Grid cells sit in the entorhinal cortex, beside the hippocampus. Together with hippocampal place cells they form the brain's navigation system. May-Britt and Edvard Moser's group described them in 2005.
+  provenance:
+    sources:
+    - source:hafting-2005
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R1 §5 Hidden and deep structures (Hippocampus); R1 §4 Function index (Spatial navigation); KB anatomy/limbic_system.md (Hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:astrocyte
+  class: CellType
+  label: Astrocyte
+  kind: glia
+  pronunciation:
+    respelling: AS-troh-site
+  text:
+    child: Star-shaped helper cells that look after my neurons, tidy up around their connections and wrap my blood vessels.
+    curious: 'Astrocytes clear away surplus neurotransmitter and potassium around synapses, store fuel, and wrap blood vessels with their end-feet, helping maintain the blood-brain barrier and matching blood flow to activity. Because they sit at so many synapses, scientists speak of a three-part synapse: two neurons plus an astrocyte.'
+  notes: How much astrocytes feed neurons directly is still debated (KB cells/glia.md); not modelled as an assertion.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:iliff-2012
+    locator: KB cells/glia.md (Astrocytes); KB anatomy/blood_brain_barrier.md (Neurovascular unit); R1 §7 (Glymphatic system); R1 §13 (Blood-brain barrier); R1 §17c Glossary (Astrocyte)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:oligodendrocyte
+  class: CellType
+  label: Oligodendrocyte
+  kind: glia
+  pronunciation:
+    respelling: oh-lih-goh-DEN-droh-site
+  text:
+    child: Cells that wrap fatty insulation around my wires so messages race along. The fatty wrapping is what makes white matter pale.
+    curious: Oligodendrocytes make myelin in the brain and spinal cord, and one cell can wrap segments of up to about 50 axons. Myelin lets impulses jump from gap to gap, which speeds them up and saves energy. In multiple sclerosis the immune system strips this myelin away.
+  quantities:
+  - name: axonsMyelinatedPerCell
+    value: 50
+    unit: axons
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    note: Up to about 50 axons per cell.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Oligodendrocytes); KB cells/axon.md (Myelin makers); R1 §17c Glossary (Oligodendrocyte)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:oligodendrocyte-precursor-cell
+  class: CellType
+  label: Oligodendrocyte Precursor Cell
+  kind: progenitor
+  aliases:
+  - text: NG2 cell
+    kind: common
+  text:
+    curious: Also called NG2 cells, these precursors make up about 5 to 8 percent of cells in the brain and spinal cord and can become new oligodendrocytes throughout life. Some produce spike-like electrical events.
+  quantities:
+  - name: shareOfCnsCells
+    value: 6.5
+    unit: percent
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    low: 5
+    high: 8
+    note: Stated as about 5 to 8 percent; value is the midpoint.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Oligodendrocyte precursor (NG2) cells)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:microglia
+  class: CellType
+  label: Microglia
+  kind: glia
+  pronunciation:
+    respelling: my-kroh-GLEE-uh
+  text:
+    child: My own immune cells. They patrol for germs and injuries, clear away debris and trim connections I no longer need.
+    curious: 'Microglia are the brain''s resident immune cells. They roam the tissue looking for injury and infection, clean up debris and, while the brain is developing, remove synapses it does not need. Unlike other glia they do not come from neural stem cells: they descend from immune precursors that migrate in from the yolk sac early in development.'
+  notes: 'Origin: yolk-sac immune precursors, not neural stem cells (Ginhoux et al. 2010; correction applied to QBI). Overactive microglia contribute to inflammation in Alzheimer''s.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:ginhoux-2010
+    locator: KB cells/glia.md (Microglia; Origin); KB physiology/neurogenesis.md (For the expert); KB SOURCES_AND_CORRECTIONS.md (What is neurogenesis?); R1 §17c Glossary (Microglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:schwann-cell
+  class: CellType
+  label: Schwann Cell
+  kind: glia
+  pronunciation:
+    respelling: SHWON
+  text:
+    child: Cells that wrap insulation around the nerves in your body and help them grow back after an injury.
+    curious: Schwann cells myelinate peripheral nerves, one cell per segment of a single axon. After an injury they guide regrowth, which is why peripheral nerves recover far better than brain and spinal cord axons, regrowing roughly a millimetre a day.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Outside the brain and spinal cord); KB anatomy/peripheral_nervous_system.md (Myelin; Repair); KB cells/axon.md (Myelin makers)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:ependymal-cell
+  class: CellType
+  label: Ependymal Cell
+  kind: glia
+  pronunciation:
+    respelling: eh-PEN-dih-mal
+  text:
+    child: Cells lining my fluid-filled chambers. Tiny beating hairs on them keep the fluid moving.
+    curious: Ependymal cells form the lining of the ventricles and of the spinal cord's central canal, and their beating cilia keep cerebrospinal fluid moving. A specialised version in the choroid plexus makes most of that fluid.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Ependymal cells)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:radial-glia
+  class: CellType
+  label: Radial Glia
+  kind: progenitor
+  aliases:
+  - text: radial glial cell
+    kind: common
+  text:
+    curious: Stem-like cells of the developing brain. They produce neurons and glia, and they double as guide rails that newborn neurons travel along to reach their places, so the cortex is built from the deepest layer outward. An outer form of radial glia expanded greatly in primates.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Radial glia); KB physiology/neurogenesis.md (Before birth); R1 §12 Lifespan (Neurogenesis and migration)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:neural-stem-cell
+  class: CellType
+  label: Neural Stem Cell
+  kind: progenitor
+  text:
+    curious: Cells that divide to make copies of themselves plus progenitors that mature into neurons or glia. In the developing brain they line the fluid-filled ventricles. Whether adult human brains keep active ones in the hippocampus is part of an open debate.
+  notes: Microglia are not born from neural stem cells.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurogenesis.md (The tour; For the expert)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:bergmann-glia
+  class: CellType
+  label: Bergmann Glia
+  kind: glia
+  text:
+    curious: A specialised glial cell found in the cerebellum.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:muller-glia
+  class: CellType
+  label: Müller Glia
+  kind: glia
+  aliases:
+  - text: Muller glia
+    kind: common
+  text:
+    curious: A specialised glial cell found in the retina.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:tanycyte
+  class: CellType
+  label: Tanycyte
+  kind: glia
+  text:
+    curious: A specialised glial cell found in the hypothalamus.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:rod
+  class: CellType
+  label: Rod Photoreceptor
+  kind: neuron
+  aliases:
+  - text: rod
+    kind: common
+  text:
+    child: Light-catching cells at the back of your eye. Each eye has around a hundred million of them.
+    curious: Rods are one of the two kinds of photoreceptor in the retina, about 90 to 120 million per eye. They hand their signals to bipolar cells, which pass them on to retinal ganglion cells.
+  quantities:
+  - name: countPerRetina
+    value: 105000000
+    unit: cells
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 90000000
+    high: 120000000
+    note: Stated as about 90 to 120 million per retina; value is the midpoint.
+  notes: cellKind 'neuron' assigned by convention for retinal photoreceptors; the sources do not classify them explicitly (see openQuestions).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:cone
+  class: CellType
+  label: Cone Photoreceptor
+  kind: neuron
+  aliases:
+  - text: cone
+    kind: common
+  text:
+    curious: Cones are the retina's other photoreceptor type, about 6 million per eye, passing signals through bipolar cells to retinal ganglion cells.
+  quantities:
+  - name: countPerRetina
+    value: 6000000
+    unit: cells
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+  notes: cellKind 'neuron' assigned by convention for retinal photoreceptors (see openQuestions).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:retinal-bipolar-cell
+  class: CellType
+  label: Retinal Bipolar Cell
+  kind: neuron
+  text:
+    curious: Bipolar cells relay signals from rods and cones to retinal ganglion cells. Like other bipolar neurons they have one input process and one output process.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:nolte-human-brain
+    locator: R1 §8 Sensory systems end to end (Vision); KB cells/neuron_types.md (Shapes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:retinal-ganglion-cell
+  class: CellType
+  label: Retinal Ganglion Cell
+  kind: neuron
+  text:
+    child: The output cells of your eye. Their wires bundle together to form the optic nerve.
+    curious: Retinal ganglion cells are the retina's output neurons. Their axons, about 1 to 1.2 million per eye, form the optic nerve and carry vision toward the thalamus, with a side route to the superior colliculus for orienting and to the body clock for light timing.
+  quantities:
+  - name: axonsPerOpticNerve
+    value: 1100000
+    unit: axons
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:blumenfeld-neuroanatomy
+    low: 1000000
+    high: 1200000
+    note: Stated as about 1 to 1.2 million; value is the midpoint.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §8 Sensory systems end to end (Vision); R1 §2 Pathways (Visual pathway)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:amacrine-cell
+  class: CellType
+  label: Amacrine Cell
+  kind: neuron
+  text:
+    curious: A retinal neuron that lacks a classic axon, a reminder that not every neuron fits the textbook shape.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron.md (Exceptions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:olfactory-sensory-neuron
+  class: CellType
+  label: Olfactory Sensory Neuron
+  kind: neuron
+  text:
+    child: Smell-detecting neurons inside your nose. New ones keep replacing old ones all through your life.
+    curious: These neurons sit in the lining of the nose. Each one expresses a single type of smell receptor, out of about 400, and their axons pass through the cribriform plate to the olfactory bulb. Unlike most neurons they regenerate throughout life, which is separate from the brain's own route to the olfactory bulb that shuts down in infancy.
+  notes: Peripheral olfactory sensory neurons in the nasal epithelium regenerate throughout life (R1 §8). Do not confuse with the subventricular zone to olfactory bulb route, which largely shuts down by about 18 months in humans (KB physiology/neurogenesis.md).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:buck-axel-1991
+    - source:qbi-brain-basics
+    - source:nolte-human-brain
+    locator: 'R1 §8 Sensory systems end to end (Smell); KB cells/neuron_types.md (Shapes: bipolar)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:mitral-cell
+  class: CellType
+  label: Mitral Cell
+  kind: neuron
+  text:
+    curious: An output neuron of the olfactory bulb. With tufted cells, mitral cells carry smell signals along the lateral olfactory tract straight to the piriform cortex, amygdala and entorhinal cortex, without a stop in the thalamus first.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: R1 §8 Sensory systems end to end (Smell); R1 §1.15a Piriform cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:tufted-cell
+  class: CellType
+  label: Tufted Cell
+  kind: neuron
+  text:
+    curious: An output neuron of the olfactory bulb that, alongside mitral cells, sends smell signals directly to the piriform cortex.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: R1 §8 Sensory systems end to end (Smell); R1 §1.15a Piriform cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:dentate-granule-cell
+  class: CellType
+  label: Dentate Gyrus Granule Cell
+  kind: neuron
+  text:
+    curious: Granule cells of the dentate gyrus receive the perforant path from the entorhinal cortex, the first step of the hippocampus's three-synapse circuit. In rodents, new ones are added throughout adult life; whether that happens in adult humans is debated.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R2 B8 Hippocampal trisynaptic circuit; KB physiology/neurogenesis.md (In adults)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:thalamic-relay-neuron
+  class: CellType
+  label: Thalamic Relay Neuron
+  kind: neuron
+  text:
+    curious: Neurons of the thalamic relay nuclei that pass sensory and motor-loop signals up to the cortex, releasing glutamate mainly onto layer IV. Layer VI sends feedback to the same nucleus.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:thalamic-reticular-neuron
+  class: CellType
+  label: Thalamic Reticular Neuron
+  kind: neuron
+  text:
+    curious: Inhibitory neurons forming a thin shell around the thalamus. They receive branches of signals passing in both directions and use GABA to gate which channels reach the cortex.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:d1-striatal-neuron
+  class: CellType
+  label: Direct-Pathway Striatal Neuron
+  kind: neuron
+  aliases:
+  - text: D1 striatal neuron
+    kind: common
+  text:
+    curious: Striatal neurons carrying D1 receptors form the direct, go pathway. Cortex excites them and dopamine boosts them; they inhibit the basal ganglia output, which releases the thalamus and helps movement start. Both pathways turn out to fire together when movement begins.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:albin-1989
+    - source:delong-1990
+    - source:cui-2013
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (Signal flow); R1 §5 Hidden and deep structures (Basal ganglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: celltype:d2-striatal-neuron
+  class: CellType
+  label: Indirect-Pathway Striatal Neuron
+  kind: neuron
+  aliases:
+  - text: D2 striatal neuron
+    kind: common
+  text:
+    curious: Striatal neurons carrying D2 receptors form the indirect, no-go pathway, which ends up suppressing the thalamus. Dopamine damps them, easing the brake on movement; too much no-go is part of the picture in Parkinson's disease.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:albin-1989
+    - source:delong-1990
+    - source:cui-2013
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (Signal flow); R1 §5 Hidden and deep structures (Basal ganglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:glutamate
+  class: Molecule
+  label: Glutamate
+  kind: neurotransmitter
+  pronunciation:
+    respelling: GLOO-tuh-mate
+  text:
+    child: My main go chemical. It tells the next neuron to get excited and fire.
+    curious: Glutamate is the brain's main excitatory transmitter, used by roughly 80 percent of cortical neurons. It acts on fast AMPA receptors and on NMDA receptors, which help decide when a synapse should get stronger during learning.
+  quantities:
+  - name: shareOfCorticalNeuronsUsing
+    value: 80
+    unit: percent
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones); KB physiology/how_neurons_signal.md (Scale); R1 §17c Glossary (Glutamate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:gaba
+  class: Molecule
+  label: GABA
+  kind: neurotransmitter
+  pronunciation:
+    respelling: GAB-uh
+  text:
+    child: My main stop chemical. It calms the next neuron down so it is less likely to fire.
+    curious: GABA is the brain's main inhibitory transmitter, and it is made from glutamate. It works through fast GABA-A receptors and slower GABA-B receptors. Purkinje cells and most local cortical interneurons use it.
+  notes: Made from glutamate. Many sedatives act on GABA receptors (mechanism only).
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones); R2 D2 Major receptor families; R1 §17c Glossary (GABA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:glycine
+  class: Molecule
+  label: Glycine
+  kind: neurotransmitter
+  text:
+    curious: An inhibitory transmitter used mainly in the spinal cord and brainstem. It is also a required partner at NMDA receptors, which will not open on glutamate alone.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones); R2 B9 Spinal reflex arcs
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:acetylcholine
+  class: Molecule
+  label: Acetylcholine
+  kind: neurotransmitter
+  aliases:
+  - text: ACh
+    kind: abbreviation
+  pronunciation:
+    respelling: uh-SEE-tul-KOH-leen
+  text:
+    child: The chemical your nerves use to tell muscles to squeeze. In my brain it helps with attention and memory.
+    curious: 'Acetylcholine is released at every junction between a nerve and a skeletal muscle. In the brain it supports attention and memory and helps keep the cortex awake. It was the first neurotransmitter identified: in 1921 Otto Loewi bathed a second frog heart in fluid from a stimulated one and watched it slow down.'
+  notes: Cleared by acetylcholinesterase, the target of Alzheimer's cholinesterase inhibitors (mechanism only). Basal forebrain acetylcholine neuron loss in Alzheimer's is a consequence, not the cause.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:loewi-1921
+    locator: KB physiology/neurotransmitters.md (Memorable fact; The main ones; Clearance); R1 §10 History (Otto Loewi); R2 B11 Ascending arousal system
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:dopamine
+  class: Molecule
+  label: Dopamine
+  kind: neuromodulator
+  pronunciation:
+    respelling: DOH-puh-meen
+  text:
+    child: A chemical from deep in my midbrain that helps you move smoothly, stay motivated and learn what is worth doing again.
+    curious: Dopamine comes mainly from the substantia nigra and the ventral tegmental area. It shapes movement, motivation and reward learning, and its loss from the nigra causes Parkinson's disease. It is better described as a wanting-and-learning signal than as a pleasure chemical.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:brainfacts
+    - source:nolte-human-brain
+    - source:schultz-1997
+    locator: KB physiology/neurotransmitters.md (The main ones; Common questions; Careful with); KB anatomy/midbrain.md; R2 B6; R2 B7; R1 §17c Glossary (Dopamine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:serotonin
+  class: Molecule
+  label: Serotonin
+  kind: neuromodulator
+  aliases:
+  - text: 5-HT
+    kind: abbreviation
+  pronunciation:
+    respelling: sair-uh-TOH-nin
+  text:
+    child: A chemical messenger linked to mood, sleep, appetite and pain. My own supply comes from cells in my brainstem.
+    curious: Brain serotonin is made by the raphe nuclei of the brainstem. The gut makes most of the body's serotonin, yet the blood-brain barrier keeps that supply out, so gut serotonin does not directly set your mood. It acts on many receptor subtypes, nearly all of them slow metabotropic ones.
+  quantities:
+  - name: shareOfBodySerotoninMadeInGut
+    value: 92.5
+    unit: percent
+    approx: true
+    sources:
+    - source:purves-neuroscience
+    low: 90
+    high: 95
+    note: Stated as about 90 to 95 percent; value is the midpoint. Gut serotonin does not cross the blood-brain barrier.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones; Common questions); KB SOURCES_AND_CORRECTIONS.md (Neurotransmitters); R1 §17a Myths 14; R1 §13 Blood-brain barrier
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:noradrenaline
+  class: Molecule
+  label: Noradrenaline
+  kind: neuromodulator
+  aliases:
+  - text: norepinephrine
+    kind: common
+  pronunciation:
+    respelling: nor-a-DREN-a-lin
+  text:
+    child: An alertness chemical. It helps you wake up, pay attention and get ready for action.
+    curious: Noradrenaline, also called norepinephrine, comes from the locus coeruleus in the pons. In the brain it raises arousal and attention; in the body it is the main transmitter of the sympathetic fight-or-flight nerves.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones); R1 §1.20 Brainstem (Pons); R2 B11 Ascending arousal system
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:histamine
+  class: Molecule
+  label: Histamine
+  kind: neurotransmitter
+  text:
+    curious: A wake-promoting transmitter made in the hypothalamus, in its tuberomammillary nucleus. That is why older antihistamines, which interfere with it, leave people drowsy.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (The main ones); R2 B11 Ascending arousal system
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:melatonin
+  class: Molecule
+  label: Melatonin
+  kind: hormone
+  text:
+    child: A night-time chemical that my pineal gland releases on orders from my body clock.
+    curious: The pineal gland secretes melatonin at night under the control of the suprachiasmatic nucleus, the body clock in the hypothalamus.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    - source:nolte-human-brain
+    locator: R1 §5 Hidden and deep structures (Pineal gland); R1 §4 Function index (Sleep and wakefulness); KB anatomy/forebrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:oxytocin
+  class: Molecule
+  label: Oxytocin
+  kind: neuropeptide
+  text:
+    curious: A neuropeptide made by neurons of the hypothalamus and released from the posterior pituitary.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    locator: R1 §5 Hidden and deep structures (Pituitary gland); KB physiology/neurotransmitters.md (Neuropeptides)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:vasopressin
+  class: Molecule
+  label: Vasopressin
+  kind: neuropeptide
+  text:
+    curious: Made by hypothalamic neurons and released from the posterior pituitary. The paraventricular nucleus also releases it, together with CRH, at the start of the stress hormone chain.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §5 Hidden and deep structures (Pituitary gland); R2 B13 HPA stress axis
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:endocannabinoids
+  class: Molecule
+  label: Endocannabinoids
+  kind: neuromodulator
+  text:
+    curious: Messengers that can travel backwards across a synapse, from the receiving cell to the sending one. Cannabinoid CB1 receptors, among the most common receptors of their class in the brain, carry this retrograde signal.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Unusual messengers); R2 D2 Major receptor families (Cannabinoid CB1)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:orexin
+  class: Molecule
+  label: Orexin
+  kind: neuropeptide
+  aliases:
+  - text: hypocretin
+    kind: common
+  text:
+    curious: A wake-promoting signal from the lateral hypothalamus that steadies the brain's sleep-wake switch.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system; R1 §4 Function index (Sleep and wakefulness)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:adenosine
+  class: Molecule
+  label: Adenosine
+  kind: neuromodulator
+  text:
+    child: A sleepy chemical that piles up the longer you stay awake. Caffeine works by blocking the receptors it uses.
+    curious: While you stay awake, adenosine gradually accumulates and pushes you toward sleep. Caffeine keeps you alert by blocking its A1 and A2A receptors.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Unusual messengers; Common questions); R2 D4 Familiar substances
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:nitric-oxide
+  class: Molecule
+  label: Nitric Oxide
+  kind: neuromodulator
+  text:
+    curious: A gas that neurons use as a messenger. Like endocannabinoids, it can travel backwards across a synapse.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Unusual messengers)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:endorphins
+  class: Molecule
+  label: Endorphins
+  kind: neuropeptide
+  text:
+    curious: Endorphins and related opioid peptides are among more than 100 known neuropeptides. They relieve pain by acting on the brain's opioid receptors.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Neuropeptides); R2 D2 Major receptor families (Opioid)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:crh
+  class: Molecule
+  label: Corticotropin-Releasing Hormone
+  kind: hormone
+  aliases:
+  - text: CRH
+    kind: abbreviation
+  text:
+    curious: 'Released by the hypothalamus''s paraventricular nucleus to start the stress hormone chain: the pituitary then releases ACTH and the adrenal cortex releases cortisol.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis; R2 B5 Amygdala fear circuit (Neurotransmitters)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:ampa-receptor
+  class: Molecule
+  label: AMPA Receptor
+  kind: receptor
+  pronunciation:
+    respelling: AM-pa
+  text:
+    curious: An ionotropic glutamate receptor that carries most fast excitation. During long-term potentiation, extra AMPA receptors are added to the synapse, making it stronger.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R2 D2 Major receptor families; KB physiology/synaptic_plasticity.md (Mechanism)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:nmda-receptor
+  class: Molecule
+  label: NMDA Receptor
+  kind: receptor
+  pronunciation:
+    respelling: N-M-D-A
+  text:
+    child: A molecular gate that opens only when two things happen at once, which helps your brain choose which connections to strengthen.
+    curious: 'An ionotropic receptor that lets calcium in. It needs three things at once: glutamate, a co-agonist such as glycine, and a membrane already depolarised enough to push out the magnesium ion plugging its pore. That makes it a coincidence detector at the heart of classic long-term potentiation.'
+  notes: Ketamine blocks it; alcohol inhibits it (mechanism only, R2 D2 and D4).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: R2 D2 Major receptor families; KB physiology/synaptic_plasticity.md (Mechanism); KB physiology/neurotransmitters.md (Glycine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:kainate-receptor
+  class: Molecule
+  label: Kainate Receptor
+  kind: receptor
+  text:
+    curious: An ionotropic receptor family that modulates signalling on both sides of the synapse.
+  notes: Ligand not stated in the source material; ACTS_ON from glutamate held in openQuestions.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:gaba-a-receptor
+  class: Molecule
+  label: GABA-A Receptor
+  kind: receptor
+  text:
+    curious: An ionotropic chloride channel that provides the main fast inhibition in the brain.
+  notes: Benzodiazepines, alcohol and barbiturates enhance it; benzodiazepines increase how often the channel opens (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families; R2 D4 Familiar substances
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:gaba-b-receptor
+  class: Molecule
+  label: GABA-B Receptor
+  kind: receptor
+  text:
+    curious: A metabotropic GABA receptor that produces slow inhibition by acting on potassium channels.
+  notes: Baclofen is an agonist (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:d1-receptor
+  class: Molecule
+  label: Dopamine D1 Receptor
+  kind: receptor
+  text:
+    curious: A metabotropic dopamine receptor; the D1 family also includes D5. It marks the direct, go pathway in the striatum and supports working memory in the prefrontal cortex.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:albin-1989
+    locator: R2 D2 Major receptor families; R2 B1 (Signal flow); R2 B7 Nigrostriatal pathway; R1 §5 (Basal ganglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:d2-receptor
+  class: Molecule
+  label: Dopamine D2 Receptor
+  kind: receptor
+  text:
+    curious: A metabotropic dopamine receptor; the D2 family also includes D3 and D4. It marks the indirect, no-go pathway in the striatum and also acts as an autoreceptor.
+  notes: Antipsychotic target; D2-blocking antipsychotics can cause parkinsonism (mechanism only, R2 D2 and B7).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:albin-1989
+    locator: R2 D2 Major receptor families; R2 B1 (Signal flow); R2 B7 Nigrostriatal pathway; R1 §5 (Basal ganglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:nicotinic-acetylcholine-receptor
+  class: Molecule
+  label: Nicotinic Acetylcholine Receptor
+  kind: receptor
+  aliases:
+  - text: nicotinic receptor
+    kind: common
+  text:
+    curious: An ionotropic acetylcholine receptor found at the junction between nerve and muscle; brain forms include the alpha4-beta2 and alpha7 types.
+  notes: Nicotine is an agonist, including at receptors on VTA dopamine neurons (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families; R2 D4 Familiar substances
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:muscarinic-acetylcholine-receptor
+  class: Molecule
+  label: Muscarinic Acetylcholine Receptor
+  kind: receptor
+  aliases:
+  - text: muscarinic receptor
+    kind: common
+  text:
+    curious: Metabotropic acetylcholine receptors, numbered M1 to M5.
+  quantities:
+  - name: subtypeCount
+    value: 5
+    unit: subtypes
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    note: M1 to M5; M1, M3 and M5 couple to Gq, M2 and M4 to Gi.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:metabotropic-glutamate-receptor
+  class: Molecule
+  label: Metabotropic Glutamate Receptor
+  kind: receptor
+  aliases:
+  - text: mGluR
+    kind: abbreviation
+  text:
+    curious: A slower, metabotropic glutamate receptor. One form of long-term depression depends on it.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Other forms)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:serotonin-receptors
+  class: Molecule
+  label: Serotonin Receptors
+  kind: receptor
+  aliases:
+  - text: 5-HT receptors
+    kind: abbreviation
+  text:
+    curious: Serotonin acts on about 14 receptor subtypes. Almost all are metabotropic, working through second messengers; 5-HT3 is the one ionotropic exception.
+  quantities:
+  - name: subtypeCount
+    value: 14
+    unit: subtypes
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+  notes: Family node for 5-HT1, 5-HT2 and 5-HT4 to 5-HT7. 5-HT2A is the main psychedelic target (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:serotonin-5-ht3-receptor
+  class: Molecule
+  label: Serotonin 5-HT3 Receptor
+  kind: receptor
+  text:
+    curious: 'The ionotropic exception among serotonin receptors: a cation channel rather than a second-messenger receptor.'
+  notes: Ondansetron blocks it (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:adrenergic-receptors
+  class: Molecule
+  label: Adrenergic Receptors
+  kind: receptor
+  text:
+    curious: 'Metabotropic receptors for noradrenaline: alpha1, alpha2 and beta1 to beta3. Alpha2 works as a presynaptic brake, beta1 sets heart rate and beta2 acts in the airways.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:opioid-receptors
+  class: Molecule
+  label: Opioid Receptors
+  kind: receptor
+  text:
+    curious: Metabotropic mu, delta and kappa receptors. Mu receptors bring pain relief but can also slow breathing; kappa receptors are linked to dysphoria.
+  quantities:
+  - name: subtypeCount
+    value: 3
+    unit: subtypes
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    note: mu, delta, kappa.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families; R2 B10 Central pattern generators
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:cb1-receptor
+  class: Molecule
+  label: Cannabinoid CB1 Receptor
+  kind: receptor
+  text:
+    curious: A metabotropic receptor that is among the most abundant of its class in the brain and carries retrograde signalling.
+  notes: THC is a partial agonist (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:adenosine-a1-receptor
+  class: Molecule
+  label: Adenosine A1 Receptor
+  kind: receptor
+  text:
+    curious: One of the receptors adenosine uses to promote sleepiness; caffeine blocks it.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D4 Familiar substances; KB physiology/neurotransmitters.md (Common questions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:adenosine-a2a-receptor
+  class: Molecule
+  label: Adenosine A2A Receptor
+  kind: receptor
+  text:
+    curious: One of the receptors adenosine uses to promote sleepiness; caffeine blocks it.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D4 Familiar substances; KB physiology/neurotransmitters.md (Common questions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:olfactory-receptors
+  class: Molecule
+  label: Olfactory Receptors
+  kind: receptor
+  aliases:
+  - text: odorant receptors
+    kind: common
+  text:
+    curious: Humans have about 400 functional olfactory receptor genes. Each olfactory sensory neuron expresses just one receptor type, and odorants binding these receptors start the sense of smell.
+  quantities:
+  - name: functionalGeneCount
+    value: 400
+    unit: genes
+    approx: true
+    sources:
+    - source:buck-axel-1991
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:buck-axel-1991
+    locator: R1 §8 Sensory systems end to end (Smell)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:trpv1
+  class: Molecule
+  label: TRPV1
+  kind: receptor
+  text:
+    curious: A molecular sensor for heat and for capsaicin.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Touch, proprioception and pain)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:piezo2
+  class: Molecule
+  label: Piezo2
+  kind: receptor
+  text:
+    curious: A molecular sensor for touch and for body position (proprioception).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Touch, proprioception and pain)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:voltage-gated-sodium-channel
+  class: Molecule
+  label: Voltage-Gated Sodium Channel
+  kind: ion_channel
+  aliases:
+  - text: Nav channel
+    kind: abbreviation
+  text:
+    child: Tiny gates that flip open to let sodium rush in, starting each electric pulse in a neuron.
+    curious: Nine subtypes, Nav1.1 to Nav1.9, drive the rising phase of the action potential. They crowd the axon initial segment, where spikes usually start, and the bare nodes of Ranvier on myelinated axons.
+  quantities:
+  - name: subtypeCount
+    value: 9
+    unit: subtypes
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    note: Nav1.1 to Nav1.9.
+  notes: Blocked by tetrodotoxin and local anaesthetics; SCN1A mutations cause Dravet syndrome (mechanism only).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels; KB physiology/how_neurons_signal.md (The spike); KB cells/axon.md (Segments)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:voltage-gated-potassium-channel
+  class: Molecule
+  label: Voltage-Gated Potassium Channel
+  kind: ion_channel
+  text:
+    curious: Channels that open after sodium channels to bring the membrane back down after each spike, and that shape a neuron's firing pattern.
+  notes: KCNQ mutations cause some epilepsies.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels; KB physiology/how_neurons_signal.md (The spike)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:voltage-gated-calcium-channel
+  class: Molecule
+  label: Voltage-Gated Calcium Channel
+  kind: ion_channel
+  text:
+    curious: Calcium channels come in L, N, P/Q, R and T types. At axon terminals, N and P/Q types let in the calcium that triggers transmitter release; T types drive burst firing in the thalamus.
+  notes: T-type channels are involved in absence epilepsy and are blocked by ethosuximide (mechanism only). Calcium is written Ca2+, not Ca+.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels; KB physiology/how_neurons_signal.md (Chemical synapse); R2 B3 (Failure)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:sodium-potassium-pump
+  class: Molecule
+  label: Sodium-Potassium Pump
+  kind: transporter
+  aliases:
+  - text: Na+/K+ pump
+    kind: abbreviation
+  text:
+    curious: A membrane pump that maintains a neuron's resting voltage and resets it after each electrical pulse. Running these pumps uses most of a neuron's energy, which is why the brain is so power-hungry even at rest.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:brainfacts
+    locator: KB physiology/how_neurons_signal.md (Resting potential); KB cells/mitochondria.md (How they function; Neuronal roles); R1 §13 Blood supply (Energy)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:aquaporin-4
+  class: Molecule
+  label: Aquaporin-4
+  kind: protein
+  text:
+    curious: A water channel on astrocytes. The proposed glymphatic system relies on it to move fluid through brain tissue, an idea that is still debated.
+  provenance:
+    sources:
+    - source:iliff-2012
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:camkii
+  class: Molecule
+  label: CaMKII
+  kind: protein
+  text:
+    curious: A signalling protein switched on by a large calcium influx through NMDA receptors. It drives the insertion of extra AMPA receptors, strengthening the synapse.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:pka
+  class: Molecule
+  label: PKA
+  kind: protein
+  text:
+    curious: A signalling protein needed for late long-term potentiation, the phase that depends on gene expression and new protein synthesis.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Phases)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: molecule:creb
+  class: Molecule
+  label: CREB
+  kind: protein
+  text:
+    curious: A protein needed for late long-term potentiation, the phase that depends on switching on genes and making new proteins.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Phases)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:action-potential
+  class: Process
+  label: Action Potential
+  kind: signalling
+  aliases:
+  - text: spike
+    kind: common
+  - text: nerve impulse
+    kind: common
+  pronunciation:
+    respelling: AK-shun po-TEN-shal
+  text:
+    child: A tiny electric zap that races along a neuron. It is all or nothing, like a camera flash.
+    curious: At rest a neuron sits near minus 70 millivolts. If its inputs push it to about minus 55, sodium channels open, sodium floods in and the inside briefly turns positive. Potassium channels then reset it, all within a millisecond or two. A stronger stimulus gives more spikes, not bigger ones.
+    expert: Spikes usually start at the axon initial segment. Voltage-gated sodium channels open, the membrane peaks near +30 to +40 mV, sodium channels inactivate and voltage-gated potassium channels repolarise it, followed by a brief afterhyperpolarisation; a refractory period stops backward travel. Hodgkin and Huxley's 1952 squid giant axon model explained the sodium and potassium currents. Speed runs from about 0.5 to 2 m/s in thin unmyelinated fibres up to about 120 m/s in thick myelinated ones.
+  quantities:
+  - name: restingPotential
+    value: -70
+    unit: mV
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: -80
+    high: -60
+    note: Typical; varies by cell type.
+  - name: threshold
+    value: -55
+    unit: mV
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: -55
+    high: -50
+  - name: peakPotential
+    value: 35
+    unit: mV
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 30
+    high: 40
+    note: Stated as +30 to +40 mV; value is the midpoint.
+  - name: duration
+    value: 1.5
+    unit: ms
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 1
+    high: 2
+    note: Stated as about 1 to 2 ms; value is the midpoint.
+  - name: unmyelinatedConductionVelocity
+    value: 1.25
+    unit: m/s
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 0.5
+    high: 2
+    note: Thin unmyelinated fibres; value is the midpoint of the stated range.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:hodgkin-huxley-1952
+    locator: KB physiology/how_neurons_signal.md; R1 §10 History (Hodgkin and Huxley); R1 §17c Glossary (Action potential)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:synaptic-transmission
+  class: Process
+  label: Synaptic Transmission
+  kind: signalling
+  text:
+    child: 'How neurons pass on messages: the electric pulse makes the sending cell squirt chemicals across a tiny gap to the next cell.'
+    curious: When a spike reaches an axon terminal, calcium channels open, vesicles fuse and transmitter spills into a cleft about 20 to 40 nanometres wide. Receptors on the next cell respond within about a millisecond, nudging it toward or away from firing. Some neurons instead connect electrically through gap junctions.
+  quantities:
+  - name: synapticCleftWidth
+    value: 30
+    unit: nm
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 20
+    high: 40
+    note: Stated as about 20 to 40 nm; value is the midpoint.
+  - name: synapticDelay
+    value: 0.75
+    unit: ms
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    low: 0.5
+    high: 1
+    note: Stated as about 0.5 to 1 ms; value is the midpoint.
+  notes: Not all synapses are chemical. Transmitters are cleared by reuptake transporters, enzymes and diffusion.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:brainfacts
+    - source:nolte-human-brain
+    locator: KB physiology/how_neurons_signal.md (Chemical synapse; Electrical synapses); KB physiology/neurotransmitters.md; KB cells/glia.md (Astrocytes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:long-term-potentiation
+  class: Process
+  label: Long-Term Potentiation
+  kind: plasticity
+  aliases:
+  - text: LTP
+    kind: abbreviation
+  text:
+    child: When you practise, connections between my neurons get stronger, so the message passes more easily next time.
+    curious: Long-term potentiation is a lasting strengthening of a synapse after strong, well-timed activity, first shown in the rabbit hippocampus by Bliss and Lomo in 1973. In the classic form, NMDA receptors detect coincident activity, calcium pours in and extra AMPA receptors are added. It is the leading cellular model of learning, though not the whole story.
+    expert: 'Classic NMDA-dependent LTP needs glutamate binding plus postsynaptic depolarisation to relieve the magnesium block; the resulting calcium influx activates CaMKII, which drives AMPA receptor insertion. The early phase lasts minutes to hours without any new protein being made; the late phase depends on switching on genes and building proteins through PKA and CREB, plus growth of dendritic spines. LTP is not the whole account of memory: shifts in how excitable neurons are, physical rewiring and engram cell assemblies also contribute.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:bliss-lomo-1973
+    locator: KB physiology/synaptic_plasticity.md; R2 B8 Hippocampal trisynaptic circuit; R2 D2 (NMDA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:long-term-depression
+  class: Process
+  label: Long-Term Depression
+  kind: plasticity
+  aliases:
+  - text: LTD
+    kind: abbreviation
+  text:
+    curious: 'A lasting weakening of a synapse. It is not simple disuse: it needs particular activity patterns, such as modest calcium rises through NMDA receptors. In the cerebellum, weakening of the synapses between parallel fibres and Purkinje cells is a basis for learning movements.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Short-term vs long-term; Mechanism; Other forms; Careful with)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:short-term-plasticity
+  class: Process
+  label: Short-Term Plasticity
+  kind: plasticity
+  text:
+    curious: Changes in synaptic strength lasting milliseconds to minutes, such as facilitation after a quick second spike or depression after a burst. These quick adjustments let synapses act as filters and follow rhythms.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Short-term vs long-term)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:spike-timing-dependent-plasticity
+  class: Process
+  label: Spike-Timing-Dependent Plasticity
+  kind: plasticity
+  aliases:
+  - text: STDP
+    kind: abbreviation
+  text:
+    curious: 'A timing rule for synapses: when the sending neuron fires a few milliseconds (up to about 20) ahead of the receiving one, their connection grows stronger; when the order is reversed, it weakens.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:markram-1997
+    - source:bi-poo-1998
+    locator: KB physiology/synaptic_plasticity.md (Timing rule)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:myelination
+  class: Process
+  label: Myelination
+  kind: development
+  text:
+    child: Wrapping my wires in fatty insulation. It starts before birth, speeds up in your first two years and keeps going into your twenties.
+    curious: Oligodendrocytes in the brain and Schwann cells in the nerves wrap axons in myelin, which speeds signals. It starts before birth, moves fastest in the first two years and is still going in a person's twenties; frontal and association pathways are the last to finish. White matter volume peaks at around age 29.
+  quantities:
+  - name: whiteMatterVolumePeakAge
+    value: 29
+    unit: years
+    approx: true
+    sources:
+    - source:bethlehem-2022
+    note: Lifespan brain charts from more than 100,000 scans.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:bethlehem-2022
+    locator: R1 §12 Lifespan development (Myelination); KB cells/axon.md (Myelin makers); KB cells/glia.md; R1 §17c Glossary (Myelin)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:neurogenesis
+  class: Process
+  label: Neurogenesis
+  kind: development
+  pronunciation:
+    respelling: NOOR-oh-JEN-eh-sis
+  text:
+    child: Making new neurons. Almost all of mine were made before you were born.
+    curious: Neural stem cells divide to make progenitors that mature into neurons or glia, which then migrate and wire in. Over the whole of pregnancy that works out to roughly 250,000 new neurons a minute on average. Most cortical neurons are born in the first half of pregnancy; cerebellar granule cells are the big exception, mostly arriving in the first year after birth.
+  quantities:
+  - name: prenatalNeuronAdditionRate
+    value: 250000
+    unit: neurons/minute
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    note: Averaged across pregnancy.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurogenesis.md (The tour; Before birth); R1 §12 Lifespan development (Neurogenesis and migration); R1 §17c Glossary (Neurogenesis)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:adult-neurogenesis
+  class: Process
+  label: Adult Neurogenesis
+  kind: plasticity
+  text:
+    child: Whether grown-up brains make new neurons. Scientists think a few may appear in my hippocampus, but they are still arguing about it.
+    curious: 'In rodents, new neurons are added throughout life in the hippocampus''s dentate gyrus and along a route to the olfactory bulb. In humans the evidence conflicts: some studies find immature neurons and dividing progenitors into old age, others find almost none in adults. The best summary is some, at low and variable levels, with an unknown role. The human route to the olfactory bulb shuts down by about 18 months.'
+  quantities:
+  - name: humanSvzToOlfactoryBulbRouteShutdownAge
+    value: 18
+    unit: months
+    approx: true
+    sources:
+    - source:sanai-2011
+    - source:bergmann-2012
+    note: The subventricular zone to olfactory bulb route largely shuts down by about this age in humans; not a debated claim.
+  - name: hippocampalNeuronsAddedPerDay
+    value: 700
+    unit: neurons/day
+    approx: true
+    sources:
+    - source:spalding-2013
+    note: Per hippocampus, from a single carbon-14 dating study. Human adult hippocampal neurogenesis is debated; voice only with that caveat.
+  notes: Never state human adult neurogenesis as confirmed or disproven. Adult human amygdala neurogenesis is unproven. Explain learning through plasticity, not new neurons.
+  provenance:
+    sources:
+    - source:sorrells-2018
+    - source:moreno-jimenez-2019
+    - source:dumitru-2025
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurogenesis.md (In adults: the honest state of the science); R1 §12 Lifespan development (Adult neurogenesis (DEBATED)); KB SOURCES_AND_CORRECTIONS.md (Adult neurogenesis)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:synaptic-pruning
+  class: Process
+  label: Synaptic Pruning
+  kind: development
+  text:
+    child: Trimming away connections that are not needed, like pruning a bush so the strongest branches grow.
+    curious: Young brains make more synapses than they keep. Synapse density peaks early in sensory areas, within the first year in visual cortex, and later in the prefrontal cortex; pruning then continues through adolescence. Microglia help remove the unneeded synapses.
+  provenance:
+    sources:
+    - source:huttenlocher-dabholkar-1997
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §12 Lifespan development (Synaptogenesis and pruning); KB cells/glia.md (Microglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:synaptogenesis
+  class: Process
+  label: Synaptogenesis
+  kind: development
+  text:
+    curious: The formation of new synapses. Synapse density peaks within the first year in visual cortex and later in the prefrontal cortex, before pruning trims the excess.
+  provenance:
+    sources:
+    - source:huttenlocher-dabholkar-1997
+    locator: R1 §12 Lifespan development (Synaptogenesis and pruning)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:neuronal-migration
+  class: Process
+  label: Neuronal Migration
+  kind: development
+  text:
+    curious: Newborn neurons travel to their final positions, many climbing along radial glia to build the cortex layer by layer from the inside out. When migration fails, the cortex can end up smooth, as in lissencephaly.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurogenesis.md (Before birth); R1 §12 Lifespan development (Neurogenesis and migration); KB cells/glia.md (Radial glia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:glymphatic-clearance
+  class: Process
+  label: Glymphatic Clearance
+  kind: maintenance
+  aliases:
+  - text: glymphatic system
+    kind: common
+  text:
+    child: A proposed way my fluid rinses out waste. Scientists agree I clean house, but they still argue about how, and whether sleep helps.
+    curious: In 2012 researchers proposed that cerebrospinal fluid flows in along arteries, through brain tissue with help from astrocyte water channels, and out along veins, carrying waste. A 2013 mouse study reported faster clearance during sleep, but a 2024 mouse study found clearance was reduced during sleep and anaesthesia. Treat it as debated.
+  quantities:
+  - name: interstitialSpaceIncreaseDuringSleep
+    value: 60
+    unit: percent
+    approx: true
+    sources:
+    - source:xie-2013
+    note: Mice, single study; the sleep effect on clearance is disputed (Miao et al. 2024).
+  provenance:
+    sources:
+    - source:iliff-2012
+    - source:xie-2013
+    - source:miao-2024
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system (DEBATED)); R1 Key Findings (Glymphatic system); KB cells/glia.md (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:neuroplasticity
+  class: Process
+  label: Neuroplasticity
+  kind: plasticity
+  text:
+    child: My ability to change with practice and to recover after injury. Playing this game is probably reshaping connections in your brain right now.
+    curious: 'Neuroplasticity covers the ways the brain changes with experience or injury: synapses strengthening or weakening, neurons changing their excitability and circuits rewiring. It never switches off, although certain forms peak in childhood, and it is why rehabilitation after a stroke helps. Matching a word to the right region again and again is plasticity in action.'
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md; R1 §17c Glossary (Neuroplasticity); R1 §14 Stroke and recovery (Rehabilitation and plasticity)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:saltatory-conduction
+  class: Process
+  label: Saltatory Conduction
+  kind: signalling
+  text:
+    curious: In myelinated axons the impulse jumps between bare gaps called nodes of Ranvier, which are packed with sodium channels. Skipping ahead this way makes signals much faster, up to about 120 metres per second, and cheaper in energy.
+  quantities:
+  - name: maxConductionVelocity
+    value: 120
+    unit: m/s
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    note: Thick myelinated fibres, for example muscle position sense.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/axon.md (Saltatory conduction; Speed; Segments); KB physiology/how_neurons_signal.md (Conduction)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:sensory-transduction
+  class: Process
+  label: Sensory Transduction
+  kind: signalling
+  text:
+    curious: 'The first step of every sense: turning light, pressure, heat or an odour into neural signals. Rods and cones, olfactory sensory neurons and molecular sensors such as TRPV1 and Piezo2 do this job.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    - source:nolte-human-brain
+    locator: R1 §8 Sensory systems end to end; KB cells/neuron_types.md (How they function)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:csf-production
+  class: Process
+  label: Cerebrospinal Fluid Production
+  kind: homeostasis
+  aliases:
+  - text: CSF production
+    kind: abbreviation
+  text:
+    curious: Most cerebrospinal fluid is made by the choroid plexus inside the ventricles, about 500 mL a day, so the roughly 125 to 150 mL present at any moment turns over three to four times daily. How much comes from outside the choroid plexus is still debated.
+  quantities:
+  - name: productionRate
+    value: 500
+    unit: mL/day
+    approx: true
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    - source:blumenfeld-neuroanatomy
+    low: 400
+    high: 600
+  - name: turnoverPerDay
+    value: 3.5
+    unit: times/day
+    approx: true
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    low: 3
+    high: 4
+    note: Stated as roughly three to four times a day; value is the midpoint.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    locator: R1 §7 Meninges, ventricles and CSF (CSF); R2 F Verification (CSF production); KB cells/glia.md (Ependymal cells)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:axon-regeneration
+  class: Process
+  label: Peripheral Axon Regeneration
+  kind: maintenance
+  text:
+    curious: After an injury, axons in the body's nerves can grow back at about a millimetre a day, with Schwann cells showing the way. Brain and spinal cord axons manage this far less well.
+  quantities:
+  - name: regrowthRate
+    value: 1
+    unit: mm/day
+    approx: true
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/peripheral_nervous_system.md (Repair); KB cells/glia.md (Schwann cells)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:blood-brain-barrier-maintenance
+  class: Process
+  label: Blood-Brain Barrier Maintenance
+  kind: maintenance
+  text:
+    curious: Astrocyte end-feet and pericytes wrap brain capillaries and help create and keep up the tight seal of the blood-brain barrier.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/blood_brain_barrier.md (Neurovascular unit); KB cells/glia.md (Astrocytes); R1 §13 Blood supply (Blood-brain barrier)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: process:energy-metabolism
+  class: Process
+  label: Brain Energy Metabolism
+  kind: maintenance
+  text:
+    child: I am small but hungry. I use about a fifth of your body's energy, even while you rest.
+    curious: Although it makes up only about 2 percent of body weight, the brain burns roughly 20 percent of the energy the body uses at rest. Mitochondria turn glucose and oxygen into ATP, and most of it powers ion pumps and synaptic signalling, so concentrating hard adds very little.
+  quantities:
+  - name: shareOfRestingBodyEnergy
+    value: 20
+    unit: percent
+    approx: true
+    sources:
+    - source:raichle-gusnard-2002
+    - source:brainfacts
+  provenance:
+    sources:
+    - source:raichle-gusnard-2002
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §13 Blood supply (Energy); KB cells/mitochondria.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+assertions:
+- id: assert:region-19--contains-cell--purkinje
+  predicate: CONTAINS_CELL
+  subject: region:19
+  object: celltype:purkinje
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:qbi-brain-basics
+    locator: R1 §1.19 Cerebellum (Anatomy); KB cells/neuron_types.md (On the model); KB anatomy/hindbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--contains-cell--cerebellar-granule-cell
+  predicate: CONTAINS_CELL
+  subject: region:19
+  object: celltype:cerebellar-granule-cell
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:kandel-pns
+    - source:qbi-brain-basics
+    locator: R1 §1.19 Cerebellum (What); KB physiology/neurogenesis.md (Before birth); R2 B2
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--contains-cell--bergmann-glia
+  predicate: CONTAINS_CELL
+  subject: region:19
+  object: celltype:bergmann-glia
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-5--contains-cell--betz
+  predicate: CONTAINS_CELL
+  subject: region:5
+  object: celltype:betz
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §1.5 Primary motor cortex (Key cells); R2 C2 Motor versus sensory cortex; KB cells/neuron_types.md (On the model)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-5--contains-cell--pyramidal-neuron
+  predicate: CONTAINS_CELL
+  subject: region:5
+  object: celltype:pyramidal-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'R1 §1.5 Primary motor cortex (Key cells: Betz cells are giant pyramidal neurons in layer V); R2 C1 (layer V large pyramidal cells)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-5--contains-cell--upper-motor-neuron
+  predicate: CONTAINS_CELL
+  subject: region:5
+  object: celltype:upper-motor-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Upper vs lower motor neurons; On the model)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-20--contains-cell--upper-motor-neuron
+  predicate: CONTAINS_CELL
+  subject: region:20
+  object: celltype:upper-motor-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/neuron_types.md (Upper vs lower motor neurons: start in motor cortex and brainstem)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-20--contains-cell--motor-neuron
+  predicate: CONTAINS_CELL
+  subject: region:20
+  object: celltype:motor-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/neuron_types.md (Upper vs lower motor neurons: lower motor neurons run from spinal cord and brainstem)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinal-cord--contains-cell--motor-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:spinal-cord
+  object: celltype:motor-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB anatomy/spinal_cord.md (Internal layout: ventral horns hold lower motor neurons)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinal-cord--contains-cell--interneuron
+  predicate: CONTAINS_CELL
+  subject: structure:spinal-cord
+  object: celltype:interneuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Memorable fact); R2 B9 Spinal reflex arcs
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--contains-cell--pyramidal-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:cerebral-cortex
+  object: celltype:pyramidal-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons); R2 C1 The six neocortical layers
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--contains-cell--interneuron
+  predicate: CONTAINS_CELL
+  subject: structure:cerebral-cortex
+  object: celltype:interneuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--contains-cell--basket-cell
+  predicate: CONTAINS_CELL
+  subject: structure:cerebral-cortex
+  object: celltype:basket-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--contains-cell--chandelier-cell
+  predicate: CONTAINS_CELL
+  subject: structure:cerebral-cortex
+  object: celltype:chandelier-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--contains-cell--spiny-stellate-cell
+  predicate: CONTAINS_CELL
+  subject: structure:cerebral-cortex
+  object: celltype:spiny-stellate-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 C1 The six neocortical layers (IV Internal granular)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:grey-matter--contains-cell--neuron
+  predicate: CONTAINS_CELL
+  subject: structure:grey-matter
+  object: celltype:neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/central_nervous_system.md (Grey and white matter); R1 §17c Glossary (Gray matter)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:grey-matter--contains-cell--glia
+  predicate: CONTAINS_CELL
+  subject: structure:grey-matter
+  object: celltype:glia
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/central_nervous_system.md (Grey and white matter)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:peripheral-nervous-system--contains-cell--sensory-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:peripheral-nervous-system
+  object: celltype:sensory-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (What they're connected to; Shapes); KB anatomy/peripheral_nervous_system.md (Somatic division)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:peripheral-nervous-system--contains-cell--schwann-cell
+  predicate: CONTAINS_CELL
+  subject: structure:peripheral-nervous-system
+  object: celltype:schwann-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Outside the brain and spinal cord); KB anatomy/peripheral_nervous_system.md (Myelin)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-nervous-system--contains-cell--astrocyte
+  predicate: CONTAINS_CELL
+  subject: structure:central-nervous-system
+  object: celltype:astrocyte
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (In the brain and spinal cord)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-nervous-system--contains-cell--oligodendrocyte
+  predicate: CONTAINS_CELL
+  subject: structure:central-nervous-system
+  object: celltype:oligodendrocyte
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (In the brain and spinal cord)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-nervous-system--contains-cell--microglia
+  predicate: CONTAINS_CELL
+  subject: structure:central-nervous-system
+  object: celltype:microglia
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (In the brain and spinal cord)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-nervous-system--contains-cell--oligodendrocyte-precursor-cell
+  predicate: CONTAINS_CELL
+  subject: structure:central-nervous-system
+  object: celltype:oligodendrocyte-precursor-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (In the brain and spinal cord)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:lateral-ventricle--contains-cell--ependymal-cell
+  predicate: CONTAINS_CELL
+  subject: structure:lateral-ventricle
+  object: celltype:ependymal-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Ependymal cells: line the ventricles)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:third-ventricle--contains-cell--ependymal-cell
+  predicate: CONTAINS_CELL
+  subject: structure:third-ventricle
+  object: celltype:ependymal-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Ependymal cells: line the ventricles)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:fourth-ventricle--contains-cell--ependymal-cell
+  predicate: CONTAINS_CELL
+  subject: structure:fourth-ventricle
+  object: celltype:ependymal-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Ependymal cells: line the ventricles)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:choroid-plexus--contains-cell--ependymal-cell
+  predicate: CONTAINS_CELL
+  subject: structure:choroid-plexus
+  object: celltype:ependymal-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Ependymal cells: a specialised form in the choroid plexus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:substantia-nigra--contains-cell--dopaminergic-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:substantia-nigra
+  object: celltype:dopaminergic-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/midbrain.md (Substantia nigra); R1 §16 Scope candidates (Parkinson's disease); R2 B7
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ventral-tegmental-area--contains-cell--dopaminergic-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:ventral-tegmental-area
+  object: celltype:dopaminergic-neuron
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:schultz-1997
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit; KB anatomy/midbrain.md (VTA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:pons--contains-cell--cholinergic-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:pons
+  object: celltype:cholinergic-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system (pontine PPT and LDT, acetylcholine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:lateral-hypothalamus--contains-cell--orexin-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:lateral-hypothalamus
+  object: celltype:orexin-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system (lateral hypothalamus, orexin; narcolepsy type 1); R1 §4 Function index (Sleep and wakefulness)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--contains-cell--place-cell
+  predicate: CONTAINS_CELL
+  subject: structure:hippocampus
+  object: celltype:place-cell
+  provenance:
+    sources:
+    - source:okeefe-1971
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §5 Hidden and deep structures (Hippocampus); KB anatomy/limbic_system.md (Hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:entorhinal-cortex--contains-cell--grid-cell
+  predicate: CONTAINS_CELL
+  subject: structure:entorhinal-cortex
+  object: celltype:grid-cell
+  provenance:
+    sources:
+    - source:hafting-2005
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §5 Hidden and deep structures (Hippocampus); R1 §4 Function index (Spatial navigation); KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dentate-gyrus--contains-cell--dentate-granule-cell
+  predicate: CONTAINS_CELL
+  subject: structure:dentate-gyrus
+  object: celltype:dentate-granule-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B8 Hippocampal trisynaptic circuit (dentate gyrus granule cells)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--rod
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:rod
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--cone
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:cone
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--retinal-bipolar-cell
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:retinal-bipolar-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--retinal-ganglion-cell
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:retinal-ganglion-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end (Vision)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--amacrine-cell
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:amacrine-cell
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron.md (Exceptions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:retina--contains-cell--muller-glia
+  predicate: CONTAINS_CELL
+  subject: structure:retina
+  object: celltype:muller-glia
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hypothalamus--contains-cell--tanycyte
+  predicate: CONTAINS_CELL
+  subject: structure:hypothalamus
+  object: celltype:tanycyte
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Specialists)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-epithelium--contains-cell--olfactory-sensory-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:olfactory-epithelium
+  object: celltype:olfactory-sensory-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R1 §8 Sensory systems end to end (Smell: olfactory sensory neurons in the nasal epithelium)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-bulb--contains-cell--mitral-cell
+  predicate: CONTAINS_CELL
+  subject: structure:olfactory-bulb
+  object: celltype:mitral-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: R1 §8 Sensory systems end to end (Smell); R1 §1.15a Piriform cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-bulb--contains-cell--tufted-cell
+  predicate: CONTAINS_CELL
+  subject: structure:olfactory-bulb
+  object: celltype:tufted-cell
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: R1 §8 Sensory systems end to end (Smell); R1 §1.15a Piriform cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamus--contains-cell--thalamic-relay-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:thalamus
+  object: celltype:thalamic-relay-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops (relay nuclei)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamic-reticular-nucleus--contains-cell--thalamic-reticular-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:thalamic-reticular-nucleus
+  object: celltype:thalamic-reticular-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops (TRN, a GABAergic shell)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:striatum--contains-cell--d1-striatal-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:striatum
+  object: celltype:d1-striatal-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:albin-1989
+    locator: 'R2 B1 (Signal flow: D1 striatal neurons); R1 §5 (Basal ganglia: striatum (D1))'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:striatum--contains-cell--d2-striatal-neuron
+  predicate: CONTAINS_CELL
+  subject: structure:striatum
+  object: celltype:d2-striatal-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:albin-1989
+    locator: 'R2 B1 (Signal flow: D2 striatal neurons); R1 §5 (Basal ganglia: striatum (D2))'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:purkinje--releases--gaba
+  predicate: RELEASES
+  subject: celltype:purkinje
+  object: molecule:gaba
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:qbi-brain-basics
+    locator: 'R1 §1.19 Cerebellum (Anatomy: inhibitory (GABA)); R2 B2 (Neurotransmitters); KB anatomy/hindbrain.md'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:pyramidal-neuron--releases--glutamate
+  predicate: RELEASES
+  subject: celltype:pyramidal-neuron
+  object: molecule:glutamate
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (Projection neurons vs local interneurons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:interneuron--releases--gaba
+  predicate: RELEASES
+  subject: celltype:interneuron
+  object: molecule:gaba
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/neuron_types.md (local interneurons are mostly inhibitory, using GABA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:interneuron--releases--glycine
+  predicate: RELEASES
+  subject: celltype:interneuron
+  object: molecule:glycine
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 B9 Spinal reflex arcs (glycinergic interneuron); KB physiology/neurotransmitters.md (Glycine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-granule-cell--releases--glutamate
+  predicate: RELEASES
+  subject: celltype:cerebellar-granule-cell
+  object: molecule:glutamate
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (granule cells and parallel fibres; glutamate for mossy, parallel and climbing fibres)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dopaminergic-neuron--releases--dopamine
+  predicate: RELEASES
+  subject: celltype:dopaminergic-neuron
+  object: molecule:dopamine
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/midbrain.md; R2 B7 Nigrostriatal pathway; R2 B6
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:motor-neuron--releases--acetylcholine
+  predicate: RELEASES
+  subject: celltype:motor-neuron
+  object: molecule:acetylcholine
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurotransmitters.md (Acetylcholine: transmitter at every skeletal nerve-muscle junction); R2 D2 (Nicotinic ACh: neuromuscular junction)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cholinergic-neuron--releases--acetylcholine
+  predicate: RELEASES
+  subject: celltype:cholinergic-neuron
+  object: molecule:acetylcholine
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (basal forebrain acetylcholine neurons); R2 B11
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:orexin-neuron--releases--orexin
+  predicate: RELEASES
+  subject: celltype:orexin-neuron
+  object: molecule:orexin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamic-relay-neuron--releases--glutamate
+  predicate: RELEASES
+  subject: celltype:thalamic-relay-neuron
+  object: molecule:glutamate
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops (relay nuclei send glutamate mainly to layer IV)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamic-reticular-neuron--releases--gaba
+  predicate: RELEASES
+  subject: celltype:thalamic-reticular-neuron
+  object: molecule:gaba
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops (TRN, a GABAergic shell)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:glutamate--acts-on--ampa-receptor
+  predicate: ACTS_ON
+  subject: molecule:glutamate
+  object: molecule:ampa-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism); R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:glutamate--acts-on--nmda-receptor
+  predicate: ACTS_ON
+  subject: molecule:glutamate
+  object: molecule:nmda-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism); R2 D2 (NMDA needs glutamate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:glutamate--acts-on--metabotropic-glutamate-receptor
+  predicate: ACTS_ON
+  subject: molecule:glutamate
+  object: molecule:metabotropic-glutamate-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Other forms: mGluR-dependent LTD)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:glycine--acts-on--nmda-receptor
+  predicate: ACTS_ON
+  subject: molecule:glycine
+  object: molecule:nmda-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurotransmitters.md (Glycine: required co-agonist at NMDA receptors); R2 D2 (co-agonist)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:gaba--acts-on--gaba-a-receptor
+  predicate: ACTS_ON
+  subject: molecule:gaba
+  object: molecule:gaba-a-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:gaba--acts-on--gaba-b-receptor
+  predicate: ACTS_ON
+  subject: molecule:gaba
+  object: molecule:gaba-b-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:acetylcholine--acts-on--nicotinic-acetylcholine-receptor
+  predicate: ACTS_ON
+  subject: molecule:acetylcholine
+  object: molecule:nicotinic-acetylcholine-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:acetylcholine--acts-on--muscarinic-acetylcholine-receptor
+  predicate: ACTS_ON
+  subject: molecule:acetylcholine
+  object: molecule:muscarinic-acetylcholine-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dopamine--acts-on--d1-receptor
+  predicate: ACTS_ON
+  subject: molecule:dopamine
+  object: molecule:d1-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:albin-1989
+    locator: R2 B7 Nigrostriatal pathway (dopamine onto D1 and D2 receptors); R2 B1; R2 D2
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dopamine--acts-on--d2-receptor
+  predicate: ACTS_ON
+  subject: molecule:dopamine
+  object: molecule:d2-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:albin-1989
+    locator: R2 B7 Nigrostriatal pathway (dopamine onto D1 and D2 receptors); R2 B1; R2 D2
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:serotonin--acts-on--serotonin-receptors
+  predicate: ACTS_ON
+  subject: molecule:serotonin
+  object: molecule:serotonin-receptors
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families (5-HT1, 2, 4 to 7)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:serotonin--acts-on--serotonin-5-ht3-receptor
+  predicate: ACTS_ON
+  subject: molecule:serotonin
+  object: molecule:serotonin-5-ht3-receptor
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families (5-HT3 ionotropic exception)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:noradrenaline--acts-on--adrenergic-receptors
+  predicate: ACTS_ON
+  subject: molecule:noradrenaline
+  object: molecule:adrenergic-receptors
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D2 Major receptor families (Adrenergic)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:endorphins--acts-on--opioid-receptors
+  predicate: ACTS_ON
+  subject: molecule:endorphins
+  object: molecule:opioid-receptors
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (endorphins and other opioid peptides); R2 D2 (Opioid mu, delta, kappa)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:endocannabinoids--acts-on--cb1-receptor
+  predicate: ACTS_ON
+  subject: molecule:endocannabinoids
+  object: molecule:cb1-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurotransmitters.md (Unusual messengers); R2 D2 (Cannabinoid CB1, retrograde signalling)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:adenosine--acts-on--adenosine-a1-receptor
+  predicate: ACTS_ON
+  subject: molecule:adenosine
+  object: molecule:adenosine-a1-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D4 Familiar substances; KB physiology/neurotransmitters.md (Common questions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:adenosine--acts-on--adenosine-a2a-receptor
+  predicate: ACTS_ON
+  subject: molecule:adenosine
+  object: molecule:adenosine-a2a-receptor
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 D4 Familiar substances; KB physiology/neurotransmitters.md (Common questions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dopamine--produced-in--substantia-nigra
+  predicate: PRODUCED_IN
+  subject: molecule:dopamine
+  object: structure:substantia-nigra
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:brainfacts
+    - source:nolte-human-brain
+    locator: KB physiology/neurotransmitters.md (Dopamine); KB anatomy/midbrain.md; R1 §1.15b Midbrain (pars compacta); R2 B7
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dopamine--produced-in--ventral-tegmental-area
+  predicate: PRODUCED_IN
+  subject: molecule:dopamine
+  object: structure:ventral-tegmental-area
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:brainfacts
+    - source:nolte-human-brain
+    locator: KB physiology/neurotransmitters.md (Dopamine); KB anatomy/midbrain.md (VTA); R2 B6; R2 B11
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:serotonin--produced-in--raphe-nuclei
+  predicate: PRODUCED_IN
+  subject: molecule:serotonin
+  object: structure:raphe-nuclei
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:blumenfeld-neuroanatomy
+    locator: KB physiology/neurotransmitters.md (Serotonin); KB SOURCES_AND_CORRECTIONS.md (Neurotransmitters); R1 §1.20 Brainstem (Pons); R2 B11
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:noradrenaline--produced-in--locus-coeruleus
+  predicate: PRODUCED_IN
+  subject: molecule:noradrenaline
+  object: structure:locus-coeruleus
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:blumenfeld-neuroanatomy
+    locator: KB physiology/neurotransmitters.md (Noradrenaline); R1 §1.20 Brainstem (Pons); R2 B11
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:acetylcholine--produced-in--pons
+  predicate: PRODUCED_IN
+  subject: molecule:acetylcholine
+  object: structure:pons
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system (pontine PPT and LDT)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:histamine--produced-in--hypothalamus
+  predicate: PRODUCED_IN
+  subject: molecule:histamine
+  object: structure:hypothalamus
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurotransmitters.md (Histamine: from the hypothalamus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:histamine--produced-in--tuberomammillary-nucleus
+  predicate: PRODUCED_IN
+  subject: molecule:histamine
+  object: structure:tuberomammillary-nucleus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system (tuberomammillary nucleus, histamine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:orexin--produced-in--lateral-hypothalamus
+  predicate: PRODUCED_IN
+  subject: molecule:orexin
+  object: structure:lateral-hypothalamus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B11 Ascending arousal system (lateral hypothalamus, orexin)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:melatonin--produced-in--pineal-gland
+  predicate: PRODUCED_IN
+  subject: molecule:melatonin
+  object: structure:pineal-gland
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:qbi-brain-basics
+    - source:nolte-human-brain
+    locator: R1 §5 Hidden and deep structures (Pineal gland); KB anatomy/forebrain.md (Pineal gland)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:oxytocin--produced-in--hypothalamus
+  predicate: PRODUCED_IN
+  subject: molecule:oxytocin
+  object: structure:hypothalamus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: 'R1 §5 Hidden and deep structures (Pituitary gland: made in hypothalamic neurons)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vasopressin--produced-in--hypothalamus
+  predicate: PRODUCED_IN
+  subject: molecule:vasopressin
+  object: structure:hypothalamus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: 'R1 §5 Hidden and deep structures (Pituitary gland: made in hypothalamic neurons)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vasopressin--produced-in--paraventricular-nucleus
+  predicate: PRODUCED_IN
+  subject: molecule:vasopressin
+  object: structure:paraventricular-nucleus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis (paraventricular nucleus releases CRH and vasopressin)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:crh--produced-in--paraventricular-nucleus
+  predicate: PRODUCED_IN
+  subject: molecule:crh
+  object: structure:paraventricular-nucleus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:neuron--participates-in--action-potential
+  predicate: PARTICIPATES_IN
+  subject: celltype:neuron
+  object: process:action-potential
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/how_neurons_signal.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:neuron--participates-in--synaptic-transmission
+  predicate: PARTICIPATES_IN
+  subject: celltype:neuron
+  object: process:synaptic-transmission
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/how_neurons_signal.md (Chemical synapse)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:neuron--participates-in--energy-metabolism
+  predicate: PARTICIPATES_IN
+  subject: celltype:neuron
+  object: process:energy-metabolism
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB cells/mitochondria.md (Common questions: neurons constantly pump ions)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:voltage-gated-sodium-channel--participates-in--action-potential
+  predicate: PARTICIPATES_IN
+  subject: molecule:voltage-gated-sodium-channel
+  object: process:action-potential
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels (upstroke); KB physiology/how_neurons_signal.md (The spike)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:voltage-gated-potassium-channel--participates-in--action-potential
+  predicate: PARTICIPATES_IN
+  subject: molecule:voltage-gated-potassium-channel
+  object: process:action-potential
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels (repolarisation); KB physiology/how_neurons_signal.md (The spike)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:sodium-potassium-pump--participates-in--action-potential
+  predicate: PARTICIPATES_IN
+  subject: molecule:sodium-potassium-pump
+  object: process:action-potential
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/how_neurons_signal.md (Resting potential); KB cells/mitochondria.md (pumps reset the cell after each pulse)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:sodium-potassium-pump--participates-in--energy-metabolism
+  predicate: PARTICIPATES_IN
+  subject: molecule:sodium-potassium-pump
+  object: process:energy-metabolism
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB cells/mitochondria.md (How they function; Neuronal roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:voltage-gated-sodium-channel--participates-in--saltatory-conduction
+  predicate: PARTICIPATES_IN
+  subject: molecule:voltage-gated-sodium-channel
+  object: process:saltatory-conduction
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/axon.md (Segments: nodes of Ranvier rich in sodium channels; Saltatory conduction)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:voltage-gated-calcium-channel--participates-in--synaptic-transmission
+  predicate: PARTICIPATES_IN
+  subject: molecule:voltage-gated-calcium-channel
+  object: process:synaptic-transmission
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:qbi-brain-basics
+    locator: R2 D3 Voltage-gated channels (N and P/Q trigger release); KB physiology/how_neurons_signal.md (Chemical synapse)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:astrocyte--participates-in--synaptic-transmission
+  predicate: PARTICIPATES_IN
+  subject: celltype:astrocyte
+  object: process:synaptic-transmission
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Astrocytes: tripartite synapse; mop up neurotransmitter)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:astrocyte--participates-in--blood-brain-barrier-maintenance
+  predicate: PARTICIPATES_IN
+  subject: celltype:astrocyte
+  object: process:blood-brain-barrier-maintenance
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/blood_brain_barrier.md (Neurovascular unit); KB cells/glia.md (Astrocytes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:endocannabinoids--participates-in--synaptic-transmission
+  predicate: PARTICIPATES_IN
+  subject: molecule:endocannabinoids
+  object: process:synaptic-transmission
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurotransmitters.md (Unusual messengers: retrograde)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nitric-oxide--participates-in--synaptic-transmission
+  predicate: PARTICIPATES_IN
+  subject: molecule:nitric-oxide
+  object: process:synaptic-transmission
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurotransmitters.md (Unusual messengers: retrograde)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ampa-receptor--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: molecule:ampa-receptor
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nmda-receptor--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: molecule:nmda-receptor
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism); R2 D2 (LTP coincidence detector)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nmda-receptor--participates-in--long-term-depression
+  predicate: PARTICIPATES_IN
+  subject: molecule:nmda-receptor
+  object: process:long-term-depression
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Mechanism: modest calcium rises produce LTD)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:metabotropic-glutamate-receptor--participates-in--long-term-depression
+  predicate: PARTICIPATES_IN
+  subject: molecule:metabotropic-glutamate-receptor
+  object: process:long-term-depression
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Other forms: mGluR-dependent LTD)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:camkii--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: molecule:camkii
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Mechanism)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:pka--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: molecule:pka
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Phases: late LTP)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:creb--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: molecule:creb
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Phases: late LTP)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: structure:hippocampus
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:bliss-lomo-1973
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/synaptic_plasticity.md (Discovery of LTP); R2 B8 Hippocampal trisynaptic circuit
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dentate-gyrus--participates-in--long-term-potentiation
+  predicate: PARTICIPATES_IN
+  subject: structure:dentate-gyrus
+  object: process:long-term-potentiation
+  provenance:
+    sources:
+    - source:bliss-lomo-1973
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Discovery of LTP: perforant path to dentate gyrus); R2 B8'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:purkinje--participates-in--long-term-depression
+  predicate: PARTICIPATES_IN
+  subject: celltype:purkinje
+  object: process:long-term-depression
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Other forms: cerebellar LTD at parallel fibre to Purkinje cell synapses)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--participates-in--long-term-depression
+  predicate: PARTICIPATES_IN
+  subject: region:19
+  object: process:long-term-depression
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (Other forms: cerebellar LTD underlies motor learning)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--participates-in--neuroplasticity
+  predicate: PARTICIPATES_IN
+  subject: structure:hippocampus
+  object: process:neuroplasticity
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (What it''s connected to: most studied sites)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-cortex--participates-in--neuroplasticity
+  predicate: PARTICIPATES_IN
+  subject: structure:cerebral-cortex
+  object: process:neuroplasticity
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (What it''s connected to: most studied sites)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--participates-in--neuroplasticity
+  predicate: PARTICIPATES_IN
+  subject: region:19
+  object: process:neuroplasticity
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/synaptic_plasticity.md (What it''s connected to: most studied sites)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:oligodendrocyte--participates-in--myelination
+  predicate: PARTICIPATES_IN
+  subject: celltype:oligodendrocyte
+  object: process:myelination
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Oligodendrocytes); KB cells/axon.md (Myelin makers)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:schwann-cell--participates-in--myelination
+  predicate: PARTICIPATES_IN
+  subject: celltype:schwann-cell
+  object: process:myelination
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB cells/glia.md (Schwann cells); KB anatomy/peripheral_nervous_system.md (Myelin)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:microglia--participates-in--synaptic-pruning
+  predicate: PARTICIPATES_IN
+  subject: celltype:microglia
+  object: process:synaptic-pruning
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Microglia: prune unneeded synapses during development)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:neural-stem-cell--participates-in--neurogenesis
+  predicate: PARTICIPATES_IN
+  subject: celltype:neural-stem-cell
+  object: process:neurogenesis
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: KB physiology/neurogenesis.md (The tour)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:radial-glia--participates-in--neurogenesis
+  predicate: PARTICIPATES_IN
+  subject: celltype:radial-glia
+  object: process:neurogenesis
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Radial glia: produce neurons and glia)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:radial-glia--participates-in--neuronal-migration
+  predicate: PARTICIPATES_IN
+  subject: celltype:radial-glia
+  object: process:neuronal-migration
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB cells/glia.md (Radial glia: scaffolding); KB physiology/neurogenesis.md (Before birth); R1 §12 (Neurogenesis and migration)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-granule-cell--participates-in--neurogenesis
+  predicate: PARTICIPATES_IN
+  subject: celltype:cerebellar-granule-cell
+  object: process:neurogenesis
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'KB physiology/neurogenesis.md (Before birth: mostly generated after birth, in the first year); KB SOURCES_AND_CORRECTIONS.md (Independent fact-check)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-sensory-neuron--participates-in--neurogenesis
+  predicate: PARTICIPATES_IN
+  subject: celltype:olfactory-sensory-neuron
+  object: process:neurogenesis
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R1 §8 Sensory systems end to end (Smell: these neurons regenerate throughout life)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ependymal-cell--participates-in--csf-production
+  predicate: PARTICIPATES_IN
+  subject: celltype:ependymal-cell
+  object: process:csf-production
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/glia.md (Ependymal cells: move CSF; specialised form in the choroid plexus produces most CSF)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:choroid-plexus--participates-in--csf-production
+  predicate: PARTICIPATES_IN
+  subject: structure:choroid-plexus
+  object: process:csf-production
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §7 Meninges, ventricles and CSF (The choroid plexus makes most of it); R1 §17c Glossary (Choroid plexus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:schwann-cell--participates-in--axon-regeneration
+  predicate: PARTICIPATES_IN
+  subject: celltype:schwann-cell
+  object: process:axon-regeneration
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/peripheral_nervous_system.md (Repair); KB cells/glia.md (Schwann cells guide regrowth)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:peripheral-nervous-system--participates-in--axon-regeneration
+  predicate: PARTICIPATES_IN
+  subject: structure:peripheral-nervous-system
+  object: process:axon-regeneration
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: KB anatomy/peripheral_nervous_system.md (Repair)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:rod--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: celltype:rod
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cone--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: celltype:cone
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-sensory-neuron--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: celltype:olfactory-sensory-neuron
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:buck-axel-1991
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:trpv1--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: molecule:trpv1
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:piezo2--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: molecule:piezo2
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:olfactory-receptors--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: molecule:olfactory-receptors
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:buck-axel-1991
+    locator: R1 §8 Sensory systems end to end
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:sensory-neuron--participates-in--sensory-transduction
+  predicate: PARTICIPATES_IN
+  subject: celltype:sensory-neuron
+  object: process:sensory-transduction
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'KB cells/neuron_types.md (How they function: sensory neurons fire when activated)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--participates-in--adult-neurogenesis--asserts
+  predicate: PARTICIPATES_IN
+  subject: structure:hippocampus
+  object: process:adult-neurogenesis
+  props:
+    confidence: debated
+    stance: asserts
+  debateNote: 'Supporting side: first evidence of new adult hippocampal neurons (Eriksson 1998); carbon-14 dating estimate of about 700 new neurons a day per hippocampus (Spalding 2013); progenitors and immature neurons in healthy people aged 14 to 79 (Boldrini 2018); thousands of immature neurons up to age 87, fewer in Alzheimer''s, with tissue handling blamed for negative results (Moreno-Jimenez 2019); dividing progenitors in adults up to 78, but only 354 among about 300,000 nuclei, with wide individual differences and none in several adults (Dumitru 2025). Safe summary: probably some, at low and variable levels, role in humans unknown.'
+  provenance:
+    sources:
+    - source:eriksson-1998
+    - source:spalding-2013
+    - source:boldrini-2018
+    - source:moreno-jimenez-2019
+    - source:dumitru-2025
+    locator: 'KB physiology/neurogenesis.md (In adults: the honest state of the science); R1 §12 Lifespan development (Adult neurogenesis (DEBATED)); KB SOURCES_AND_CORRECTIONS.md (Adult neurogenesis)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--participates-in--adult-neurogenesis--disputes
+  predicate: PARTICIPATES_IN
+  subject: structure:hippocampus
+  object: process:adult-neurogenesis
+  props:
+    confidence: debated
+    stance: disputes
+  debateNote: 'Disputing side: new neurons rare by ages 7 to 13 and undetectable in adults (Sorrells 2018); clear neurogenic signatures in mice, pigs and monkeys but almost none in adult humans (Franjic 2022). Never voice adult human neurogenesis as confirmed or as disproven.'
+  provenance:
+    sources:
+    - source:sorrells-2018
+    - source:franjic-2022
+    locator: 'KB physiology/neurogenesis.md (In adults: the honest state of the science); R1 §12 Lifespan development (Adult neurogenesis (DEBATED)); KB SOURCES_AND_CORRECTIONS.md (Adult neurogenesis)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--participates-in--adult-neurogenesis--disputes--contests--hippocampus--participates-in--adult-neurogenesis--asserts
+  predicate: CONTESTS
+  subject: assert:hippocampus--participates-in--adult-neurogenesis--disputes
+  object: assert:hippocampus--participates-in--adult-neurogenesis--asserts
+  provenance:
+    sources:
+    - source:sorrells-2018
+    - source:franjic-2022
+    - source:boldrini-2018
+    - source:moreno-jimenez-2019
+    - source:dumitru-2025
+    locator: 'KB physiology/neurogenesis.md (In adults: the honest state of the science); R1 §12 Lifespan development (Adult neurogenesis (DEBATED)); KB SOURCES_AND_CORRECTIONS.md (Adult neurogenesis)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:astrocyte--participates-in--glymphatic-clearance--asserts
+  predicate: PARTICIPATES_IN
+  subject: celltype:astrocyte
+  object: process:glymphatic-clearance
+  props:
+    confidence: debated
+    stance: asserts
+  debateNote: 'Supporting side: Iliff 2012 proposed CSF inflow along arteries, through tissue with help from astrocyte aquaporin-4 channels, and outflow along veins; Xie 2013 reported in mice that sleep enlarged interstitial space by about 60 percent and sped clearance. The dispute centres on the proposed route and on whether sleep speeds clearance.'
+  provenance:
+    sources:
+    - source:iliff-2012
+    - source:xie-2013
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system (DEBATED)); R1 Key Findings (Glymphatic system); KB cells/glia.md (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:astrocyte--participates-in--glymphatic-clearance--disputes
+  predicate: PARTICIPATES_IN
+  subject: celltype:astrocyte
+  object: process:glymphatic-clearance
+  props:
+    confidence: debated
+    stance: disputes
+  debateNote: 'Disputing side: Miao 2024 found in male mice that clearance dropped, rather than rose, during sleep and anaesthesia. The Nedergaard group has published a rebuttal (not cited here; no reference given). Voice line: the brain clears waste, but how, and whether sleep speeds it, is still argued.'
+  provenance:
+    sources:
+    - source:miao-2024
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system (DEBATED)); R1 Key Findings (Glymphatic system); KB cells/glia.md (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:astrocyte--participates-in--glymphatic-clearance--disputes--contests--astrocyte--participates-in--glymphatic-clearance--asserts
+  predicate: CONTESTS
+  subject: assert:astrocyte--participates-in--glymphatic-clearance--disputes
+  object: assert:astrocyte--participates-in--glymphatic-clearance--asserts
+  provenance:
+    sources:
+    - source:miao-2024
+    - source:xie-2013
+    - source:iliff-2012
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system (DEBATED)); R1 Key Findings (Glymphatic system); KB cells/glia.md (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:aquaporin-4--participates-in--glymphatic-clearance
+  predicate: PARTICIPATES_IN
+  subject: molecule:aquaporin-4
+  object: process:glymphatic-clearance
+  props:
+    confidence: approximate
+    stance: asserts
+  debateNote: Role proposed by Iliff 2012 as part of the glymphatic model, which as a whole is labelled debated (see the astrocyte CONTESTS pair).
+  provenance:
+    sources:
+    - source:iliff-2012
+    locator: R1 §7 Meninges, ventricles and CSF (Glymphatic system (DEBATED)); R1 Key Findings (Glymphatic system); KB cells/glia.md (Glymphatic system)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Single-source claim inside the debated glymphatic model; the debate itself is the astrocyte CONTESTS pair.
+requests:
+- wanted: structure:basal-forebrain
+  label: Basal forebrain
+  why: Source of brain acetylcholine (R2 B11; R1 §4; KB physiology/neurotransmitters.md). Would carry CONTAINS_CELL basal-forebrain to celltype:cholinergic-neuron and PRODUCED_IN acetylcholine to basal-forebrain, both held back.
+- wanted: structure:subventricular-zone
+  label: Subventricular zone
+  why: 'Adult neurogenic niche lining the lateral ventricles whose route to the olfactory bulb largely shuts down by about 18 months in humans (KB physiology/neurogenesis.md; SOURCES_AND_CORRECTIONS: Sanai 2011, Bergmann 2012). Fact currently stored as a quantity on process:adult-neurogenesis.'
+- wanted: structure:pedunculopontine-tegmental-nucleus
+  label: Pedunculopontine tegmental nucleus (PPT)
+  why: Pontine acetylcholine source in the ascending arousal system (R2 B11). Acetylcholine PRODUCED_IN and cholinergic CONTAINS_CELL currently point at structure:pons.
+- wanted: structure:laterodorsal-tegmental-nucleus
+  label: Laterodorsal tegmental nucleus (LDT)
+  why: Pontine acetylcholine source in the ascending arousal system (R2 B11); same refinement as PPT.
+- wanted: structure:dorsal-root-ganglion
+  label: Dorsal root ganglion
+  why: Home of pseudounipolar touch and body-position sensory neurons (KB cells/neuron_types.md; R1 §2 DCML). Sensory neuron containment currently points at structure:peripheral-nervous-system.
+openQuestions:
+- claim: Glutamate ACTS_ON kainate receptor.
+  locator: R2 D2 Major receptor families
+  reason: The sources list kainate receptors among the receptor families but never name their ligand. Textbook fact, but it would come from memory; needs a source line before asserting.
+- claim: Inner hair cells (about 3,500) carry most of the auditory signal and outer hair cells (about 12,000) amplify it; semicircular canal hair cells start the vestibulo-ocular reflex.
+  locator: R1 §8 Sensory systems end to end (Hearing); R2 B12 Vestibulo-ocular reflex
+  reason: Hair cells are sensory receptor cells, not neurons, glia or progenitors, and vocab cellKind has no fitting term. Same gap for pericytes (KB anatomy/blood_brain_barrier.md), taste receptor cells (R1 §8) and capillary endothelial cells. Schema change needed (for example cellKind 'sensory_receptor' and 'vascular').
+- claim: Rods and cones classified as cellKind neuron.
+  locator: R1 §8 Sensory systems end to end (Vision)
+  reason: Asserted by convention because the vocabulary forces a choice; the sources call them photoreceptors without classifying them. Reviewer should confirm.
+- claim: Olfactory sensory neurons regenerate throughout life (asserted as PARTICIPATES_IN process:neurogenesis).
+  locator: R1 §8 Sensory systems end to end (Smell); KB physiology/neurogenesis.md (Careful with)
+  reason: 'Asserted, but flagged for review: the KB warns not to claim the human smell system is renewed by new neurons. That warning concerns the olfactory bulb route (shut down by about 18 months), not nasal sensory neurons; guide scripts must keep the two apart.'
+- claim: Mirror neurons are found in ventral premotor cortex (monkey area F5); the human mirror neuron system is contested.
+  locator: R1 §1.3 Premotor cortex (Function; Expert detail)
+  reason: CONTAINS_CELL has no species qualifier; asserting region:3 contains mirror neurons would overstate the human evidence (Hickok 2009). Needs a modelling decision.
+- claim: Large-scale S1 remapping after amputation (Pons et al. 1991; Ramachandran 1990s) versus a largely preserved hand map (Schone et al. 2025).
+  locator: R1 §3 The homunculus (Phantom limbs and remapping)
+  reason: A live plasticity debate, but it belongs with phenomenon:phantom-limb (functions agent). Not modelled here to avoid a duplicate debate; Ramachandran's work also lacks a year for a source id.
+- claim: Cortical grey matter volume peaks at about age 6 (Bethlehem et al. 2022).
+  locator: R1 §12 Lifespan development (Myelination)
+  reason: Not a cell, molecule or process fact; belongs as a quantity on structure:grey-matter (anatomy agent).
+- claim: Astrocytes supply fuel directly to neurons (extent debated).
+  locator: KB cells/glia.md (Astrocytes)
+  reason: Marked debated in the KB but no works are named on either side, so no CONTESTS pair can be sourced.
+- claim: Adult humans grow new amygdala neurons.
+  locator: KB SOURCES_AND_CORRECTIONS.md (Adult neurogenesis); KB physiology/neurogenesis.md (Careful with)
+  reason: Corrected as unproven; no supporting source to anchor an asserts/disputes pair. Not modelled.
+- claim: Hebb (1949) learning rule; cerebellar LTD (Ito); Betz cell counts (Lassek, 1940s).
+  locator: KB physiology/synaptic_plasticity.md; R2 F Verification
+  reason: Attributions lack a firm year or bibliographic detail, so no source ids were minted; the facts are cited to Kandel/Purves instead.
+- claim: Receptor, channel, layer and circuit-transmitter facts from R2 Parts B, C and D cited to Kandel and Purves.
+  locator: R2 B1 to B13; R2 C1 to C2; R2 D1 to D4
+  reason: R2 gives no per-row attribution for these tables and describes them as textbook-consensus material, so the textbooks are cited. Reviewer should confirm against the textbooks before approval.
+- claim: Neurogenesis evidence reported via Karolinska Institutet news (Dumitru et al. 2025).
+  locator: KB physiology/neurogenesis.md (sources header)
+  reason: Press release is a forbidden source; the underlying paper (source:dumitru-2025) is cited instead.

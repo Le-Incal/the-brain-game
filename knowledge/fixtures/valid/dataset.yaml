@@ -167,6 +167,12 @@ nodes:
     visibility: surface
     aliases: [ { text: Sylvian fissure, kind: historical } ]
     provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
+  - id: structure:cuneus
+    class: Structure
+    label: Cuneus
+    kind: gyrus
+    visibility: partly
+    provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
   - id: structure:spinal-cord
     class: Structure
     label: Spinal Cord
@@ -343,6 +349,8 @@ assertions:
   - { id: assert:hippocampus--beneath--region-14, predicate: LIES_BENEATH, subject: structure:hippocampus, object: region:14, props: { hint: "deep inside my temporal lobe, on its inner side" }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
   - { id: assert:central-sulcus--bounds--region-5, predicate: BOUNDS, subject: structure:central-sulcus, object: region:5, props: { side: behind }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
   - { id: assert:lateral-fissure--bounds--region-12, predicate: BOUNDS, subject: structure:lateral-fissure, object: region:12, props: { side: above }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:cuneus--overlaps--region-17, predicate: OVERLAPS, subject: structure:cuneus, object: region:17, props: { portion: "the part above the calcarine sulcus" }, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
+  - { id: assert:cuneus--overlaps--region-18, predicate: OVERLAPS, subject: structure:cuneus, object: region:18, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
   - { id: assert:region-5--adjacent--region-7, predicate: ADJACENT_TO, subject: region:5, object: region:7, provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] } }
   - { id: assert:speech-production--region-6, predicate: SUPPORTED_BY, subject: function:speech-production, object: region:6, props: { role: primary, evidence: [lesion, stimulation], lateralization: left, confidence: established }, provenance: { <<: *prov, sources: [source:dronkers-2007, source:kandel-pns-6e] } }
   - { id: assert:speech-production--region-5, predicate: SUPPORTED_BY, subject: function:speech-production, object: region:5, props: { role: primary, evidence: [stimulation], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }

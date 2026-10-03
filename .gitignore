@@ -11,3 +11,6 @@ dist/
 docs/handoff/markup/
 docs/handoff/reference/renders/
 docs/handoff/*.pre-*.png
+
+# Generated preview builds
+knowledge/build/

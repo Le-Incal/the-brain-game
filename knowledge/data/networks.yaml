@@ -1,0 +1,5190 @@
+# Brain Game knowledge base: networks. Extracted 2026-10-02; every record is proposed until the steward approves it.
+nodes:
+- id: network:default-mode
+  class: Network
+  label: Default Mode Network
+  atlas: yeo7
+  yeoLabel: Default
+  aliases:
+  - text: DMN
+    kind: abbreviation
+  text:
+    child: A team of my areas that gets busy when you daydream, remember your past or wonder what someone else is thinking.
+    curious: 'When you stop focusing on the world outside, a set of my areas becomes more active together: the precuneus and posterior cingulate along my midline, the medial prefrontal cortex, the angular gyrus and the hippocampal region. This team is linked to mind-wandering, recalling your own past, imagining what comes next and thinking about other people.'
+    expert: Core nodes are the posterior cingulate and precuneus (hubs), medial prefrontal cortex, angular gyrus and inferior parietal lobule, lateral temporal cortex and the hippocampal formation. Consistent task-induced deactivations were reported in 1997, the network was named in 2001 and its resting functional connectivity was shown in 2003. Boundaries depend on the parcellation used (Yeo 7 or 17 networks, Gordon) and differ between individuals in precision mapping.
+  xrefs:
+  - scheme: yeo17
+    value: DefaultA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: DefaultB
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: DefaultC
+    matchType: narrower
+    verified: false
+  notes: Network boundaries vary with atlas and between individuals; all memberships are approximate.
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:raichle-2001
+    - source:shulman-1997
+    - source:greicius-2003
+    - source:buckner-2008
+    locator: R1 §9 Brain networks; R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:ventral-attention
+  class: Network
+  label: Ventral Attention Network
+  atlas: yeo7
+  yeoLabel: Ventral Attention
+  aliases:
+  - text: salience network
+    kind: common
+  - text: ventral attention (salience) network
+    kind: common
+  text:
+    child: My alarm-and-spotlight team. It notices when something important or surprising happens and swings your attention towards it.
+    curious: This network flags what matters. Its salience core, the anterior insula and the dorsal anterior cingulate, helps switch the brain between inward thought and focused work. Its ventral attention part, mostly on the right side, pulls your attention to something unexpected, like a sudden noise. Damage to that right-sided part is linked to ignoring one side of space.
+  xrefs:
+  - scheme: yeo17
+    value: SalVentAttnA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: SalVentAttnB
+    matchType: narrower
+    verified: false
+  notes: 'Registry merges two networks that R1 §9 describes separately: the salience network (anterior insula and dorsal ACC, plus amygdala and ventral striatum) and the right-lateralized ventral attention network (right TPJ and ventral frontal cortex). Yeo-7 labels it Ventral Attention (Salience).'
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:seeley-2007
+    - source:menon-uddin-2010
+    - source:corbetta-shulman-2002
+    locator: R1 §9 Brain networks; R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:frontoparietal-control
+  class: Network
+  label: Frontoparietal Control Network
+  atlas: yeo7
+  yeoLabel: Frontoparietal Control
+  aliases:
+  - text: central executive network
+    kind: common
+  - text: frontoparietal network
+    kind: common
+  text:
+    child: My planning team. Areas at my front and near my top work together to hold things in mind and follow the rules of a task.
+    curious: The dorsolateral prefrontal cortex and the cortex around the intraparietal sulcus form a partnership that keeps information active for a few seconds, applies rules and changes strategy when a task changes. It is also called the central executive network.
+  xrefs:
+  - scheme: yeo17
+    value: ContA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: ContB
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: ContC
+    matchType: narrower
+    verified: false
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:seeley-2007
+    - source:vincent-2008
+    locator: R1 §9 Brain networks; R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:dorsal-attention
+  class: Network
+  label: Dorsal Attention Network
+  atlas: yeo7
+  yeoLabel: Dorsal Attention
+  text:
+    child: A team near the top of me that aims your attention wherever you choose, like a torch you point on purpose.
+    curious: On both sides, the superior parietal lobule, the intraparietal sulcus and the frontal eye fields work together when you deliberately decide where to look or what to attend to. This is goal-driven, top-down attention, as opposed to having your attention grabbed by a surprise.
+  xrefs:
+  - scheme: yeo17
+    value: DorsAttnA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: DorsAttnB
+    matchType: narrower
+    verified: false
+  notes: Bilateral.
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:corbetta-shulman-2002
+    locator: R1 §9 Brain networks; R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:limbic
+  class: Network
+  label: Limbic Network
+  atlas: yeo7
+  yeoLabel: Limbic
+  text:
+    child: A group of areas on my underside, centred on the patch above your eyes, whose activity rises and falls together.
+    curious: One of seven large networks found by comparing resting brain scans from 1,000 people. Its main cortical member is the orbitofrontal cortex above the eye sockets, with parts of the cingulate below the corpus callosum and the underside of the temporal lobe listed as secondary members.
+  xrefs:
+  - scheme: yeo17
+    value: LimbicA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: LimbicB
+    matchType: narrower
+    verified: false
+  notes: A Yeo-7 resting-state network label; a separate node from the classical limbic system (structure:limbic-system).
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:somatomotor
+  class: Network
+  label: Somatomotor Network
+  atlas: yeo7
+  yeoLabel: Somatomotor
+  text:
+    child: My moving-and-feeling strips, plus my hearing area, which keep in step with one another even when you rest.
+    curious: In resting brain scans, the motor and touch strips on either side of the central sulcus, the premotor and supplementary motor areas and the auditory cortex rise and fall together. Coupling of this kind at rest was first shown in motor cortex, in 1995, before whole networks were mapped.
+  xrefs:
+  - scheme: yeo17
+    value: SomMotA
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: SomMotB
+    matchType: narrower
+    verified: false
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:biswal-1995
+    locator: R1 §9 Brain networks; R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:visual
+  class: Network
+  label: Visual Network
+  atlas: yeo7
+  yeoLabel: Visual
+  text:
+    child: My seeing areas at the back of your head, which work as one team.
+    curious: Primary visual cortex and the visual association areas around it form one resting-state network. The finer 17-network map splits it into two parts.
+  xrefs:
+  - scheme: yeo17
+    value: VisCent
+    matchType: narrower
+    verified: false
+  - scheme: yeo17
+    value: VisPeri
+    matchType: narrower
+    verified: false
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:schaefer-2018
+    locator: R2 E4 Yeo 7 and 17 networks
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: network:language
+  class: Network
+  label: Language Network
+  atlas: fedorenko
+  text:
+    child: A team of my frontal and temporal areas, mostly on the left, that works on words and sentences and stays quiet for maths or music.
+    curious: Frontal areas (the inferior and middle frontal gyri) and temporal areas (the superior and middle temporal gyri and the front of the temporal lobe), mostly on the left, respond to language and hardly at all to arithmetic, music or logic puzzles. Researchers locate it person by person with a short language test, because its exact position differs between people.
+  notes: Left-lateralized. Identified with functional localizers in individual brains. A 2024 position paper argued language is mainly a tool for communication rather than for thought; contested.
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    - source:fedorenko-2011
+    locator: R1 §9 Brain networks (Language network)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:arcuate-fasciculus
+  class: Tract
+  label: Arcuate Fasciculus
+  kind: association
+  pronunciation:
+    respelling: AR-kyoo-ate fuh-SIK-yoo-lus
+  text:
+    child: A bow-shaped bundle of wires linking the parts of me that make sense of words with the part that says them.
+    curious: This arched bundle runs from Wernicke's area and the superior temporal gyrus, past the angular gyrus, to Broca's area and premotor cortex. One model splits it into a long direct segment and two shorter segments that stop off in the inferior parietal lobule. Damage is classically linked to trouble repeating words, called conduction aphasia.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. Three-segment model (Catani 2005): long direct segment, anterior and posterior indirect segments via the inferior parietal lobule.'
+  provenance:
+    sources:
+    - source:catani-2005
+    locator: R2 A1 Arcuate fasciculus; R1 §17c Glossary (Arcuate fasciculus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:superior-longitudinal-fasciculus
+  class: Tract
+  label: Superior Longitudinal Fasciculus
+  kind: association
+  aliases:
+  - text: SLF
+    kind: abbreviation
+  pronunciation:
+    respelling: soo-PEER-ee-er lon-jih-TOO-dih-nul fuh-SIK-yoo-lus
+  text:
+    child: Three bundles stacked like shelves under my top surface, linking where-things-are areas at the back with action and planning areas at the front.
+    curious: It comes in three tiers. The top tier joins the superior parietal lobule and precuneus with the supplementary motor, dorsal premotor and prefrontal cortex. The middle tier joins the angular gyrus region with dorsolateral prefrontal cortex. The lowest joins the supramarginal gyrus with ventral premotor cortex and the pars opercularis. Right-sided damage is linked to neglect, left-sided damage to apraxia and speech problems.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. SLF I, II and III are held as one tract node. A single study (Thiebaut de Schotten et al. 2011) linked right-sided SLF II lateralization to a visuospatial attention bias.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:thiebaut-de-schotten-2011
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:uncinate-fasciculus
+  class: Tract
+  label: Uncinate Fasciculus
+  kind: association
+  pronunciation:
+    respelling: UN-sin-ate fuh-SIK-yoo-lus
+  text:
+    child: A hook-shaped bundle that bends from the front of my temporal lobe up into the underside of my frontal lobe.
+    curious: This hooked tract joins the front of the temporal lobe, near the amygdala, to the orbitofrontal and ventral prefrontal cortex. It helps tie emotion and memory to value and supports knowledge about people and objects. It is implicated in semantic dementia and in the behavioural form of frontotemporal dementia.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A3 Uncinate fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:cingulum-bundle
+  class: Tract
+  label: Cingulum Bundle
+  kind: association
+  aliases:
+  - text: cingulum
+    kind: common
+  pronunciation:
+    respelling: SING-gyoo-lum bundle
+  text:
+    child: A long bundle tucked inside my cingulate belt, joining my front to memory areas on the inner side of my temporal lobe.
+    curious: Running inside the cingulate gyrus, the cingulum stretches from frontal cortex under the front of the corpus callosum back to the parahippocampal and entorhinal cortex, with branches to the precuneus and medial prefrontal cortex. It supports attention, emotion regulation and memory and forms part of the extended Papez circuit.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A4 Cingulum bundle; R1 §1.16 Cingulate cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:inferior-longitudinal-fasciculus
+  class: Tract
+  label: Inferior Longitudinal Fasciculus
+  kind: association
+  aliases:
+  - text: ILF
+    kind: abbreviation
+  text:
+    child: A long bundle running along my lower side, letting what you see meet what you already know.
+    curious: It runs from visual association cortex and the fusiform gyrus forward to the front of the temporal lobe, carrying object information on its way to memory. Damage can cause visual agnosia, face blindness and some forms of pure alexia.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A5 Inferior longitudinal fasciculus; R1 §1.14 Fusiform gyrus (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:inferior-fronto-occipital-fasciculus
+  class: Tract
+  label: Inferior Fronto-Occipital Fasciculus
+  kind: association
+  debated: true
+  aliases:
+  - text: IFOF
+    kind: abbreviation
+  text:
+    child: One of my longest bundles, running from the seeing areas at my back all the way to my front.
+    curious: 'In humans it links occipital, fusiform and posterior temporal cortex with frontal areas, passing through the extreme and external capsules. It may support meaning and reading: stimulating it during surgery can cause meaning errors. Tracing studies in monkeys disagree about whether they have the same direct bundle, so its story is unresolved.'
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. Debated: macaque tract-tracing (Schmahmann and Pandya) found no direct fronto-occipital bundle and described an extreme capsule fasciculus instead; some later monkey work reports a candidate homologue. Present as a human pathway whose monkey equivalent is still debated.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:schmahmann-pandya-2006
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:frontal-aslant-tract
+  class: Tract
+  label: Frontal Aslant Tract
+  kind: association
+  pronunciation:
+    respelling: frontal uh-SLANT
+  text:
+    child: A short, sloping bundle that helps you start talking by linking my top-middle movement area to my speech area.
+    curious: It runs at a slant from the supplementary motor area and pre-SMA down to the pars opercularis of Broca's area. It supports starting speech and verbal fluency; damage contributes to reduced fluency and stutter-like signs in the temporary SMA syndrome that can follow surgery.
+  notes: 'Endpoint convention: source gives no direction; the SMA end is recorded as origin and the Broca''s end as termination.'
+  provenance:
+    sources:
+    - source:catani-2012
+    locator: R2 A7 Frontal aslant tract; R1 §1.6 Broca's area (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:middle-longitudinal-fasciculus
+  class: Tract
+  label: Middle Longitudinal Fasciculus
+  kind: association
+  debated: true
+  aliases:
+  - text: MdLF
+    kind: abbreviation
+  text:
+    child: A bundle running back from my upper temporal lobe whose job is still a puzzle.
+    curious: It links the superior temporal gyrus and temporal pole with the angular gyrus, superior parietal lobule, precuneus and occipital cortex. It was described in monkeys in 1984 and in humans in 2009, mostly by tractography. Roles in joining sound and language with attention have been proposed, but its function is uncertain.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. Debated: function uncertain and evidence mainly from tractography; flag as less established. No firm syndrome.'
+  provenance:
+    sources:
+    - source:seltzer-pandya-1984
+    - source:makris-2009
+    locator: R2 A8 Middle longitudinal fasciculus; R1 §1.9 Angular gyrus (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:fornix
+  class: Tract
+  label: Fornix
+  kind: projection
+  pronunciation:
+    respelling: FOR-niks
+  text:
+    child: A curved bundle that is the main exit road from my hippocampus, important for remembering what happened to you.
+    curious: The fornix is the main output of the hippocampus. It arches forward to the mammillary bodies, the septal nuclei and the front of the thalamus. It belongs to the Papez loop and matters for memories of events; damage, for example during surgery near the third ventricle, can stop new memories forming.
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A9 Fornix; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:corpus-callosum
+  class: Tract
+  label: Corpus Callosum
+  kind: commissural
+  pronunciation:
+    respelling: KOR-pus kuh-LOH-sum
+  text:
+    child: A thick band at my centre, made of roughly 200 million fibres, so my two halves can share what each one knows.
+    curious: The largest white-matter structure joins matching areas of the two hemispheres. Its front part links prefrontal and orbitofrontal cortex, its body links motor, touch and parietal areas, and its back end, the splenium, links visual areas, the precuneus and parts of the temporal lobe. Cutting it to treat severe epilepsy leaves daily life normal, but lab tests show each half can know things the other does not.
+  quantities:
+  - name: axonCount
+    value: 200000000
+    unit: axons
+    approx: true
+    low: 200000000
+    high: 300000000
+    sources:
+    - source:aboitiz-1992
+    - source:tomasch-1954
+    - source:nolte-human-brain
+    note: About 200 million (Tomasch 1954; Aboitiz et al. 1992, not re-verified); some estimates reach 250 to 300 million; 200 to 250 million is the most cited range.
+  - name: length
+    value: 10
+    unit: cm
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+  notes: 'Endpoint convention: commissural fibres join matching areas of both hemispheres; endpoints recorded as termination. Parts front to back: rostrum, genu, body, splenium; forceps minor (front) and forceps major (back).'
+  provenance:
+    sources:
+    - source:aboitiz-1992
+    - source:tomasch-1954
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum; KB anatomy/corpus_callosum.md; R1 §5 Hidden and deep structures (Corpus callosum); R2 F Verification (Corpus callosum axons)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:anterior-commissure
+  class: Tract
+  label: Anterior Commissure
+  kind: commissural
+  pronunciation:
+    respelling: anterior KOM-ih-shur
+  text:
+    child: A slim crossing near my front, joining my two temporal lobes and letting the smell areas on each side swap notes.
+    curious: This small commissure joins the front parts of the two temporal lobes and olfactory areas such as the piriform cortex across the midline. Some split-brain patients kept a little transfer between hemispheres through it.
+  notes: 'Endpoint convention: commissural fibres join matching areas of both hemispheres; endpoints recorded as termination.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A11 Anterior commissure; KB anatomy/corpus_callosum.md (Other commissures)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:internal-capsule
+  class: Tract
+  label: Internal Capsule
+  kind: projection
+  text:
+    child: A tight, bent pass deep inside each half of me where wires heading to and from your body crowd together.
+    curious: Its front limb carries fibres between the thalamus and prefrontal cortex and from frontal cortex to the pons; its bend carries face-movement fibres from motor cortex to cranial nerve nuclei in the brain stem; its back limb carries corticospinal fibres and touch fibres from the thalamus to sensory cortex. Because fibres pack so tightly here, a tiny stroke can weaken a whole side of the body.
+  notes: Endpoints are those of the fibre systems that pass through each limb.
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A12 Internal capsule and corona radiata; R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:corona-radiata
+  class: Tract
+  label: Corona Radiata
+  kind: projection
+  pronunciation:
+    respelling: kuh-ROH-nuh ray-dee-AH-tuh
+  text:
+    child: Fans of fibres spreading out between my deep pass and my folded surface, shaped like the rays of a crown.
+    curious: Above the internal capsule, projection fibres spread out in a fan to and from the cortex. Movement fibres from primary motor, premotor, supplementary motor and touch cortex pass through it on their way down to the brain stem and spinal cord.
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A12 Internal capsule and corona radiata; R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:corticospinal-tract
+  class: Tract
+  label: Corticospinal Tract
+  kind: projection
+  aliases:
+  - text: pyramidal tract
+    kind: common
+  pronunciation:
+    respelling: KOR-tih-koh-SPY-nul tract
+  text:
+    child: The long motor highway from my movement strip down to your spinal cord. Most of its fibres swap sides low in my brain stem.
+    curious: It starts mainly in primary motor cortex, joined by fibres from premotor, supplementary motor and touch cortex. It descends through the corona radiata, the internal capsule, the cerebral peduncle of the midbrain, the pons and the pyramids of the medulla. Low in the medulla most fibres cross to the other side, which is why each hemisphere moves the opposite side of the body.
+  quantities:
+  - name: axonCountPerPyramid
+    value: 1000000
+    unit: axons
+    approx: true
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+  - name: fractionCrossingAtPyramidalDecussation
+    value: 85
+    unit: percent
+    approx: true
+    low: 85
+    high: 90
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    note: Most fibres, about 85 to 90 percent, form the lateral corticospinal tract; the rest descend uncrossed in the anterior corticospinal tract. Textbook figures range about 75 to 90 percent.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract; R1 §2 Pathways and body control (Corticospinal tract); R1 §1.20 Brainstem
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:optic-radiation
+  class: Tract
+  label: Optic Radiation
+  kind: projection
+  aliases:
+  - text: optic radiations
+    kind: common
+  text:
+    child: A wide fan of wires taking what your eyes see from my deep relay station to my vision area at the back.
+    curious: It runs from the lateral geniculate nucleus of the thalamus to primary visual cortex. Fibres for the upper part of your view swing forward through the temporal lobe in Meyer's loop, while parietal fibres carry the lower part. Damage to Meyer's loop removes a wedge of the upper view on the opposite side, nicknamed 'pie in the sky'.
+  notes: Meyer's loop (MY-erz) is the forward-looping upper-field part; tractography is used before temporal lobe surgery to spare it.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A14 Optic radiations and Meyer's loop; R1 §2 Pathways and body control (Visual pathway); R1 §1.17 Primary visual cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:cerebellar-peduncles
+  class: Tract
+  label: Cerebellar Peduncles
+  kind: projection
+  pronunciation:
+    respelling: cerebellar peh-DUNG-kulz
+  text:
+    child: Thick stalks on each side that plug my little brain into my brain stem, so news can flow in and orders can flow out.
+    curious: 'The superior peduncle is mainly output: from the dentate nucleus it crosses in the midbrain to the red nucleus and thalamus. The middle peduncle, the largest, is all input from the pontine nuclei to the opposite cerebellar half. The inferior peduncle brings input from the spinal cord, inferior olive and vestibular nuclei through the medulla. Damage causes unsteadiness, overshooting and tremor when reaching.'
+  notes: Superior, middle and inferior peduncles held as one tract node; endpoints labelled per peduncle direction.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: R2 A15 Cerebellar peduncles; R1 §1.19 Cerebellum (Connections); R1 §2 Pathways and body control (Cerebellum is ipsilateral)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:medial-forebrain-bundle
+  class: Tract
+  label: Medial Forebrain Bundle
+  kind: projection
+  aliases:
+  - text: MFB
+    kind: abbreviation
+  text:
+    child: A bundle carrying the brain's reward chemicals from my midbrain up to the front of me.
+    curious: 'It runs from the ventral tegmental area of the midbrain and the lateral hypothalamus to the nucleus accumbens and the orbitofrontal and prefrontal cortex, carrying dopamine, noradrenaline and serotonin fibres. It is tied to reward and motivation: in 1954, rats pressed a lever again and again to stimulate this region.'
+  notes: Deep brain stimulation of the MFB for depression is experimental (informational only).
+  provenance:
+    sources:
+    - source:olds-milner-1954
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:u-fibers
+  class: Tract
+  label: U-Fibres
+  kind: association
+  aliases:
+  - text: U-fibers
+    kind: common
+  - text: short association fibres
+    kind: common
+  text:
+    child: Short hooked fibres hugging the underside of my folds, so each patch of my surface can talk to its neighbour.
+    curious: These short association fibres sit just beneath the cortex and join neighbouring gyri, for example the motor strip with the touch strip, or primary visual cortex with the visual areas around it. They are hard to image because they hug the cortex so closely.
+  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. Endpoints are the source''s examples, not an exhaustive list.'
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A17 U-fibers
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:dorsal-column-medial-lemniscus
+  class: Tract
+  label: Dorsal Column-Medial Lemniscus Pathway
+  kind: projection
+  aliases:
+  - text: DCML
+    kind: abbreviation
+  pronunciation:
+    respelling: dorsal column medial lem-NIS-kus
+  text:
+    child: A pathway carrying fine touch and the sense of where your body is, from skin and joints up to my touch strip.
+    curious: Signals for fine touch, vibration and body position travel up the same side of the spinal cord in the dorsal columns, switch neurons in the medulla, cross to the other side, rise in the medial lemniscus to the thalamus and then reach primary somatosensory cortex.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Dorsal column-medial lemniscus); R1 §8 Sensory systems end to end (Touch); KB anatomy/spinal_cord.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: tract:spinothalamic-tract
+  class: Tract
+  label: Spinothalamic Tract
+  kind: projection
+  pronunciation:
+    respelling: SPY-noh-thuh-LAM-ik tract
+  text:
+    child: The pathway for pain, heat and cold, which crosses to the other side almost as soon as it enters your spinal cord.
+    curious: Pain, temperature and crude touch signals synapse in the dorsal horn, cross within one or two spinal segments, then rise on the opposite side to the thalamus and on to primary somatosensory cortex, the insula and the cingulate. Its early crossing explains the split pattern of loss after half of the spinal cord is injured.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract); R1 §8 Sensory systems end to end (Touch, proprioception and pain); KB anatomy/spinal_cord.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:cortico-basal-ganglia-loop
+  class: Circuit
+  label: Cortico-Basal Ganglia Loop
+  summary: Parallel loops in which cortex signals the striatum, the basal ganglia output nuclei gate the thalamus, and the thalamus reports back to the same cortex, helping pick one action while holding competitors back.
+  aliases:
+  - text: cortico-basal ganglia-thalamo-cortical loops
+    kind: common
+  text:
+    child: A loop running from my surface down into my deep movement nuclei and back again, deciding which move gets the green light.
+    curious: Five parallel loops (motor, eye movement, dorsolateral prefrontal, orbitofrontal and anterior cingulate) leave the cortex, pass through the striatum, the internal globus pallidus and substantia nigra, and the thalamus, then return. A 'go' route releases the thalamus, a 'stop' route suppresses it, and dopamine tilts the balance. Parkinson's and Huntington's diseases disturb these loops.
+  notes: 'Order: 1 cortex, 2 striatum, 3 output nuclei (GPi/SNr), 4 thalamus, then back to cortex. The subthalamic nucleus sits on the indirect and hyperdirect routes, so it has no single order. Direct and indirect pathway neurons co-activate at movement onset (Cui et al. 2013), supporting an action-selection view.'
+  provenance:
+    sources:
+    - source:alexander-1986
+    - source:cui-2013
+    - source:kandel-pns
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops; R1 §5 Hidden and deep structures (Basal ganglia)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:cerebro-cerebellar-loop
+  class: Circuit
+  label: Cerebro-Cerebellar Loop
+  summary: A doubly crossed loop from cortex through the pons to the opposite cerebellar half and back through the dentate nucleus and thalamus to cortex, helping predict and correct movement and thought.
+  text:
+    child: A loop from my thinking surface to my little brain and back, checking each move and nudging it on target.
+    curious: Cortical areas send signals through the cerebral peduncle to the pontine nuclei, which cross into the opposite cerebellar half. Purkinje cells shape the output of the dentate nucleus, which crosses back to the thalamus and on to motor and prefrontal cortex. Because the loop crosses twice, each cerebellar half works with the same side of the body.
+  notes: Climbing fibres from the inferior olive also reach Purkinje cells. Lesions cause ataxia and dysmetria; posterior-lobe lesions can add the cerebellar cognitive affective syndrome (Schmahmann and Sherman 1998).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:schmahmann-sherman-1998
+    locator: R2 B2 Cerebro-cerebellar loop; R1 §1.19 Cerebellum; R1 §2 Pathways and body control (Cerebellum is ipsilateral)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:thalamocortical-loop
+  class: Circuit
+  label: Thalamocortical Loop
+  summary: Thalamic relay nuclei send sensory and motor signals to matching cortical areas, which send feedback to the same nuclei, while the thalamic reticular nucleus gates which channels get through.
+  text:
+    child: Back-and-forth chatter between my central relay station and my surface, deciding which messages get through.
+    curious: 'Each relay nucleus feeds one cortical area: vision to primary visual cortex, hearing to auditory cortex, body touch to somatosensory cortex and motor signals to motor cortex. Deep cortical layers answer back. A thin inhibitory shell around the thalamus acts as a gate, which may help with attention and sleep rhythms. Absence seizures involve this loop.'
+  notes: Relay input lands mainly in layer IV; layer VI sends feedback. The 'searchlight' idea for attention (Crick 1984) is still a hypothesis.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:crick-1984
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus; R1 §5 Hidden and deep structures (Thalamus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:papez
+  class: Circuit
+  label: Papez Circuit
+  summary: A memory loop from the hippocampus through the fornix, mammillary bodies, anterior thalamus and cingulate cortex and back via the parahippocampal region, first proposed in 1937 as a circuit for emotion.
+  text:
+    child: A ring of memory parts deep inside me, linking my hippocampus to my cingulate belt and back again.
+    curious: From the hippocampus, signals pass along the fornix to the mammillary bodies, then to the front of the thalamus and the cingulate cortex, and return through the cingulum to the parahippocampal and entorhinal cortex. Proposed in 1937 for emotion, it is now seen mainly as a system for memories of events. Damage to its parts, as in Korsakoff syndrome, impairs memory.
+  notes: The mammillothalamic tract (mammillary bodies to anterior thalamus) is not a registry tract, so the sequence jumps from order 3 to the thalamus at order 4. Emotion is now thought to depend more on the amygdala, orbitofrontal and ventromedial prefrontal cortex.
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md (Papez circuit)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:amygdala-fear-circuit
+  class: Circuit
+  label: Amygdala Fear Circuit
+  summary: A threat-response circuit in which sensory signals reach the amygdala directly from the thalamus or by way of sensory cortex, and the amygdala's central nucleus drives hormonal, freezing and heart-rate responses while prefrontal cortex and hippocampus adjust it.
+  text:
+    child: My danger-detector setup. A quick rough route and a slower careful route both tell my amygdala about possible threats.
+    curious: In rat studies, a fast 'low road' runs from the sensory thalamus straight to the amygdala, and a slower 'high road' passes through sensory cortex first. The amygdala then drives the hypothalamus, the periaqueductal grey and brain stem nuclei. Ventromedial prefrontal cortex and the hippocampus help decide when the danger is over. Whether primates need the low road is debated.
+  notes: 'Debated: a fast subcortical visual route may not be needed in primates (Pessoa and Adolphs 2010). Defensive survival circuits are distinct from the conscious feeling of fear, and the ''fear centre'' label is rejected (LeDoux and Pine 2016). Model derived from rat fear conditioning.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:pessoa-adolphs-2010
+    - source:ledoux-pine-2016
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road); R1 §5 Hidden and deep structures (Amygdala)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:mesolimbic-reward-pathway
+  class: Circuit
+  label: Mesolimbic Reward Pathway
+  summary: Dopamine neurons of the ventral tegmental area project to the nucleus accumbens, amygdala and hippocampus and on to prefrontal, orbitofrontal and anterior cingulate cortex, signalling when outcomes are better or worse than expected.
+  aliases:
+  - text: mesolimbic and mesocortical dopamine pathways
+    kind: common
+  text:
+    child: A dopamine pathway from my midbrain that fires up when something turns out better than you expected.
+    curious: Dopamine cells in the ventral tegmental area send fibres to the nucleus accumbens, amygdala and hippocampus (the mesolimbic part) and to prefrontal, orbitofrontal and anterior cingulate cortex (the mesocortical part). They fire for unexpected rewards, shift to cues that predict reward, and dip when an expected reward fails to arrive, matching a learning rule from computer science.
+  notes: 'Includes the mesocortical branch. Reward prediction error: Schultz, Dayan and Montague 1997, matching temporal-difference learning.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:schultz-1997
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:nigrostriatal-pathway
+  class: Circuit
+  label: Nigrostriatal Pathway
+  summary: Dopamine neurons of the substantia nigra pars compacta project to the dorsal striatum, supporting movement start-up, vigour and habits.
+  text:
+    child: A dopamine supply line from my midbrain to my movement nuclei. When it fades, moving becomes slow and stiff, as in Parkinson's disease.
+    curious: Cells in the compact part of the substantia nigra release dopamine onto D1 and D2 receptors in the dorsal striatum, helping movements start and stay vigorous and habitual. In Parkinson's disease, motor signs appear only after a large share of these neurons is lost, and drugs that block D2 receptors can cause similar signs.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: 'R2 B7 Nigrostriatal pathway; R1 §1.15 Midbrain (Parts: substantia nigra pars compacta, dopamine to the striatum)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:trisynaptic-circuit
+  class: Circuit
+  label: Hippocampal Trisynaptic Circuit
+  summary: A three-synapse chain from entorhinal cortex to dentate gyrus to CA3 to CA1, with output through the subiculum back to entorhinal cortex, that supports memory for events and places.
+  text:
+    child: A chain of three linked hand-offs inside my hippocampus, where new memories of places and events take shape.
+    curious: Entorhinal cortex sends the perforant path to dentate gyrus granule cells; mossy fibres carry the signal to CA3, which also excites itself; Schaffer collaterals pass it to CA1, which sends output through the subiculum back to entorhinal cortex. Long-term potentiation was first described at the perforant path in 1973. Alzheimer's changes begin in this region.
+  notes: Dentate gyrus, CA3, CA1 and subiculum are not registry structures, so the chain is collapsed to structure:hippocampus at order 2; see requests. A direct path also runs from entorhinal layer III to CA1. Pattern separation (dentate) and completion (CA3) are computational models.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:bliss-lomo-1973
+    locator: R2 B8 Hippocampal trisynaptic circuit
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:spinal-reflex-arc
+  class: Circuit
+  label: Spinal Reflex Arc
+  summary: Short circuits inside the spinal cord that turn a sensory input straight into a muscle response, such as the knee jerk or pulling away from pain, tuned from above by motor cortex and brain stem.
+  text:
+    child: A shortcut in your spinal cord that pulls your hand off something hot before I even hear about it.
+    curious: In the knee jerk, a stretch sensor's fibre makes a single synapse onto a motor neuron that contracts the same muscle, while an inhibitory interneuron relaxes the opposing muscle. Withdrawal reflexes use interneurons to bend the hurt limb and straighten the other leg so you stay standing. Motor cortex and brain stem tune reflexes from above.
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B9 Spinal reflex arcs
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:central-pattern-generator
+  class: Circuit
+  label: Central Pattern Generators
+  summary: Networks that make rhythmic output without needing rhythmic input, such as spinal circuits for stepping and the pre-Bötzinger complex for breathing, switched on and refined by midbrain, cortex and cerebellum.
+  text:
+    child: Built-in rhythm makers in my brain stem and your spinal cord that keep you breathing and stepping without any thinking.
+    curious: Networks of spinal interneurons can produce the alternating rhythm of walking, an idea modelled as two half-centres in 1911. A region of the midbrain switches walking on, while cortex and cerebellum refine it. For breathing, the pre-Bötzinger complex in the medulla generates each breath in; opioids depress it, which is how an overdose can stop breathing.
+  notes: Mechanism only. Failure includes central apnoea and congenital central hypoventilation syndrome (PHOX2B).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:brown-1911
+    - source:smith-1991
+    locator: R2 B10 Central pattern generators; R1 §1.20 Brainstem (Medulla)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:ascending-arousal-system
+  class: Circuit
+  label: Ascending Arousal System
+  summary: Brain stem, hypothalamic and basal forebrain cell groups using noradrenaline, serotonin, acetylcholine, histamine, orexin and dopamine that project through the thalamus and directly to cortex to keep it awake.
+  text:
+    child: Wake-up signals rising from my brain stem and deep centre that turn up the lights across my surface while you are awake.
+    curious: The locus coeruleus (noradrenaline), raphe nuclei (serotonin), acetylcholine cells in the pons and basal forebrain, histamine and orexin cells in the hypothalamus, and dopamine cells in the VTA all project, through the thalamus or directly, to the cortex. In sleep a hypothalamic sleep centre shuts them off in a flip-flop switch steadied by orexin. Losing orexin neurons causes narcolepsy type 1.
+  notes: Basal forebrain is not a registry structure (see requests). The VLPO 'flip-flop switch' is from Saper and colleagues; historical root Moruzzi and Magoun 1949.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:moruzzi-magoun-1949
+    locator: 'R2 B11 Ascending arousal system; R1 §1.20 Brainstem (Controls: reticular activating system)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:vestibulo-ocular-reflex
+  class: Circuit
+  label: Vestibulo-Ocular Reflex
+  summary: A reflex that carries head-turn signals from the inner ear's semicircular canals through the vestibular nuclei to the eye-movement nuclei, turning the eyes opposite to the head, with the cerebellar flocculus tuning its strength.
+  aliases:
+  - text: VOR
+    kind: abbreviation
+  text:
+    child: A reflex that keeps your view steady by moving your eyes the opposite way whenever your head turns.
+    curious: Hair cells in the semicircular canals signal head turns through the vestibular nerve to the vestibular nuclei. Crossed fibres in the medial longitudinal fasciculus reach the abducens nucleus in the pons and the oculomotor nucleus in the midbrain, so the eyes counter-rotate. The cerebellar flocculus adjusts the strength. Doctors test it in coma examinations.
+  notes: The medial longitudinal fasciculus is not a registry tract; abducens and oculomotor nuclei are represented by structure:pons and structure:midbrain (see requests).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: 'R2 B12 Vestibulo-ocular reflex; R1 §1.20 Brainstem (Pons: medial longitudinal fasciculus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: circuit:hpa-axis
+  class: Circuit
+  label: HPA Axis
+  summary: A hormone chain in which the hypothalamus releases CRH and vasopressin, the anterior pituitary releases ACTH and the adrenal cortex releases cortisol, which feeds back to damp the system.
+  aliases:
+  - text: HPA stress axis
+    kind: common
+  - text: hypothalamic-pituitary-adrenal axis
+    kind: common
+  text:
+    child: My stress-hormone chain. My hypothalamus nudges the gland just below me, which signals your adrenal glands to release cortisol.
+    curious: Under stress, the paraventricular nucleus of the hypothalamus releases CRH and vasopressin, the anterior pituitary releases ACTH, and the adrenal cortex releases cortisol. Cortisol then feeds back on the hippocampus, prefrontal cortex, hypothalamus and pituitary. The amygdala pushes the axis on, while the hippocampus and medial prefrontal cortex hold it back.
+  notes: The adrenal cortex (order 3) is outside the modelled brain and not a registry structure (see requests).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis; R1 §5 Hidden and deep structures (Hypothalamus; Pituitary gland)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+assertions:
+- id: assert:region-1--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: region:1
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 1
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-1--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:1
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R2 E4 Yeo 7 and 17 networks, row 1; R1 §9 Brain networks (DMN: medial PFC)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-2--member-of--limbic
+  predicate: MEMBER_OF
+  subject: region:2
+  object: network:limbic
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 2
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-2--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:2
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 2
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-3--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:3
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 3
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-3--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: region:3
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 3
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-4--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:4
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 4
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-4--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: region:4
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 4 (pre-SMA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-5--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:5
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 5
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-6--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:6
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 6
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-6--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: region:6
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 6
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-7--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:7
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 7
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-8--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: region:8
+  object: network:dorsal-attention
+  props:
+    role: hub
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:corbetta-shulman-2002
+    locator: 'R2 E4 Yeo 7 and 17 networks, row 8; R1 §1.8 Superior parietal lobule (Expert detail: core node); R1 §9 Brain networks (DAN: IPS/SPL)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-9--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:9
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R2 E4 Yeo 7 and 17 networks, row 9; R1 §9 Brain networks (DMN: angular gyrus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-9--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: region:9
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 9
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-10--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:10
+  object: network:default-mode
+  props:
+    role: hub
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:raichle-2001
+    - source:cavanna-trimble-2006
+    locator: 'R2 E4 Yeo 7 and 17 networks, row 10; R1 §1.10 Precuneus (Expert detail: core DMN hub); R1 §9 Brain networks'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-10--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: region:10
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 10
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-11--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:11
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 11 (auditory)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-12--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:12
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 12
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-12--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: region:12
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 12
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-12--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:12
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 12
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-13--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:13
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 13
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-13--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: region:13
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 13
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-14--member-of--visual
+  predicate: MEMBER_OF
+  subject: region:14
+  object: network:visual
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 14
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-14--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: region:14
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 14
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-14--member-of--limbic
+  predicate: MEMBER_OF
+  subject: region:14
+  object: network:limbic
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 14
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-16--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: region:16
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 16 (dorsal cingulate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-16--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:16
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 16 (PCC)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-16--member-of--limbic
+  predicate: MEMBER_OF
+  subject: region:16
+  object: network:limbic
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 16 (subgenual)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-17--member-of--visual
+  predicate: MEMBER_OF
+  subject: region:17
+  object: network:visual
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 17
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-18--member-of--visual
+  predicate: MEMBER_OF
+  subject: region:18
+  object: network:visual
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 18
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-18--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: region:18
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 18
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--visual
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:visual
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--limbic
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:limbic
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-19--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: region:19
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:yeo-2011
+    - source:buckner-2011
+    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:posterior-cingulate-cortex--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: structure:posterior-cingulate-cortex
+  object: network:default-mode
+  props:
+    role: hub
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    - source:vogt-2005
+    locator: 'R1 §9 Brain networks (DMN: posterior cingulate and precuneus); R1 §1.16 Cingulate cortex (PCC: DMN hub)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-parietal-lobule--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: structure:inferior-parietal-lobule
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R1 §9 Brain networks (DMN: angular gyrus and inferior parietal lobule)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hippocampus--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: structure:hippocampus
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R1 §9 Brain networks (DMN: hippocampal formation)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:insula--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: structure:insula
+  object: network:ventral-attention
+  props:
+    role: hub
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:menon-uddin-2010
+    locator: 'R1 §9 Brain networks (Salience network: anterior insula); R1 §5 Hidden and deep structures (Insula: salience, anterior insula)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:anterior-cingulate-cortex--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: structure:anterior-cingulate-cortex
+  object: network:ventral-attention
+  props:
+    role: hub
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:menon-uddin-2010
+    locator: 'R1 §9 Brain networks (Salience network: dorsal ACC)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: structure:amygdala
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:menon-uddin-2010
+    locator: 'R1 §9 Brain networks (Salience network: amygdala)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nucleus-accumbens--member-of--ventral-attention
+  predicate: MEMBER_OF
+  subject: structure:nucleus-accumbens
+  object: network:ventral-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:menon-uddin-2010
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'R1 §9 Brain networks (Salience network: ventral striatum); KB anatomy/limbic_system.md (ventral striatum = nucleus accumbens)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsolateral-prefrontal-cortex--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: structure:dorsolateral-prefrontal-cortex
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:vincent-2008
+    - source:yeo-2011
+    locator: 'R1 §9 Brain networks (Central executive: DLPFC)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:intraparietal-sulcus--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: structure:intraparietal-sulcus
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:vincent-2008
+    - source:yeo-2011
+    locator: 'R1 §9 Brain networks (Central executive: posterior parietal cortex, IPS)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:intraparietal-sulcus--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: structure:intraparietal-sulcus
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:corbetta-shulman-2002
+    locator: 'R1 §9 Brain networks (Dorsal attention network: IPS/SPL)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:frontal-eye-field--member-of--dorsal-attention
+  predicate: MEMBER_OF
+  subject: structure:frontal-eye-field
+  object: network:dorsal-attention
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:corbetta-shulman-2002
+    locator: 'R1 §9 Brain networks (Dorsal attention network: FEF)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-frontal-gyrus--member-of--language
+  predicate: MEMBER_OF
+  subject: structure:inferior-frontal-gyrus
+  object: network:language
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    locator: 'R1 §9 Brain networks (Language network: IFG)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-frontal-gyrus--member-of--language
+  predicate: MEMBER_OF
+  subject: structure:middle-frontal-gyrus
+  object: network:language
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    locator: 'R1 §9 Brain networks (Language network: MFG)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-temporal-gyrus--member-of--language
+  predicate: MEMBER_OF
+  subject: structure:middle-temporal-gyrus
+  object: network:language
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    locator: 'R1 §9 Brain networks (Language network: MTG)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-12--member-of--language
+  predicate: MEMBER_OF
+  subject: region:12
+  object: network:language
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    locator: 'R1 §9 Brain networks (Language network: STG, anterior temporal)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-6--member-of--language
+  predicate: MEMBER_OF
+  subject: region:6
+  object: network:language
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2012
+    locator: 'R1 §1.6 Broca''s area (Function: part belongs to the language network)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:caudate-nucleus--member-of--frontoparietal-control
+  predicate: MEMBER_OF
+  subject: structure:caudate-nucleus
+  object: network:frontoparietal-control
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:choi-2012
+    locator: 'R2 E4 Yeo 7 and 17 networks (Choi et al. 2012 striatum: caudate)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:caudate-nucleus--member-of--default-mode
+  predicate: MEMBER_OF
+  subject: structure:caudate-nucleus
+  object: network:default-mode
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:choi-2012
+    locator: 'R2 E4 Yeo 7 and 17 networks (Choi et al. 2012 striatum: caudate)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:putamen--member-of--somatomotor
+  predicate: MEMBER_OF
+  subject: structure:putamen
+  object: network:somatomotor
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:choi-2012
+    locator: 'R2 E4 Yeo 7 and 17 networks (Choi et al. 2012 striatum: putamen)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nucleus-accumbens--member-of--limbic
+  predicate: MEMBER_OF
+  subject: structure:nucleus-accumbens
+  object: network:limbic
+  props:
+    role: node
+    confidence: approximate
+  provenance:
+    sources:
+    - source:choi-2012
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'R2 E4 Yeo 7 and 17 networks (Choi et al. 2012 striatum: ventral striatum); KB anatomy/limbic_system.md (ventral striatum = nucleus accumbens)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:default-mode--subserves--episodic-memory
+  predicate: SUBSERVES
+  subject: network:default-mode
+  object: function:episodic-memory
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R1 §9 Brain networks (DMN: remembering)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:default-mode--subserves--theory-of-mind
+  predicate: SUBSERVES
+  subject: network:default-mode
+  object: function:theory-of-mind
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R1 §9 Brain networks (DMN: thinking about others)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:default-mode--subserves--self-referential-thought
+  predicate: SUBSERVES
+  subject: network:default-mode
+  object: function:self-referential-thought
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:raichle-2001
+    - source:buckner-2008
+    locator: 'R1 §9 Brain networks (DMN: rest and mind-wandering); R1 §17c Glossary (DMN: inward thought)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:frontoparietal-control--subserves--working-memory
+  predicate: SUBSERVES
+  subject: network:frontoparietal-control
+  object: function:working-memory
+  props:
+    confidence: established
+  provenance:
+    sources:
+    - source:seeley-2007
+    - source:vincent-2008
+    - source:yeo-2011
+    locator: 'R1 §9 Brain networks (Central executive: working memory)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsal-attention--subserves--attention
+  predicate: SUBSERVES
+  subject: network:dorsal-attention
+  object: function:attention
+  props:
+    confidence: established
+  provenance:
+    sources:
+    - source:corbetta-shulman-2002
+    locator: 'R1 §9 Brain networks (Dorsal attention: goal-driven attention); R1 §4 Function index (Attention)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ventral-attention--subserves--attention
+  predicate: SUBSERVES
+  subject: network:ventral-attention
+  object: function:attention
+  props:
+    confidence: established
+  provenance:
+    sources:
+    - source:corbetta-shulman-2002
+    locator: 'R1 §9 Brain networks (Ventral attention: reorients attention); R1 §4 Function index (Attention)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:language--subserves--language-comprehension
+  predicate: SUBSERVES
+  subject: network:language
+  object: function:language-comprehension
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    - source:fedorenko-2011
+    locator: 'R1 §9 Brain networks (Language network: selective for language)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:language--subserves--speech-production
+  predicate: SUBSERVES
+  subject: network:language
+  object: function:speech-production
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:fedorenko-2010
+    - source:fedorenko-2011
+    locator: 'R1 §9 Brain networks (Language network: selective for language)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--region-13
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: region:13
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2005
+    - source:blumenfeld-neuroanatomy
+    locator: R2 A1 Arcuate fasciculus; R1 §1.13 Wernicke's area (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--region-12
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: region:12
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2005
+    locator: R2 A1 Arcuate fasciculus; R1 §1.12 Superior temporal gyrus (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--region-9
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: region:9
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:catani-2005
+    locator: R2 A1 Arcuate fasciculus; R1 §1.9 Angular gyrus (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--inferior-parietal-lobule
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: structure:inferior-parietal-lobule
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:catani-2005
+    locator: 'R2 A1 Arcuate fasciculus (Catani three-segment model: Geschwind''s territory)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--region-6
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: region:6
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2005
+    - source:blumenfeld-neuroanatomy
+    locator: R2 A1 Arcuate fasciculus; R1 §1.6 Broca's area (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:arcuate-fasciculus--connects--region-3
+  predicate: CONNECTS
+  subject: tract:arcuate-fasciculus
+  object: region:3
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2005
+    locator: R2 A1 Arcuate fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-8
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:8
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF I)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-10
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:10
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF I)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-9
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:9
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF II)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--supramarginal-gyrus
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: structure:supramarginal-gyrus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF III)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-4
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:4
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF I)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-3
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:3
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF I and III)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-1
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF I and II)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:superior-longitudinal-fasciculus--connects--region-6
+  predicate: CONNECTS
+  subject: tract:superior-longitudinal-fasciculus
+  object: region:6
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A2 Superior longitudinal fasciculus I, II, III (SLF III (pars opercularis))
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:uncinate-fasciculus--connects--region-12
+  predicate: CONNECTS
+  subject: tract:uncinate-fasciculus
+  object: region:12
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A3 Uncinate fasciculus (anterior temporal lobe, rostral 12)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:uncinate-fasciculus--connects--region-2
+  predicate: CONNECTS
+  subject: tract:uncinate-fasciculus
+  object: region:2
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A3 Uncinate fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:uncinate-fasciculus--connects--region-1
+  predicate: CONNECTS
+  subject: tract:uncinate-fasciculus
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A3 Uncinate fasciculus (ventral prefrontal)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cingulum-bundle--connects--parahippocampal-gyrus
+  predicate: CONNECTS
+  subject: tract:cingulum-bundle
+  object: structure:parahippocampal-gyrus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A4 Cingulum bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cingulum-bundle--connects--entorhinal-cortex
+  predicate: CONNECTS
+  subject: tract:cingulum-bundle
+  object: structure:entorhinal-cortex
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A4 Cingulum bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cingulum-bundle--connects--region-10
+  predicate: CONNECTS
+  subject: tract:cingulum-bundle
+  object: region:10
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A4 Cingulum bundle (branch)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cingulum-bundle--connects--region-16
+  predicate: CONNECTS
+  subject: tract:cingulum-bundle
+  object: region:16
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:vogt-2005
+    locator: 'R2 A4 Cingulum bundle; R1 §1.16 Cingulate cortex (Connections: hippocampus through the cingulum bundle)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cingulum-bundle--connects--region-1
+  predicate: CONNECTS
+  subject: tract:cingulum-bundle
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A4 Cingulum bundle (subgenual frontal and medial prefrontal branch)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-longitudinal-fasciculus--connects--region-18
+  predicate: CONNECTS
+  subject: tract:inferior-longitudinal-fasciculus
+  object: region:18
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A5 Inferior longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-longitudinal-fasciculus--connects--fusiform-gyrus
+  predicate: CONNECTS
+  subject: tract:inferior-longitudinal-fasciculus
+  object: structure:fusiform-gyrus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A5 Inferior longitudinal fasciculus; R1 §1.14 Fusiform gyrus (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-longitudinal-fasciculus--connects--region-12
+  predicate: CONNECTS
+  subject: tract:inferior-longitudinal-fasciculus
+  object: region:12
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A5 Inferior longitudinal fasciculus (anterior temporal lobe, rostral 12)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-17
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:17
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-18
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:18
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-14
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:14
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-1
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-2
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:2
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:inferior-fronto-occipital-fasciculus--connects--region-6
+  predicate: CONNECTS
+  subject: tract:inferior-fronto-occipital-fasciculus
+  object: region:6
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A6 Inferior fronto-occipital fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:frontal-aslant-tract--connects--region-4
+  predicate: CONNECTS
+  subject: tract:frontal-aslant-tract
+  object: region:4
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012
+    locator: R2 A7 Frontal aslant tract (SMA and pre-SMA)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:frontal-aslant-tract--connects--region-6
+  predicate: CONNECTS
+  subject: tract:frontal-aslant-tract
+  object: region:6
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012
+    locator: R2 A7 Frontal aslant tract (pars opercularis); R1 §1.6 Broca's area (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-longitudinal-fasciculus--connects--region-9
+  predicate: CONNECTS
+  subject: tract:middle-longitudinal-fasciculus
+  object: region:9
+  props:
+    endpoint: origin
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seltzer-pandya-1984
+    - source:makris-2009
+    locator: R2 A8 Middle longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-longitudinal-fasciculus--connects--region-8
+  predicate: CONNECTS
+  subject: tract:middle-longitudinal-fasciculus
+  object: region:8
+  props:
+    endpoint: origin
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seltzer-pandya-1984
+    - source:makris-2009
+    locator: R2 A8 Middle longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-longitudinal-fasciculus--connects--region-10
+  predicate: CONNECTS
+  subject: tract:middle-longitudinal-fasciculus
+  object: region:10
+  props:
+    endpoint: origin
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seltzer-pandya-1984
+    - source:makris-2009
+    locator: R2 A8 Middle longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:middle-longitudinal-fasciculus--connects--region-12
+  predicate: CONNECTS
+  subject: tract:middle-longitudinal-fasciculus
+  object: region:12
+  props:
+    endpoint: termination
+    confidence: approximate
+  provenance:
+    sources:
+    - source:seltzer-pandya-1984
+    - source:makris-2009
+    locator: R2 A8 Middle longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:fornix--connects--hippocampus
+  predicate: CONNECTS
+  subject: tract:fornix
+  object: structure:hippocampus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A9 Fornix; KB anatomy/limbic_system.md (main output of the hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:fornix--connects--mammillary-bodies
+  predicate: CONNECTS
+  subject: tract:fornix
+  object: structure:mammillary-bodies
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A9 Fornix; KB anatomy/limbic_system.md (Papez circuit)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:fornix--connects--thalamus
+  predicate: CONNECTS
+  subject: tract:fornix
+  object: structure:thalamus
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A9 Fornix (anterior thalamus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-1
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A10 Corpus callosum (rostrum and genu, forceps minor); KB anatomy/corpus_callosum.md (genu links prefrontal; splenium links occipital)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-2
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:2
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (rostrum and genu, forceps minor)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-3
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:3
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (body)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-4
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:4
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (body)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-5
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:5
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (body)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-7
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:7
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (body)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-8
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:8
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (body)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-17
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:17
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A10 Corpus callosum (splenium, forceps major); KB anatomy/corpus_callosum.md (genu links prefrontal; splenium links occipital)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-18
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:18
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A10 Corpus callosum (splenium, forceps major); KB anatomy/corpus_callosum.md (genu links prefrontal; splenium links occipital)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corpus-callosum--connects--region-10
+  predicate: CONNECTS
+  subject: tract:corpus-callosum
+  object: region:10
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A10 Corpus callosum (splenium, forceps major)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:anterior-commissure--connects--region-12
+  predicate: CONNECTS
+  subject: tract:anterior-commissure
+  object: region:12
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A11 Anterior commissure (anterior temporal lobes); KB anatomy/corpus_callosum.md (temporal lobes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:anterior-commissure--connects--region-15
+  predicate: CONNECTS
+  subject: tract:anterior-commissure
+  object: region:15
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 A11 Anterior commissure (piriform cortex, 15-alt); KB anatomy/corpus_callosum.md (olfaction)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--thalamus
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: structure:thalamus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A12 Internal capsule and corona radiata (anterior limb: thalamus to prefrontal)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-1
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A12 Internal capsule and corona radiata (anterior limb)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-2
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:2
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A12 Internal capsule and corona radiata (anterior limb)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--pons
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: structure:pons
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A12 Internal capsule and corona radiata (anterior limb: frontopontine fibres)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-5
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:5
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: 'R2 A12 Internal capsule and corona radiata (genu: corticobulbar from face motor cortex; posterior limb: corticospinal); R1 §2 Pathways and body control (Corticospinal tract)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-20
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:20
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A12 Internal capsule and corona radiata (genu: corticobulbar to cranial nerve nuclei)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-3
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:3
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: 'R2 A12 Internal capsule and corona radiata (posterior limb: corticospinal); R1 §2 Pathways and body control (Corticospinal tract)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-4
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:4
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: 'R2 A12 Internal capsule and corona radiata (posterior limb: corticospinal); R1 §2 Pathways and body control (Corticospinal tract)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:internal-capsule--connects--region-7
+  predicate: CONNECTS
+  subject: tract:internal-capsule
+  object: region:7
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A12 Internal capsule and corona radiata (posterior limb: sensory thalamocortical fibres)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corona-radiata--connects--region-5
+  predicate: CONNECTS
+  subject: tract:corona-radiata
+  object: region:5
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A13 Corticospinal tract (path through the corona radiata); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corona-radiata--connects--region-3
+  predicate: CONNECTS
+  subject: tract:corona-radiata
+  object: region:3
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A13 Corticospinal tract (path through the corona radiata); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corona-radiata--connects--region-4
+  predicate: CONNECTS
+  subject: tract:corona-radiata
+  object: region:4
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A13 Corticospinal tract (path through the corona radiata); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corona-radiata--connects--region-7
+  predicate: CONNECTS
+  subject: tract:corona-radiata
+  object: region:7
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A13 Corticospinal tract (path through the corona radiata); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--region-5
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: region:5
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (M1); R1 §1.5 Primary motor cortex (Connections); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--region-3
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: region:3
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (premotor); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--region-4
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: region:4
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (SMA); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--region-7
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: region:7
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (S1); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--midbrain
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: structure:midbrain
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (cerebral peduncle in the midbrain, 15); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--pons
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: structure:pons
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (basilar pons); R1 §1.20 Brainstem (Pons); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--medulla-oblongata
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: structure:medulla-oblongata
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (medullary pyramids); R1 §1.20 Brainstem (Medulla); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--region-20
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: region:20
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract (pons and medullary pyramids, 20); R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:corticospinal-tract--connects--spinal-cord
+  predicate: CONNECTS
+  subject: tract:corticospinal-tract
+  object: structure:spinal-cord
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R2 A13 Corticospinal tract; R1 §2 Pathways and body control (Corticospinal tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:optic-radiation--connects--lateral-geniculate-nucleus
+  predicate: CONNECTS
+  subject: tract:optic-radiation
+  object: structure:lateral-geniculate-nucleus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A14 Optic radiations and Meyer's loop; R1 §2 Pathways and body control (Visual pathway)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:optic-radiation--connects--region-17
+  predicate: CONNECTS
+  subject: tract:optic-radiation
+  object: region:17
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:catani-2012-b
+    locator: R2 A14 Optic radiations and Meyer's loop; R1 §1.17 Primary visual cortex (Connections)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--deep-cerebellar-nuclei
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:deep-cerebellar-nuclei
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (superior: from the dentate nucleus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--midbrain
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:midbrain
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (superior: crosses in the midbrain, 15)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--red-nucleus
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:red-nucleus
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (superior); R1 §1.19 Cerebellum (Connections: superior peduncle to thalamus and red nucleus)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--thalamus
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:thalamus
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (superior: VL thalamus); R1 §1.19 Cerebellum (Connections)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--pons
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:pons
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (middle: pontine nuclei, 20); R1 §1.19 Cerebellum (Connections: middle peduncle)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--region-19
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: region:19
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (middle and inferior: input to the cerebellum); R1 §1.19 Cerebellum (Connections)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--spinal-cord
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:spinal-cord
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (inferior); R1 §1.19 Cerebellum (Connections: inferior peduncle)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--vestibular-nuclei
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:vestibular-nuclei
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A15 Cerebellar peduncles (inferior)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebellar-peduncles--connects--medulla-oblongata
+  predicate: CONNECTS
+  subject: tract:cerebellar-peduncles
+  object: structure:medulla-oblongata
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A15 Cerebellar peduncles (inferior: through the medulla, 20)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:medial-forebrain-bundle--connects--ventral-tegmental-area
+  predicate: CONNECTS
+  subject: tract:medial-forebrain-bundle
+  object: structure:ventral-tegmental-area
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle (VTA in the midbrain, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:medial-forebrain-bundle--connects--hypothalamus
+  predicate: CONNECTS
+  subject: tract:medial-forebrain-bundle
+  object: structure:hypothalamus
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle (lateral hypothalamus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:medial-forebrain-bundle--connects--nucleus-accumbens
+  predicate: CONNECTS
+  subject: tract:medial-forebrain-bundle
+  object: structure:nucleus-accumbens
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:medial-forebrain-bundle--connects--region-2
+  predicate: CONNECTS
+  subject: tract:medial-forebrain-bundle
+  object: region:2
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:medial-forebrain-bundle--connects--region-1
+  predicate: CONNECTS
+  subject: tract:medial-forebrain-bundle
+  object: region:1
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: R2 A16 Medial forebrain bundle
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:u-fibers--connects--region-7
+  predicate: CONNECTS
+  subject: tract:u-fibers
+  object: region:7
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A17 U-fibers (examples: 5 with 7, 17 with 18)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:u-fibers--connects--region-5
+  predicate: CONNECTS
+  subject: tract:u-fibers
+  object: region:5
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A17 U-fibers (examples: 5 with 7, 17 with 18)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:u-fibers--connects--region-17
+  predicate: CONNECTS
+  subject: tract:u-fibers
+  object: region:17
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A17 U-fibers (examples: 5 with 7, 17 with 18)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:u-fibers--connects--region-18
+  predicate: CONNECTS
+  subject: tract:u-fibers
+  object: region:18
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:catani-2012-b
+    locator: 'R2 A17 U-fibers (examples: 5 with 7, 17 with 18)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsal-column-medial-lemniscus--connects--spinal-cord
+  predicate: CONNECTS
+  subject: tract:dorsal-column-medial-lemniscus
+  object: structure:spinal-cord
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Dorsal column-medial lemniscus) (dorsal columns, same side)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsal-column-medial-lemniscus--connects--medulla-oblongata
+  predicate: CONNECTS
+  subject: tract:dorsal-column-medial-lemniscus
+  object: structure:medulla-oblongata
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Dorsal column-medial lemniscus) (nucleus gracilis and cuneatus; crossing as internal arcuate fibres)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsal-column-medial-lemniscus--connects--thalamus
+  predicate: CONNECTS
+  subject: tract:dorsal-column-medial-lemniscus
+  object: structure:thalamus
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Dorsal column-medial lemniscus) (VPL)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:dorsal-column-medial-lemniscus--connects--region-7
+  predicate: CONNECTS
+  subject: tract:dorsal-column-medial-lemniscus
+  object: region:7
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Dorsal column-medial lemniscus) (S1)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinothalamic-tract--connects--spinal-cord
+  predicate: CONNECTS
+  subject: tract:spinothalamic-tract
+  object: structure:spinal-cord
+  props:
+    endpoint: origin
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract) (dorsal horn; crosses in the anterior white commissure)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinothalamic-tract--connects--thalamus
+  predicate: CONNECTS
+  subject: tract:spinothalamic-tract
+  object: structure:thalamus
+  props:
+    endpoint: via
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract) (VPL)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinothalamic-tract--connects--region-7
+  predicate: CONNECTS
+  subject: tract:spinothalamic-tract
+  object: region:7
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract) (S1)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinothalamic-tract--connects--insula
+  predicate: CONNECTS
+  subject: tract:spinothalamic-tract
+  object: structure:insula
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinothalamic-tract--connects--region-16
+  predicate: CONNECTS
+  subject: tract:spinothalamic-tract
+  object: region:16
+  props:
+    endpoint: termination
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Spinothalamic tract) (cingulate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-4
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:4
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: 'R2 B1 Cortico-basal ganglia-thalamo-cortical loops (motor loop: SMA)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-3
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:3
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (motor and oculomotor loops)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-5
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:5
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: 'R2 B1 Cortico-basal ganglia-thalamo-cortical loops (motor loop: M1)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-7
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:7
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: 'R2 B1 Cortico-basal ganglia-thalamo-cortical loops (motor loop: S1)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-1
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:1
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (oculomotor and dorsolateral prefrontal loops)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--frontal-eye-field
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:frontal-eye-field
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (oculomotor loop)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-8
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:8
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: 'R2 B1 Cortico-basal ganglia-thalamo-cortical loops (oculomotor loop: posterior parietal)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-2
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:2
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (lateral orbitofrontal loop)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--region-16
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: region:16
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (anterior cingulate loop)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--putamen
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:putamen
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (motor loop)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--caudate-nucleus
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:caudate-nucleus
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (oculomotor, prefrontal and orbitofrontal loops)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--nucleus-accumbens
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:nucleus-accumbens
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (anterior cingulate loop)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--globus-pallidus
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:globus-pallidus
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (GPi)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--substantia-nigra
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:substantia-nigra
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (SNr; SNc dopamine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:thalamus
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (VL/VA and MD thalamus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cortico-basal-ganglia-loop--includes--subthalamic-nucleus
+  predicate: INCLUDES
+  subject: circuit:cortico-basal-ganglia-loop
+  object: structure:subthalamic-nucleus
+  provenance:
+    sources:
+    - source:alexander-1986
+    locator: R2 B1 Cortico-basal ganglia-thalamo-cortical loops (indirect and hyperdirect pathways)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--region-5
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: region:5
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--region-3
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: region:3
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--region-1
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: region:1
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--region-8
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: region:8
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--midbrain
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: structure:midbrain
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cerebral peduncle, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--pons
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: structure:pons
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (pontine nuclei, 20)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--cerebellar-peduncles
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: tract:cerebellar-peduncles
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (middle peduncle in; superior peduncle out)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--region-19
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: region:19
+  props:
+    order: 5
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (cerebellar cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--deep-cerebellar-nuclei
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: structure:deep-cerebellar-nuclei
+  props:
+    order: 6
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (dentate nucleus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebro-cerebellar-loop--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:cerebro-cerebellar-loop
+  object: structure:thalamus
+  props:
+    order: 7
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B2 Cerebro-cerebellar loop (VL thalamus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: structure:thalamus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R2 B3 Thalamocortical loops and thalamic reticular nucleus (relay nuclei: VPL/VPM, VL)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--lateral-geniculate-nucleus
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: structure:lateral-geniculate-nucleus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (LGN)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--medial-geniculate-nucleus
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: structure:medial-geniculate-nucleus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (MGN)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--region-17
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: region:17
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (LGN to 17)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--region-11
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: region:11
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (MGN to 11)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--region-7
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: region:7
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (VPL/VPM to 7)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thalamocortical-loop--includes--region-5
+  predicate: INCLUDES
+  subject: circuit:thalamocortical-loop
+  object: region:5
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B3 Thalamocortical loops and thalamic reticular nucleus (VL to 5)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--hippocampus
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: structure:hippocampus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--fornix
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: tract:fornix
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--mammillary-bodies
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: structure:mammillary-bodies
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: structure:thalamus
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--region-16
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: region:16
+  props:
+    order: 5
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--cingulum-bundle
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: tract:cingulum-bundle
+  props:
+    order: 6
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--parahippocampal-gyrus
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: structure:parahippocampal-gyrus
+  props:
+    order: 7
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view; KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--includes--entorhinal-cortex
+  predicate: INCLUDES
+  subject: circuit:papez
+  object: structure:entorhinal-cortex
+  props:
+    order: 7
+  provenance:
+    sources:
+    - source:papez-1937
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R2 B4 Papez circuit (1937) and modern view
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:thalamus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R2 B5 Amygdala fear circuit (LeDoux low road and high road) (sensory thalamus: low and high roads)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--region-11
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: region:11
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (high road via sensory cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--region-17
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: region:17
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (high road via sensory cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--region-18
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: region:18
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (high road via sensory cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--amygdala
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:amygdala
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (lateral and central nuclei)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--hypothalamus
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:hypothalamus
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (hormones)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--periaqueductal-gray
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:periaqueductal-gray
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (freezing; midbrain, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--region-20
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: region:20
+  props:
+    order: 4
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R2 B5 Amygdala fear circuit (LeDoux low road and high road) (brain stem nuclei: startle, heart rate)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--ventromedial-prefrontal-cortex
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:ventromedial-prefrontal-cortex
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (regulates extinction (1, 2))
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:amygdala-fear-circuit--includes--hippocampus
+  predicate: INCLUDES
+  subject: circuit:amygdala-fear-circuit
+  object: structure:hippocampus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B5 Amygdala fear circuit (LeDoux low road and high road) (regulates context)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--ventral-tegmental-area
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: structure:ventral-tegmental-area
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (VTA, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--nucleus-accumbens
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: structure:nucleus-accumbens
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesolimbic)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--amygdala
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: structure:amygdala
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesolimbic)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--hippocampus
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: structure:hippocampus
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesolimbic)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--region-1
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: region:1
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesocortical)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--region-2
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: region:2
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesocortical)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:mesolimbic-reward-pathway--includes--region-16
+  predicate: INCLUDES
+  subject: circuit:mesolimbic-reward-pathway
+  object: region:16
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: 'R2 B6 Mesolimbic and mesocortical dopamine reward circuit (mesocortical: ACC)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nigrostriatal-pathway--includes--substantia-nigra
+  predicate: INCLUDES
+  subject: circuit:nigrostriatal-pathway
+  object: structure:substantia-nigra
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B7 Nigrostriatal pathway (pars compacta, 15); R1 §1.15 Midbrain (Parts)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:nigrostriatal-pathway--includes--striatum
+  predicate: INCLUDES
+  subject: circuit:nigrostriatal-pathway
+  object: structure:striatum
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B7 Nigrostriatal pathway (dorsal striatum); R1 §1.15 Midbrain (Parts)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:trisynaptic-circuit--includes--entorhinal-cortex
+  predicate: INCLUDES
+  subject: circuit:trisynaptic-circuit
+  object: structure:entorhinal-cortex
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B8 Hippocampal trisynaptic circuit (entorhinal layer II, perforant path)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:trisynaptic-circuit--includes--hippocampus
+  predicate: INCLUDES
+  subject: circuit:trisynaptic-circuit
+  object: structure:hippocampus
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B8 Hippocampal trisynaptic circuit (dentate gyrus, CA3, CA1, subiculum)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinal-reflex-arc--includes--spinal-cord
+  predicate: INCLUDES
+  subject: circuit:spinal-reflex-arc
+  object: structure:spinal-cord
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B9 Spinal reflex arcs (stretch and withdrawal reflexes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinal-reflex-arc--includes--region-5
+  predicate: INCLUDES
+  subject: circuit:spinal-reflex-arc
+  object: region:5
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B9 Spinal reflex arcs (modulates reflexes from above)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:spinal-reflex-arc--includes--region-20
+  predicate: INCLUDES
+  subject: circuit:spinal-reflex-arc
+  object: region:20
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B9 Spinal reflex arcs (modulates reflexes from above)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--spinal-cord
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: structure:spinal-cord
+  provenance:
+    sources:
+    - source:brown-1911
+    locator: 'R2 B10 Central pattern generators (walking: spinal interneuron networks)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--midbrain
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: structure:midbrain
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B10 Central pattern generators (mesencephalic locomotor region, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--region-5
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: region:5
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B10 Central pattern generators (cortex refines walking)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--region-3
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: region:3
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B10 Central pattern generators (cortex refines walking)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--region-19
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: region:19
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B10 Central pattern generators (cerebellum refines walking)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-pattern-generator--includes--medulla-oblongata
+  predicate: INCLUDES
+  subject: circuit:central-pattern-generator
+  object: structure:medulla-oblongata
+  provenance:
+    sources:
+    - source:smith-1991
+    locator: 'R2 B10 Central pattern generators (breathing: pre-Bötzinger complex, ventrolateral medulla, 20)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--locus-coeruleus
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:locus-coeruleus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (noradrenaline)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--raphe-nuclei
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:raphe-nuclei
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (serotonin; 15, 20)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--pons
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:pons
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (PPT and LDT, acetylcholine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--hypothalamus
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:hypothalamus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (tuberomammillary histamine, lateral hypothalamus orexin; VLPO)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--ventral-tegmental-area
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:ventral-tegmental-area
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (dopamine)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ascending-arousal-system--includes--thalamus
+  predicate: INCLUDES
+  subject: circuit:ascending-arousal-system
+  object: structure:thalamus
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R2 B11 Ascending arousal system (relay to cortex)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vestibulo-ocular-reflex--includes--vestibulocochlear-nerve
+  predicate: INCLUDES
+  subject: circuit:vestibulo-ocular-reflex
+  object: structure:vestibulocochlear-nerve
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B12 Vestibulo-ocular reflex (vestibular nerve, CN VIII)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vestibulo-ocular-reflex--includes--vestibular-nuclei
+  predicate: INCLUDES
+  subject: circuit:vestibulo-ocular-reflex
+  object: structure:vestibular-nuclei
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B12 Vestibulo-ocular reflex (20)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vestibulo-ocular-reflex--includes--pons
+  predicate: INCLUDES
+  subject: circuit:vestibulo-ocular-reflex
+  object: structure:pons
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B12 Vestibulo-ocular reflex (abducens nucleus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vestibulo-ocular-reflex--includes--midbrain
+  predicate: INCLUDES
+  subject: circuit:vestibulo-ocular-reflex
+  object: structure:midbrain
+  props:
+    order: 3
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B12 Vestibulo-ocular reflex (oculomotor nucleus, 15)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:vestibulo-ocular-reflex--includes--region-19
+  predicate: INCLUDES
+  subject: circuit:vestibulo-ocular-reflex
+  object: region:19
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R2 B12 Vestibulo-ocular reflex (flocculus tunes gain)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hpa-axis--includes--hypothalamus
+  predicate: INCLUDES
+  subject: circuit:hpa-axis
+  object: structure:hypothalamus
+  props:
+    order: 1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R2 B13 HPA stress axis (paraventricular nucleus: CRH, vasopressin)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hpa-axis--includes--pituitary-gland
+  predicate: INCLUDES
+  subject: circuit:hpa-axis
+  object: structure:pituitary-gland
+  props:
+    order: 2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R2 B13 HPA stress axis (anterior pituitary: ACTH)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hpa-axis--includes--amygdala
+  predicate: INCLUDES
+  subject: circuit:hpa-axis
+  object: structure:amygdala
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis (drives the axis)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hpa-axis--includes--hippocampus
+  predicate: INCLUDES
+  subject: circuit:hpa-axis
+  object: structure:hippocampus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis (cortisol feedback; restrains the axis)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hpa-axis--includes--region-1
+  predicate: INCLUDES
+  subject: circuit:hpa-axis
+  object: region:1
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R2 B13 HPA stress axis (cortisol feedback; medial PFC restrains the axis)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+requests:
+- wanted: structure:temporoparietal-junction
+  label: Temporoparietal junction
+  why: 'R1 §9: right TPJ is a ventral attention network member (MEMBER_OF network:ventral-attention, role node, confidence approximate; sources corbetta-shulman-2002). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:anterior-insula
+  label: Anterior insula
+  why: R1 §9 names the anterior insula (not the whole insula) as the salience core; hub edge placed on registry structure:insula per instructions and could be retargeted. Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.
+- wanted: structure:ventral-frontal-cortex
+  label: Ventral frontal cortex
+  why: 'R1 §9: ventral attention network member (VFC). No registry id; closest anatomy.yaml id is structure:ventrolateral-prefrontal-cortex, but the sources do not equate them.'
+- wanted: structure:septal-nuclei
+  label: Septal nuclei
+  why: 'R2 A9: fornix termination (CONNECTS tract:fornix, endpoint termination). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:thalamic-reticular-nucleus
+  label: Thalamic reticular nucleus
+  why: 'R2 B3: GABAergic gate in the thalamocortical loop (INCLUDES). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:dentate-gyrus
+  label: Dentate gyrus
+  why: 'R2 B8: trisynaptic circuit step 2 (perforant path target). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:ca3
+  label: CA3
+  why: 'R2 B8: trisynaptic circuit step 3 (mossy fibre target). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:ca1
+  label: CA1
+  why: 'R2 B8: trisynaptic circuit step 4 (Schaffer collateral target). Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:subiculum
+  label: Subiculum
+  why: 'R2 B8: trisynaptic circuit output step 5.'
+- wanted: structure:ventral-pallidum
+  label: Ventral pallidum
+  why: 'R2 B1: anterior cingulate (limbic) basal ganglia loop, between nucleus accumbens and MD thalamus.'
+- wanted: structure:basal-forebrain
+  label: Basal forebrain
+  why: 'R2 B11: acetylcholine source in the ascending arousal system.'
+- wanted: structure:pre-botzinger-complex
+  label: Pre-Bötzinger complex
+  why: 'R2 B10: breathing rhythm generator; currently represented by structure:medulla-oblongata. Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:inferior-olivary-nucleus
+  label: Inferior olivary nucleus
+  why: R2 A15 inferior cerebellar peduncle input and R2 B2 climbing fibres. Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.
+- wanted: structure:abducens-nucleus
+  label: Abducens nucleus
+  why: 'R2 B12: VOR target in the pons; currently represented by structure:pons. Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:oculomotor-nucleus
+  label: Oculomotor nucleus
+  why: 'R2 B12: VOR target in the midbrain; currently represented by structure:midbrain. Not in the shared registry; anatomy.yaml already defines this id, so the edge can be added once it is confirmed.'
+- wanted: structure:adrenal-gland
+  label: Adrenal gland
+  why: 'R2 B13: HPA axis step 3 (adrenal cortex releases cortisol); outside the modelled brain, visibility not_present.'
+- wanted: function:cognitive-control
+  label: Cognitive control
+  why: 'R1 §9: central executive network supports ''flexible control and rule use''; no registry Function for SUBSERVES.'
+- wanted: function:future-thinking
+  label: Imagining the future
+  why: 'R1 §9: DMN is active when imagining the future; no registry Function for SUBSERVES.'
+- wanted: function:salience-detection
+  label: Salience detection
+  why: 'R1 §9: salience network detects what matters and switches between DMN and executive networks; no registry Function for SUBSERVES.'
+openQuestions:
+- claim: The salience network and the ventral attention network are one network (network:ventral-attention).
+  locator: R1 §9 Brain networks
+  reason: R1 §9 describes them separately with different members and authors (Seeley 2007 vs Corbetta and Shulman 2002); the registry aliases them following the Yeo-7 'Ventral Attention (Salience)' label. Members of both were attached to network:ventral-attention. Reviewer should confirm the merge is acceptable for teaching.
+- claim: DMN member 'lateral temporal cortex'.
+  locator: R1 §9 Brain networks
+  reason: No single canon region or registry structure; not mapped. R2 E4 rows 12 and 13 already give temporal default-mode edges.
+- claim: Ventral striatum equals nucleus accumbens.
+  locator: R1 §9; R2 E4 (Choi et al. 2012); KB anatomy/limbic_system.md
+  reason: Ventral striatum edges (salience member, limbic network) placed on structure:nucleus-accumbens because the KB equates them; confirm.
+- claim: 'R2 E4 row 16 networks apply to cingulate subdivisions (dorsal: ventral attention; PCC: default; subgenual: limbic).'
+  locator: R2 E4 row 16
+  reason: Edges placed on region:16 as a whole per instructions; subdivision detail survives only via structure:posterior-cingulate-cortex (default hub) and structure:anterior-cingulate-cortex (salience hub). Same for row 4 (pre-SMA) and row 11 (auditory) qualifiers.
+- claim: Region 15 Yeo network membership.
+  locator: R2 E4 row 15
+  reason: Row 15 describes the midbrain (outside cortical parcellation); no row covers piriform cortex, which is canon region 15. No edges created for 15 or 20.
+- claim: Yeo-17 label TempPar belongs to a particular Yeo-7 network.
+  locator: R2 E4 Yeo 7 and 17 networks
+  reason: Listed among the 17 labels and in row 13 but not assigned to a 7-network in the source; not added as an xref. Other yeo17 xrefs were assigned by label prefix (matchType narrower, unverified).
+- claim: Broca's area partly belongs to the multiple demand network; motor cortex hosts a somato-cognitive action network (SCAN) linked to a cingulo-opercular action network.
+  locator: R1 §1.6 Broca's area; R1 §3 The homunculus
+  reason: Not registry networks, so no nodes or MEMBER_OF edges were created. SCAN is also flagged as a recent, contested proposal.
+- claim: 'Pathways and bundles named in the sources but absent from the tract registry: mammillothalamic tract, medial longitudinal fasciculus, auditory radiation, optic nerve and optic tract, lateral olfactory tract, extreme capsule fasciculus, perforant path, mossy fibres, Schaffer collaterals, frontopontine and corticobulbar fibres.'
+  locator: R1 §2; R1 §8; R2 A6, A12, B4, B8, B12
+  reason: Not created. R1 §2 visual and auditory pathways have no registry tract or circuit, so only the optic radiation (visual) is captured and the auditory pathway is not modelled.
+- claim: Attribution of uncited tract endpoints and circuit flows.
+  locator: R2 Part A; R2 Part B
+  reason: Most A and B entries carry no inline citation. Uncited tract facts were attributed to Catani and Thiebaut de Schotten 2012 (named in R2 Part A Methods as the main human reference) plus R1/KB textbooks where those sections cover the tract; uncited circuit flows (B2, B3, B5 to B7, B8, B9, B11 to B13) were attributed to Kandel/Purves/Blumenfeld as textbook consensus, as R2's preamble says. Reviewer should confirm.
+- claim: Tract kind for fornix, cerebellar peduncles, medial forebrain bundle, DCML and spinothalamic tract.
+  locator: R2 A9, A15, A16; R1 §2
+  reason: Sources do not classify these; set to projection by the schema's definitions (links to subcortical, brain stem or spinal targets). The fornix in particular is classified differently across texts.
+- claim: Origin and termination labels on bidirectional association and commissural tracts.
+  locator: R2 A1 to A11, A17
+  reason: 'Sources list endpoints without direction. Convention used: posterior end origin, anterior end termination, waypoints via; commissural endpoints termination. Recorded in each tract''s notes.'
+- claim: Corpus callosum has about 200 million axons.
+  locator: R1 §5; R2 F; KB anatomy/corpus_callosum.md
+  reason: R1 cites Tomasch 1954 (about 200 million); R2 F cites Aboitiz et al. 1992 (about 200 million, up to 250 million; not re-verified); KB gives 200 to 300 million with 200 to 250 million most cited. Stored as about 200 million, range 200 to 300 million.
+- claim: About 85 to 90 percent of corticospinal fibres cross at the pyramidal decussation.
+  locator: R1 §2; R2 F Verification
+  reason: R2 F says this was not re-verified and that textbooks range about 75 to 90 percent; stored as 85 to 90 percent per both reports' recommended wording.
+- claim: The angular gyrus is a hub.
+  locator: R1 §1.9 Angular gyrus (Seghier 2013)
+  reason: Called a cross-modal integrative hub, not a hub of a named network; kept role node in the default-mode network.
+- claim: Fast 'low road' from sensory thalamus to amygdala.
+  locator: R2 B5
+  reason: Debated for primates (Pessoa and Adolphs 2010). The thalamus INCLUDES edge was kept because the thalamus also feeds the high road; the debate is recorded in the circuit notes.
+- claim: Every tractography picture is a model (many false-positive bundles).
+  locator: R2 Part A Methods (Maier-Hein et al. 2017); R1 §11
+  reason: R2 asks that this limitation be stated whenever tracts are shown. It is a UI or script rule rather than a graph fact, so it was not encoded.
+- claim: Unnumbered tract endpoints.
+  locator: R2 A8, A10
+  reason: MdLF 'occipital cortex' and the splenium's 'parts of the temporal lobe' have no region numbers in the source; omitted rather than guessed.

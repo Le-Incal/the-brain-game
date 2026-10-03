@@ -16,6 +16,7 @@ universalProps:
 relations:
   PART_OF:         { domain: [Structure], range: [Region, Structure] }
   LIES_BENEATH:    { domain: [Structure], range: [Region], props: { hint: { type: string, required: true, maxWords: 20 } } }
+  OVERLAPS:        { domain: [Structure], range: [Region], props: { portion: { type: string } } }   # straddles painted regions without being part of one
   BOUNDS:          { domain: [Structure], range: [Region, Structure], props: { side: { type: string } } }
   ADJACENT_TO:     { domain: [Region, Structure], range: [Region, Structure], symmetric: true }
   SUPPORTED_BY:
@@ -63,3 +64,4 @@ inverses:
   INCLUDES: IN_CIRCUIT
   AFFECTS: AFFECTED_BY
   SUPPLIED_BY: SUPPLIES
+  OVERLAPS: OVERLAPPED_BY

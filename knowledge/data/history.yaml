@@ -1,0 +1,2744 @@
+# Brain Game knowledge base: history. Extracted 2026-10-02; every record is proposed until the steward approves it.
+nodes:
+- id: person:hippocrates
+  class: Person
+  label: Hippocrates
+  living: false
+  knownFor: Ancient Greek physician whose treatise On the Sacred Disease argued that epilepsy is a brain disorder rather than a divine one, and that the brain is the seat of thought and feeling.
+  notes: R1 dates him to about 460-370 BCE; approximate BCE dates are kept here rather than in born/died.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Hippocrates)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:aristotle
+  class: Person
+  label: Aristotle
+  living: false
+  knownFor: Ancient Greek philosopher who held that the heart was the seat of the mind and that the brain served to cool the blood.
+  notes: R1 gives 384-322 BCE; BCE dates are kept here rather than in born/died.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Aristotle)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:galen
+  class: Person
+  label: Galen
+  living: false
+  knownFor: Physician who experimented on animals, silencing squealing pigs by cutting the recurrent laryngeal nerve, and promoted the idea of ventricular 'animal spirits', which held sway for about 1,400 years.
+  pronunciation:
+    respelling: GAY-len
+  notes: R1 dates him to around 129-216 CE; approximate dates are kept here rather than in born/died.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Galen)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:andreas-vesalius
+  class: Person
+  label: Andreas Vesalius
+  living: false
+  knownFor: Anatomist whose 1543 book De humani corporis fabrica, based on human dissection, corrected many of Galen's errors.
+  pronunciation:
+    respelling: veh-SAY-lee-us
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Andreas Vesalius)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:rene-descartes
+  class: Person
+  label: René Descartes
+  living: false
+  knownFor: Philosopher who explained reflexes in mechanical terms and placed the meeting point of soul and body in the pineal gland.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (René Descartes)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:thomas-willis
+  class: Person
+  label: Thomas Willis
+  living: false
+  knownFor: Author of Cerebri Anatome (1664), who described the ring of arteries at the base of the brain now called the circle of Willis and coined the word 'neurology'.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Thomas Willis)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:franciscus-sylvius
+  class: Person
+  label: Franciscus Sylvius
+  living: false
+  born: 1614
+  died: 1672
+  knownFor: Anatomist honoured in the names of the Sylvian (lateral) fissure and the aqueduct of Sylvius.
+  aliases:
+  - text: Franz de le Boë
+    kind: historical
+  pronunciation:
+    respelling: SIL-vee-us
+  notes: Not the same person as the earlier anatomist Jacobus Sylvius (1478-1555), with whom he is sometimes confused.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Franciscus Sylvius); R1 §17b People and eponyms
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:jacobus-sylvius
+  class: Person
+  label: Jacobus Sylvius
+  living: false
+  born: 1478
+  died: 1555
+  knownFor: An earlier anatomist with the same Latin surname, sometimes confused with Franciscus Sylvius.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Franciscus Sylvius note)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:luigi-rolando
+  class: Person
+  label: Luigi Rolando
+  living: false
+  born: 1773
+  died: 1831
+  knownFor: Italian anatomist honoured in the old name for the central sulcus, the fissure of Rolando.
+  pronunciation:
+    respelling: roh-LAN-doh
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Luigi Rolando); R1 §17b People and eponyms
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:franz-joseph-gall
+  class: Person
+  label: Franz Joseph Gall
+  living: false
+  born: 1758
+  died: 1828
+  knownFor: Founder of phrenology. He was right that mental abilities are localised in the cortex, but wrong that bumps on the skull reveal them.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Gall and phrenology)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:pierre-flourens
+  class: Person
+  label: Pierre Flourens
+  living: false
+  born: 1794
+  died: 1867
+  knownFor: Used ablation experiments in birds to show the cerebellum's role in coordination and the medulla's role in breathing, and argued that the cortex works as a whole.
+  pronunciation:
+    respelling: floo-RAHNS
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Pierre Flourens)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:paul-broca
+  class: Person
+  label: Paul Broca
+  living: false
+  born: 1824
+  died: 1880
+  knownFor: Described the speech loss of his patient Leborgne in 1861 and concluded in 1865 that we speak with the left hemisphere.
+  pronunciation:
+    respelling: BROH-kuh
+  provenance:
+    sources:
+    - source:dronkers-2007
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Paul Broca); R1 §1.6 Broca's area (History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:louis-leborgne
+  class: Person
+  label: Louis Victor Leborgne
+  living: false
+  knownFor: Broca's patient, nicknamed 'Tan' because it was nearly the only syllable he could produce, although he understood a great deal.
+  aliases:
+  - text: Tan
+    kind: common
+  - text: Leborgne
+    kind: common
+  pronunciation:
+    respelling: leh-BORN-yuh
+  provenance:
+    sources:
+    - source:dronkers-2007
+    locator: R1 §1.6 Broca's area (History, Kid fact)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:lelong
+  class: Person
+  label: Lelong
+  living: false
+  knownFor: Broca's second patient with lost speech, whose preserved brain was later scanned with MRI alongside Leborgne's.
+  provenance:
+    sources:
+    - source:dronkers-2007
+    locator: R1 §1.6 Broca's area (History); R1 Key Findings (Broca's area)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. Given name not stated in the sources.
+- id: person:carl-wernicke
+  class: Person
+  label: Carl Wernicke
+  living: false
+  born: 1848
+  died: 1905
+  knownFor: Described sensory aphasia in 1874, predicted conduction aphasia from disconnection, and built a connection-based model of language.
+  pronunciation:
+    respelling: VER-nih-kuh
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §10 History and originators (Carl Wernicke); R1 §1.13 Wernicke's area (History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:john-hughlings-jackson
+  class: Person
+  label: John Hughlings Jackson
+  living: false
+  born: 1835
+  died: 1911
+  knownFor: Described the 'Jacksonian march' of focal seizures, which hinted at a body map in the cortex, and proposed that the nervous system is organised in hierarchical levels.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (John Hughlings Jackson)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:camillo-golgi
+  class: Person
+  label: Camillo Golgi
+  living: false
+  born: 1843
+  died: 1926
+  knownFor: Developed the silver chromate 'black reaction' stain around 1873 and held that the nervous system is one continuous net.
+  pronunciation:
+    respelling: GOHL-jee
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Camillo Golgi)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:santiago-ramon-y-cajal
+  class: Person
+  label: Santiago Ramón y Cajal
+  living: false
+  born: 1852
+  died: 1934
+  knownFor: Used Golgi's stain to argue that neurons are separate cells (the neuron doctrine) and that signals flow through them in one direction.
+  pronunciation:
+    respelling: rah-MOHN ee kah-HAHL
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Santiago Ramón y Cajal)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:korbinian-brodmann
+  class: Person
+  label: Korbinian Brodmann
+  living: false
+  born: 1868
+  died: 1918
+  knownFor: Published a 1909 map dividing the cortex into numbered areas by cell layering, with numbers running up to 52.
+  pronunciation:
+    respelling: BROHD-mahn
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Korbinian Brodmann)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:charles-sherrington
+  class: Person
+  label: Charles Sherrington
+  living: false
+  born: 1857
+  died: 1952
+  knownFor: Coined the word 'synapse' in 1897 and studied how reflexes are integrated.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Charles Sherrington)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:otto-loewi
+  class: Person
+  label: Otto Loewi
+  living: false
+  born: 1873
+  died: 1961
+  knownFor: Showed in a 1921 frog-heart experiment that nerves pass signals with chemicals; the substance he called 'Vagusstoff' was later identified as acetylcholine.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Otto Loewi); KB physiology/neurotransmitters.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:alan-hodgkin
+  class: Person
+  label: Alan Hodgkin
+  living: false
+  knownFor: With Andrew Huxley, used the squid giant axon to build the 1952 model of how sodium and potassium currents produce the action potential.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Hodgkin and Huxley)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:andrew-huxley
+  class: Person
+  label: Andrew Huxley
+  living: false
+  knownFor: With Alan Hodgkin, used the squid giant axon to build the 1952 model of how sodium and potassium currents produce the action potential.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Hodgkin and Huxley)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:wilder-penfield
+  class: Person
+  label: Wilder Penfield
+  living: false
+  born: 1891
+  died: 1976
+  knownFor: Neurosurgeon at the Montreal Neurological Institute who mapped the cortex by stimulating awake epilepsy surgery patients, producing the homunculus, and developed the Montreal procedure.
+  provenance:
+    sources:
+    - source:penfield-boldrey-1937
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Wilder Penfield); R1 §3 The Homunculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:brenda-milner
+  class: Person
+  label: Brenda Milner
+  living: true
+  statusCheckedOn: 2026-10-02
+  knownFor: Studied patient H.M., founding the neuropsychology of memory, and showed that his motor learning was spared.
+  provenance:
+    sources:
+    - source:mcgill-neuropsych-day-2026
+    locator: R2 Part F Verification (Brenda Milner); R2 Key Findings 1; R1 §10 History and originators (Brenda Milner)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: 'R1 §10 reports a 2025 death; R2 Part F corrects this (living, per the McGill 2026 booklet). Re-check status at every content release. Birth year held back: R2 took it from Wikipedia.'
+- id: person:william-scoville
+  class: Person
+  label: William Scoville
+  living: false
+  knownFor: Surgeon who removed both of H.M.'s medial temporal lobes in 1953 to treat his epilepsy, and reported the memory loss with Brenda Milner in 1957.
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hidden and deep structures (Hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:henry-molaison
+  class: Person
+  label: Henry Molaison
+  living: false
+  born: 1926
+  died: 2008
+  knownFor: Known in research as patient H.M. After surgery for epilepsy in 1953 he could no longer form new declarative memories, yet he could still learn motor skills such as mirror drawing.
+  aliases:
+  - text: H.M.
+    kind: abbreviation
+  - text: patient H.M.
+    kind: common
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hidden and deep structures (Hippocampus); R1 §10 (Henry Molaison)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:roger-sperry
+  class: Person
+  label: Roger Sperry
+  living: false
+  knownFor: Led split-brain studies from the 1960s on patients whose corpus callosum had been cut, showing that each hemisphere could process information separately.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 History and originators (Roger Sperry and Michael Gazzaniga); KB anatomy/corpus_callosum.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:phineas-gage
+  class: Person
+  label: Phineas Gage
+  living: false
+  born: 1823
+  died: 1860
+  knownFor: Survived a tamping iron passing through his left frontal lobe on 13 September 1848; after a reported personality change he later worked for years as a stagecoach driver in Chile.
+  provenance:
+    sources:
+    - source:macmillan-lena-2010
+    locator: R1 §10 History and originators (Phineas Gage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: person:john-harlow
+  class: Person
+  label: John Harlow
+  living: false
+  knownFor: Phineas Gage's doctor, who reported a major change in Gage's personality after the 1848 accident.
+  provenance:
+    sources:
+    - source:macmillan-lena-2010
+    locator: R1 §10 History and originators (Phineas Gage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm.
+- id: person:papez
+  class: Person
+  label: Papez
+  living: false
+  knownFor: Proposed in 1937 a loop through the hippocampus, mammillary bodies, anterior thalamus and cingulate cortex as the circuit for emotion; it is now seen mainly as a memory circuit.
+  provenance:
+    sources:
+    - source:papez-1937
+    locator: R2 B4 Papez circuit (1937) and modern view
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. Given name not stated in the sources; steward to supply.
+- id: person:heschl
+  class: Person
+  label: Heschl
+  living: false
+  knownFor: The person after whom Heschl's gyri, the transverse temporal gyri that hold primary auditory cortex, are named.
+  pronunciation:
+    respelling: HESH-ul
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §1.11 Primary auditory cortex; R1 §17b Pronunciation (Heschl)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. Given name and life dates not stated in the sources; steward to supply.
+- id: person:paul-ehrlich
+  class: Person
+  label: Paul Ehrlich
+  living: false
+  knownFor: His dye experiments in the 1880s left the brain unstained, an early clue to the blood-brain barrier, although he thought brain tissue simply did not take up the dye.
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: person:max-lewandowsky
+  class: Person
+  label: Max Lewandowsky
+  living: false
+  knownFor: Proposed in 1900 that the brain's capillaries restrict what passes from the blood into the brain.
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: person:edwin-goldmann
+  class: Person
+  label: Edwin Goldmann
+  living: false
+  knownFor: Injected dye into the blood in 1909 and into the cerebrospinal fluid in 1913; the second experiment stained only the brain, showing a true barrier.
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: person:lina-stern
+  class: Person
+  label: Lina Stern
+  living: false
+  knownFor: Named it the 'hemato-encephalic barrier' around 1921.
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Deceased status inferred from the historical context; the source material gives no death year. Steward to confirm. KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: guide:sylvi
+  class: Guide
+  label: Sylvi
+  anchorRegions:
+  - region:11
+  - region:12
+  notes: Named for the Sylvian (lateral) fissure, which separates the temporal lobe from the frontal and parietal lobes. Faces regions 11 and 12 when asked about the name. Never claims to be Franciscus Sylvius.
+  provenance:
+    sources: []
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: guide:rollo
+  class: Guide
+  label: Rollo
+  anchorRegions:
+  - region:5
+  - region:7
+  notes: Named for the Rolandic (central) fissure, with motor cortex in front and sensory cortex behind. Faces regions 5 and 7 when asked about the name. Never claims to be Luigi Rolando.
+  provenance:
+    sources: []
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:parkinsons-disease
+  class: Condition
+  label: Parkinson's Disease
+  kind: neurodegenerative
+  informationalOnly: true
+  audience: teen
+  text:
+    child: An illness where some movement-helping cells deep in my midbrain are slowly lost, so moving becomes shaky, slow and stiff.
+    curious: Parkinson's disease happens when dopamine-making neurons in the substantia nigra of my midbrain are gradually lost. Those cells feed the basal ganglia, which help start and smooth out movement. Tremor, slowness and stiffness usually show up only after many of the cells are already gone. Clumps of a protein called alpha-synuclein, known as Lewy bodies, are another hallmark.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §16 Scope candidates (Parkinson's disease); R1 §1.15b Midbrain (Damage); KB anatomy/midbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:alzheimers-disease
+  class: Condition
+  label: Alzheimer's Disease
+  kind: neurodegenerative
+  informationalOnly: true
+  audience: teen
+  text:
+    child: An illness that slowly damages brain cells, starting in my memory areas. It is caused by disease, not by simply getting older.
+    curious: Alzheimer's disease is the most common cause of dementia, a decline serious enough to get in the way of independent daily life. Amyloid plaques and tangles of tau protein build up, and neurons are lost, beginning in the entorhinal cortex and hippocampus. The precuneus and posterior cingulate show early drops in activity. Dementia comes from disease; it is not an unavoidable part of growing old.
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R1 §16 Scope candidates (Alzheimer's disease); R1 §12 Dementia versus normal aging; R1 §1.10 Precuneus (Damage); R1 §1.16 Cingulate (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: The cited R1 section names no work for this description; textbook attribution is provisional until the citation pass.
+- id: condition:ischemic-stroke
+  class: Condition
+  label: Ischemic Stroke
+  kind: vascular
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: ischaemic stroke
+    kind: common
+  text:
+    child: A stroke where a blood vessel in the brain gets blocked, so the brain cells it feeds stop getting what they need.
+    curious: In an ischemic stroke an artery supplying the brain is blocked, and the tissue downstream begins to fail. It is the most common type of stroke. What happens depends on which artery is blocked, from one-sided weakness to speech or vision problems. Sudden face drooping, arm weakness, trouble speaking, loss of balance or a change in vision means call emergency services right away and note the time.
+  provenance:
+    sources:
+    - source:wso-global-stroke-2025
+    - source:asa-be-fast
+    - source:kandel-pns
+    locator: R1 §14 Stroke and recovery (Types; BE FAST; Symptoms by territory); R1 §1.5 Primary motor cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:haemorrhagic-stroke
+  class: Condition
+  label: Haemorrhagic Stroke
+  kind: vascular
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: hemorrhagic stroke
+    kind: common
+  text:
+    child: A stroke where a blood vessel in or around the brain bursts and bleeds.
+    curious: 'A haemorrhagic stroke happens when a blood vessel bursts. The bleeding can be inside the brain tissue itself, called an intracerebral haemorrhage, or in the fluid-filled space beneath the arachnoid layer around the brain, called a subarachnoid haemorrhage. Like any stroke it is an emergency: sudden face drooping, arm weakness, trouble speaking, loss of balance or a change in vision means call emergency services right away.'
+  provenance:
+    sources:
+    - source:wso-global-stroke-2025
+    - source:asa-be-fast
+    locator: R1 §14 Stroke and recovery (Types; BE FAST); R1 §17c Glossary (Stroke); R1 §7 Meninges (subarachnoid space)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:epilepsy
+  class: Condition
+  label: Epilepsy
+  kind: seizure
+  informationalOnly: true
+  audience: teen
+  text:
+    child: A brain condition that causes seizures again and again. If someone has a seizure, keep them safe and get a grown-up to help.
+    curious: 'Epilepsy is a brain condition with repeated seizures. More than two thousand years ago, Hippocrates argued that it comes from the brain and is not a punishment from the gods. Epilepsy surgery later taught science a great deal: Wilder Penfield mapped the cortex in awake patients, and patient H.M. revealed how memory works. If someone has a seizure, keep them safe, time it, and call for help if it goes on.'
+  provenance:
+    sources:
+    - source:who-epilepsy
+    - source:kandel-pns
+    - source:finger-origins
+    - source:penfield-boldrey-1937
+    - source:scoville-milner-1957
+    locator: R1 §16 Scope candidates (Epilepsy); R1 §10 History (Hippocrates; Wilder Penfield); R1 §5 Hippocampus (H.M.)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:concussion
+  class: Condition
+  label: Concussion
+  kind: injury
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: mild traumatic brain injury
+    kind: common
+  text:
+    child: A brain injury from a bump, blow or jolt to the head. Wearing a helmet for sports and riding helps protect your brain.
+    curious: A concussion is a mild traumatic brain injury caused by a blow or a jolt. The underside of the frontal lobes and the front of the temporal lobes are especially vulnerable; the orbital surface can scrape against the bony floor of the skull. Helmets help. A condition linked to repeated head impacts, called CTE, can only be diagnosed after death, and how strongly the impacts cause it is still debated.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §16 Scope candidates (Concussion and TBI); R1 §1.2 Orbitofrontal cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: R1 §16 names no work; sources are those of R1 §1.2 (orbitofrontal damage in traumatic brain injury).
+- id: condition:brocas-aphasia
+  class: Condition
+  label: Broca's Aphasia
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: non-fluent aphasia
+    kind: common
+  - text: expressive aphasia
+    kind: common
+  pronunciation:
+    respelling: BROH-kuhz uh-FAY-zhuh
+  text:
+    child: When damage near the front of my left side makes talking slow and hard, even though the person still understands a lot.
+    curious: People with Broca's aphasia speak with great effort, in short, telegraphic phrases, while understanding simple sentences fairly well. Weakness on the right side of the body is common. It is named for Paul Broca, who described his patient Leborgne, nicknamed 'Tan', in 1861. MRI of Leborgne's preserved brain shows the damage reached deep below the surface, and lasting aphasia usually needs a lesion larger than Broca's area alone.
+  provenance:
+    sources:
+    - source:dronkers-2007
+    - source:mohr-1978
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.6 Broca's area (Damage; History); R1 Key Findings (Broca's area)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:wernickes-aphasia
+  class: Condition
+  label: Wernicke's Aphasia
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: fluent aphasia
+    kind: common
+  - text: receptive aphasia
+    kind: common
+  pronunciation:
+    respelling: VER-nih-kuhz uh-FAY-zhuh
+  text:
+    child: Talking stays quick and easy, but the words get mixed up and make little sense, and understanding other people becomes hard.
+    curious: Wernicke's aphasia brings fluent speech full of wrong or invented words, along with poor understanding of what others say. People often don't notice their own errors, and unlike Broca's aphasia there is usually no weakness. Carl Wernicke described it in 1874. Some researchers now argue the comprehension problems come mainly from damage to the middle temporal gyrus and nearby cortex rather than the classic area alone.
+  provenance:
+    sources:
+    - source:binder-2015
+    - source:tremblay-dick-2016
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.13 Wernicke's area (Damage; History; Boundary debate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:hydrocephalus
+  class: Condition
+  label: Hydrocephalus
+  kind: csf_disorder
+  informationalOnly: true
+  audience: teen
+  pronunciation:
+    respelling: hy-droh-SEF-uh-lus
+  text:
+    child: When too much of the brain's cushioning fluid builds up, often because a narrow channel the fluid flows through gets blocked.
+    curious: 'Hydrocephalus means too much cerebrospinal fluid. It can happen when the flow is blocked, for example where the cerebral aqueduct in the midbrain is narrowed, when the fluid is not absorbed properly, or, rarely, when too much is made. In older adults a form called normal pressure hydrocephalus brings a typical trio of problems: trouble walking, loss of bladder control and declining thinking.'
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §7 Meninges, ventricles and CSF (Hydrocephalus); R1 §1.15b Midbrain (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: conditionKind has no fitting term for a CSF disorder; 'syndrome' used provisionally.
+- id: condition:meningioma
+  class: Condition
+  label: Meningioma
+  kind: tumour
+  informationalOnly: true
+  audience: teen
+  pronunciation:
+    respelling: meh-nin-jee-OH-muh
+  text:
+    child: A lump that grows from the thin coverings around the brain. Most of them are not cancer.
+    curious: 'A meningioma grows from cells of the arachnoid, one of the protective membranes around the brain. It is the most common tumour that starts in the brain or its coverings, it is usually not cancerous, and it is more common in women. Where it grows shapes what happens: one growing in the groove under the front of the brain, beside the smell pathways, can cause loss of smell and personality change.'
+  provenance:
+    sources:
+    - source:louis-2021
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §15 Tumors (Meningioma); R1 §1.2 Orbitofrontal cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: R1 §15 names no work for the meningioma description; Louis 2021 attribution provisional.
+- id: condition:glioblastoma
+  class: Condition
+  label: Glioblastoma
+  kind: tumour
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: glioblastoma, IDH-wildtype
+    kind: common
+  pronunciation:
+    respelling: GLY-oh-blas-TOH-muh
+  text:
+    child: A serious kind of brain tumour that grows from glial cells, the brain's support cells.
+    curious: Gliomas grow from the glial family of cells. Glioblastoma, IDH-wildtype, is the most common malignant tumour that starts in the adult brain. Since 2021 the World Health Organization classifies brain tumours by combining how they look under the microscope with molecular markers, and in that system glioblastoma is graded 4.
+  provenance:
+    sources:
+    - source:louis-2021
+    locator: R1 §15 Tumors (Gliomas; WHO CNS5)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:medulloblastoma
+  class: Condition
+  label: Medulloblastoma
+  kind: tumour
+  informationalOnly: true
+  audience: teen
+  pronunciation:
+    respelling: meh-DUL-oh-blas-TOH-muh
+  text:
+    child: A tumour that grows in my cerebellum, the part at the back that helps with movement. It is one of the brain tumours that can affect children.
+    curious: Medulloblastoma is a malignant tumour of the cerebellum and the most common malignant brain tumour in children. Doctors now sort it into molecular groups named WNT, SHH, Group 3 and Group 4, as part of a classification that combines microscope findings with molecular markers.
+  provenance:
+    sources:
+    - source:louis-2021
+    locator: R1 §15 Tumors (Pediatric tumors)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:multiple-sclerosis
+  class: Condition
+  label: Multiple Sclerosis
+  kind: demyelinating
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: MS
+    kind: abbreviation
+  text:
+    child: An illness where the body's defence system attacks the protective coating around nerve fibres in the brain and spinal cord.
+    curious: In multiple sclerosis, the immune system attacks and strips away myelin, the fatty insulation that speeds signals along axons. A breakdown of the blood-brain barrier lets immune cells into the central nervous system, where the damage happens. The disease causes the myelin loss, not the other way round.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    - source:kandel-pns
+    locator: KB cells/axon.md (Disease); KB anatomy/blood_brain_barrier.md (Disease); KB SOURCES_AND_CORRECTIONS.md (fact-check)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: conditionKind has no immune or demyelinating term; 'neurodegenerative' used provisionally.
+- id: condition:brown-sequard-syndrome
+  class: Condition
+  label: Brown-Séquard Syndrome
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  pronunciation:
+    respelling: brown-say-KAR
+  text:
+    child: 'What happens when exactly one side of the spinal cord is hurt: different feelings are lost on different sides of the body.'
+    curious: Brown-Séquard syndrome follows damage to one half of the spinal cord. Below the injury, the same side loses strength and the sense of vibration and limb position, while the opposite side loses pain and temperature feeling, starting a segment or two lower. The split happens because these pathways cross the midline at different levels, which makes it a classic puzzle for learning the wiring.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Brown-Séquard syndrome); R1 §17b People and eponyms
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:locked-in-syndrome
+  class: Condition
+  label: Locked-in Syndrome
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  text:
+    child: A person is awake and aware but can talk only with blinks and up-and-down eye movements, after damage to the front of the pons.
+    curious: Locked-in syndrome usually follows a stroke in the front part of the pons, often from the basilar artery. The person is fully awake and aware, yet can communicate only with blinks and vertical eye movements. Because tracts and vital centres are packed so tightly in the brain stem, a small injury there can have very large effects.
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:kandel-pns
+    - source:nolte-human-brain
+    locator: R1 §1.20 Brainstem (Damage); KB anatomy/hindbrain.md (Brainstem lesions)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:prosopagnosia
+  class: Condition
+  label: Prosopagnosia
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: face blindness
+    kind: common
+  pronunciation:
+    respelling: PROS-oh-pag-NOH-zhuh
+  text:
+    child: 'Face blindness: having trouble recognising who someone is from their face.'
+    curious: People with prosopagnosia struggle to recognise faces. It can follow damage to the fusiform gyrus on the underside of the brain, usually on the right side or on both sides, where a face-sensitive patch sits. Damage to the cable carrying visual information forward into the temporal lobe can also cause it. There is a developmental form as well.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:kanwisher-1997
+    locator: R1 §1.14 Fusiform gyrus (Damage; Named areas); R2 A5 Inferior longitudinal fasciculus
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:hemispatial-neglect
+  class: Condition
+  label: Hemispatial Neglect
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  aliases:
+  - text: spatial neglect
+    kind: common
+  text:
+    child: After damage to the right side of the brain, a person may stop noticing things on their left, as if that half of the world had vanished.
+    curious: Hemispatial neglect is a failure to notice or respond to one side of space, most often the left side after damage to the right hemisphere. The right parietal lobe, including the angular gyrus and superior parietal areas, is often involved, along with the network that redirects attention to unexpected events and the white-matter highways that link parietal and frontal areas.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    - source:corbetta-shulman-2002
+    - source:seghier-2013
+    locator: R1 §1.8 SPL (Damage); R1 §1.9 Angular gyrus (Damage); R1 §9 Brain networks (Ventral attention); R1 §14 Symptoms by territory; R2 A2 SLF
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:anterograde-amnesia
+  class: Condition
+  label: Anterograde Amnesia
+  kind: syndrome
+  informationalOnly: true
+  audience: teen
+  text:
+    child: When the brain can no longer store new memories of events. The famous patient H.M. had this, yet he could still learn new hand skills.
+    curious: Anterograde amnesia is an inability to form new memories of events and facts. The best-known case is Henry Molaison, known as H.M., whose 1953 epilepsy surgery removed the inner parts of both temporal lobes. He could not form new declarative memories, but Brenda Milner showed that his learning of motor skills, such as mirror drawing, was spared. Damage to the fornix, the hippocampus's main output cable, can also cause it.
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hippocampus (Patient H.M.); R1 §10 Brenda Milner; R2 A9 Fornix
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: condition:bells-palsy
+  class: Condition
+  label: Bell's Palsy
+  kind: cranial_nerve_disorder
+  informationalOnly: true
+  audience: teen
+  text:
+    child: When the facial nerve on one side stops working properly, so the whole of that side of the face goes weak.
+    curious: Bell's palsy affects the facial nerve, cranial nerve VII, which runs the muscles of facial expression. The whole half of the face on one side becomes weak, so a smile is lopsided and one eyebrow will not lift.
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §6 Cranial nerves (VII Facial)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: conditionKind has no cranial-nerve term; 'syndrome' used provisionally.
+- id: condition:urbach-wiethe-disease
+  class: Condition
+  label: Urbach-Wiethe Disease
+  kind: genetic
+  informationalOnly: true
+  audience: teen
+  text:
+    child: An illness that can damage the amygdala, a small almond-shaped part deep inside that helps the brain notice danger.
+    curious: Urbach-Wiethe disease can damage both amygdalae, the almond-shaped clusters deep in the temporal lobes. A well-studied patient known as S.M., who had this damage, showed a striking loss of fear experience. Yet the same patient felt intense panic after breathing in carbon dioxide, a sign that the amygdala is not the brain's only route to fear.
+  provenance:
+    sources:
+    - source:feinstein-2011
+    - source:feinstein-2013
+    locator: R1 §5 Amygdala (Patient S.M.); R2 B5 Amygdala fear circuit (Critiques)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: conditionKind has no genetic term; 'syndrome' used provisionally.
+- id: myth:ten-percent-brain
+  class: Myth
+  label: We only use 10% of our brain
+  statement: People use only about ten percent of their brains.
+  correction:
+    child: You use all of your brain. Different parts are busy at different times, and every part has a job.
+    curious: Brain scans show activity spreading across the whole brain over an ordinary day, not just a small slice of it. Injury to almost any part causes some kind of problem, which would not happen if most of the brain sat unused.
+  provenance:
+    sources:
+    - source:beyerstein-1999
+    locator: 'R1 §17a Consolidated myths list #1'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:left-right-brain
+  class: Myth
+  label: Left-brained and right-brained people
+  statement: Each person is either left-brained (logical) or right-brained (creative).
+  correction:
+    child: Nobody is left-brained or right-brained. Your two halves team up on almost everything, even though each half is a bit better at certain jobs.
+    curious: 'A study of more than a thousand people found no sign that anyone is dominated by one whole hemisphere. Some skills do lean to one side: language usually leans left, while faces and the melody of speech lean right. Both halves still work together constantly. Split-brain research was later stretched into this personality myth.'
+  provenance:
+    sources:
+    - source:nielsen-2013
+    locator: 'R1 §17a Consolidated myths list #2; R1 §10 (Sperry and Gazzaniga)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:learning-styles
+  class: Myth
+  label: Learning styles
+  statement: Students learn best when teaching matches their personal learning style, such as visual or auditory.
+  correction:
+    child: There is no good evidence that teaching a 'picture learner' only with pictures, or a 'listening learner' only by talking, helps them learn more.
+    curious: A major review of the research found no solid evidence that matching lessons to a person's supposed learning style, such as visual or auditory, improves how much they learn. Liking one way of learning is not the same as learning better that way.
+  provenance:
+    sources:
+    - source:pashler-2008
+    locator: 'R1 §17a Consolidated myths list #3'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:bigger-brain-smarter
+  class: Myth
+  label: A bigger brain means a smarter person
+  statement: The bigger your brain, the smarter you are.
+  correction:
+    child: Size isn't everything. Elephants and whales have bigger brains than people, and among humans brain size tells you very little about how clever someone is.
+    curious: Across many studies, brain size and intelligence scores are only weakly to modestly linked; one meta-analysis put the correlation at about 0.24, which leaves most of the differences between people unexplained. Elephants and whales also have larger brains than humans do.
+  provenance:
+    sources:
+    - source:pietschnig-2015
+    locator: 'R1 §17a Consolidated myths list #4'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:mozart-effect
+  class: Myth
+  label: The Mozart effect
+  statement: Listening to classical music, especially Mozart, makes babies smarter.
+  correction:
+    child: Listening to Mozart does not make babies smarter. The famous study tested college students, and its small effect faded quickly.
+    curious: The original 1993 study tested college students, not babies, and found only a brief bump in scores on spatial puzzles after listening to Mozart. Later reviews that pooled many studies found little or no real effect. Music is worth enjoying for its own sake, but it is not a shortcut to a higher IQ.
+  provenance:
+    sources:
+    - source:rauscher-1993
+    - source:chabris-1999
+    - source:pietschnig-2010
+    locator: 'R1 §17a Consolidated myths list #5'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:alcohol-kills-brain-cells
+  class: Myth
+  label: Alcohol kills brain cells
+  statement: Drinking alcohol kills brain cells.
+  correction:
+    child: The real story is more complicated, but heavy drinking still harms the brain by damaging the wiring and branches that connect brain cells.
+    curious: 'Studies that counted neurons found no major loss of cortex cells in people with long-term alcoholism. That is not good news, though: alcohol damages white matter and the branching dendrites neurons use to connect. A shortage of thiamine, as in Wernicke-Korsakoff syndrome, does kill neurons. Heavy use harms the brain, just not in the simple way the slogan says.'
+  audience: teen
+  provenance:
+    sources:
+    - source:jensen-pakkenberg-1993
+    locator: 'R1 §17a Consolidated myths list #6'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:hundred-billion-neurons
+  class: Myth
+  label: The brain has 100 billion neurons
+  statement: The human brain contains 100 billion neurons.
+  correction:
+    child: Careful counting found about 86 billion neurons in a human brain, not 100 billion. That is still an enormous number!
+    curious: When researchers counted the neurons in adult brains, they found about 86 billion, with individual brains ranging from roughly 79 to 95 billion. The popular figure of 100 billion falls outside that measured range. The counts came from only four brains, so 86 billion is best treated as a good estimate rather than an exact total.
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:lent-2012
+    locator: 'R1 §17a Consolidated myths list #7; R1 TL;DR; R1 Key Findings (Neuron and glia counts)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:glia-ten-to-one
+  class: Myth
+  label: Glia outnumber neurons ten to one
+  statement: Glial cells outnumber neurons in the brain ten to one.
+  correction:
+    child: Your brain has roughly one glial helper cell for every neuron, not ten.
+    curious: Careful cell counts show that the whole brain holds roughly as many glial cells as neurons, a ratio of about one to one. The balance does shift between brain areas, but the old ten-to-one figure does not hold up anywhere in the overall count.
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:von-bartheld-2016
+    locator: 'R1 §17a Consolidated myths list #8'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:cerebellum-only-balance
+  class: Myth
+  label: The cerebellum only controls balance
+  statement: The cerebellum's only job is balance.
+  correction:
+    child: Your cerebellum helps you balance, but it also helps you learn skills, keep time, use words and handle feelings.
+    curious: Balance and coordination are classic cerebellum jobs, but far from the whole story. It is central to motor learning and precise timing. People with damage to its posterior lobe can have problems with planning, spatial thinking, language and emotion, a pattern called the cerebellar cognitive affective syndrome.
+  provenance:
+    sources:
+    - source:schmahmann-sherman-1998
+    locator: 'R1 §17a Consolidated myths list #9; R1 §1.19 Cerebellum'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:smell-through-thalamus
+  class: Myth
+  label: Smell passes through the thalamus like other senses
+  statement: Smell signals pass through the thalamus before reaching the cortex, just like the other senses.
+  correction:
+    child: Smell takes a shortcut! It travels from your nose straight to a smell area of the brain without stopping at the main relay station first.
+    curious: 'Every other sense stops at the thalamus, the brain''s relay hub, on its way to the cortex. Smell is different: signals from the olfactory bulb go directly to the piriform cortex, the primary smell area. A secondary route does pass through the thalamus to reach the orbitofrontal cortex, where smell joins taste to build flavour, but the first stop skips the thalamus.'
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: 'R1 §17a Consolidated myths list #10; R1 §8 Smell; R1 §1.15a Piriform cortex'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:adult-neurogenesis-certainty
+  class: Myth
+  label: Adults definitely do, or definitely don't, grow new neurons
+  statement: 'Science has settled whether adult humans grow new neurons: either they never do, or they definitely make many.'
+  correction:
+    child: Scientists are still working this out. Grown-ups may make a few new neurons in a memory area, but nobody knows yet how many, or how much it matters.
+    curious: 'Some studies have found signs of new neurons forming in the adult hippocampus, including a 2025 study that spotted dividing precursor cells in adults up to age 78. Others found almost none, and results vary widely between people and methods. The fair summary: adults may make some new hippocampal neurons, but how many, and whether they matter for memory, is still debated.'
+  provenance:
+    sources:
+    - source:eriksson-1998
+    - source:spalding-2013
+    - source:sorrells-2018
+    - source:boldrini-2018
+    - source:moreno-jimenez-2019
+    - source:dumitru-2025
+    locator: 'R1 §17a Consolidated myths list #11; R1 §12 Adult neurogenesis (DEBATED)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: myth:phineas-gage-permanent
+  class: Myth
+  label: Phineas Gage was ruined for life
+  statement: After an iron rod passed through his head, Phineas Gage became a permanent wreck.
+  correction:
+    child: Phineas Gage changed after his accident, but he recovered a lot. Years later he drove stagecoaches, a job that needed planning and people skills.
+    curious: 'In 1848 a tamping iron passed through Gage''s left frontal lobe, and his doctor reported a major personality change. That part gets retold often. Less often told: historians found he later worked for years as a stagecoach driver in Chile, a job that demands planning and social skill, and a doctor there reported no impairment of his mind. His story is about recovery as much as damage.'
+  provenance:
+    sources:
+    - source:macmillan-lena-2010
+    locator: 'R1 §17a Consolidated myths list #12; R1 §10 Phineas Gage'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:trillion-odors
+  class: Myth
+  label: Humans can smell a trillion odours
+  statement: People can tell apart one trillion different smells.
+  correction:
+    child: Nobody knows exactly how many smells you can tell apart. It is a big number, but the 'one trillion' claim did not hold up.
+    curious: A 2014 study estimated that people can tell apart about a trillion odours. Other scientists then showed that the method behind that figure could produce almost any number, depending on its assumptions. So the true count is unknown. What can be said is that it is large.
+  provenance:
+    sources:
+    - source:meister-2015
+    - source:gerkin-castro-2015
+    locator: 'R1 §17a Consolidated myths list #13; R1 §8 Smell (Disputed claim)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:gut-serotonin-mood
+  class: Myth
+  label: Gut serotonin controls your mood
+  statement: Serotonin made in your gut controls your mood.
+  correction:
+    child: Most of your body's serotonin is made in your belly, but it cannot get into your brain. Your brain makes its own.
+    curious: Most of the body's serotonin, about 90 to 95 percent, is made in the gut, but that serotonin cannot cross the blood-brain barrier, so it never reaches brain cells directly. The brain's own serotonin comes from the raphe nuclei in the brain stem. Gut and brain do communicate, through nerves such as the vagus, immune signals and chemicals made by gut microbes, and those links are an active research area.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: 'R1 §17a Consolidated myths list #14; R1 §13 Blood supply (Blood-brain barrier); KB SOURCES_AND_CORRECTIONS.md (Neurotransmitters)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: 'R1 §17a #14 cites no work; sources are those of R1 §13 and the KB corrections log.'
+- id: myth:tongue-taste-map
+  class: Myth
+  label: The tongue has a taste map
+  statement: Different zones of the tongue detect different tastes, such as sweet at the tip and bitter at the back.
+  correction:
+    child: There is no taste map. All five basic tastes can be picked up all across your tongue.
+    curious: The famous tongue map grew out of a misreading of a 1901 study and was popularised in 1942. In fact, sweet, sour, salty, bitter and umami are all detected across the tongue. Taste buds send their signals through three cranial nerves to the brain stem, then on to the taste cortex in the insula.
+  notes: R1 traces the myth to a misreading of Hänig (1901), popularised by Boring (1942).
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R1 §17a Consolidated myths list #15; R1 §8 Taste (Myth)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:brain-done-at-fixed-age
+  class: Myth
+  label: The brain is finished at 18, or at exactly 25
+  statement: The brain is fully developed at age 18, or at exactly age 25.
+  correction:
+    child: Your brain keeps growing and changing well into adulthood. There is no single birthday when it is finished.
+    curious: The planning areas at the front of the brain mature last, and wiring keeps changing through the twenties. The famous age of 25 stretches beyond the original data, which only covered people up to 21. A 2025 study of more than 4,000 people found a major turning point in whole-brain wiring around age 32. There is no single 'done' birthday.
+  provenance:
+    sources:
+    - source:gogtay-2004
+    - source:mousley-2025
+    - source:somerville-2016
+    locator: 'R1 §17a Consolidated myths list #16; R1 §12 Adolescence and the PFC'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:brain-training-games
+  class: Myth
+  label: Brain-training games make you smarter overall
+  statement: Playing brain-training games makes you smarter in general.
+  correction:
+    child: Brain games make you better at those games. They do not seem to make you better at schoolwork or everyday thinking.
+    curious: A major review found that brain-training games reliably improve performance on the trained tasks themselves. Evidence that those gains carry over to everyday thinking, school or work is weak. Getting good at a game mostly makes you good at that game.
+  provenance:
+    sources:
+    - source:simons-2016
+    locator: 'R1 §17a Consolidated myths list #17'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+  standaloneCorrection: true
+- id: myth:brain-feels-pain
+  class: Myth
+  label: The brain feels pain when it is cut
+  statement: Cutting into the brain itself is painful.
+  correction:
+    child: Brain tissue has no pain sensors, so it cannot feel being touched. That is why some people stay awake during brain surgery!
+    curious: The brain tissue itself has no pain receptors. That is why surgeons can operate while a patient is awake, as Wilder Penfield did when he mapped the cortex during epilepsy surgery. Headaches come from the brain's coverings, the meninges, and from its blood vessels, which do have pain receptors.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    - source:penfield-boldrey-1937
+    locator: 'R1 §17a Consolidated myths list #18; R1 §7 Meninges; R1 §3 Origins'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: 'R1 §17a #18 cites no work; sources are those of R1 §7 and R1 §3.'
+  standaloneCorrection: true
+- id: myth:living-brain-grey
+  class: Myth
+  label: Living brains are grey
+  statement: A living brain is grey.
+  correction:
+    child: A living brain is pinkish-beige because blood flows all through it. Brains only look grey after they have been preserved.
+    curious: Pictures of grey brains usually show preserved specimens. Inside a living head the brain is pinkish-beige, coloured by its rich blood supply. The term 'grey matter' describes how cell-body-rich tissue looks after preservation.
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: 'R1 §17a Consolidated myths list #19; KB anatomy/central_nervous_system.md (Common questions)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: 'R1 §17a #19 cites no work; sources are the works listed by KB anatomy/central_nervous_system.md.'
+  standaloneCorrection: true
+- id: myth:brain-cannot-recover
+  class: Myth
+  label: A damaged brain can never recover
+  statement: Once the brain is damaged, lost abilities never come back.
+  correction:
+    child: Brains can heal in surprising ways. After an injury, other parts can learn to take over some jobs, especially with lots of practice.
+    curious: 'Neuroplasticity, the brain''s ability to rewire, allows real recovery after stroke and other injuries. Recovery is usually fastest in the first weeks to months, and therapy helps: one method restrains the stronger arm so the weaker one gets practice, and a large trial showed it works. Recovery is often incomplete, but ''never'' is wrong.'
+  provenance:
+    sources:
+    - source:wolf-2006
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: 'R1 §17a Consolidated myths list #20; R1 §14 Rehabilitation and plasticity; KB physiology/synaptic_plasticity.md (Recovery)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: 'R1 §17a #20 cites no work; sources are those of R1 §14 and the KB plasticity file.'
+assertions:
+- id: assert:paul-broca--described--region-6
+  predicate: DESCRIBED
+  subject: person:paul-broca
+  object: region:6
+  props:
+    year: 1861
+  provenance:
+    sources:
+    - source:dronkers-2007
+    locator: R1 §1.6 Broca's area (History); R1 §10 Paul Broca
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:paul-broca--described--brocas-aphasia
+  predicate: DESCRIBED
+  subject: person:paul-broca
+  object: condition:brocas-aphasia
+  props:
+    year: 1861
+  provenance:
+    sources:
+    - source:dronkers-2007
+    locator: R1 §1.6 Broca's area (History); R1 §10 Paul Broca
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:carl-wernicke--described--region-13
+  predicate: DESCRIBED
+  subject: person:carl-wernicke
+  object: region:13
+  props:
+    year: 1874
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.13 Wernicke's area (History); R1 §10 Carl Wernicke
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:carl-wernicke--described--wernickes-aphasia
+  predicate: DESCRIBED
+  subject: person:carl-wernicke
+  object: condition:wernickes-aphasia
+  props:
+    year: 1874
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.13 Wernicke's area (History); R1 §10 Carl Wernicke
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wilder-penfield--described--region-5
+  predicate: DESCRIBED
+  subject: person:wilder-penfield
+  object: region:5
+  props:
+    year: 1937
+  provenance:
+    sources:
+    - source:penfield-boldrey-1937
+    locator: R1 §3 The Homunculus (Origins)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wilder-penfield--described--region-7
+  predicate: DESCRIBED
+  subject: person:wilder-penfield
+  object: region:7
+  props:
+    year: 1937
+  provenance:
+    sources:
+    - source:penfield-boldrey-1937
+    locator: R1 §3 The Homunculus (Origins)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:william-scoville--described--hippocampus
+  predicate: DESCRIBED
+  subject: person:william-scoville
+  object: structure:hippocampus
+  props:
+    year: 1957
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hidden and deep structures (Hippocampus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brenda-milner--described--hippocampus
+  predicate: DESCRIBED
+  subject: person:brenda-milner
+  object: structure:hippocampus
+  props:
+    year: 1957
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hidden and deep structures (Hippocampus); R1 §10 Brenda Milner
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:papez--described--papez
+  predicate: DESCRIBED
+  subject: person:papez
+  object: circuit:papez
+  props:
+    year: 1937
+  provenance:
+    sources:
+    - source:papez-1937
+    locator: R2 B4 Papez circuit (1937) and modern view
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:thomas-willis--described--circle-of-willis
+  predicate: DESCRIBED
+  subject: person:thomas-willis
+  object: artery:circle-of-willis
+  props:
+    year: 1664
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Thomas Willis
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:franciscus-sylvius--described--lateral-fissure
+  predicate: DESCRIBED
+  subject: person:franciscus-sylvius
+  object: structure:lateral-fissure
+  props:
+    year: 1641
+  debateNote: R1 says Caspar Bartholin published the description in 1641 and credited it to Sylvius.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Franciscus Sylvius
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:otto-loewi--described--acetylcholine
+  predicate: DESCRIBED
+  subject: person:otto-loewi
+  object: molecule:acetylcholine
+  props:
+    year: 1921
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:purves-neuroscience
+    locator: R1 §10 Otto Loewi; KB physiology/neurotransmitters.md (Memorable fact)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:otto-loewi--described--synaptic-transmission
+  predicate: DESCRIBED
+  subject: person:otto-loewi
+  object: process:synaptic-transmission
+  props:
+    year: 1921
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Otto Loewi (chemical neurotransmission)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:alan-hodgkin--described--action-potential
+  predicate: DESCRIBED
+  subject: person:alan-hodgkin
+  object: process:action-potential
+  props:
+    year: 1952
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:purves-neuroscience
+    locator: R1 §10 Alan Hodgkin and Andrew Huxley; KB physiology/how_neurons_signal.md (History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:andrew-huxley--described--action-potential
+  predicate: DESCRIBED
+  subject: person:andrew-huxley
+  object: process:action-potential
+  props:
+    year: 1952
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:purves-neuroscience
+    locator: R1 §10 Alan Hodgkin and Andrew Huxley; KB physiology/how_neurons_signal.md (History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:max-lewandowsky--described--blood-brain-barrier
+  predicate: DESCRIBED
+  subject: person:max-lewandowsky
+  object: structure:blood-brain-barrier
+  props:
+    year: 1900
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: assert:edwin-goldmann--described--blood-brain-barrier
+  predicate: DESCRIBED
+  subject: person:edwin-goldmann
+  object: structure:blood-brain-barrier
+  props:
+    year: 1913
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: assert:lina-stern--described--blood-brain-barrier
+  predicate: DESCRIBED
+  subject: person:lina-stern
+  object: structure:blood-brain-barrier
+  props:
+    year: 1921
+    confidence: approximate
+  debateNote: The KB says she named the barrier around 1921; the year is approximate.
+  provenance:
+    sources:
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (For the expert, History); KB SOURCES_AND_CORRECTIONS.md (fact-check 2026-10-02)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: KB file lists QBI, BrainFacts (The Blood-Brain Barrier, 2014) and textbooks; the corrections log cites only 'history of medicine'. Verify the historical source.
+- id: assert:region-6--named-after--paul-broca
+  predicate: NAMED_AFTER
+  subject: region:6
+  object: person:paul-broca
+  provenance:
+    sources:
+    - source:dronkers-2007
+    locator: R1 §1.6 Broca's area (History); R1 §10 Paul Broca
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:region-13--named-after--carl-wernicke
+  predicate: NAMED_AFTER
+  subject: region:13
+  object: person:carl-wernicke
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:kandel-pns
+    locator: R1 §1.13 Wernicke's area (History); R1 §10 Carl Wernicke
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:lateral-fissure--named-after--franciscus-sylvius
+  predicate: NAMED_AFTER
+  subject: structure:lateral-fissure
+  object: person:franciscus-sylvius
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Franciscus Sylvius; R1 §17c Glossary (Lateral fissure)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:cerebral-aqueduct--named-after--franciscus-sylvius
+  predicate: NAMED_AFTER
+  subject: structure:cerebral-aqueduct
+  object: person:franciscus-sylvius
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §10 Franciscus Sylvius; R1 §7 Ventricles (aqueduct of Sylvius)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:central-sulcus--named-after--luigi-rolando
+  predicate: NAMED_AFTER
+  subject: structure:central-sulcus
+  object: person:luigi-rolando
+  debateNote: Félix Vicq d'Azyr depicted the sulcus earlier; François Leuret attached Rolando's name to it in 1839.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Luigi Rolando; R1 §17c Glossary (Central sulcus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:heschls-gyrus--named-after--heschl
+  predicate: NAMED_AFTER
+  subject: structure:heschls-gyrus
+  object: person:heschl
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §1.11 Primary auditory cortex; KB anatomy/gyri_and_sulci.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brocas-aphasia--named-after--paul-broca
+  predicate: NAMED_AFTER
+  subject: condition:brocas-aphasia
+  object: person:paul-broca
+  provenance:
+    sources:
+    - source:dronkers-2007
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.6 Broca's area (Damage; History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wernickes-aphasia--named-after--carl-wernicke
+  predicate: NAMED_AFTER
+  subject: condition:wernickes-aphasia
+  object: person:carl-wernicke
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.13 Wernicke's area (Damage; History)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:sylvi--named-after--franciscus-sylvius
+  predicate: NAMED_AFTER
+  subject: guide:sylvi
+  object: person:franciscus-sylvius
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:rollo--named-after--luigi-rolando
+  predicate: NAMED_AFTER
+  subject: guide:rollo
+  object: person:luigi-rolando
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:finger-origins
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:sylvi--anchored-on--lateral-fissure
+  predicate: ANCHORED_ON
+  subject: guide:sylvi
+  object: structure:lateral-fissure
+  provenance:
+    sources: []
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:rollo--anchored-on--central-sulcus
+  predicate: ANCHORED_ON
+  subject: guide:rollo
+  object: structure:central-sulcus
+  provenance:
+    sources: []
+    locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:parkinsons-disease--affects--substantia-nigra
+  predicate: AFFECTS
+  subject: condition:parkinsons-disease
+  object: structure:substantia-nigra
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §16 Parkinson's disease; R1 §1.15b Midbrain (Damage); KB anatomy/midbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:parkinsons-disease--affects--dopaminergic-neuron
+  predicate: AFFECTS
+  subject: condition:parkinsons-disease
+  object: celltype:dopaminergic-neuron
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §16 Parkinson's disease; R1 §1.15b Midbrain (Damage); KB anatomy/midbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:alzheimers-disease--affects--entorhinal-cortex
+  predicate: AFFECTS
+  subject: condition:alzheimers-disease
+  object: structure:entorhinal-cortex
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R1 §16 Alzheimer's disease; R2 B8 Hippocampal trisynaptic circuit (Failure)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: The cited R1 section names no work for this description; textbook attribution is provisional until the citation pass.
+- id: assert:alzheimers-disease--affects--hippocampus
+  predicate: AFFECTS
+  subject: condition:alzheimers-disease
+  object: structure:hippocampus
+  provenance:
+    sources:
+    - source:kandel-pns
+    locator: R1 §16 Alzheimer's disease; R2 B8 Hippocampal trisynaptic circuit (Failure)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: The cited R1 section names no work for this description; textbook attribution is provisional until the citation pass.
+- id: assert:alzheimers-disease--affects--region-10
+  predicate: AFFECTS
+  subject: condition:alzheimers-disease
+  object: region:10
+  provenance:
+    sources:
+    - source:cavanna-trimble-2006
+    - source:raichle-2001
+    locator: R1 §1.10 Precuneus (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:alzheimers-disease--affects--posterior-cingulate-cortex
+  predicate: AFFECTS
+  subject: condition:alzheimers-disease
+  object: structure:posterior-cingulate-cortex
+  provenance:
+    sources:
+    - source:vogt-2005
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.16 Cingulate cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brocas-aphasia--affects--region-6
+  predicate: AFFECTS
+  subject: condition:brocas-aphasia
+  object: region:6
+  debateNote: A lesion confined to region 6 usually causes milder or temporary deficits; lasting Broca's aphasia needs larger lesions reaching deeper (Mohr 1978; Dronkers 2007).
+  provenance:
+    sources:
+    - source:dronkers-2007
+    - source:mohr-1978
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.6 Broca's area (Damage); R1 Key Findings (Broca's area)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wernickes-aphasia--affects--region-13
+  predicate: AFFECTS
+  subject: condition:wernickes-aphasia
+  object: region:13
+  debateNote: Experts disagree on where Wernicke's area lies (Tremblay and Dick 2016); Binder 2015 attributes the comprehension deficit mostly to middle temporal damage.
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:binder-2015
+    - source:tremblay-dick-2016
+    locator: R1 §1.13 Wernicke's area (Damage; Boundary debate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wernickes-aphasia--affects--middle-temporal-gyrus
+  predicate: AFFECTS
+  subject: condition:wernickes-aphasia
+  object: structure:middle-temporal-gyrus
+  props:
+    confidence: approximate
+  provenance:
+    sources:
+    - source:binder-2015
+    locator: R1 §1.13 Wernicke's area (Boundary debate)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: Single source (Binder 2015); held as approximate until a contesting source is added.
+- id: assert:locked-in-syndrome--affects--pons
+  predicate: AFFECTS
+  subject: condition:locked-in-syndrome
+  object: structure:pons
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:kandel-pns
+    - source:nolte-human-brain
+    locator: R1 §1.20 Brainstem (Damage); KB anatomy/hindbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:prosopagnosia--affects--fusiform-gyrus
+  predicate: AFFECTS
+  subject: condition:prosopagnosia
+  object: structure:fusiform-gyrus
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    locator: R1 §1.14 Fusiform gyrus (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hemispatial-neglect--affects--region-9
+  predicate: AFFECTS
+  subject: condition:hemispatial-neglect
+  object: region:9
+  provenance:
+    sources:
+    - source:seghier-2013
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    locator: 'R1 §1.9 Angular gyrus (Damage: right side)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hemispatial-neglect--affects--region-8
+  predicate: AFFECTS
+  subject: condition:hemispatial-neglect
+  object: region:8
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    - source:corbetta-shulman-2002
+    locator: 'R1 §1.8 SPL (Damage: especially right side)'
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:anterograde-amnesia--affects--hippocampus
+  predicate: AFFECTS
+  subject: condition:anterograde-amnesia
+  object: structure:hippocampus
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hippocampus (Patient H.M.); KB anatomy/limbic_system.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:urbach-wiethe-disease--affects--amygdala
+  predicate: AFFECTS
+  subject: condition:urbach-wiethe-disease
+  object: structure:amygdala
+  provenance:
+    sources:
+    - source:feinstein-2011
+    locator: R1 §5 Amygdala (Patient S.M.)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:meningioma--affects--arachnoid-mater
+  predicate: AFFECTS
+  subject: condition:meningioma
+  object: structure:arachnoid-mater
+  provenance:
+    sources:
+    - source:louis-2021
+    locator: R1 §15 Tumors (Meningioma)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+    reviewNote: R1 §15 names no work for the cell of origin; Louis 2021 attribution provisional.
+- id: assert:medulloblastoma--affects--region-19
+  predicate: AFFECTS
+  subject: condition:medulloblastoma
+  object: region:19
+  provenance:
+    sources:
+    - source:louis-2021
+    locator: R1 §15 Tumors (Pediatric tumors)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hydrocephalus--affects--cerebral-aqueduct
+  predicate: AFFECTS
+  subject: condition:hydrocephalus
+  object: structure:cerebral-aqueduct
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §7 Hydrocephalus (aqueductal stenosis); R1 §1.15b Midbrain (Damage); KB anatomy/midbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brown-sequard-syndrome--affects--spinal-cord
+  predicate: AFFECTS
+  subject: condition:brown-sequard-syndrome
+  object: structure:spinal-cord
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Brown-Séquard syndrome)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:bells-palsy--affects--facial-nerve
+  predicate: AFFECTS
+  subject: condition:bells-palsy
+  object: structure:facial-nerve
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §6 Cranial nerves (VII Facial)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:concussion--affects--region-2
+  predicate: AFFECTS
+  subject: condition:concussion
+  object: region:2
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §16 Concussion and TBI; R1 §1.2 Orbitofrontal cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:multiple-sclerosis--affects--blood-brain-barrier
+  predicate: AFFECTS
+  subject: condition:multiple-sclerosis
+  object: structure:blood-brain-barrier
+  provenance:
+    sources:
+    - source:qbi-brain-basics
+    - source:brainfacts
+    locator: KB anatomy/blood_brain_barrier.md (Disease)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:parkinsons-disease--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:parkinsons-disease
+  object: function:motor-control
+  props:
+    sign: Tremor, slowness and stiffness of movement, appearing after many dopamine neurons are lost.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §16 Parkinson's disease; R1 §1.15b Midbrain (Damage); KB anatomy/midbrain.md
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brocas-aphasia--impairs--speech-production
+  predicate: IMPAIRS
+  subject: condition:brocas-aphasia
+  object: function:speech-production
+  props:
+    sign: Effortful, halting speech in short telegraphic phrases, while simple sentences are still fairly well understood.
+  provenance:
+    sources:
+    - source:dronkers-2007
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.6 Broca's area (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:wernickes-aphasia--impairs--language-comprehension
+  predicate: IMPAIRS
+  subject: condition:wernickes-aphasia
+  object: function:language-comprehension
+  props:
+    sign: Fluent speech full of wrong or invented words, with poor understanding of what others say.
+  provenance:
+    sources:
+    - source:binder-2015
+    - source:blumenfeld-neuroanatomy
+    locator: R1 §1.13 Wernicke's area (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:prosopagnosia--impairs--face-recognition
+  predicate: IMPAIRS
+  subject: condition:prosopagnosia
+  object: function:face-recognition
+  props:
+    sign: Difficulty recognising people from their faces.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    locator: R1 §1.14 Fusiform gyrus (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hemispatial-neglect--impairs--attention
+  predicate: IMPAIRS
+  subject: condition:hemispatial-neglect
+  object: function:attention
+  props:
+    sign: Failing to notice or respond to things on the left side of space after right-hemisphere damage.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:blumenfeld-neuroanatomy
+    - source:corbetta-shulman-2002
+    locator: R1 §1.8 SPL; R1 §1.9 Angular gyrus; R1 §9 Ventral attention network; R1 §14 Symptoms by territory
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:anterograde-amnesia--impairs--episodic-memory
+  predicate: IMPAIRS
+  subject: condition:anterograde-amnesia
+  object: function:episodic-memory
+  props:
+    sign: Unable to store new memories of events, although new motor skills can still be learned.
+  provenance:
+    sources:
+    - source:scoville-milner-1957
+    locator: R1 §5 Hippocampus (Patient H.M.)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:locked-in-syndrome--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:locked-in-syndrome
+  object: function:motor-control
+  props:
+    sign: Awake and aware, yet able to communicate only with blinks and up-and-down eye movements.
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:kandel-pns
+    - source:nolte-human-brain
+    locator: R1 §1.20 Brainstem (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brown-sequard-syndrome--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:brown-sequard-syndrome
+  object: function:motor-control
+  props:
+    sign: Weakness below the injury on the same side as the damaged half of the spinal cord.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Brown-Séquard syndrome)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brown-sequard-syndrome--impairs--proprioception
+  predicate: IMPAIRS
+  subject: condition:brown-sequard-syndrome
+  object: function:proprioception
+  props:
+    sign: Lost sense of vibration and limb position below the injury, on the same side.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Brown-Séquard syndrome)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:brown-sequard-syndrome--impairs--pain
+  predicate: IMPAIRS
+  subject: condition:brown-sequard-syndrome
+  object: function:pain
+  props:
+    sign: Lost pain and temperature feeling on the opposite side, starting one or two segments below the injury.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §2 Pathways and body control (Brown-Séquard syndrome)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:bells-palsy--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:bells-palsy
+  object: function:motor-control
+  props:
+    sign: Weakness of the whole of one side of the face, so smiling and raising the eyebrow are lopsided.
+  provenance:
+    sources:
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §6 Cranial nerves (VII Facial)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:urbach-wiethe-disease--impairs--fear
+  predicate: IMPAIRS
+  subject: condition:urbach-wiethe-disease
+  object: function:fear
+  props:
+    sign: Markedly reduced experience of fear in a well-studied patient with damage to both amygdalae.
+  provenance:
+    sources:
+    - source:feinstein-2011
+    locator: R1 §5 Amygdala (Patient S.M.)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:meningioma--impairs--smell
+  predicate: IMPAIRS
+  subject: condition:meningioma
+  object: function:smell
+  props:
+    sign: Loss of smell when the tumour grows in the olfactory groove beneath the front of the brain.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §1.2 Orbitofrontal cortex (Damage)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:hydrocephalus--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:hydrocephalus
+  object: function:motor-control
+  props:
+    sign: Trouble walking, one of three typical signs of normal pressure hydrocephalus in older adults.
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    - source:statpearls
+    locator: R1 §7 Hydrocephalus (normal pressure hydrocephalus)
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ischemic-stroke--impairs--motor-control
+  predicate: IMPAIRS
+  subject: condition:ischemic-stroke
+  object: function:motor-control
+  props:
+    sign: Weakness on the opposite side of the body; face and arm more than leg after a middle cerebral artery stroke.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §1.5 Primary motor cortex (Damage); R1 §14 Symptoms by territory
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:ischemic-stroke--impairs--vision
+  predicate: IMPAIRS
+  subject: condition:ischemic-stroke
+  object: function:vision
+  props:
+    sign: Loss of the opposite half of the visual field in both eyes after a posterior cerebral artery stroke.
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:nolte-human-brain
+    locator: R1 §1.17 Primary visual cortex (Blood supply; Damage); R1 §14 Symptoms by territory
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: 2026-10-02
+    status: proposed
+- id: assert:speech-production--supported-by--region-6--debunks--left-right-brain
+  predicate: DEBUNKS
+  subject: assert:speech-production--supported-by--region-6
+  object: myth:left-right-brain
+  provenance:
+    sources:
+    - source:nielsen-2013
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: &id001 2026-10-02
+    status: proposed
+- id: assert:language-comprehension--supported-by--region-13--debunks--left-right-brain
+  predicate: DEBUNKS
+  subject: assert:language-comprehension--supported-by--region-13
+  object: myth:left-right-brain
+  provenance:
+    sources:
+    - source:nielsen-2013
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:neuron--debunks--hundred-billion-neurons
+  predicate: DEBUNKS
+  subject: celltype:neuron
+  object: myth:hundred-billion-neurons
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:lent-2012
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:glia--debunks--glia-ten-to-one
+  predicate: DEBUNKS
+  subject: celltype:glia
+  object: myth:glia-ten-to-one
+  provenance:
+    sources:
+    - source:azevedo-2009
+    - source:von-bartheld-2016
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:procedural-memory--supported-by--region-19--debunks--cerebellum-only-balance
+  predicate: DEBUNKS
+  subject: assert:procedural-memory--supported-by--region-19
+  object: myth:cerebellum-only-balance
+  provenance:
+    sources:
+    - source:schmahmann-sherman-1998
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:timing--supported-by--region-19--debunks--cerebellum-only-balance
+  predicate: DEBUNKS
+  subject: assert:timing--supported-by--region-19
+  object: myth:cerebellum-only-balance
+  provenance:
+    sources:
+    - source:schmahmann-sherman-1998
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:working-memory--supported-by--region-19--debunks--cerebellum-only-balance
+  predicate: DEBUNKS
+  subject: assert:working-memory--supported-by--region-19
+  object: myth:cerebellum-only-balance
+  provenance:
+    sources:
+    - source:schmahmann-sherman-1998
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:emotion-regulation--supported-by--region-19--debunks--cerebellum-only-balance
+  predicate: DEBUNKS
+  subject: assert:emotion-regulation--supported-by--region-19
+  object: myth:cerebellum-only-balance
+  provenance:
+    sources:
+    - source:schmahmann-sherman-1998
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:smell--supported-by--region-15--debunks--smell-through-thalamus
+  predicate: DEBUNKS
+  subject: assert:smell--supported-by--region-15
+  object: myth:smell-through-thalamus
+  provenance:
+    sources:
+    - source:kandel-pns
+    - source:purves-neuroscience
+    - source:gottfried-2010
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:hippocampus--participates-in--adult-neurogenesis--disputes----debunks--adult-neurogenesis-certainty
+  predicate: DEBUNKS
+  subject: assert:hippocampus--participates-in--adult-neurogenesis--disputes--contests--hippocampus--participates-in--adult-neurogenesis--asserts
+  object: myth:adult-neurogenesis-certainty
+  provenance:
+    sources:
+    - source:eriksson-1998
+    - source:spalding-2013
+    - source:sorrells-2018
+    - source:boldrini-2018
+    - source:moreno-jimenez-2019
+    - source:dumitru-2025
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:serotonin--produced-in--raphe-nuclei--debunks--gut-serotonin-mood
+  predicate: DEBUNKS
+  subject: assert:serotonin--produced-in--raphe-nuclei
+  object: myth:gut-serotonin-mood
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:serotonin--debunks--gut-serotonin-mood
+  predicate: DEBUNKS
+  subject: molecule:serotonin
+  object: myth:gut-serotonin-mood
+  provenance:
+    sources:
+    - source:purves-neuroscience
+    - source:blumenfeld-neuroanatomy
+    - source:nolte-human-brain
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: assert:cerebral-cortex--participates-in--neuroplasticity--debunks--brain-cannot-recover
+  predicate: DEBUNKS
+  subject: assert:cerebral-cortex--participates-in--neuroplasticity
+  object: myth:brain-cannot-recover
+  provenance:
+    sources:
+    - source:wolf-2006
+    - source:kandel-pns
+    - source:purves-neuroscience
+    locator: R1 §17a Consolidated myths list
+    license: own
+    method: ai_extracted
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+requests:
+- wanted: structure:anterior-temporal-lobe
+  label: Anterior temporal lobe
+  why: R1 §16 says concussion especially affects the OFC and anterior temporal lobes, and R1 §4 names the anterior temporal lobes as the semantic hub; structure:temporal-pole is narrower, so no AFFECTS edge was asserted.
+openQuestions:
+- claim: Brenda Milner died in 2025 at age 106.
+  locator: R1 §10 Brenda Milner; R1 Caveats
+  reason: Contradicted by R2 Part F (living, McGill 2026 booklet). Recorded as living per R2 and the brief. R1 §10 needs correcting. Her birth year 1918 appears in R1 §10 and R2 F, but R2's exact birth date rests on Wikipedia; confirm in a non-Wikipedia source.
+- claim: Alzheimer's disease impairs episodic memory.
+  locator: R1 §16 Alzheimer's disease; R1 §12 Dementia
+  reason: Not stated explicitly in the sources (they describe dementia and hippocampal/entorhinal neuron loss). IMPAIRS assertion held back; add once a cited source states it.
+- claim: Living status of Vesalius, Descartes, Willis, Leborgne, Lelong, Hodgkin, Huxley, Scoville, Sperry, Harlow, Papez, Heschl, Ehrlich, Lewandowsky, Goldmann and Stern.
+  locator: R1 §10; R1 §5; R2 B4; KB anatomy/blood_brain_barrier.md
+  reason: 'living: false is inferred from the historical context; the sources give no death year. Steward to confirm and supply life dates from a cited source.'
+- claim: Given names and dates for person:papez and person:heschl.
+  locator: R2 B4; R1 §1.11
+  reason: Sources give surnames only, so the nodes use surname-only ids and labels. Steward to supply full names from a cited source (not from memory).
+- claim: Eponym persons for Parkinson's disease, Alzheimer's disease, Bell's palsy, Brown-Séquard syndrome and Urbach-Wiethe disease.
+  locator: R1 §16; R1 §6; R1 §2; R1 §5; R1 §17b
+  reason: The sources say nothing about these people beyond the eponym, so no Person nodes or NAMED_AFTER edges were created.
+- claim: 'Dated history without a usable year or registry target: Ehrlich dye work (1880s), Golgi stain (around 1873), Descartes Treatise of Man (1662/1664), Vicq d''Azyr depicting the central sulcus (no year), Leuret naming it (1839), Gennari stria (late 1700s), Dejerine alexia with agraphia (1891), Sherrington ''synapse'' (1897), Brodmann map (1909), Moruzzi and Magoun (1949), Kornhuber and Deecke (1965).'
+  locator: R1 §10; R1 §1.4; R1 §1.9; R2 B11; R2 C2; KB anatomy/blood_brain_barrier.md
+  reason: DESCRIBED needs an exact year and a node to point at; these were left out or kept in person knownFor text.
+- claim: Franciscus Sylvius described the lateral fissure in 1641.
+  locator: R1 §10 Franciscus Sylvius
+  reason: R1 says Caspar Bartholin published the description in 1641 and credited Sylvius. Asserted for Sylvius with a debateNote; steward to decide whether Bartholin should also get a DESCRIBED edge.
+- claim: Blood-brain barrier history (Lewandowsky 1900, Goldmann 1909 and 1913, Stern around 1921).
+  locator: KB anatomy/blood_brain_barrier.md; KB SOURCES_AND_CORRECTIONS.md
+  reason: The KB names only file-level sources and the corrections log cites 'history of medicine'. Cited BrainFacts provisionally; needs a proper historical source.
+- claim: Core descriptions of Alzheimer's disease (R1 §16) and of meningioma, glioblastoma and medulloblastoma (R1 §15).
+  locator: R1 §15; R1 §16
+  reason: R1 names no work for these statements (only FDA and CBTRUS items, which are out of scope). Kandel and Louis 2021 cited provisionally; needs the citation pass.
+- claim: conditionKind vocabulary gaps.
+  locator: schema/vocabulary.yaml
+  reason: Hydrocephalus (CSF disorder), Bell's palsy (cranial nerve), Urbach-Wiethe (genetic) forced to 'syndrome'; multiple sclerosis (immune, demyelinating) forced to 'neurodegenerative'. Consider adding terms.
+- claim: AFFECTS lacks a lateralization prop.
+  locator: schema/relations.yaml; R1 §1.8, §1.9, §1.14, §14
+  reason: Hemispatial neglect is right-hemisphere and prosopagnosia right or bilateral, but AFFECTS edges to region:8, region:9 and the fusiform gyrus cannot say so. Consider an optional lateralization prop.
+- claim: Epilepsy affects the piriform cortex and the hippocampus.
+  locator: R1 §1.15a Piriform cortex (Damage); R2 B8 (hippocampal sclerosis)
+  reason: Both claims concern temporal lobe epilepsy specifically, not epilepsy in general. Consider a condition:temporal-lobe-epilepsy node.
+- claim: Ischemic stroke IMPAIRS motor control and vision.
+  locator: R1 §1.5; R1 §1.17; R1 §14
+  reason: The sources speak of 'MCA strokes' and 'PCA strokes' without saying ischemic; attached to ischemic-stroke as the territory-blockage case. Confirm.
+- claim: Citation details for Beyerstein 1999, Pietschnig 2015, Chabris 1999, Pietschnig 2010, von Bartheld 2016, Finger (Origins of Neuroscience) and Papez 1937.
+  locator: R1 §17a; R1 §10; R2 B4
+  reason: R1/R2 give author and year only; Source type 'peer_reviewed' assumed. Confirm Beyerstein 1999 is not a pop-science source (rule 6). Ids source:finger-origins and source:von-bartheld-2016 are ad hoc.
+- claim: 'Myths #14, #18, #19, #20 corrections.'
+  locator: R1 §17a
+  reason: R1 §17a cites no work for these; sources were taken from the R1 section the item points to or from the KB file that states the correction.
+- claim: 'Conditions in the sources that are not in the registry: cerebellar cognitive affective syndrome, Korsakoff syndrome, Huntington''s disease, conduction aphasia, Gerstmann syndrome, Balint syndrome, akinetopsia, achromatopsia, Wallenberg syndrome, Weber syndrome, Parinaud syndrome, apraxia of speech, SMA syndrome.'
+  locator: R1 §1; R1 §5; R2 A1; R2 B1; R2 B4
+  reason: Not created (outside the registry list). Candidates for a later pass.

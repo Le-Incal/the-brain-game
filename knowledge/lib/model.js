@@ -100,6 +100,16 @@ export function resolvePointer(model, id, seen = new Set()) {
     const up = resolvePointer(model, a.object, seen);
     if (up) return { region: up.region, hint: up.hint, path: [a.id, ...up.path] };
   }
+  // Fallbacks: a structure that straddles regions, then a sulcus or fissure that bounds one.
+  const overlap = edgesOf(model, 'OVERLAPS', { positiveOnly: true }).find((a) => a.subject === id && model.nodes.get(a.object)?.class === 'Region');
+  if (overlap) return { region: overlap.object, hint: null, path: [overlap.id] };
+  const bounds = edgesOf(model, 'BOUNDS', { positiveOnly: true }).filter((a) => a.subject === id);
+  const boundsRegion = bounds.find((a) => model.nodes.get(a.object)?.class === 'Region');
+  if (boundsRegion) return { region: boundsRegion.object, hint: null, path: [boundsRegion.id] };
+  for (const a of bounds) {
+    const up = resolvePointer(model, a.object, seen);
+    if (up) return { region: up.region, hint: up.hint, path: [a.id, ...up.path] };
+  }
   return null;
 }
 

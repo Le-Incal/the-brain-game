@@ -1,0 +1,478 @@
+# Brain Game knowledge base: docs. Extracted 2026-10-02; every record is proposed until the steward approves it.
+nodes:
+- id: doc:anatomy.blood-brain-barrier
+  class: Doc
+  label: Blood-Brain Barrier
+  path: kb/anatomy/blood_brain_barrier.md
+  kbId: anatomy.blood-brain-barrier
+  about:
+  - structure:blood-brain-barrier
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/blood_brain_barrier.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: &id001 2026-10-02
+    status: proposed
+- id: doc:anatomy.central-nervous-system
+  class: Doc
+  label: Central Nervous System (Brain and Spinal Cord)
+  path: kb/anatomy/central_nervous_system.md
+  kbId: anatomy.central-nervous-system
+  about:
+  - structure:central-nervous-system
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/central_nervous_system.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.corpus-callosum
+  class: Doc
+  label: Corpus Callosum
+  path: kb/anatomy/corpus_callosum.md
+  kbId: anatomy.corpus-callosum
+  about:
+  - tract:corpus-callosum
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/corpus_callosum.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.forebrain
+  class: Doc
+  label: The Forebrain
+  path: kb/anatomy/forebrain.md
+  kbId: anatomy.forebrain
+  about:
+  - region:1
+  - region:10
+  - region:11
+  - region:12
+  - region:13
+  - region:14
+  - region:16
+  - region:17
+  - region:18
+  - region:2
+  - region:3
+  - region:4
+  - region:5
+  - region:6
+  - region:7
+  - region:8
+  - region:9
+  - structure:forebrain
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/forebrain.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.gyri-and-sulci
+  class: Doc
+  label: Gyri and Sulci (the Folds of the Brain)
+  path: kb/anatomy/gyri_and_sulci.md
+  kbId: anatomy.gyri-and-sulci
+  about:
+  - region:11
+  - region:12
+  - region:14
+  - region:16
+  - region:17
+  - region:5
+  - region:7
+  - region:9
+  - structure:central-sulcus
+  - structure:lateral-fissure
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/gyri_and_sulci.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.gyri-and-sulci-questions
+  class: Doc
+  label: Questions About Gyri and Sulci
+  path: kb/anatomy/gyri_and_sulci_questions.md
+  kbId: anatomy.gyri-and-sulci-questions
+  about:
+  - region:11
+  - region:16
+  - region:17
+  - region:5
+  - region:7
+  - structure:central-sulcus
+  - structure:lateral-fissure
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/gyri_and_sulci_questions.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.hindbrain
+  class: Doc
+  label: The Hindbrain (Pons, Medulla, Cerebellum)
+  path: kb/anatomy/hindbrain.md
+  kbId: anatomy.hindbrain
+  about:
+  - region:19
+  - region:20
+  - structure:hindbrain
+  - structure:medulla-oblongata
+  - structure:pons
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/hindbrain.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.limbic-system
+  class: Doc
+  label: The Limbic System
+  path: kb/anatomy/limbic_system.md
+  kbId: anatomy.limbic-system
+  about:
+  - region:16
+  - structure:limbic-system
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/limbic_system.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.lobes
+  class: Doc
+  label: Lobes of the Brain
+  path: kb/anatomy/lobes.md
+  kbId: anatomy.lobes
+  about:
+  - division:1
+  - division:2
+  - division:3
+  - division:4
+  - division:5
+  - region:1
+  - region:10
+  - region:11
+  - region:12
+  - region:13
+  - region:14
+  - region:16
+  - region:17
+  - region:18
+  - region:2
+  - region:3
+  - region:4
+  - region:5
+  - region:6
+  - region:7
+  - region:8
+  - region:9
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/lobes.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.midbrain
+  class: Doc
+  label: The Midbrain
+  path: kb/anatomy/midbrain.md
+  kbId: anatomy.midbrain
+  about:
+  - region:20
+  - structure:midbrain
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/midbrain.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.peripheral-nervous-system
+  class: Doc
+  label: Peripheral Nervous System
+  path: kb/anatomy/peripheral_nervous_system.md
+  kbId: anatomy.peripheral-nervous-system
+  about:
+  - structure:peripheral-nervous-system
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/peripheral_nervous_system.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:anatomy.spinal-cord
+  class: Doc
+  label: The Spinal Cord
+  path: kb/anatomy/spinal_cord.md
+  kbId: anatomy.spinal-cord
+  about:
+  - region:20
+  - structure:spinal-cord
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB anatomy/spinal_cord.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:cells.axon
+  class: Doc
+  label: Axons
+  path: kb/cells/axon.md
+  kbId: cells.axon
+  about:
+  - celltype:neuron
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB cells/axon.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:cells.glia
+  class: Doc
+  label: Glia (What They Are and Their Types)
+  path: kb/cells/glia.md
+  kbId: cells.glia
+  about:
+  - celltype:astrocyte
+  - celltype:glia
+  - celltype:microglia
+  - celltype:oligodendrocyte
+  - region:19
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB cells/glia.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:cells.mitochondria
+  class: Doc
+  label: Mitochondria in the Brain
+  path: kb/cells/mitochondria.md
+  kbId: cells.mitochondria
+  about:
+  - celltype:neuron
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB cells/mitochondria.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:cells.neuron
+  class: Doc
+  label: What Is a Neuron?
+  path: kb/cells/neuron.md
+  kbId: cells.neuron
+  about:
+  - celltype:neuron
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB cells/neuron.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:cells.neuron-types
+  class: Doc
+  label: Types of Neurons
+  path: kb/cells/neuron_types.md
+  kbId: cells.neuron-types
+  about:
+  - celltype:neuron
+  - celltype:purkinje
+  - celltype:pyramidal-neuron
+  - region:19
+  - region:5
+  - region:7
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB cells/neuron_types.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:physiology.how-neurons-signal
+  class: Doc
+  label: How Neurons Signal (Action Potentials and Synapses)
+  path: kb/physiology/how_neurons_signal.md
+  kbId: physiology.how-neurons-signal
+  about:
+  - process:action-potential
+  - process:synaptic-transmission
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB physiology/how_neurons_signal.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:physiology.neurogenesis
+  class: Doc
+  label: Neurogenesis (Development and Adulthood)
+  path: kb/physiology/neurogenesis.md
+  kbId: physiology.neurogenesis
+  about:
+  - process:adult-neurogenesis
+  - process:neurogenesis
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB physiology/neurogenesis.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:physiology.neurotransmitters
+  class: Doc
+  label: Neurotransmitters
+  path: kb/physiology/neurotransmitters.md
+  kbId: physiology.neurotransmitters
+  about:
+  - molecule:acetylcholine
+  - molecule:dopamine
+  - molecule:gaba
+  - molecule:glutamate
+  - molecule:serotonin
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB physiology/neurotransmitters.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+- id: doc:physiology.synaptic-plasticity
+  class: Doc
+  label: Synaptic Plasticity (Short-Term and Long-Term)
+  path: kb/physiology/synaptic_plasticity.md
+  kbId: physiology.synaptic-plasticity
+  about:
+  - process:long-term-depression
+  - process:long-term-potentiation
+  registers:
+  - child
+  - curious
+  - expert
+  provenance:
+    sources: []
+    locator: KB physiology/synaptic_plasticity.md
+    license: own
+    method: human
+    assertedBy: extractor:claude
+    assertedOn: *id001
+    status: proposed
+assertions: []

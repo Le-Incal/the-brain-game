@@ -215,7 +215,7 @@ export function validate(ds, { sor, asOf = new Date().toISOString().slice(0, 10)
     }
     if (n.class === 'Myth') {
       const corrected = edgesOf(model, 'DEBUNKS').some((a) => a.object === n.id);
-      if (!corrected) err('MYTH_UNCORRECTED', n.id, `${n.id} has no fact correcting it`);
+      if (!corrected && n.standaloneCorrection !== true) err('MYTH_UNCORRECTED', n.id, `${n.id} has no fact correcting it and is not marked standaloneCorrection`);
     }
   }
 

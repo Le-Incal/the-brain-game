@@ -80,6 +80,7 @@ classes:
 
   Myth:
     required: { statement: string, correction: Text }
+    optional: { standaloneCorrection: bool }   # true: the myth's own cited correction is the evidence; no graph fact carries it
 
   Person:
     required: { living: bool }

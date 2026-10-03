@@ -31,3 +31,6 @@
 - { id: f28, question: "Aliases resolve: the little brain", call: resolveAlias, args: ["the little brain"], expect: { equals: region:19 } }
 - { id: f29, question: "Aliases resolve: Sylvian fissure", call: resolveAlias, args: ["Sylvian fissure"], expect: { equals: structure:lateral-fissure } }
 - { id: f30, question: "Disputed claims never count as positive facts", call: participatesIn, args: [structure:hippocampus], expect: { equals: [process:long-term-potentiation] } }
+- { id: f31, question: "R3 fallback: a sulcus points at the region it bounds", call: pointTo, args: [structure:central-sulcus], expect: { matches: { region: region:5 } } }
+- { id: f32, question: "R3 fallback: a gyrus that straddles regions points at the first it overlaps", call: pointTo, args: [structure:cuneus], expect: { matches: { region: region:17 } } }
+- { id: f33, question: "Overlapping structures are listed for every region they touch", call: overlapsOf, args: [structure:cuneus], expect: { equals: [region:17, region:18] } }
