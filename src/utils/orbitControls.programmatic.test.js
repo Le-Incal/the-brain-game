@@ -200,3 +200,65 @@ describe('B6: moves and the existing controls', () => {
     expect(orientGroup.quaternion.angleTo(second)).toBeLessThan(0.01);
   });
 });
+
+describe('B7: the player taking hold is observable', () => {
+  it('reports a grab on pointerdown and a release on pointerup', () => {
+    const { controls, element } = createControls();
+    const events = [];
+    controls.subscribeUserInput((event) => events.push(event));
+
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    expect(events).toEqual([{ type: 'grab', mode: 'rotate' }]);
+
+    element.dispatch('pointermove', { clientX: 470, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 470, clientY: 300 });
+    expect(events[1]).toEqual({ type: 'release', mode: 'rotate', wasClick: false });
+  });
+
+  it('marks a click and a shift-drag pan for what they are', () => {
+    const { controls, element } = createControls();
+    const events = [];
+    controls.subscribeUserInput((event) => events.push(event));
+
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 401, clientY: 300 });
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300, shiftKey: true });
+    element.dispatch('pointerup', { clientX: 400, clientY: 340 });
+
+    expect(events).toEqual([
+      { type: 'grab', mode: 'rotate' },
+      { type: 'release', mode: 'rotate', wasClick: true },
+      { type: 'grab', mode: 'pan' },
+      { type: 'release', mode: 'pan', wasClick: false },
+    ]);
+  });
+
+  it('does not treat scroll-zoom as taking hold', () => {
+    const { controls, element } = createControls();
+    const events = [];
+    controls.subscribeUserInput((event) => events.push(event));
+    element.dispatch('wheel', { deltaY: 100 });
+    expect(events).toEqual([]);
+  });
+
+  it('stops reporting after unsubscribing', () => {
+    const { controls, element } = createControls();
+    const events = [];
+    const unsubscribe = controls.subscribeUserInput((event) => events.push(event));
+    unsubscribe();
+    element.dispatch('pointerdown');
+    element.dispatch('pointerup');
+    expect(events).toEqual([]);
+  });
+
+  it('reports the grab after the move has already been cancelled', async () => {
+    const { controls, element } = createControls();
+    const seen = [];
+    controls.subscribeUserInput(() => seen.push(controls.isMoving));
+    controls.moveTo(quarterTurn());
+    await runFrames(controls, clock, MOVE_MS * 0.5);
+    element.dispatch('pointerdown');
+    expect(seen).toEqual([false]);
+    element.dispatch('pointerup');
+  });
+});

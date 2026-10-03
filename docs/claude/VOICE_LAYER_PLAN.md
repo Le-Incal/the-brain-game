@@ -29,12 +29,12 @@ A pure, testable command API over the existing scene. Voice is one client of it;
 - `resetView()`
 - `getSceneState()` returns current view, visible regions, highlighted region, mode
 - Every command returns a truthful result object `{ ok, did, reason }`. Never claim success that did not happen (Atlas bug).
-- Prerequisite: `BrainOrbitControls` gains a tween API plus instant cancel on user drag or wheel (Atlas `cancelCameraMotion` pattern).
+- Prerequisite: `BrainOrbitControls` gains a tween API plus instant cancel on user drag (Atlas `cancelCameraMotion` pattern). Scroll-zoom does not cancel (decided in M1).
 
 ### Layer 2: Voice bridge (browser)
 - `@elevenlabs/react` (current package; Atlas uses deprecated `@11labs/react`). Requires `ConversationProvider`. Pin exact version.
 - Client tools map 1:1 to scene commands, wrapped by the Atlas `voiceClientTools.js` normalizer and alias expander (copied).
-- Two-way: app sends `sendContextualUpdate` on meaningful player actions (region clicked, rotation settled on a new view, Study mode entered). Atlas never did this.
+- Two-way: app sends `sendContextualUpdate` on meaningful player actions (region clicked, rotation settled on a new view, Study mode entered, player took hold of the brain and what it interrupted, player let go). Atlas never did this.
 - Text input via `sendUserMessage`, transcript in store (Atlas pattern).
 
 ### Layer 3: Server (new; Express on Railway)

@@ -75,7 +75,8 @@ Write these first. Run them and confirm the new ones fail. R1 to R3 should pass 
 3. A move reaches the target orientation (angle < 0.01 rad) in about 1.2 s, eased (not linear, not instant).
 4. A completed move resolves `{ completed: true }`.
 5. Pointerdown mid-move cancels instantly: resolves `{ completed: false, reason: 'user' }`; orientation stays where the user grabbed it.
-6. A move pauses auto-rotate only for its duration and never alters auto-rotate behavior for a non-voice user. Scroll-zoom does not cancel a move.
+6. A move pauses auto-rotate only for its duration and never alters auto-rotate behavior for a non-voice user. Scroll-zoom does not cancel a move. A later move supersedes an earlier one (`reason: 'superseded'`).
+6b. The player taking hold is observable: `subscribeUserInput(listener)` reports `{ type: 'grab', mode }` on pointerdown (`rotate` or `pan`) and `{ type: 'release', mode, wasClick }` on pointerup, after any running move is already cancelled. Scroll-zoom is not a grab. Drag behavior is unchanged.
 
 **C. Scene commands**
 7. `faceRegion(6)` faces the left hemisphere. `faceRegion(6, { hemisphere: 'right' })` still faces left, `ok: true`, and `did` explains it exists only on the left.
@@ -87,11 +88,14 @@ Write these first. Run them and confirm the new ones fail. R1 to R3 should pass 
 13. `getSceneState` returns the nearest standard view plus `viewExact`, both classified with the same camera-relative measure as A1; `visibleRegions` come from `labelsPerView` for that view. The untouched home view reports `left_lateral` with `viewExact: false` (the camera sits about 11 degrees above level).
 14. `lookupRegion({ regionId: 6 })` returns the exact shape; `{ name: "broca's area" }` resolves to 6; `{ name: 'the little brain' }` resolves to 19 (subtitle match); unknown returns `ok: false`.
 15. `listRegions()` matches `brainRegions.json` divisions and ids exactly.
+16b. The player can take hold at any time (Kyle, 2026-10-03). Motion stops at once; the conversation does not. `createSceneCommands(adapter, { onUserInteraction })` reports `{ type: 'grab', interrupted }` and `{ type: 'release', view, viewExact }`. `interrupted` bookmarks the cancelled move (`{ command: 'faceRegion', regionId, hemisphere }` or `{ command: 'rotateTo', view }`) and stays in `getSceneState().interrupted` until a later move completes. While the player holds the brain, `faceRegion` and `rotateTo` return `ok: false` (reason says the player is holding it); highlight, lookup, list and state still work. `getSceneState` adds `userHolding` and `interrupted`.
 16. Drift: the `# My regions` block in `agent/architect-brief.md` matches `brainRegions.json` ids and names exactly.
 
 ## Decisions already made
 
 - Scroll-zoom does not cancel a move.
+- A grab stops motion, never the conversation. The guide bookmarks where it was and, once the player lets go, asks whether to pick up where it left off (prompt rule in `agent/architect-brief.md`; contextual updates in M4).
+- Study mode turns auto-rotate off on entry (M2), so a completed move is not followed by drift.
 - Wrong hemisphere corrects, does not fail.
 - Move duration about 1.2 s; tune by feel later.
 - Scene commands take a scene adapter so they test without WebGL.

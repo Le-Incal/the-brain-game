@@ -31,12 +31,15 @@ afterEach(() => {
 
 function setup() {
   const harness = createFakeSceneAdapter();
-  const commands = createSceneCommands(harness.adapter);
+  const interactions = [];
+  const commands = createSceneCommands(harness.adapter, {
+    onUserInteraction: (event) => interactions.push(event),
+  });
   async function settle(promise) {
     await runFrames(harness.controls, clock, MOVE_SETTLE_MS);
     return promise;
   }
-  return { ...harness, commands, settle };
+  return { ...harness, commands, settle, interactions };
 }
 
 function expectResultShape(result) {
@@ -331,6 +334,90 @@ describe('C15: listRegions', () => {
         regions: division.regions.map((id) => [id, nameById.get(id)]),
       })),
     });
+  });
+});
+
+describe('C17: the player can take hold at any time', () => {
+  // Motion stops the instant the player grabs; the conversation does not.
+  // The app tells the guide what was interrupted so it can offer to resume.
+  it('tells the guide when the player grabs and releases with no move running', async () => {
+    const { commands, element, interactions } = setup();
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    expect(interactions).toEqual([{ type: 'grab', interrupted: null }]);
+    expect(commands.getSceneState().userHolding).toBe(true);
+
+    element.dispatch('pointerup', { clientX: 400, clientY: 300 });
+    const scene = commands.getSceneState();
+    expect(interactions[1]).toEqual({ type: 'release', view: scene.view, viewExact: scene.viewExact });
+    expect(scene.userHolding).toBe(false);
+  });
+
+  it('bookmarks the move a grab interrupted', async () => {
+    const { commands, controls, element, interactions } = setup();
+    const pending = commands.faceRegion(6, { hemisphere: 'right' });
+    await runFrames(controls, clock, 500);
+    element.dispatch('pointerdown');
+    await flushMicrotasks();
+
+    const bookmark = { command: 'faceRegion', regionId: 6, hemisphere: 'left' };
+    expect(interactions[0]).toEqual({ type: 'grab', interrupted: bookmark });
+    expect((await pending).ok).toBe(false);
+
+    element.dispatch('pointerup');
+    expect(commands.getSceneState().interrupted).toEqual(bookmark);
+  });
+
+  it('bookmarks an interrupted rotateTo', async () => {
+    const { commands, controls, element } = setup();
+    const pending = commands.rotateTo('posterior');
+    await runFrames(controls, clock, 500);
+    element.dispatch('pointerdown');
+    await pending;
+    element.dispatch('pointerup');
+    expect(commands.getSceneState().interrupted).toEqual({ command: 'rotateTo', view: 'posterior' });
+  });
+
+  it('refuses to move while the player is holding the brain', async () => {
+    const { commands, controls, element, settle } = setup();
+    element.dispatch('pointerdown');
+    const held = controls.orientGroup.quaternion.clone();
+
+    for (const result of [await settle(commands.faceRegion(17)), await settle(commands.rotateTo('superior'))]) {
+      expectResultShape(result);
+      expect(result.ok).toBe(false);
+      expect(result.reason).toMatch(/holding/i);
+    }
+    expect(controls.orientGroup.quaternion.angleTo(held)).toBeLessThan(1e-6);
+    element.dispatch('pointerup');
+  });
+
+  it('keeps talking tools working while the player holds the brain', () => {
+    const { commands, element, state } = setup();
+    element.dispatch('pointerdown');
+    expect(commands.highlightRegion(9).ok).toBe(true);
+    expect(state.highlight).toBe(9);
+    expect(commands.lookupRegion({ regionId: 9 }).ok).toBe(true);
+    expect(commands.listRegions().ok).toBe(true);
+    expect(commands.getSceneState().ok).toBe(true);
+    element.dispatch('pointerup');
+  });
+
+  it('clears the bookmark once a later move completes', async () => {
+    const { commands, controls, element, settle } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 500);
+    element.dispatch('pointerdown');
+    await pending;
+    element.dispatch('pointerup');
+    expect(commands.getSceneState().interrupted).not.toBeNull();
+
+    await settle(commands.faceRegion(17));
+    expect(commands.getSceneState().interrupted).toBeNull();
+  });
+
+  it('starts with nothing interrupted and nobody holding', () => {
+    const { commands } = setup();
+    expect(commands.getSceneState()).toMatchObject({ userHolding: false, interrupted: null });
   });
 });
 
