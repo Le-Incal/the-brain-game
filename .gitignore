@@ -14,3 +14,7 @@ docs/handoff/*.pre-*.png
 
 # Generated preview builds
 knowledge/build/
+
+# Python bytecode
+__pycache__/
+*.pyc
