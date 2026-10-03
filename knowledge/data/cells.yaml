@@ -47,7 +47,7 @@ nodes:
     low: 100000000000000
     high: 1000000000000000
     note: Estimates range from about 100 to 1,000 trillion; value is the low end of the stated range.
-  notes: Use about 86 billion, never 100 billion (Lent et al. 2012 note 100 billion is outside the measured range). Co-transmission is common; Dale's principle (same transmitter set at all terminals) still largely holds. Some neurons, such as retinal amacrine cells, lack a classic axon.
+  notes: Say about 86 billion and never 100 billion; Lent et al. 2012 point out that 100 billion falls beyond the measured range. A neuron often releases several transmitters, yet Dale's principle (each cell uses the same transmitter set at every terminal) mostly still applies. A few neurons, retinal amacrine cells among them, have no classic axon.
   provenance:
     sources:
     - source:azevedo-2009
@@ -73,7 +73,7 @@ nodes:
   pronunciation:
     respelling: GLEE-uh
   text:
-    child: Glia are my helper cells. They feed and protect neurons, tidy up waste, fight germs and wrap wires so messages travel fast.
+    child: My glia are little helpers. They feed and guard my nerve cells, clear away rubbish, fight off germs and coat my wires so signals zoom along.
     curious: Glia are all the nervous-system cells that are not neurons. They do not usually fire spikes, yet they manage the chemistry around synapses, insulate axons, defend against infection and help build the brain. Across my whole brain there is roughly one glial cell per neuron, not the ten to one that older books repeat.
     expert: Central types are astrocytes, oligodendrocytes, microglia, ependymal cells and oligodendrocyte precursor (NG2) cells, with specialists such as Bergmann glia, Muller glia and tanycytes; Schwann cells myelinate peripheral nerves. Microglia come from yolk-sac immune precursors, not neural progenitors. The whole-brain glia-to-neuron ratio is near 1:1, but outside the cerebellum, where granule cells dominate the neuron count, it can reach about 4:1. Glia signal through calcium waves and gliotransmitters, and most primary malignant brain tumours arise from glial lineages.
   quantities:
@@ -215,7 +215,7 @@ nodes:
     - source:kandel-pns
     - source:qbi-brain-basics
     note: Up to about 200,000 per cell.
-  notes: Purkinje cells inhibit the deep cerebellar nuclei (main outputs); some flocculonodular and vermal Purkinje cells project directly to the vestibular nuclei.
+  notes: Purkinje cells send inhibition to the deep cerebellar nuclei, which are the cerebellum's main output stations. A subset in the flocculonodular lobe and vermis bypasses those nuclei and projects straight to the vestibular nuclei.
   provenance:
     sources:
     - source:kandel-pns
@@ -235,7 +235,7 @@ nodes:
   kind: neuron
   text:
     child: Tiny cells packed by the billions into my cerebellum. There are more of them than any other kind of neuron in me.
-    curious: Granule cells make up most of the cerebellum's roughly 69 billion neurons, which makes them the most numerous neurons in the brain. Unusually, most are born after birth, during the first year of life. Mossy fibres drive them, and their parallel fibres excite Purkinje cells with glutamate.
+    curious: Most of the cerebellum's roughly 69 billion neurons are granule cells, so no other neuron type in the brain is more plentiful. Unusually, the majority are generated after birth, within the first year of life. They are driven by mossy fibres, and their parallel fibres use glutamate to excite Purkinje cells.
   provenance:
     sources:
     - source:azevedo-2009
@@ -257,7 +257,7 @@ nodes:
     respelling: IN-ter-noor-on
   text:
     child: Connector neurons that link other neurons together and help shape the timing of their signals.
-    curious: The word has two uses. Broadly it means any neuron that is neither sensory nor motor, by far the largest group in the brain. In the narrower sense it means local circuit cells, about one in five cortical neurons, which are mostly inhibitory, use GABA and shape timing and rhythm. In the spinal cord, some inhibitory interneurons use glycine.
+    curious: This term is used in two ways. In the broad sense it covers every neuron that is not sensory or motor, which is by far the brain's biggest group. In the narrow sense it means local circuit neurons, roughly a fifth of cortical neurons; most are inhibitory, release GABA and tune timing and rhythm. Some inhibitory interneurons in the spinal cord release glycine.
   quantities:
   - name: shareOfCorticalNeurons
     value: 20
@@ -346,7 +346,7 @@ nodes:
   text:
     child: Neurons that carry go signals from your spinal cord and brainstem out to your muscles.
     curious: Motor neurons in the spinal cord and brainstem send axons out to skeletal muscle, where acetylcholine makes the muscle contract. Upper motor neurons from the cortex command them. Damage to them causes weakness, wasting and lost reflexes. Smooth muscle, the heart and glands are run by autonomic neurons instead.
-  notes: In the KB's everyday sense this is the lower motor neuron (spinal cord and brainstem to skeletal muscle). Somatic motor neurons drive skeletal muscle only (correction applied to QBI).
+  notes: As the KB uses it day to day, this term means the lower motor neuron, running from brainstem and spinal cord out to skeletal muscle. Somatic motor neurons drive only skeletal muscle (QBI corrected on this point).
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -625,7 +625,7 @@ nodes:
     respelling: SHWON
   text:
     child: Cells that wrap insulation around the nerves in your body and help them grow back after an injury.
-    curious: Schwann cells myelinate peripheral nerves, one cell per segment of a single axon. After an injury they guide regrowth, which is why peripheral nerves recover far better than brain and spinal cord axons, regrowing roughly a millimetre a day.
+    curious: Schwann cells provide the myelin for peripheral nerves, each one covering a single stretch of one axon. When a nerve is injured they steer the regrowing fibre, which is why peripheral nerves heal far better than axons inside the brain or spinal cord, with axons regrowing at about a millimetre per day.
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -689,7 +689,7 @@ nodes:
   kind: progenitor
   text:
     curious: Cells that divide to make copies of themselves plus progenitors that mature into neurons or glia. In the developing brain they line the fluid-filled ventricles. Whether adult human brains keep active ones in the hippocampus is part of an open debate.
-  notes: Microglia are not born from neural stem cells.
+  notes: Neural stem cells do not give rise to microglia.
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -897,8 +897,8 @@ nodes:
   kind: neuron
   text:
     child: Smell-detecting neurons inside your nose. New ones keep replacing old ones all through your life.
-    curious: These neurons sit in the lining of the nose. Each one expresses a single type of smell receptor, out of about 400, and their axons pass through the cribriform plate to the olfactory bulb. Unlike most neurons they regenerate throughout life, which is separate from the brain's own route to the olfactory bulb that shuts down in infancy.
-  notes: Peripheral olfactory sensory neurons in the nasal epithelium regenerate throughout life (R1 §8). Do not confuse with the subventricular zone to olfactory bulb route, which largely shuts down by about 18 months in humans (KB physiology/neurogenesis.md).
+    curious: These cells live in the lining inside your nose. Each one makes just one kind of odour receptor from a repertoire of about 400, and its axon threads through the cribriform plate to reach the olfactory bulb. Unusually for neurons, they are replaced all through life. That renewal is distinct from the brain's internal supply route to the olfactory bulb, which closes down in infancy.
+  notes: The olfactory sensory neurons of the nasal epithelium keep regenerating for life (R1 §8). Don't mix this up with the route from the subventricular zone to the olfactory bulb, which in humans mostly closes by about 18 months (KB physiology/neurogenesis.md).
   provenance:
     sources:
     - source:kandel-pns
@@ -917,7 +917,7 @@ nodes:
   label: Mitral Cell
   kind: neuron
   text:
-    curious: An output neuron of the olfactory bulb. With tufted cells, mitral cells carry smell signals along the lateral olfactory tract straight to the piriform cortex, amygdala and entorhinal cortex, without a stop in the thalamus first.
+    curious: One of the olfactory bulb's output neurons. Together with tufted cells, mitral cells send odour information down the lateral olfactory tract directly to piriform cortex, entorhinal cortex and the amygdala, with no prior stop in the thalamus.
   provenance:
     sources:
     - source:kandel-pns
@@ -969,7 +969,7 @@ nodes:
   label: Thalamic Relay Neuron
   kind: neuron
   text:
-    curious: Neurons of the thalamic relay nuclei that pass sensory and motor-loop signals up to the cortex, releasing glutamate mainly onto layer IV. Layer VI sends feedback to the same nucleus.
+    curious: These neurons, found in the thalamus's relay nuclei, forward sensory signals and motor-loop signals to the cortex, where they release glutamate mostly onto layer IV. Cortical layer VI then sends feedback to that same nucleus.
   provenance:
     sources:
     - source:kandel-pns
@@ -1080,7 +1080,7 @@ nodes:
   text:
     child: My main stop chemical. It calms the next neuron down so it is less likely to fire.
     curious: GABA is the brain's main inhibitory transmitter, and it is made from glutamate. It works through fast GABA-A receptors and slower GABA-B receptors. Purkinje cells and most local cortical interneurons use it.
-  notes: Made from glutamate. Many sedatives act on GABA receptors (mechanism only).
+  notes: Synthesized from glutamate. GABA receptors are the target of many sedatives (state the mechanism only).
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -1381,7 +1381,7 @@ nodes:
   - text: CRH
     kind: abbreviation
   text:
-    curious: 'Released by the hypothalamus''s paraventricular nucleus to start the stress hormone chain: the pituitary then releases ACTH and the adrenal cortex releases cortisol.'
+    curious: The hypothalamus releases it from its paraventricular nucleus to kick off the stress hormone cascade. Next the pituitary puts out ACTH, and then the adrenal cortex puts out cortisol.
   provenance:
     sources:
     - source:kandel-pns
@@ -1734,7 +1734,7 @@ nodes:
   - text: odorant receptors
     kind: common
   text:
-    curious: Humans have about 400 functional olfactory receptor genes. Each olfactory sensory neuron expresses just one receptor type, and odorants binding these receptors start the sense of smell.
+    curious: People carry roughly 400 working genes for olfactory receptors. Any given olfactory sensory neuron makes only one of these receptor types, and smell begins when odour molecules latch onto them.
   quantities:
   - name: functionalGeneCount
     value: 400
@@ -1957,9 +1957,9 @@ nodes:
   pronunciation:
     respelling: AK-shun po-TEN-shal
   text:
-    child: A tiny electric zap that races along a neuron. It is all or nothing, like a camera flash.
+    child: A quick little spark of electricity zooming down a nerve cell. It either fires fully or not at all, just like a camera flash.
     curious: At rest a neuron sits near minus 70 millivolts. If its inputs push it to about minus 55, sodium channels open, sodium floods in and the inside briefly turns positive. Potassium channels then reset it, all within a millisecond or two. A stronger stimulus gives more spikes, not bigger ones.
-    expert: Spikes usually start at the axon initial segment. Voltage-gated sodium channels open, the membrane peaks near +30 to +40 mV, sodium channels inactivate and voltage-gated potassium channels repolarise it, followed by a brief afterhyperpolarisation; a refractory period stops backward travel. Hodgkin and Huxley's 1952 squid giant axon model explained the sodium and potassium currents. Speed runs from about 0.5 to 2 m/s in thin unmyelinated fibres up to about 120 m/s in thick myelinated ones.
+    expert: Initiation typically occurs at the axon initial segment. Opening of voltage-gated sodium channels drives the membrane to a peak of roughly +30 to +40 mV; the sodium channels then inactivate while voltage-gated potassium channels restore the negative potential, and a short afterhyperpolarisation follows. The refractory period prevents the spike from propagating backwards. Hodgkin and Huxley's 1952 model, built on the squid giant axon, accounted for the underlying sodium and potassium currents. Thin unmyelinated fibres conduct at between roughly 0.5 and 2 m/s, while thick myelinated axons reach about 120 m/s.
   quantities:
   - name: restingPotential
     value: -70
@@ -2194,7 +2194,7 @@ nodes:
     respelling: NOOR-oh-JEN-eh-sis
   text:
     child: Making new neurons. Almost all of mine were made before you were born.
-    curious: Neural stem cells divide to make progenitors that mature into neurons or glia, which then migrate and wire in. Over the whole of pregnancy that works out to roughly 250,000 new neurons a minute on average. Most cortical neurons are born in the first half of pregnancy; cerebellar granule cells are the big exception, mostly arriving in the first year after birth.
+    curious: Neural stem cells split to produce progenitors, and these mature into glia or neurons that move to their places and join circuits. Averaged across all of pregnancy, that comes to about 250,000 new neurons every minute. The bulk of cortical neurons form during the first half of pregnancy. The standout exception is cerebellar granule cells, most of which appear during the first year after birth.
   quantities:
   - name: prenatalNeuronAdditionRate
     value: 250000
@@ -2241,7 +2241,7 @@ nodes:
     sources:
     - source:spalding-2013
     note: Per hippocampus, from a single carbon-14 dating study. Human adult hippocampal neurogenesis is debated; voice only with that caveat.
-  notes: Never state human adult neurogenesis as confirmed or disproven. Adult human amygdala neurogenesis is unproven. Explain learning through plasticity, not new neurons.
+  notes: Do not present adult neurogenesis in humans as either proven or ruled out. New neuron formation in the adult human amygdala has not been demonstrated. Attribute learning to plasticity rather than to newly made neurons.
   provenance:
     sources:
     - source:sorrells-2018
@@ -2298,7 +2298,7 @@ nodes:
   label: Neuronal Migration
   kind: development
   text:
-    curious: Newborn neurons travel to their final positions, many climbing along radial glia to build the cortex layer by layer from the inside out. When migration fails, the cortex can end up smooth, as in lissencephaly.
+    curious: Freshly made neurons journey to where they will settle, and many crawl up radial glia, building the cortex in layers from the inside outward. If this journey goes wrong, the cortex may form without its usual folds, as happens in lissencephaly.
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -4641,7 +4641,7 @@ assertions:
   props:
     confidence: debated
     stance: asserts
-  debateNote: 'Supporting side: first evidence of new adult hippocampal neurons (Eriksson 1998); carbon-14 dating estimate of about 700 new neurons a day per hippocampus (Spalding 2013); progenitors and immature neurons in healthy people aged 14 to 79 (Boldrini 2018); thousands of immature neurons up to age 87, fewer in Alzheimer''s, with tissue handling blamed for negative results (Moreno-Jimenez 2019); dividing progenitors in adults up to 78, but only 354 among about 300,000 nuclei, with wide individual differences and none in several adults (Dumitru 2025). Safe summary: probably some, at low and variable levels, role in humans unknown.'
+  debateNote: 'For: Eriksson 1998 (first evidence); Spalding 2013 (carbon-14, ~700/day per hippocampus); Boldrini 2018 (progenitors, immature neurons, healthy ages 14-79); Moreno-Jimenez 2019 (thousands of immature neurons to 87, fewer with Alzheimer''s; blames negatives on tissue handling); Dumitru 2025 (dividing progenitors to 78, but 354 of ~300,000 nuclei, widely variable, none in several adults). Summary: probably some, low, variable; human role unknown.'
   provenance:
     sources:
     - source:eriksson-1998
@@ -4662,7 +4662,7 @@ assertions:
   props:
     confidence: debated
     stance: disputes
-  debateNote: 'Disputing side: new neurons rare by ages 7 to 13 and undetectable in adults (Sorrells 2018); clear neurogenic signatures in mice, pigs and monkeys but almost none in adult humans (Franjic 2022). Never voice adult human neurogenesis as confirmed or as disproven.'
+  debateNote: 'Against: Sorrells 2018 found new neurons had become rare by 7 to 13 years of age and were undetectable in adults; Franjic 2022 saw clear neurogenic signatures in monkeys, pigs and mice yet nearly none in adult humans. Never voice adult neurogenesis in humans as either proven or refuted.'
   provenance:
     sources:
     - source:sorrells-2018
@@ -4697,7 +4697,7 @@ assertions:
   props:
     confidence: debated
     stance: asserts
-  debateNote: 'Supporting side: Iliff 2012 proposed CSF inflow along arteries, through tissue with help from astrocyte aquaporin-4 channels, and outflow along veins; Xie 2013 reported in mice that sleep enlarged interstitial space by about 60 percent and sped clearance. The dispute centres on the proposed route and on whether sleep speeds clearance.'
+  debateNote: 'For: Iliff 2012 proposed that CSF flows in alongside arteries, moves through the tissue aided by astrocytic aquaporin-4 channels, and exits alongside veins. Xie 2013 found in mice that sleep expanded the interstitial space by about 60 percent and accelerated clearance. Disagreement focuses on that proposed route and on whether sleep does speed clearance.'
   provenance:
     sources:
     - source:iliff-2012

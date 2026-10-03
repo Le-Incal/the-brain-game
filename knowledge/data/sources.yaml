@@ -64,7 +64,7 @@ sources:
   class: Source
   label: Azevedo et al. 2009
   type: peer_reviewed
-  citation: Azevedo FAC et al. Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. J Comp Neurol 2009;513:532-541.
+  citation: Azevedo FAC et al. Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. J Comp Neurol 2009.
   year: 2009
   license: all-rights-reserved
   provenance:
@@ -75,6 +75,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:bergmann-2012
   class: Source
   label: Bergmann 2012
@@ -302,7 +303,7 @@ sources:
   class: Source
   label: Catani et al. 2005
   type: peer_reviewed
-  citation: Catani M, Jones DK, ffytche DH. Perisylvian language networks of the human brain. Annals of Neurology 2005;57:8-16.
+  citation: Catani M, Jones DK, ffytche DH. Perisylvian language networks of the human brain. Annals of Neurology 2005.
   year: 2005
   license: all-rights-reserved
   provenance:
@@ -313,6 +314,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:catani-2012
   class: Source
   label: Catani et al. 2012
@@ -338,21 +340,6 @@ sources:
   provenance:
     sources: []
     locator: R1 Sources; R2 Sources; BRIEF ID conventions
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
-- id: source:cavanna-2006
-  class: Source
-  label: Cavanna and Trimble 2006
-  type: peer_reviewed
-  citation: Cavanna AE, Trimble MR. 2006. Brain. (Review of the precuneus.)
-  year: 2006
-  license: all-rights-reserved
-  provenance:
-    sources: []
-    locator: R1 §1.10 Precuneus
     license: own
     method: ai_extracted
     assertedBy: extractor:claude
@@ -403,21 +390,6 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-- id: source:corbetta-2002
-  class: Source
-  label: Corbetta and Shulman 2002
-  type: peer_reviewed
-  citation: Corbetta M, Shulman GL. 2002. Nature Reviews Neuroscience. (Dorsal and ventral attention systems.)
-  year: 2002
-  license: all-rights-reserved
-  provenance:
-    sources: []
-    locator: R1 §1.8 Superior parietal lobule
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
 - id: source:corbetta-shulman-2002
   class: Source
   label: Corbetta and Shulman 2002
@@ -458,21 +430,6 @@ sources:
   provenance:
     sources: []
     locator: R1 Sources; R2 Sources; BRIEF ID conventions
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
-- id: source:dehaene-2011
-  class: Source
-  label: Dehaene and Cohen 2011
-  type: peer_reviewed
-  citation: Dehaene S, Cohen L. 2011. Trends in Cognitive Sciences. (The visual word form area.)
-  year: 2011
-  license: all-rights-reserved
-  provenance:
-    sources: []
-    locator: R1 §1.14 Fusiform gyrus
     license: own
     method: ai_extracted
     assertedBy: extractor:claude
@@ -572,7 +529,7 @@ sources:
   class: Source
   label: Dronkers et al. 2007
   type: peer_reviewed
-  citation: 'Dronkers NF, Plaisant O, Iba-Zizen MT, Cabanis EA. Paul Broca''s historic cases: high resolution MR imaging of the brains of Leborgne and Lelong. Brain 2007;130:1432-1441.'
+  citation: 'Dronkers NF, Plaisant O, Iba-Zizen MT, Cabanis EA. Paul Broca''s historic cases: high resolution MR imaging of the brains of Leborgne and Lelong. Brain 2007 130:1432-1441.'
   year: 2007
   license: all-rights-reserved
   provenance:
@@ -706,7 +663,7 @@ sources:
   class: Source
   label: Fischl and Dale 2000
   type: peer_reviewed
-  citation: Fischl and Dale (2000). PNAS 97:11050-11055. Cortical thickness measured from MRI.
+  citation: Fischl and Dale (2000). PNAS. Cortical thickness measured from MRI.
   year: 2000
   license: all-rights-reserved
   provenance:
@@ -717,6 +674,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:franjic-2022
   class: Source
   label: Franjic et al. 2022
@@ -1202,7 +1160,7 @@ sources:
   class: Source
   label: Moreno-Jimenez et al. 2019
   type: peer_reviewed
-  citation: Moreno-Jimenez EP et al. Adult hippocampal neurogenesis is abundant in neurologically healthy subjects and drops sharply in patients with Alzheimer's disease. Nature Medicine 2019;25:554-560.
+  citation: Moreno-Jimenez EP et al. Adult hippocampal neurogenesis is abundant in neurologically healthy subjects and drops sharply in patients with Alzheimer's disease. Nature Medicine 2019.
   year: 2019
   license: all-rights-reserved
   provenance:
@@ -1213,21 +1171,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-- id: source:moruzzi-1949
-  class: Source
-  label: Moruzzi and Magoun 1949
-  type: peer_reviewed
-  citation: Moruzzi G, Magoun HW. 1949. (Brainstem reticular formation and cortical arousal.)
-  year: 1949
-  license: all-rights-reserved
-  provenance:
-    sources: []
-    locator: R2 B11
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:moruzzi-magoun-1949
   class: Source
   label: Moruzzi and Magoun 1949
@@ -1513,7 +1457,7 @@ sources:
   class: Source
   label: Raichle et al. 2001
   type: peer_reviewed
-  citation: Raichle ME et al. A default mode of brain function. PNAS 2001;98:676-682.
+  citation: Raichle ME et al. A default mode of brain function. PNAS 2001.
   year: 2001
   license: all-rights-reserved
   provenance:
@@ -1524,6 +1468,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:raichle-gusnard-2002
   class: Source
   label: Raichle and Gusnard 2002
@@ -1629,21 +1574,6 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-- id: source:schmahmann-1998
-  class: Source
-  label: Schmahmann and Sherman 1998
-  type: peer_reviewed
-  citation: Schmahmann JD, Sherman JC. 1998. Brain. (The cerebellar cognitive affective syndrome.)
-  year: 1998
-  license: all-rights-reserved
-  provenance:
-    sources: []
-    locator: R1 §1.19 Cerebellum
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
 - id: source:schmahmann-pandya-2006
   class: Source
   label: Fiber Pathways of the Brain
@@ -1693,7 +1623,7 @@ sources:
   class: Source
   label: Scoville and Milner 1957
   type: peer_reviewed
-  citation: Scoville WB, Milner B. Loss of recent memory after bilateral hippocampal lesions. J Neurol Neurosurg Psychiatry 1957;20:11-21.
+  citation: Scoville WB, Milner B. Loss of recent memory after bilateral hippocampal lesions. J Neurol Neurosurg Psychiatry 1957.
   year: 1957
   license: all-rights-reserved
   provenance:
@@ -1704,6 +1634,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:seeley-2007
   class: Source
   label: Seeley et al. 2007
@@ -1828,7 +1759,7 @@ sources:
   class: Source
   label: Sorrells et al. 2018
   type: peer_reviewed
-  citation: Sorrells SF et al. Human hippocampal neurogenesis drops sharply in children to undetectable levels in adults. Nature 2018;555:377-381.
+  citation: Sorrells SF et al. Human hippocampal neurogenesis drops sharply in children to undetectable levels in adults. Nature 2018.
   year: 2018
   license: all-rights-reserved
   provenance:
@@ -1839,6 +1770,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:spalding-2013
   class: Source
   label: Spalding et al. 2013
@@ -2037,7 +1969,7 @@ sources:
   class: Source
   label: Yeo et al. 2011
   type: peer_reviewed
-  citation: Yeo BTT et al. The organization of the human cerebral cortex estimated by intrinsic functional connectivity. Journal of Neurophysiology 2011;106:1125-1165.
+  citation: Yeo BTT et al. The organization of the human cerebral cortex estimated by intrinsic functional connectivity. Journal of Neurophysiology 2011.
   year: 2011
   license: all-rights-reserved
   provenance:
@@ -2048,6 +1980,7 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Volume and pages removed: not stated in the source material; steward may restore after checking.'
 - id: source:zihl-1983
   class: Source
   label: Zihl et al. 1983
@@ -2063,3 +1996,4 @@ sources:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+assertions: []

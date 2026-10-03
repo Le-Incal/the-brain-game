@@ -4,7 +4,7 @@ nodes:
   class: Person
   label: Hippocrates
   living: false
-  knownFor: Ancient Greek physician whose treatise On the Sacred Disease argued that epilepsy is a brain disorder rather than a divine one, and that the brain is the seat of thought and feeling.
+  knownFor: Greek physician of antiquity. His treatise On the Sacred Disease held that epilepsy arises from the brain, not from the gods, and placed thought and feeling in the brain.
   notes: R1 dates him to about 460-370 BCE; approximate BCE dates are kept here rather than in born/died.
   provenance:
     sources:
@@ -146,7 +146,7 @@ nodes:
   living: false
   born: 1773
   died: 1831
-  knownFor: Italian anatomist honoured in the old name for the central sulcus, the fissure of Rolando.
+  knownFor: Italian anatomist remembered in the fissure of Rolando, an older name for the central sulcus.
   pronunciation:
     respelling: roh-LAN-doh
   provenance:
@@ -182,7 +182,7 @@ nodes:
   living: false
   born: 1794
   died: 1867
-  knownFor: Used ablation experiments in birds to show the cerebellum's role in coordination and the medulla's role in breathing, and argued that the cortex works as a whole.
+  knownFor: Removed parts of birds' brains to show that the cerebellum matters for coordination and the medulla for breathing; he also maintained that the cortex functions as a single whole.
   pronunciation:
     respelling: floo-RAHNS
   provenance:
@@ -295,7 +295,7 @@ nodes:
   living: false
   born: 1843
   died: 1926
-  knownFor: Developed the silver chromate 'black reaction' stain around 1873 and held that the nervous system is one continuous net.
+  knownFor: Created the 'black reaction', a silver chromate stain, in about 1873, and believed the nervous system forms a single unbroken network.
   pronunciation:
     respelling: GOHL-jee
   provenance:
@@ -314,7 +314,7 @@ nodes:
   living: false
   born: 1852
   died: 1934
-  knownFor: Used Golgi's stain to argue that neurons are separate cells (the neuron doctrine) and that signals flow through them in one direction.
+  knownFor: Applied Golgi's staining method to make the case that neurons are distinct, individual cells (the neuron doctrine) and that signals pass through each one in a single direction.
   pronunciation:
     respelling: rah-MOHN ee kah-HAHL
   provenance:
@@ -486,7 +486,7 @@ nodes:
   class: Person
   label: Roger Sperry
   living: false
-  knownFor: Led split-brain studies from the 1960s on patients whose corpus callosum had been cut, showing that each hemisphere could process information separately.
+  knownFor: Beginning in the 1960s, directed split-brain research with patients whose corpus callosum had been severed, demonstrating that the two hemispheres could each handle information on their own.
   provenance:
     sources:
     - source:kandel-pns
@@ -504,7 +504,7 @@ nodes:
   living: false
   born: 1823
   died: 1860
-  knownFor: Survived a tamping iron passing through his left frontal lobe on 13 September 1848; after a reported personality change he later worked for years as a stagecoach driver in Chile.
+  knownFor: On 13 September 1848 he survived a tamping iron being driven through his left frontal lobe. Though his personality was reported to change, he later spent years driving stagecoaches in Chile.
   provenance:
     sources:
     - source:macmillan-lena-2010
@@ -612,7 +612,7 @@ nodes:
   class: Person
   label: Lina Stern
   living: false
-  knownFor: Named it the 'hemato-encephalic barrier' around 1921.
+  knownFor: Coined the name 'hemato-encephalic barrier' for it in about 1921.
   provenance:
     sources:
     - source:brainfacts
@@ -629,7 +629,7 @@ nodes:
   anchorRegions:
   - region:11
   - region:12
-  notes: Named for the Sylvian (lateral) fissure, which separates the temporal lobe from the frontal and parietal lobes. Faces regions 11 and 12 when asked about the name. Never claims to be Franciscus Sylvius.
+  notes: Takes its name from the Sylvian, or lateral, fissure, the groove that divides the frontal and parietal lobes from the temporal lobe. When asked about the name, turns to face regions 11 and 12. Never says it is Franciscus Sylvius.
   provenance:
     sources: []
     locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
@@ -644,7 +644,7 @@ nodes:
   anchorRegions:
   - region:5
   - region:7
-  notes: Named for the Rolandic (central) fissure, with motor cortex in front and sensory cortex behind. Faces regions 5 and 7 when asked about the name. Never claims to be Luigi Rolando.
+  notes: Takes its name from the Rolandic, or central, fissure, which has motor cortex ahead of it and sensory cortex behind it. When asked about the name, turns to face regions 5 and 7. Never says it is Luigi Rolando.
   provenance:
     sources: []
     locator: R1 §10 Luigi Rolando (Game note); KB README.md (The guides)
@@ -703,7 +703,7 @@ nodes:
     kind: common
   text:
     child: A stroke where a blood vessel in the brain gets blocked, so the brain cells it feeds stop getting what they need.
-    curious: In an ischemic stroke an artery supplying the brain is blocked, and the tissue downstream begins to fail. It is the most common type of stroke. What happens depends on which artery is blocked, from one-sided weakness to speech or vision problems. Sudden face drooping, arm weakness, trouble speaking, loss of balance or a change in vision means call emergency services right away and note the time.
+    curious: An ischemic stroke happens when an artery feeding the brain gets blocked, so the tissue beyond the blockage starts to fail. This is the commonest kind of stroke. The effects depend on which artery is involved and range from weakness on one side to trouble with speech or sight. If face drooping, arm weakness, difficulty speaking, loss of balance or vision changes appear suddenly, call emergency services at once and make a note of the time.
   provenance:
     sources:
     - source:wso-global-stroke-2025
@@ -770,7 +770,7 @@ nodes:
     kind: common
   text:
     child: A brain injury from a bump, blow or jolt to the head. Wearing a helmet for sports and riding helps protect your brain.
-    curious: A concussion is a mild traumatic brain injury caused by a blow or a jolt. The underside of the frontal lobes and the front of the temporal lobes are especially vulnerable; the orbital surface can scrape against the bony floor of the skull. Helmets help. A condition linked to repeated head impacts, called CTE, can only be diagnosed after death, and how strongly the impacts cause it is still debated.
+    curious: Concussion, a mild form of traumatic brain injury, follows a knock or a sudden jolt. The undersides of the frontal lobes and the tips of the temporal lobes are most at risk; the orbital surface can grind across the bony base of the skull. Wearing a helmet helps. CTE, a condition tied to repeated hits to the head, can be diagnosed only after death, and how strongly those hits cause it remains debated.
   provenance:
     sources:
     - source:kandel-pns
@@ -869,7 +869,7 @@ nodes:
     respelling: meh-nin-jee-OH-muh
   text:
     child: A lump that grows from the thin coverings around the brain. Most of them are not cancer.
-    curious: 'A meningioma grows from cells of the arachnoid, one of the protective membranes around the brain. It is the most common tumour that starts in the brain or its coverings, it is usually not cancerous, and it is more common in women. Where it grows shapes what happens: one growing in the groove under the front of the brain, beside the smell pathways, can cause loss of smell and personality change.'
+    curious: 'Meningiomas arise from arachnoid cells; the arachnoid is one of the membranes that wrap and protect the brain. Among tumours originating in the brain or the membranes covering it, this is the most frequent. Most are benign, and women get them more often. Symptoms depend on location: one in the groove beneath the front of the brain, next to the smell pathways, can take away the sense of smell and alter personality.'
   provenance:
     sources:
     - source:louis-2021
@@ -935,8 +935,8 @@ nodes:
   - text: MS
     kind: abbreviation
   text:
-    child: An illness where the body's defence system attacks the protective coating around nerve fibres in the brain and spinal cord.
-    curious: In multiple sclerosis, the immune system attacks and strips away myelin, the fatty insulation that speeds signals along axons. A breakdown of the blood-brain barrier lets immune cells into the central nervous system, where the damage happens. The disease causes the myelin loss, not the other way round.
+    child: In this illness, the body's own germ fighters turn on the protective coating wrapped around the nerve wires inside your brain and spinal cord.
+    curious: Multiple sclerosis is a disease in which immune attacks remove myelin, the fatty wrapping that helps signals move quickly down axons. Immune cells get into the central nervous system through a weakened blood-brain barrier, and that is where they do their harm. The illness produces the myelin loss; the myelin loss does not produce the illness.
   provenance:
     sources:
     - source:qbi-brain-basics
@@ -1048,7 +1048,7 @@ nodes:
   audience: teen
   text:
     child: When the brain can no longer store new memories of events. The famous patient H.M. had this, yet he could still learn new hand skills.
-    curious: Anterograde amnesia is an inability to form new memories of events and facts. The best-known case is Henry Molaison, known as H.M., whose 1953 epilepsy surgery removed the inner parts of both temporal lobes. He could not form new declarative memories, but Brenda Milner showed that his learning of motor skills, such as mirror drawing, was spared. Damage to the fornix, the hippocampus's main output cable, can also cause it.
+    curious: 'People with anterograde amnesia cannot lay down new memories of facts and events. The most famous example is Henry Molaison, or H.M.: surgery for epilepsy in 1953 took out the inner portions of both his temporal lobes. New declarative memories were beyond him, yet Brenda Milner found that he could still get better at motor skills like mirror drawing. It can also follow damage to the fornix, the hippocampus''s chief outgoing cable.'
   provenance:
     sources:
     - source:scoville-milner-1957
@@ -1191,7 +1191,7 @@ nodes:
   statement: Drinking alcohol kills brain cells.
   correction:
     child: The real story is more complicated, but heavy drinking still harms the brain by damaging the wiring and branches that connect brain cells.
-    curious: 'Studies that counted neurons found no major loss of cortex cells in people with long-term alcoholism. That is not good news, though: alcohol damages white matter and the branching dendrites neurons use to connect. A shortage of thiamine, as in Wernicke-Korsakoff syndrome, does kill neurons. Heavy use harms the brain, just not in the simple way the slogan says.'
+    curious: When researchers counted neurons in people with long-term alcoholism, they found no major loss of cortical cells. Don't take that as reassurance. Alcohol harms white matter and the branching dendrites that neurons connect through. Thiamine deficiency, seen in Wernicke-Korsakoff syndrome, really does kill neurons. Heavy drinking damages the brain, only not in the simple way the slogan claims.
   audience: teen
   provenance:
     sources:
@@ -1298,7 +1298,7 @@ nodes:
   statement: After an iron rod passed through his head, Phineas Gage became a permanent wreck.
   correction:
     child: Phineas Gage changed after his accident, but he recovered a lot. Years later he drove stagecoaches, a job that needed planning and people skills.
-    curious: 'In 1848 a tamping iron passed through Gage''s left frontal lobe, and his doctor reported a major personality change. That part gets retold often. Less often told: historians found he later worked for years as a stagecoach driver in Chile, a job that demands planning and social skill, and a doctor there reported no impairment of his mind. His story is about recovery as much as damage.'
+    curious: In 1848 a tamping iron went through Gage's left frontal lobe, and his physician described a major change in his personality. That much is widely repeated. What rarely gets mentioned is that historians discovered he spent years driving stagecoaches in Chile, work requiring planning and people skills, and a doctor there reported no sign that his mind was impaired. Gage's story is as much about recovery as about injury.
   provenance:
     sources:
     - source:macmillan-lena-2010
@@ -1333,7 +1333,7 @@ nodes:
   statement: Serotonin made in your gut controls your mood.
   correction:
     child: Most of your body's serotonin is made in your belly, but it cannot get into your brain. Your brain makes its own.
-    curious: Most of the body's serotonin, about 90 to 95 percent, is made in the gut, but that serotonin cannot cross the blood-brain barrier, so it never reaches brain cells directly. The brain's own serotonin comes from the raphe nuclei in the brain stem. Gut and brain do communicate, through nerves such as the vagus, immune signals and chemicals made by gut microbes, and those links are an active research area.
+    curious: The gut produces most of the body's serotonin, roughly 90 to 95 percent. Yet gut serotonin can't get through the blood-brain barrier, so it never acts on brain cells directly. The brain makes its own supply in the raphe nuclei of the brain stem. Gut and brain do talk to each other, via nerves like the vagus, immune signals and substances produced by gut microbes, and researchers are actively studying those connections.
   provenance:
     sources:
     - source:purves-neuroscience
@@ -1407,7 +1407,7 @@ nodes:
   statement: Cutting into the brain itself is painful.
   correction:
     child: Brain tissue has no pain sensors, so it cannot feel being touched. That is why some people stay awake during brain surgery!
-    curious: The brain tissue itself has no pain receptors. That is why surgeons can operate while a patient is awake, as Wilder Penfield did when he mapped the cortex during epilepsy surgery. Headaches come from the brain's coverings, the meninges, and from its blood vessels, which do have pain receptors.
+    curious: Brain tissue contains no pain receptors of its own. This lets surgeons operate on patients who are awake, which is how Wilder Penfield mapped the cortex in people having epilepsy surgery. Headache pain comes instead from the meninges, the brain's protective coverings, and from its blood vessels, both of which do carry pain receptors.
   provenance:
     sources:
     - source:purves-neuroscience
@@ -1557,10 +1557,10 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-- id: assert:william-scoville--described--hippocampus
+- id: assert:william-scoville--described--anterograde-amnesia
   predicate: DESCRIBED
   subject: person:william-scoville
-  object: structure:hippocampus
+  object: condition:anterograde-amnesia
   props:
     year: 1957
   provenance:
@@ -1572,10 +1572,11 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-- id: assert:brenda-milner--described--hippocampus
+    reviewNote: 'Re-pointed by audit: Scoville and Milner (1957) described the amnesia after hippocampal removal, not the hippocampus itself.'
+- id: assert:brenda-milner--described--anterograde-amnesia
   predicate: DESCRIBED
   subject: person:brenda-milner
-  object: structure:hippocampus
+  object: condition:anterograde-amnesia
   props:
     year: 1957
   provenance:
@@ -1587,6 +1588,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Re-pointed by audit: Scoville and Milner (1957) described the amnesia after hippocampal removal, not the hippocampus itself.'
 - id: assert:papez--described--papez
   predicate: DESCRIBED
   subject: person:papez
@@ -1624,7 +1626,7 @@ assertions:
   object: structure:lateral-fissure
   props:
     year: 1641
-  debateNote: R1 says Caspar Bartholin published the description in 1641 and credited it to Sylvius.
+  debateNote: According to R1, Caspar Bartholin put the description into print in 1641, attributing it to Sylvius.
   provenance:
     sources:
     - source:kandel-pns
@@ -1758,7 +1760,8 @@ assertions:
   object: person:paul-broca
   provenance:
     sources:
-    - source:dronkers-2007
+    - source:kandel-pns
+    - source:finger-origins
     locator: R1 §1.6 Broca's area (History); R1 §10 Paul Broca
     license: own
     method: ai_extracted
@@ -2009,7 +2012,7 @@ assertions:
   predicate: AFFECTS
   subject: condition:brocas-aphasia
   object: region:6
-  debateNote: A lesion confined to region 6 usually causes milder or temporary deficits; lasting Broca's aphasia needs larger lesions reaching deeper (Mohr 1978; Dronkers 2007).
+  debateNote: Damage limited to region 6 tends to produce milder or short-lived problems. Persistent Broca's aphasia requires bigger lesions that extend further below the surface (Mohr 1978; Dronkers 2007).
   provenance:
     sources:
     - source:dronkers-2007
@@ -2053,6 +2056,7 @@ assertions:
     assertedOn: 2026-10-02
     status: proposed
     reviewNote: Single source (Binder 2015); held as approximate until a contesting source is added.
+  debateNote: 'One side of an open boundary debate: Binder (2015) argued that comprehension deficits come mostly from middle temporal cortex.'
 - id: assert:locked-in-syndrome--affects--pons
   predicate: AFFECTS
   subject: condition:locked-in-syndrome
@@ -2111,6 +2115,10 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Audit: R1 says it contributes to neglect, especially on the right side.'
+  props:
+    lateralization: right
+    confidence: approximate
 - id: assert:anterograde-amnesia--affects--hippocampus
   predicate: AFFECTS
   subject: condition:anterograde-amnesia
@@ -2493,7 +2501,7 @@ assertions:
   subject: condition:ischemic-stroke
   object: function:vision
   props:
-    sign: Loss of the opposite half of the visual field in both eyes after a posterior cerebral artery stroke.
+    sign: Following a posterior cerebral artery stroke, both eyes lose the half of the visual field on the side opposite the damage.
   provenance:
     sources:
     - source:kandel-pns
@@ -2626,7 +2634,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: *id001
     status: proposed
-- id: assert:hippocampus--participates-in--adult-neurogenesis--disputes----debunks--adult-neurogenesis-certainty
+- id: assert:hippocampus--participates-in--adult-neurogenesis--disputes--debunks--adult-neurogenesis-certainty
   predicate: DEBUNKS
   subject: assert:hippocampus--participates-in--adult-neurogenesis--disputes--contests--hippocampus--participates-in--adult-neurogenesis--asserts
   object: myth:adult-neurogenesis-certainty
@@ -2647,21 +2655,6 @@ assertions:
 - id: assert:serotonin--produced-in--raphe-nuclei--debunks--gut-serotonin-mood
   predicate: DEBUNKS
   subject: assert:serotonin--produced-in--raphe-nuclei
-  object: myth:gut-serotonin-mood
-  provenance:
-    sources:
-    - source:purves-neuroscience
-    - source:blumenfeld-neuroanatomy
-    - source:nolte-human-brain
-    locator: R1 §17a Consolidated myths list
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: *id001
-    status: proposed
-- id: assert:serotonin--debunks--gut-serotonin-mood
-  predicate: DEBUNKS
-  subject: molecule:serotonin
   object: myth:gut-serotonin-mood
   provenance:
     sources:

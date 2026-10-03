@@ -11,7 +11,7 @@ nodes:
   text:
     child: A team of my areas that gets busy when you daydream, remember your past or wonder what someone else is thinking.
     curious: 'When you stop focusing on the world outside, a set of my areas becomes more active together: the precuneus and posterior cingulate along my midline, the medial prefrontal cortex, the angular gyrus and the hippocampal region. This team is linked to mind-wandering, recalling your own past, imagining what comes next and thinking about other people.'
-    expert: Core nodes are the posterior cingulate and precuneus (hubs), medial prefrontal cortex, angular gyrus and inferior parietal lobule, lateral temporal cortex and the hippocampal formation. Consistent task-induced deactivations were reported in 1997, the network was named in 2001 and its resting functional connectivity was shown in 2003. Boundaries depend on the parcellation used (Yeo 7 or 17 networks, Gordon) and differ between individuals in precision mapping.
+    expert: 'The hubs are the posterior cingulate and the precuneus; other core nodes include medial prefrontal cortex, lateral temporal cortex, the angular gyrus with the inferior parietal lobule, and the hippocampal formation. History: reliable deactivations during tasks were described in 1997, the name followed in 2001, and resting-state functional connectivity within it was demonstrated in 2003. Its borders vary with the parcellation chosen (Yeo 7- or 17-network, Gordon), and precision mapping shows they also shift from one person to another.'
   xrefs:
   - scheme: yeo17
     value: DefaultA
@@ -61,7 +61,7 @@ nodes:
     value: SalVentAttnB
     matchType: narrower
     verified: false
-  notes: 'Registry merges two networks that R1 §9 describes separately: the salience network (anterior insula and dorsal ACC, plus amygdala and ventral striatum) and the right-lateralized ventral attention network (right TPJ and ventral frontal cortex). Yeo-7 labels it Ventral Attention (Salience).'
+  notes: The registry folds together two networks that R1 §9 treats as distinct. One is the salience network (anterior insula, dorsal ACC, with amygdala and ventral striatum); the other is the right-lateralized ventral attention network (right TPJ, ventral frontal cortex). In Yeo-7 the combined label is Ventral Attention (Salience).
   provenance:
     sources:
     - source:yeo-2011
@@ -227,7 +227,7 @@ nodes:
   text:
     child: A team of my frontal and temporal areas, mostly on the left, that works on words and sentences and stays quiet for maths or music.
     curious: Frontal areas (the inferior and middle frontal gyri) and temporal areas (the superior and middle temporal gyri and the front of the temporal lobe), mostly on the left, respond to language and hardly at all to arithmetic, music or logic puzzles. Researchers locate it person by person with a short language test, because its exact position differs between people.
-  notes: Left-lateralized. Identified with functional localizers in individual brains. A 2024 position paper argued language is mainly a tool for communication rather than for thought; contested.
+  notes: Lateralized to the left. Mapped person by person using functional localizers. A 2024 position paper made the case that language serves mainly communication, not thought; this claim is contested.
   provenance:
     sources:
     - source:fedorenko-2010
@@ -268,7 +268,7 @@ nodes:
     respelling: soo-PEER-ee-er lon-jih-TOO-dih-nul fuh-SIK-yoo-lus
   text:
     child: Three bundles stacked like shelves under my top surface, linking where-things-are areas at the back with action and planning areas at the front.
-    curious: It comes in three tiers. The top tier joins the superior parietal lobule and precuneus with the supplementary motor, dorsal premotor and prefrontal cortex. The middle tier joins the angular gyrus region with dorsolateral prefrontal cortex. The lowest joins the supramarginal gyrus with ventral premotor cortex and the pars opercularis. Right-sided damage is linked to neglect, left-sided damage to apraxia and speech problems.
+    curious: This bundle has three levels. The upper level links the precuneus and superior parietal lobule to supplementary motor, dorsal premotor and prefrontal areas. The middle level connects the area around the angular gyrus to dorsolateral prefrontal cortex. The bottom level ties the supramarginal gyrus to the pars opercularis and ventral premotor cortex. Damage on the right is associated with neglect; on the left, with apraxia and difficulties with speech.
   notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. SLF I, II and III are held as one tract node. A single study (Thiebaut de Schotten et al. 2011) linked right-sided SLF II lateralization to a visuospatial attention bias.'
   provenance:
     sources:
@@ -310,7 +310,7 @@ nodes:
     respelling: SING-gyoo-lum bundle
   text:
     child: A long bundle tucked inside my cingulate belt, joining my front to memory areas on the inner side of my temporal lobe.
-    curious: Running inside the cingulate gyrus, the cingulum stretches from frontal cortex under the front of the corpus callosum back to the parahippocampal and entorhinal cortex, with branches to the precuneus and medial prefrontal cortex. It supports attention, emotion regulation and memory and forms part of the extended Papez circuit.
+    curious: The cingulum travels within the cingulate gyrus. It reaches from frontal cortex beneath the forward end of the corpus callosum back as far as entorhinal and parahippocampal cortex, sending branches to medial prefrontal cortex and the precuneus. It helps with memory, attention and regulating emotion, and belongs to the extended Papez circuit.
   notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via.'
   provenance:
     sources:
@@ -352,7 +352,7 @@ nodes:
   text:
     child: One of my longest bundles, running from the seeing areas at my back all the way to my front.
     curious: 'In humans it links occipital, fusiform and posterior temporal cortex with frontal areas, passing through the extreme and external capsules. It may support meaning and reading: stimulating it during surgery can cause meaning errors. Tracing studies in monkeys disagree about whether they have the same direct bundle, so its story is unresolved.'
-  notes: 'Endpoint convention: bidirectional bundle; the source lists endpoints without direction, so the posterior end is recorded as origin, the anterior end as termination and waypoints as via. Debated: macaque tract-tracing (Schmahmann and Pandya) found no direct fronto-occipital bundle and described an extreme capsule fasciculus instead; some later monkey work reports a candidate homologue. Present as a human pathway whose monkey equivalent is still debated.'
+  notes: 'Endpoint convention: two-way bundle with undirected source endpoints; back end logged as origin, front end as termination, waypoints as via. Debated: macaque tract-tracing by Schmahmann and Pandya showed no direct fronto-occipital bundle, reporting an extreme capsule fasciculus instead; later monkey work offers a possible homologue. Describe it as a human pathway, monkey counterpart still unsettled.'
   provenance:
     sources:
     - source:catani-2012-b
@@ -371,7 +371,7 @@ nodes:
     respelling: frontal uh-SLANT
   text:
     child: A short, sloping bundle that helps you start talking by linking my top-middle movement area to my speech area.
-    curious: It runs at a slant from the supplementary motor area and pre-SMA down to the pars opercularis of Broca's area. It supports starting speech and verbal fluency; damage contributes to reduced fluency and stutter-like signs in the temporary SMA syndrome that can follow surgery.
+    curious: This tract slopes downward from the pre-SMA and supplementary motor area to the pars opercularis, part of Broca's area. It helps launch speech and supports verbal fluency. In the short-lived SMA syndrome that may appear after surgery, injury to this tract contributes to less fluent speech and stutter-like signs.
   notes: 'Endpoint convention: source gives no direction; the SMA end is recorded as origin and the Broca''s end as termination.'
   provenance:
     sources:
@@ -454,7 +454,7 @@ nodes:
     - source:kandel-pns
     - source:purves-neuroscience
     - source:nolte-human-brain
-  notes: 'Endpoint convention: commissural fibres join matching areas of both hemispheres; endpoints recorded as termination. Parts front to back: rostrum, genu, body, splenium; forceps minor (front) and forceps major (back).'
+  notes: 'Endpoint convention: commissural fibres link corresponding areas in the two hemispheres, so endpoints are logged as termination. Sections, anterior to posterior: rostrum, genu, body, splenium. The forceps minor lies at the front and the forceps major at the back.'
   provenance:
     sources:
     - source:aboitiz-1992
@@ -610,7 +610,7 @@ nodes:
     respelling: cerebellar peh-DUNG-kulz
   text:
     child: Thick stalks on each side that plug my little brain into my brain stem, so news can flow in and orders can flow out.
-    curious: 'The superior peduncle is mainly output: from the dentate nucleus it crosses in the midbrain to the red nucleus and thalamus. The middle peduncle, the largest, is all input from the pontine nuclei to the opposite cerebellar half. The inferior peduncle brings input from the spinal cord, inferior olive and vestibular nuclei through the medulla. Damage causes unsteadiness, overshooting and tremor when reaching.'
+    curious: The superior peduncle carries mostly outgoing fibres, which leave the dentate nucleus, cross over in the midbrain and head for the red nucleus and thalamus. The middle peduncle, the largest one, is purely incoming, bringing fibres from the pontine nuclei to the cerebellar half on the other side. The inferior peduncle, via the medulla, delivers signals from the vestibular nuclei, inferior olive and spinal cord. Injury produces unsteadiness, overshoot and tremor on reaching.
   notes: Superior, middle and inferior peduncles held as one tract node; endpoints labelled per peduncle direction.
   provenance:
     sources:
@@ -739,7 +739,7 @@ nodes:
   text:
     child: A loop from my thinking surface to my little brain and back, checking each move and nudging it on target.
     curious: Cortical areas send signals through the cerebral peduncle to the pontine nuclei, which cross into the opposite cerebellar half. Purkinje cells shape the output of the dentate nucleus, which crosses back to the thalamus and on to motor and prefrontal cortex. Because the loop crosses twice, each cerebellar half works with the same side of the body.
-  notes: Climbing fibres from the inferior olive also reach Purkinje cells. Lesions cause ataxia and dysmetria; posterior-lobe lesions can add the cerebellar cognitive affective syndrome (Schmahmann and Sherman 1998).
+  notes: Purkinje cells also receive climbing fibres arising in the inferior olive. Damage produces ataxia and dysmetria, and lesions of the posterior lobe may bring the cerebellar cognitive affective syndrome as well (Schmahmann and Sherman 1998).
   provenance:
     sources:
     - source:kandel-pns
@@ -819,8 +819,8 @@ nodes:
     kind: common
   text:
     child: A dopamine pathway from my midbrain that fires up when something turns out better than you expected.
-    curious: Dopamine cells in the ventral tegmental area send fibres to the nucleus accumbens, amygdala and hippocampus (the mesolimbic part) and to prefrontal, orbitofrontal and anterior cingulate cortex (the mesocortical part). They fire for unexpected rewards, shift to cues that predict reward, and dip when an expected reward fails to arrive, matching a learning rule from computer science.
-  notes: 'Includes the mesocortical branch. Reward prediction error: Schultz, Dayan and Montague 1997, matching temporal-difference learning.'
+    curious: Dopamine neurons in the ventral tegmental area project to the nucleus accumbens, hippocampus and amygdala, forming the mesolimbic branch, and to anterior cingulate, orbitofrontal and prefrontal cortex, forming the mesocortical branch. These cells burst when a reward comes as a surprise, move their response to cues that signal reward is coming, and dip when a reward they were counting on never shows up. That pattern fits a learning rule borrowed from computer science.
+  notes: The mesocortical branch is included here. For reward prediction error, cite Schultz, Dayan and Montague (1997), who linked it to temporal-difference learning.
   provenance:
     sources:
     - source:kandel-pns
@@ -855,8 +855,8 @@ nodes:
   summary: A three-synapse chain from entorhinal cortex to dentate gyrus to CA3 to CA1, with output through the subiculum back to entorhinal cortex, that supports memory for events and places.
   text:
     child: A chain of three linked hand-offs inside my hippocampus, where new memories of places and events take shape.
-    curious: Entorhinal cortex sends the perforant path to dentate gyrus granule cells; mossy fibres carry the signal to CA3, which also excites itself; Schaffer collaterals pass it to CA1, which sends output through the subiculum back to entorhinal cortex. Long-term potentiation was first described at the perforant path in 1973. Alzheimer's changes begin in this region.
-  notes: Dentate gyrus, CA3, CA1 and subiculum are not registry structures, so the chain is collapsed to structure:hippocampus at order 2; see requests. A direct path also runs from entorhinal layer III to CA1. Pattern separation (dentate) and completion (CA3) are computational models.
+    curious: The loop starts when entorhinal cortex projects via the perforant path onto granule cells of the dentate gyrus. Mossy fibres then relay the message to CA3, whose cells also excite one another. Schaffer collaterals hand it on to CA1, and CA1 returns output to entorhinal cortex by way of the subiculum. Long-term potentiation was first reported at perforant path synapses in 1973. This is where Alzheimer's changes first appear.
+  notes: Because the registry lacks dentate gyrus, CA3, CA1 and subiculum, the chain is collapsed into structure:hippocampus at order 2 (see requests). Entorhinal layer III also projects directly to CA1. Pattern separation in the dentate and pattern completion in CA3 are computational models.
   provenance:
     sources:
     - source:kandel-pns
@@ -889,7 +889,7 @@ nodes:
   summary: Networks that make rhythmic output without needing rhythmic input, such as spinal circuits for stepping and the pre-Bötzinger complex for breathing, switched on and refined by midbrain, cortex and cerebellum.
   text:
     child: Built-in rhythm makers in my brain stem and your spinal cord that keep you breathing and stepping without any thinking.
-    curious: Networks of spinal interneurons can produce the alternating rhythm of walking, an idea modelled as two half-centres in 1911. A region of the midbrain switches walking on, while cortex and cerebellum refine it. For breathing, the pre-Bötzinger complex in the medulla generates each breath in; opioids depress it, which is how an overdose can stop breathing.
+    curious: 'Circuits of interneurons in the spinal cord can create the alternating rhythm of walking; in 1911 this was modelled as a pair of half-centres. A midbrain region turns walking on, and the cerebellum and cortex fine-tune it. Breathing has its own generator: the medulla''s pre-Bötzinger complex sets off every inhalation. Opioids suppress this complex, which explains how an overdose can halt breathing.'
   notes: Mechanism only. Failure includes central apnoea and congenital central hypoventilation syndrome (PHOX2B).
   provenance:
     sources:
@@ -944,7 +944,7 @@ nodes:
 - id: circuit:hpa-axis
   class: Circuit
   label: HPA Axis
-  summary: A hormone chain in which the hypothalamus releases CRH and vasopressin, the anterior pituitary releases ACTH and the adrenal cortex releases cortisol, which feeds back to damp the system.
+  summary: 'A relay of hormones: CRH and vasopressin from the hypothalamus, then ACTH from the anterior pituitary, then cortisol from the adrenal cortex. Cortisol loops back to quiet the whole system.'
   aliases:
   - text: HPA stress axis
     kind: common
@@ -952,7 +952,7 @@ nodes:
     kind: common
   text:
     child: My stress-hormone chain. My hypothalamus nudges the gland just below me, which signals your adrenal glands to release cortisol.
-    curious: Under stress, the paraventricular nucleus of the hypothalamus releases CRH and vasopressin, the anterior pituitary releases ACTH, and the adrenal cortex releases cortisol. Cortisol then feeds back on the hippocampus, prefrontal cortex, hypothalamus and pituitary. The amygdala pushes the axis on, while the hippocampus and medial prefrontal cortex hold it back.
+    curious: When stress hits, the hypothalamus sends out CRH and vasopressin from its paraventricular nucleus; then the anterior pituitary secretes ACTH, and the adrenal cortex in turn produces cortisol. Cortisol acts back on the pituitary, hypothalamus, prefrontal cortex and hippocampus. The amygdala drives the axis harder, whereas the medial prefrontal cortex and hippocampus rein it in.
   notes: The adrenal cortex (order 3) is outside the modelled brain and not a registry structure (see requests).
   provenance:
     sources:
@@ -1479,23 +1479,6 @@ assertions:
     sources:
     - source:yeo-2011
     locator: R2 E4 Yeo 7 and 17 networks, row 18
-    license: own
-    method: ai_extracted
-    assertedBy: extractor:claude
-    assertedOn: 2026-10-02
-    status: proposed
-- id: assert:region-19--member-of--visual
-  predicate: MEMBER_OF
-  subject: region:19
-  object: network:visual
-  props:
-    role: node
-    confidence: approximate
-  provenance:
-    sources:
-    - source:yeo-2011
-    - source:buckner-2011
-    locator: R2 E4 Yeo 7 and 17 networks, row 19 (all 7 represented); R1 §1.19 Cerebellum (Cognitive and affective roles)
     license: own
     method: ai_extracted
     assertedBy: extractor:claude
@@ -5188,3 +5171,6 @@ openQuestions:
 - claim: Unnumbered tract endpoints.
   locator: R2 A8, A10
   reason: MdLF 'occipital cortex' and the splenium's 'parts of the temporal lobe' have no region numbers in the source; omitted rather than guessed.
+- claim: region:19 MEMBER_OF network:visual
+  locator: R2 E4 row 19
+  reason: R2 says all 7 Yeo networks are represented in the cerebellum (Buckner 2011), but Buckner 2011 itself reports that primary visual cortex is not represented there. Held back until checked.

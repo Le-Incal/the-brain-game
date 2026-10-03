@@ -1402,7 +1402,7 @@ nodes:
     respelling: IN-suh-luh
   text:
     child: Cortex tucked out of sight in my side groove. It keeps track of how your insides feel and helps you taste.
-    curious: The insula is cortex hidden deep in the lateral fissure, covered by the lips of the surrounding lobes. It handles awareness of the body's inner state, taste, pain, disgust and emotional awareness, and its front part helps flag what matters right now. Many texts count it as a fifth lobe.
+    curious: Tucked away inside the lateral fissure, the insula is a patch of cortex concealed beneath folds of the neighbouring lobes. It tracks how your body feels from the inside, and it takes part in taste, pain, disgust and emotional awareness. Its forward portion helps signal what deserves attention in the moment. Many textbooks treat it as a fifth lobe.
   provenance:
     sources:
     - source:kandel-pns
@@ -3970,7 +3970,7 @@ nodes:
     respelling: hip-oh-KAM-pus
   text:
     child: A curled, seahorse-shaped part deep in my temporal lobe. It saves new memories of what happens to you and helps you navigate.
-    curious: The hippocampus curls along the inner wall of each temporal lobe. It is needed to form new memories of events and facts, and its place cells, with grid cells next door in the entorhinal cortex, help you navigate. Patient H.M. could no longer form new memories of events and facts after both medial temporal lobes were removed, yet he still learned motor skills. Whether adults grow new neurons here is still debated.
+    curious: Each temporal lobe has a hippocampus curled along its inner side. You rely on it to lay down fresh memories of facts and experiences, and its place cells, working with grid cells in the neighbouring entorhinal cortex, help you find your way. After surgeons removed both of his medial temporal lobes, patient H.M. lost the ability to store new facts and experiences, yet he could still pick up motor skills. Whether adults add new neurons here remains debated.
   provenance:
     sources:
     - source:kandel-pns
@@ -7457,6 +7457,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Pointing convention, not anatomy: the structure is deep and central; this is the nearest painted landmark for the guide to face. Steward to confirm.'
 - id: assert:thalamus--lies-beneath--region-20
   predicate: LIES_BENEATH
   subject: structure:thalamus
@@ -7474,6 +7475,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Pointing convention, not anatomy: the structure is deep and central; this is the nearest painted landmark for the guide to face. Steward to confirm.'
 - id: assert:hypothalamus--lies-beneath--region-20
   predicate: LIES_BENEATH
   subject: structure:hypothalamus
@@ -7491,6 +7493,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
+    reviewNote: 'Pointing convention, not anatomy: the structure is deep and central; this is the nearest painted landmark for the guide to face. Steward to confirm.'
 - id: assert:limbic-system--lies-beneath--region-16
   predicate: LIES_BENEATH
   subject: structure:limbic-system
@@ -7529,7 +7532,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-    reviewNote: Sources describe this structure but do not name the painted region above it; region anchor and hint chosen by the extractor and need steward review.
+    reviewNote: 'Sources describe this structure but do not name the painted region above it; region anchor and hint chosen by the extractor and need steward review. Pointing convention, not anatomy: the structure is deep and central; this is the nearest painted landmark for the guide to face. Steward to confirm.'
 - id: assert:lateral-ventricle--lies-beneath--region-16
   predicate: LIES_BENEATH
   subject: structure:lateral-ventricle
@@ -7567,7 +7570,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-    reviewNote: Sources describe this structure but do not name the painted region above it; region anchor and hint chosen by the extractor and need steward review.
+    reviewNote: 'Sources describe this structure but do not name the painted region above it; region anchor and hint chosen by the extractor and need steward review. Pointing convention, not anatomy: the structure is deep and central; this is the nearest painted landmark for the guide to face. Steward to confirm.'
 - id: assert:fourth-ventricle--lies-beneath--region-20
   predicate: LIES_BENEATH
   subject: structure:fourth-ventricle
@@ -8412,7 +8415,7 @@ assertions:
     assertedBy: extractor:claude
     assertedOn: 2026-10-02
     status: proposed
-  debateNote: R1 notes the SPL lies near the ACA and PCA border zones, so it is vulnerable in watershed strokes.
+  debateNote: Per R1, the SPL sits close to where ACA and PCA territories meet, which leaves it at risk in watershed strokes.
 - id: assert:region-9--supplied-by--middle-cerebral
   predicate: SUPPLIED_BY
   subject: region:9
