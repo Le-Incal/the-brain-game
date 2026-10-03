@@ -25,17 +25,17 @@ describe('steward review sheet', () => {
     expect(r.filter((x) => x.conflict).map((x) => x.id).sort()).toEqual(['assert:speech-production--region-5', 'assert:speech-production--region-5--alt']);
   });
   it('imports decisions without mutating the input, and only approved facts compile', () => {
-    const decided = rows.map((r) => ({ ...r, decision: r.id === 'assert:movement--region-5' ? 'reject' : 'approve' }));
+    const decided = rows.map((r) => ({ ...r, decision: r.id === 'assert:region-5--adjacent--region-7' ? 'reject' : 'approve' }));
     const out = toCsv(decided);
     const before = JSON.stringify(valid);
     const next = importReview(valid, out, { steward: 'steward:kyle', on: '2026-10-03' });
     expect(JSON.stringify(valid)).toBe(before);
     const fusiform = next.assertions.find((a) => a.id === 'assert:fusiform--part-of--region-14');
     expect(fusiform.provenance).toMatchObject({ status: 'approved', approvedBy: 'steward:kyle', approvedOn: '2026-10-03' });
-    expect(next.assertions.find((a) => a.id === 'assert:movement--region-5').provenance.status).toBe('rejected');
+    expect(next.assertions.find((a) => a.id === 'assert:region-5--adjacent--region-7').provenance.status).toBe('rejected');
     const g = compile(next, { sor, builtAt: 'x', dataVersion: 'x' });
     expect(g.edges.some((e) => e.id === 'assert:fusiform--part-of--region-14')).toBe(true);
-    expect(g.edges.some((e) => e.id === 'assert:movement--region-5')).toBe(false);
+    expect(g.edges.some((e) => e.id === 'assert:region-5--adjacent--region-7')).toBe(false);
   });
   it('rejects unknown decisions instead of guessing', () => {
     const bad = toCsv(rows.map((r, i) => ({ ...r, decision: i === 0 ? 'maybe' : '' })));

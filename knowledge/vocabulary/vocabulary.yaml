@@ -28,10 +28,10 @@ structureKind:
   - tissue           # grey matter, white matter, choroid plexus
 
 tractKind: [association, commissural, projection]
-cellKind: [neuron, glia, progenitor]
+cellKind: [neuron, glia, progenitor, receptor_cell, vascular_cell]
 moleculeKind: [neurotransmitter, neuromodulator, neuropeptide, receptor, ion_channel, transporter, hormone, protein]
 processKind: [signalling, plasticity, development, maintenance, homeostasis]
-conditionKind: [neurodegenerative, vascular, seizure, injury, tumour, developmental, syndrome, infectious]
+conditionKind: [neurodegenerative, vascular, seizure, injury, tumour, developmental, syndrome, infectious, demyelinating, csf_disorder, cranial_nerve_disorder, genetic]
 networkRole: [hub, node]
 endpoint: [origin, termination, via]
 confidence: [established, approximate, debated]
@@ -44,6 +44,7 @@ method: [human, ai_extracted, derived]
 audience: [all, teen, adult]
 aliasKind: [common, abbreviation, historical, spoken, misnomer]
 register: [child, curious, expert]
+coverageGate: [functions, primary, networks, structures]
 viewId: [left_lateral, right_lateral, anterior, posterior, superior, inferior]
 license:
   - own                  # our paraphrase of cited facts

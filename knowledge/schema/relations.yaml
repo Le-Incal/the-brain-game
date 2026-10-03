@@ -42,11 +42,11 @@ relations:
   PRODUCED_IN:     { domain: [Molecule], range: [Structure, Region] }
   PARTICIPATES_IN: { domain: [Structure, Region, CellType, Molecule], range: [Process] }
   SUPPLIED_BY:     { domain: [Region, Structure], range: [Artery], props: { portion: { type: string } } }
-  AFFECTS:         { domain: [Condition], range: [Region, Structure, CellType] }
+  AFFECTS:         { domain: [Condition], range: [Region, Structure, CellType], props: { lateralization: { type: vocab:lateralization } } }
   IMPAIRS:         { domain: [Condition], range: [Function], props: { sign: { type: string, required: true, maxWords: 25 } } }
   DESCRIBED:       { domain: [Person], range: [any], props: { year: { type: year, required: true } } }
   NAMED_AFTER:     { domain: [Region, Structure, Phenomenon, Condition, Guide], range: [Person] }
-  DEBUNKS:         { domain: [Assertion], range: [Myth] }
+  DEBUNKS:         { domain: [Assertion, any], range: [Myth] }   # an approved assertion, or a node whose sourced fact (e.g. a quantity) corrects the myth
   CONTESTS:        { domain: [Assertion], range: [Assertion] }
   ANCHORED_ON:     { domain: [Guide], range: [Structure], requiresSources: false }
   EXPRESSES:       { domain: [Word], range: [Function, Phenomenon, Condition], requiresSources: false }

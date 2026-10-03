@@ -1,3 +1,3 @@
 code: UNKNOWN_TERM
-why: "buried" is not a visibility term.
+why: The word buried is not a visibility term.
 patch: [ { op: set, id: structure:hippocampus, path: visibility, value: buried } ]

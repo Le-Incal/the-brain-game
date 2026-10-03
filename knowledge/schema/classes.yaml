@@ -25,6 +25,7 @@ classes:
     synthesized: src/data/brainRegions.json
     labelRequired: false
     requiresSources: false
+    optional: { coverageExemptions: list<vocab:coverageGate> }
     forbidden: [label, name, description, clickDescription, subtitle, factoid, hex, hemisphere, division, divisionId, text]
 
   Division:
@@ -42,7 +43,7 @@ classes:
 
   Structure:
     required: { kind: vocab:structureKind, visibility: vocab:visibility }
-    optional: { lateralization: vocab:lateralization }
+    optional: { lateralization: vocab:lateralization, diffuse: bool }   # diffuse: everywhere (white matter, BBB), so no single region to point at
 
   Function:
     required: { plainDefinition: string }
@@ -81,8 +82,8 @@ classes:
     required: { statement: string, correction: Text }
 
   Person:
-    required: { born: year, died: nullable<year> }
-    optional: { statusCheckedOn: date, knownFor: string }
+    required: { living: bool }
+    optional: { born: year, died: year, statusCheckedOn: date, knownFor: string }   # statusCheckedOn required when living
 
   Source:
     required: { type: string, citation: string, license: vocab:license }

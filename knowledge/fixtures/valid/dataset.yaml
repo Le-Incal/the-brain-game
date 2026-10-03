@@ -190,6 +190,11 @@ nodes:
     label: Episodic Memory
     plainDefinition: "Remembering events from your own life."
     provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
+  - id: function:working-memory
+    class: Function
+    label: Working Memory
+    plainDefinition: "Holding and using information for a few seconds."
+    provenance: { <<: *prov, sources: [source:kandel-pns-6e] }
   - id: function:movement
     class: Function
     label: Voluntary Movement
@@ -279,6 +284,7 @@ nodes:
   - id: person:paul-broca
     class: Person
     label: Paul Broca
+    living: false
     born: 1824
     died: 1880
     pronunciation: { respelling: BROH-kuh }
@@ -286,19 +292,21 @@ nodes:
   - id: person:brenda-milner
     class: Person
     label: Brenda Milner
+    living: true
     born: 1918
-    died: null
     statusCheckedOn: 2026-10-02
     provenance: { <<: *prov, sources: [source:mcgill-neuropsych-day-2026] }
   - id: person:franciscus-sylvius
     class: Person
     label: Franciscus Sylvius
+    living: false
     born: 1614
     died: 1672
     provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
   - id: person:luigi-rolando
     class: Person
     label: Luigi Rolando
+    living: false
     born: 1773
     died: 1831
     provenance: { <<: *prov, sources: [source:nolte-human-brain-7e] }
@@ -341,6 +349,9 @@ assertions:
   - { id: assert:face-recognition--fusiform, predicate: SUPPORTED_BY, subject: function:face-recognition, object: structure:fusiform-gyrus, props: { role: primary, evidence: [lesion, stimulation, imaging], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
   - { id: assert:episodic-memory--hippocampus, predicate: SUPPORTED_BY, subject: function:episodic-memory, object: structure:hippocampus, props: { role: primary, evidence: [lesion], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:scoville-milner-1957] } }
   - { id: assert:episodic-memory--region-10, predicate: SUPPORTED_BY, subject: function:episodic-memory, object: region:10, props: { role: contributing, evidence: [imaging], lateralization: bilateral, confidence: approximate }, provenance: { <<: *prov, sources: [source:raichle-2001] } }
+  - { id: assert:working-memory--region-6, predicate: SUPPORTED_BY, subject: function:working-memory, object: region:6, props: { role: contributing, evidence: [imaging], lateralization: left, confidence: approximate }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:working-memory--region-1, predicate: SUPPORTED_BY, subject: function:working-memory, object: region:1, props: { role: primary, evidence: [lesion, imaging], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
+  - { id: assert:region-6--default-mode, predicate: MEMBER_OF, subject: region:6, object: network:default-mode, props: { role: node, confidence: approximate }, provenance: { <<: *prov, sources: [source:yeo-2011] } }
   - { id: assert:movement--region-5, predicate: SUPPORTED_BY, subject: function:movement, object: region:5, props: { role: primary, evidence: [lesion, stimulation], lateralization: bilateral, confidence: established }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
   - { id: assert:phantom-limb--region-7, predicate: EXPLAINED_BY, subject: phenomenon:phantom-limb, object: region:7, props: { confidence: approximate }, provenance: { <<: *prov, sources: [source:kandel-pns-6e] } }
   - { id: assert:region-10--default-mode, predicate: MEMBER_OF, subject: region:10, object: network:default-mode, props: { role: hub, confidence: approximate }, provenance: { <<: *prov, sources: [source:yeo-2011, source:raichle-2001] } }
