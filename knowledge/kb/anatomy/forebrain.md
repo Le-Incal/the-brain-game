@@ -2,7 +2,7 @@
 kb_id: anatomy.forebrain
 title: The Forebrain
 kind: structure
-game_regions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18]
+game_regions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 visible_on_model: partly
 sources:
   - "QBI, Forebrain. https://qbi.uq.edu.au/brain/brain-anatomy/forebrain"

@@ -32,7 +32,7 @@ Three tracks. Only Track A needs code from you next.
 
 On that branch: **237 tests pass** (the original 99 plus 138 for the knowledge base), `npm run kb -- validate` reports **0 errors**, all **40 competency questions** pass, and every region meets its coverage gate. It adds `knowledge/`, `scripts/kb.mjs`, the `yaml` dev dependency, an `npm run kb` script and a `knowledge/build/` line in `.gitignore`.
 
-**ElevenLabs:** the agent is configured to match `agent/architect-brief.md`: system prompt, first message, 9 client tools with mocks, timeouts of 8 s, pre-tool speech off. It still uses the retired name "The Specimen". Kyle will set up two voices (Sylvi, female; Rollo, male) and players choose one. The `log_knowledge_gap` webhook is deferred until the server exists (M3).
+**ElevenLabs:** the agent is configured to match `agent/architect-brief.md`: system prompt, first message, 9 client tools with mocks, timeouts of 8 s, pre-tool speech off. As of 2026-10-04 it has two guides with one British voice each (Rollo the default), the `guide_name` dynamic variable, the Voice ID override, and the 21 kb files attached with RAG on; see `docs/claude/VOICE_CONFIG_UPDATE.md` for the live state and the decisions behind it. The `log_knowledge_gap` webhook is deferred until the server exists (M3).
 
 ## 3. Locked decisions
 
@@ -92,6 +92,7 @@ Later milestones (from `VOICE_LAYER_PLAN.md`): M2 Study mode and the `uVoiceLeve
 |---|---|
 | Rules and orientation | `CLAUDE.md`, `.cursorrules`, `docs/claude/BRAIN_GAME_PROJECT_INSTRUCTIONS.md` |
 | M1 spec and test list | `docs/claude/VOICE_M1_HANDOFF.md` |
+| Live ElevenLabs agent, guide voices and their decisions | `docs/claude/VOICE_CONFIG_UPDATE.md` |
 | Voice architecture and milestones | `docs/claude/VOICE_LAYER_PLAN.md` |
 | Agent persona, tools, acceptance conversations | `agent/architect-brief.md` |
 | Code M1 touches | `src/utils/orbitControls.js` (+ its tests), `src/utils/brainScene.js`, `src/data/regions.js`, `src/data/brainRegions.json`, `src/data/regionGeometry.json`, `src/data/viewsTaxonomy.json`, `scripts/generate-region-geometry.py` |
@@ -107,7 +108,7 @@ Later milestones (from `VOICE_LAYER_PLAN.md`): M2 Study mode and the `uVoiceLeve
 2. **Pointing choices without a source:** thalamus and hypothalamus point to region 20, basal ganglia to 12, secondary somatosensory cortex to 7.
 3. **Word bank:** 16 words accept alternate regions that no source supports. Tighten or keep?
 4. **Region 8 name:** currently the default, Somatosensory Association Cortex.
-5. **Sylvi and Rollo:** rename the ElevenLabs agent and `agent/architect-brief.md` from "The Specimen"; set up both voices; decide one prompt with name and voice as variables (recommended) or two agents.
+5. ~~**Sylvi and Rollo**~~ **Resolved 2026-10-04:** one agent, one prompt with `guide_name`, one British voice per guide, Rollo the default. Recorded in `docs/claude/VOICE_CONFIG_UPDATE.md`, whose section 6 holds the follow-up questions.
 6. **Voice quotas:** 8-minute sessions and a 15-minute daily cap behind an access code, or public?
 7. **Pronunciation dictionary:** listen to `knowledge/build/pronunciations.pls` through ElevenLabs before relying on it.
 
