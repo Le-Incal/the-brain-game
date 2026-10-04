@@ -6,6 +6,7 @@
  * - Grab-and-drag: the surface follows the pointer in screen space
  * - Scroll to zoom
  * - Auto-rotation stops on first interaction
+ * - Programmatic eased moves (voice guide) that any grab cancels instantly
  */
 
 import * as THREE from 'three';
@@ -55,6 +56,12 @@ export function projectTrackballVector(x, y, target) {
   return target.set(x, y, z).normalize();
 }
 
+export const DEFAULT_MOVE_DURATION_MS = 1200;
+
+export function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export class BrainOrbitControls {
   constructor(camera, domElement, options = {}) {
     this.camera = camera;
@@ -102,6 +109,11 @@ export class BrainOrbitControls {
     this._worldUp = new THREE.Vector3(0, 1, 0);
     this._autoRotation = new THREE.Quaternion();
 
+    // A programmatic move is its own eased tween, separate from the
+    // near-instant pointer smoothing, so drag feel never changes.
+    this._move = null;
+    this._userInputListeners = new Set();
+
     this._pointerDownHandler = this._onPointerDown.bind(this);
     this._pointerMoveHandler = this._onPointerMove.bind(this);
     this._pointerUpHandler = this._onPointerUp.bind(this);
@@ -140,6 +152,9 @@ export class BrainOrbitControls {
     e.preventDefault();
     if (!this.orientGroup || this.activePointerId !== null) return;
 
+    // The player always wins: a grab ends any programmatic move where it is.
+    this._endMove({ completed: false, reason: 'user' });
+
     this.activePointerId = e.pointerId;
     this.domElement.setPointerCapture?.(e.pointerId);
     this.isDragging = true;
@@ -158,6 +173,8 @@ export class BrainOrbitControls {
       this.autoRotate = false;
       if (this._onInteraction) this._onInteraction();
     }
+
+    this._emitUserInput({ type: 'grab', mode: this._dragMode });
   }
 
   _onPointerMove(e) {
@@ -206,19 +223,18 @@ export class BrainOrbitControls {
     this.isDragging = false;
     const completedMode = this._dragMode;
     this._dragMode = null;
-    if (
-      completedMode === 'rotate' &&
-      this._onClick &&
+    const wasClick =
       this._maxPointerDistanceSquared <= 25 &&
       isClickGesture(
         this._pointerStartX,
         this._pointerStartY,
         e.clientX,
         e.clientY
-      )
-    ) {
+      );
+    if (completedMode === 'rotate' && this._onClick && wasClick) {
       this._onClick(e);
     }
+    this._emitUserInput({ type: 'release', mode: completedMode, wasClick });
   }
 
   _onWheel(e) {
@@ -236,12 +252,70 @@ export class BrainOrbitControls {
     }
   }
 
+  get isMoving() {
+    return this._move !== null;
+  }
+
+  /**
+   * Eases the specimen to `quaternion` over about 1.2 s. Resolves
+   * { completed: true } on arrival, or { completed: false, reason } when a grab
+   * ('user') or a later move ('superseded') cuts it short. Auto-rotate pauses
+   * only while the move runs and is never switched off by it.
+   */
+  moveTo(quaternion, { durationMs = DEFAULT_MOVE_DURATION_MS } = {}) {
+    this._endMove({ completed: false, reason: 'superseded' });
+    if (!this.orientGroup) return Promise.resolve({ completed: false, reason: 'no-specimen' });
+
+    return new Promise((resolve) => {
+      this._move = {
+        from: this.orientGroup.quaternion.clone(),
+        to: quaternion.clone().normalize(),
+        startedAt: performance.now(),
+        durationMs: Math.max(1, durationMs),
+        resolve,
+      };
+    });
+  }
+
+  /** Observes the player taking hold (grab) and letting go (release). */
+  subscribeUserInput(listener) {
+    this._userInputListeners.add(listener);
+    return () => this._userInputListeners.delete(listener);
+  }
+
+  _emitUserInput(event) {
+    this._userInputListeners.forEach((listener) => listener(event));
+  }
+
+  _endMove(outcome) {
+    if (!this._move) return;
+    const { resolve } = this._move;
+    this._move = null;
+    this.targetQuaternion.copy(this.orientGroup.quaternion);
+    resolve(outcome);
+  }
+
+  _stepMove(now) {
+    const move = this._move;
+    const progress = Math.min(1, (now - move.startedAt) / move.durationMs);
+    this.orientGroup.quaternion
+      .slerpQuaternions(move.from, move.to, easeInOutCubic(progress))
+      .normalize();
+    this.targetQuaternion.copy(this.orientGroup.quaternion);
+    if (progress >= 1) this._endMove({ completed: true });
+  }
+
   update() {
     if (!this.orientGroup) return;
 
     const now = performance.now();
     const deltaSeconds = Math.min((now - this._lastUpdateTime) / 1000, 0.05);
     this._lastUpdateTime = now;
+
+    if (this._move) {
+      this._stepMove(now);
+      return;
+    }
 
     if (this.autoRotate) {
       this._autoRotation.setFromAxisAngle(
@@ -267,6 +341,8 @@ export class BrainOrbitControls {
   }
 
   dispose() {
+    this._endMove({ completed: false, reason: 'disposed' });
+    this._userInputListeners.clear();
     const el = this.domElement;
     el.removeEventListener('pointerdown', this._pointerDownHandler);
     el.removeEventListener('pointermove', this._pointerMoveHandler);

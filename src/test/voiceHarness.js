@@ -59,6 +59,9 @@ export function createControls(options = {}) {
     autoRotate: false,
     ...options,
   });
+  // The renderer refreshes the camera's world matrices every frame; without
+  // this the trackball projects the pivot from a stale, identity view.
+  camera.updateMatrixWorld();
   return { camera, orientGroup, element, controls };
 }
 
