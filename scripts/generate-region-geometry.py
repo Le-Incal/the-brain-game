@@ -160,6 +160,19 @@ def main():
             "divisionId": int(np.bincount(divisions).argmax()),
             "meanX": round(float(points[:, 0].mean()), 4),
         }
+        # A bilateral region's centroid averages both hemispheres and sits near
+        # the midline, which points the wrong way when the guide faces a lateral
+        # region. Each hemisphere gets its own (+x is anatomical left). Regions
+        # painted on the left only get no right centroid at all.
+        hemispheres = [("centroidLeft", points[:, 0] > 0)]
+        if region["hemisphere"] != "left":
+            hemispheres.append(("centroidRight", points[:, 0] < 0))
+        for key, side in hemispheres:
+            if not side.any():
+                raise ValueError(f"Region {region_id} has no vertices for {key}")
+            geometry[str(region_id)][key] = [
+                round(float(value), 4) for value in points[side].mean(axis=0)
+            ]
 
     labels_per_view = {}
     for view, direction in CANONICAL_VIEWS.items():
