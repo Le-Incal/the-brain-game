@@ -89,6 +89,11 @@ Write these first. Run them and confirm the new ones fail. R1 to R3 should pass 
 14. `lookupRegion({ regionId: 6 })` returns the exact shape; `{ name: "broca's area" }` resolves to 6; `{ name: 'the little brain' }` resolves to 19 (subtitle match); unknown returns `ok: false`.
 15. `listRegions()` matches `brainRegions.json` divisions and ids exactly.
 16b. The player can take hold at any time (Kyle, 2026-10-03). Motion stops at once; the conversation does not. `createSceneCommands(adapter, { onUserInteraction })` reports `{ type: 'grab', interrupted }` and `{ type: 'release', view, viewExact }`. `interrupted` bookmarks the cancelled move (`{ command: 'faceRegion', regionId, hemisphere }` or `{ command: 'rotateTo', view }`) and stays in `getSceneState().interrupted` until a later move completes. While the player holds the brain, `faceRegion` and `rotateTo` return `ok: false` (reason says the player is holding it); highlight, lookup, list and state still work. `getSceneState` adds `userHolding` and `interrupted`.
+16c. Additions after review (Kyle, 2026-10-04):
+- `faceRegion` lights the region it faces: the highlight goes on as the move starts, stays if the player grabs mid-move, and `did` says so. A rejected id changes nothing.
+- Study mode only: when `getMode()` is not `'study'`, `faceRegion`, `rotateTo`, `highlightRegion`, `clearHighlight`, `setColourRegions` and `setAnnotations` return `ok: false` with a reason and change nothing. `lookupRegion`, `listRegions` and `getSceneState` still work.
+- Numeric strings: `faceRegion('6')` and `highlightRegion('6')` behave like `6`; `'2.5'` and `'six'` fail with the valid range.
+- A `faceRegion` or `rotateTo` replaced by a later move resolves `ok: false` with a reason saying it was replaced, not `user`, and leaves no bookmark.
 16. Drift: the `# My regions` block in `agent/architect-brief.md` matches `brainRegions.json` ids and names exactly.
 
 ## Decisions already made

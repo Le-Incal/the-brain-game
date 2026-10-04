@@ -69,7 +69,7 @@ No orb. The brain is the body.
 
 ## Milestones (TDD each: failing tests, commit, implement)
 - M1 Scene commands + orbit tween with drag-cancel. Pure unit tests, no voice.
-- M2 Study mode shell (gamePhase `study`, game paused) + `uVoiceLevel` shader uniform driven by a mock level.
+- M2 Study mode shell (gamePhase `study`, game paused) + `uVoiceLevel` shader uniform driven by a mock level. Includes a test that entering Study mode turns auto-rotate off, so the brain does not drift away from a region the guide just faced; the player's own controls stay unchanged. Also wires the real BrainScene adapter for the M1 scene commands.
 - M3 Express server: login, token mint, quotas, gap webhook. Supertest. Minute caps count per player per day across conversations, so switching guides cannot reset the 8-minute session or 15-minute daily cap.
 - M4 Voice bridge: client tools, normalization, contextual updates. Mocked SDK. Adds the Settings guide picker, the voice-map module (guide to ElevenLabs voice ID), and restarting the conversation on a guide switch.
 - M5 Agent config in repo + 20-question integrity eval script (myths, lateralization, buried regions, out-of-scope).

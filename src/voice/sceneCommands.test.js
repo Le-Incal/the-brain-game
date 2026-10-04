@@ -276,8 +276,8 @@ describe('C13: getSceneState', () => {
       annotations: true,
       mode: 'study',
     });
-    state.mode = 'game';
     commands.clearHighlight();
+    state.mode = 'game';
     expect(commands.getSceneState()).toMatchObject({ highlightedRegion: null, mode: 'game' });
   });
 });
@@ -418,6 +418,124 @@ describe('C17: the player can take hold at any time', () => {
   it('starts with nothing interrupted and nobody holding', () => {
     const { commands } = setup();
     expect(commands.getSceneState()).toMatchObject({ userHolding: false, interrupted: null });
+  });
+});
+
+describe('C18: faceRegion lights the region it faces', () => {
+  it('highlights the region and says so', async () => {
+    const { commands, state, settle } = setup();
+    const result = await settle(commands.faceRegion(6));
+    expect(result.ok).toBe(true);
+    expect(state.highlight).toBe(6);
+    expect(result.did).toMatch(/light|highlight/i);
+  });
+
+  it('turns the light on as the move starts', async () => {
+    const { commands, controls, state } = setup();
+    commands.faceRegion(17);
+    await flushMicrotasks();
+    expect(controls.isMoving).toBe(true);
+    expect(state.highlight).toBe(17);
+  });
+
+  it('keeps the light on when the player grabs mid-move, and says so', async () => {
+    const { commands, controls, element, state } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 500);
+    element.dispatch('pointerdown');
+    const result = await pending;
+    element.dispatch('pointerup');
+    expect(result.ok).toBe(false);
+    expect(state.highlight).toBe(17);
+    expect(result.did).toMatch(/light|highlight/i);
+  });
+
+  it('changes nothing for a rejected id', async () => {
+    const { commands, state, settle } = setup();
+    commands.highlightRegion(3);
+    await settle(commands.faceRegion(99));
+    expect(state.highlight).toBe(3);
+  });
+});
+
+describe('C19: scene commands act only in Study mode', () => {
+  const SCENE_CALLS = [
+    ['faceRegion', (c) => c.faceRegion(6)],
+    ['rotateTo', (c) => c.rotateTo('posterior')],
+    ['highlightRegion', (c) => c.highlightRegion(9)],
+    ['clearHighlight', (c) => c.clearHighlight()],
+    ['setColourRegions', (c) => c.setColourRegions(true)],
+    ['setAnnotations', (c) => c.setAnnotations(true)],
+  ];
+
+  it.each(SCENE_CALLS)('%s refuses outside Study mode and changes nothing', async (_name, call) => {
+    const { commands, controls, state, settle } = setup();
+    commands.highlightRegion(3);
+    state.mode = 'game';
+    const before = controls.orientGroup.quaternion.clone();
+
+    const result = await settle(call(commands));
+    expectResultShape(result);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/study/i);
+    expect(state).toMatchObject({ highlight: 3, colourRegions: false, annotations: false });
+    expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
+  });
+
+  it('still answers lookups, the region list and scene state outside Study mode', () => {
+    const { commands, state } = setup();
+    state.mode = 'game';
+    expect(commands.lookupRegion({ regionId: 6 }).ok).toBe(true);
+    expect(commands.listRegions().ok).toBe(true);
+    expect(commands.getSceneState()).toMatchObject({ ok: true, mode: 'game' });
+  });
+});
+
+describe('C20: numeric strings are read as ids', () => {
+  it("faceRegion('6') behaves like faceRegion(6)", async () => {
+    const { commands, controls, state, settle } = setup();
+    const result = await settle(commands.faceRegion('6'));
+    expect(result.ok).toBe(true);
+    expect(facing(controls, regionGeometry.regions['6'].centroidLeft)).toBeGreaterThan(0.99);
+    expect(state.highlight).toBe(6);
+  });
+
+  it("highlightRegion('6') behaves like highlightRegion(6)", () => {
+    const { commands, state } = setup();
+    expect(commands.highlightRegion('6').ok).toBe(true);
+    expect(state.highlight).toBe(6);
+    expect(commands.getSceneState().highlightedRegion).toBe(6);
+  });
+
+  it.each(['2.5', 'six'])('%j still fails with the valid range', async (value) => {
+    const { commands, controls, state, settle } = setup();
+    const before = controls.orientGroup.quaternion.clone();
+    for (const result of [await settle(commands.faceRegion(value)), commands.highlightRegion(value)]) {
+      expect(result.ok).toBe(false);
+      expect(result.reason).toMatch(/1/);
+      expect(result.reason).toMatch(/20/);
+    }
+    expect(state.highlight).toBeNull();
+    expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
+  });
+});
+
+describe('C21: a move replaced by a later one says so', () => {
+  it.each([
+    ['faceRegion', (c) => c.faceRegion(17), (c) => c.rotateTo('anterior')],
+    ['rotateTo', (c) => c.rotateTo('posterior'), (c) => c.faceRegion(1)],
+  ])('a %s replaced mid-move resolves ok: false as replaced, not as the user', async (_name, first, second) => {
+    const { commands, controls, settle } = setup();
+    const pending = first(commands);
+    await runFrames(controls, clock, 400);
+    const later = second(commands);
+    const result = await pending;
+    expectResultShape(result);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/replaced/i);
+    expect(result.reason).not.toMatch(/user/i);
+    expect((await settle(later)).ok).toBe(true);
+    expect(commands.getSceneState().interrupted).toBeNull();
   });
 });
 
