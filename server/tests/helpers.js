@@ -43,18 +43,62 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
   };
 }
 
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc' } = {}) {
+/**
+ * Fake ElevenLabs. Routes the two endpoints the server calls:
+ *   GET /v1/convai/conversation/token  -> { token }
+ *   GET /v1/convai/conversations       -> paged { conversations, has_more, next_cursor }
+ * `pages` is a list of conversation arrays, one per page; `listFailures`
+ * makes the first N history requests fail.
+ */
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[]], listFailures = 0 } = {}) {
   const requests = [];
+  const state = { listFailures };
+  const reply = (status, body) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+  });
   const fetchImpl = async (url, init = {}) => {
-    requests.push({ url: String(url), init });
-    return {
-      ok,
-      status: ok ? 200 : 500,
-      json: async () => (ok ? { token } : { detail: 'upstream failure' }),
-      text: async () => (ok ? JSON.stringify({ token }) : 'upstream failure'),
-    };
+    const href = String(url);
+    requests.push({ url: href, init });
+    if (href.includes('/v1/convai/conversation/token')) {
+      return ok ? reply(200, { token }) : reply(500, { detail: 'upstream failure' });
+    }
+    if (href.includes('/v1/convai/conversations')) {
+      if (state.listFailures > 0) {
+        state.listFailures -= 1;
+        return reply(503, { detail: 'history unavailable' });
+      }
+      const cursor = new URL(href).searchParams.get('cursor');
+      const index = cursor ? Number(cursor) : 0;
+      const hasMore = index < pages.length - 1;
+      return reply(200, {
+        conversations: pages[index] ?? [],
+        has_more: hasMore,
+        next_cursor: hasMore ? String(index + 1) : null,
+      });
+    }
+    return reply(404, { detail: 'not found' });
   };
-  return { fetchImpl, requests };
+  return {
+    fetchImpl,
+    requests,
+    state,
+    tokenRequests: () => requests.filter(({ url }) => url.includes('/conversation/token')),
+    historyRequests: () => requests.filter(({ url }) => url.includes('/convai/conversations')),
+  };
+}
+
+/**
+ * Builds the app and waits for today's usage to be restored from ElevenLabs,
+ * as the real server does before it offers voice.
+ */
+export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(), distDir = tempDist(), createApp } = {}) {
+  const upstream = fakeElevenLabs(elevenLabs);
+  const app = createApp({ env: makeEnv(env), distDir, fetchImpl: upstream.fetchImpl, now: clock.now });
+  await app.locals.voice.ready;
+  return { app, clock, upstream };
 }
 
 export function signWebhook(rawBody, secret = SECRETS.ELEVENLABS_WEBHOOK_SECRET, timestampSecs) {

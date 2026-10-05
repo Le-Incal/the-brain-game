@@ -54,11 +54,25 @@ describe('M3: voice configuration', () => {
     expect(config.invalid).toContain(name);
   });
 
-  it('treats the webhook secret as optional: without it nothing is ever refunded', () => {
+  // Without refunds every conversation costs the full 480 s: about 37 a day
+  // site-wide on an 18,000 s budget. Production must not run that way.
+  it('requires the webhook secret in production', () => {
     const env = makeEnv();
+    delete env.ELEVENLABS_WEBHOOK_SECRET;
+    const config = readVoiceConfig(env);
+    expect(config.available).toBe(false);
+    expect(config.missing).toEqual(['ELEVENLABS_WEBHOOK_SECRET']);
+  });
+
+  it('keeps the webhook secret optional outside production, with refunds off', () => {
+    const env = makeEnv({ NODE_ENV: 'development' });
     delete env.ELEVENLABS_WEBHOOK_SECRET;
     const config = readVoiceConfig(env);
     expect(config.available).toBe(true);
     expect(config.refundsEnabled).toBe(false);
+  });
+
+  it('turns refunds on when the secret is present', () => {
+    expect(readVoiceConfig(makeEnv()).refundsEnabled).toBe(true);
   });
 });

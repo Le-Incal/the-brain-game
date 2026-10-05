@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { HOST, fakeClock, fakeElevenLabs, makeEnv, tempDist } from './helpers.js';
+import { HOST, fakeClock, startApp } from './helpers.js';
 
 const rateModule = await import('../rateLimit.js').catch(() => ({}));
 const { createRateLimiter, TOKEN_RATE_LIMIT } = rateModule;
@@ -23,13 +23,14 @@ describe('M3: rate limiter', () => {
 });
 
 describe('M3: POST /api/voice/token is rate-limited per IP', () => {
+  it('allows 20 tokens per 10 minutes per address, enough for a class behind one school network', () => {
+    expect(TOKEN_RATE_LIMIT).toEqual({ max: 20, windowMs: 10 * 60 * 1000 });
+  });
+
   it('returns 429 with Retry-After past the limit, per IP, not per device', async () => {
-    const clock = fakeClock();
-    const app = createApp({
-      env: makeEnv({ VOICE_DAILY_MAX_SECONDS: '100000', VOICE_GLOBAL_DAILY_MAX_SECONDS: '1000000' }),
-      distDir: tempDist(),
-      fetchImpl: fakeElevenLabs().fetchImpl,
-      now: clock.now,
+    const { app } = await startApp({
+      env: { VOICE_DAILY_MAX_SECONDS: '100000', VOICE_GLOBAL_DAILY_MAX_SECONDS: '1000000' },
+      createApp,
     });
     const mint = (ip) =>
       request(app).post('/api/voice/token').set('Host', HOST).set('X-Forwarded-For', ip).send({ guide: 'sylvi' });

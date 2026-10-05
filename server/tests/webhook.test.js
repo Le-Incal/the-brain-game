@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { HOST, SECRETS, cookieFrom, fakeClock, fakeElevenLabs, makeEnv, postCallBody, signWebhook, tempDist } from './helpers.js';
+import { HOST, SECRETS, cookieFrom, fakeClock, postCallBody, signWebhook, startApp } from './helpers.js';
 
 const webhookModule = await import('../webhook.js').catch(() => ({}));
 const { verifyElevenLabsSignature } = webhookModule;
@@ -33,9 +33,7 @@ describe('M3: ElevenLabs webhook signature (t=<secs>,v0=<hex HMAC-SHA256 of "t.b
 
 describe('M3: post-call webhook refunds the unused reservation', () => {
   async function setup(envOverrides = {}) {
-    const clock = fakeClock();
-    const { fetchImpl } = fakeElevenLabs();
-    const app = createApp({ env: makeEnv(envOverrides), distDir: tempDist(), fetchImpl, now: clock.now });
+    const { app, clock } = await startApp({ env: envOverrides, createApp });
     const minted = await request(app).post('/api/voice/token').set('Host', HOST).send({ guide: 'rollo' });
     const cookie = cookieFrom(minted);
     const remaining = async () =>
@@ -98,10 +96,27 @@ describe('M3: post-call webhook refunds the unused reservation', () => {
     expect(await remaining()).toBe(420);
   });
 
-  it('refuses webhooks when no webhook secret is configured, so nothing is refunded', async () => {
-    const { minted, remaining, deliver } = await setup({ ELEVENLABS_WEBHOOK_SECRET: undefined });
+  it('outside production, refuses webhooks when no webhook secret is configured, so nothing is refunded', async () => {
+    const { minted, remaining, deliver } = await setup({ ELEVENLABS_WEBHOOK_SECRET: undefined, NODE_ENV: 'development' });
     const response = await deliver(postCallBody({ reservation: minted.body.dynamicVariables.reservation, durationSecs: 0 }));
     expect(response.status).toBe(503);
     expect(await remaining()).toBe(420);
+  });
+
+  it('charges a valid reservation the server no longer remembers (minted before a restart) to the global budget', async () => {
+    const first = await setup({ VOICE_GLOBAL_DAILY_MAX_SECONDS: '18000' });
+    const reservation = first.minted.body.dynamicVariables.reservation;
+    const restarted = await startApp({ env: { VOICE_GLOBAL_DAILY_MAX_SECONDS: '18000' }, createApp, clock: first.clock });
+    const body = postCallBody({ reservation, conversationId: 'conv_after_restart', durationSecs: 200 });
+    const deliver = () =>
+      request(restarted.app)
+        .post('/api/voice/webhook/elevenlabs')
+        .set('Host', HOST)
+        .set('Content-Type', 'application/json')
+        .set('elevenlabs-signature', signWebhook(body, SECRETS.ELEVENLABS_WEBHOOK_SECRET, nowSecs(first.clock)))
+        .send(body);
+    expect((await deliver()).body).toMatchObject({ status: 'charged' });
+    expect((await deliver()).body).toMatchObject({ status: 'duplicate' });
+    expect(restarted.app.locals.voice.ledger.globalRemaining()).toBe(18000 - 200);
   });
 });

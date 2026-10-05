@@ -17,9 +17,9 @@ Values live only in Railway. Never commit them, and never give any of them a `VI
 | `VOICE_SESSION_MAX_SECONDS` | no | Per-conversation cap. `480`. |
 | `VOICE_DAILY_MAX_SECONDS` | no | Per-player daily cap across all conversations. `900`. |
 | `VOICE_GLOBAL_DAILY_MAX_SECONDS` | no | Global daily minute budget across all players. When spent, voice reports itself unavailable until the next UTC day; the game is unaffected. |
-| `ELEVENLABS_WEBHOOK_SECRET` | yes | HMAC secret of the ElevenLabs post-call webhook. The webhook route verifies every delivery with it before refunding unused minutes. Optional: without it voice still works, but every conversation stays charged its full reservation. |
+| `ELEVENLABS_WEBHOOK_SECRET` | yes | HMAC secret of the ElevenLabs post-call webhook. The webhook route verifies every delivery with it before refunding unused minutes. Required in production (without refunds the budget drains about four times too fast); optional elsewhere. |
 
-All variables except `ELEVENLABS_WEBHOOK_SECRET` are required; if any is missing or invalid, voice reports itself unavailable. The caps have no silent defaults. Later, the `log_knowledge_gap` server tool gets its own shared secret (not the post-call webhook secret).
+All variables are required in production (`ELEVENLABS_WEBHOOK_SECRET` is optional outside it); if any is missing or invalid, voice reports itself unavailable. `ELEVENLABS_API_KEY` must also be allowed to read conversation history: on startup the server rebuilds today's global usage from it. On staging, `VOICE_HOSTS` must hold the staging domain. The caps have no silent defaults. Later, the `log_knowledge_gap` server tool gets its own shared secret (not the post-call webhook secret).
 
 ## How M3 uses them
 

@@ -132,4 +132,53 @@ describe('M3: reserve, then refund', () => {
     clock.set(Date.UTC(2026, 9, 5, 23, 59, 0));
     expect(ledger.deviceRemaining('device-a')).toBe(840);
   });
+
+  it('reports seconds until the next UTC day', () => {
+    const { clock, ledger } = setup();
+    expect(ledger.secondsUntilReset()).toBe(12 * 3600);
+    clock.set(Date.UTC(2026, 9, 5, 21, 0, 0));
+    expect(ledger.secondsUntilReset()).toBe(3 * 3600);
+  });
+});
+
+describe('M3: rebuilding today from ElevenLabs after a restart', () => {
+  it("restores today's global usage from conversation history, each capped at the session cap", () => {
+    const { ledger } = setup();
+    ledger.restore([
+      { conversationId: 'a', durationSecs: 120, status: 'done' },
+      { conversationId: 'b', durationSecs: 9999, status: 'done' },
+      { conversationId: 'c', durationSecs: 0, status: 'failed' },
+    ]);
+    expect(ledger.globalRemaining()).toBe(18000 - 120 - 480);
+  });
+
+  it('charges a conversation that may still be running its full session cap', () => {
+    const { ledger } = setup();
+    ledger.restore([
+      { conversationId: 'live', durationSecs: 30, status: 'in-progress' },
+      { conversationId: 'new', durationSecs: 0, status: 'initiated' },
+      { conversationId: 'wrapping', durationSecs: 200, status: 'processing' },
+    ]);
+    expect(ledger.globalRemaining()).toBe(18000 - 3 * 480);
+  });
+
+  it('never counts a restored conversation twice when its webhook arrives', () => {
+    const { ledger } = setup();
+    ledger.restore([{ conversationId: 'a', durationSecs: 120, status: 'done' }]);
+    expect(ledger.chargeUnreserved({ conversationId: 'a', durationSecs: 120 })).toBe('duplicate');
+    expect(ledger.globalRemaining()).toBe(18000 - 120);
+  });
+
+  it('starts per-device counts fresh, as accepted', () => {
+    const { ledger } = setup();
+    ledger.restore([{ conversationId: 'a', durationSecs: 480, status: 'done' }]);
+    expect(ledger.deviceRemaining('device-a')).toBe(900);
+  });
+
+  it('charges a conversation with no remembered reservation to the global budget, once', () => {
+    const { ledger } = setup();
+    expect(ledger.chargeUnreserved({ conversationId: 'orphan', durationSecs: 9999 })).toBe('charged');
+    expect(ledger.chargeUnreserved({ conversationId: 'orphan', durationSecs: 10 })).toBe('duplicate');
+    expect(ledger.globalRemaining()).toBe(18000 - 480);
+  });
 });
