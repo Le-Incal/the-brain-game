@@ -32,7 +32,7 @@ describe('M3: telling players when voice returns', () => {
       "Voice has reached today's limit for everyone. It returns in about 3 hours."
     );
     expect(describeVoiceUnavailable({ reason: 'restoring' })).toBe('Voice is starting up. Try again in a moment.');
-    expect(describeVoiceUnavailable({ reason: 'busy' })).toBe('The guide is busy. Try again shortly.');
+    expect(describeVoiceUnavailable({ reason: 'busy' })).toBe('The guide is busy, try again shortly.');
     expect(describeVoiceUnavailable({ reason: 'rate_limited' })).toBe(
       'Too many conversations from this network. Try again in a few minutes.'
     );

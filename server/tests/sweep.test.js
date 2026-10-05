@@ -3,7 +3,7 @@ import request from 'supertest';
 import { HOST, SECRETS, cookieFrom, postCallBody, signWebhook, startApp } from './helpers.js';
 
 const appModule = await import('../app.js').catch(() => ({}));
-const { createApp, RESERVATION_EXPIRY_MS, SWEEP_INTERVAL_MS } = appModule;
+const { createApp, RESERVATION_EXPIRY_MS, SWEEP_INTERVAL_MS, RECONCILE_INTERVAL_MS } = appModule;
 
 const MINUTE = 60 * 1000;
 
@@ -36,9 +36,11 @@ describe('M3 fix: the sweep settles or releases stale reservations', () => {
     expect(SWEEP_INTERVAL_MS).toBeLessThanOrEqual(5 * MINUTE);
   });
 
-  it('runs every few minutes', async () => {
+  it('releases after about 30 minutes, sweeping every few minutes and re-reading the total every 10', async () => {
+    expect(RESERVATION_EXPIRY_MS).toBe(30 * MINUTE);
+    expect(RECONCILE_INTERVAL_MS).toBe(10 * MINUTE);
     const { intervals } = await setup();
-    expect(intervals.map(({ ms }) => ms)).toEqual([SWEEP_INTERVAL_MS]);
+    expect(intervals.map(({ ms }) => ms).sort((a, b) => a - b)).toEqual([SWEEP_INTERVAL_MS, RECONCILE_INTERVAL_MS].sort((a, b) => a - b));
   });
 
   it('leaves a reservation alone before it expires', async () => {
@@ -91,5 +93,20 @@ describe('M3 fix: the sweep settles or releases stale reservations', () => {
     clock.advance(RESERVATION_EXPIRY_MS + MINUTE);
     await app.locals.voice.sweep();
     expect(await remaining()).toBe(420);
+  });
+
+  it('re-reads the real total from ElevenLabs, counting only conversations it does not already know', async () => {
+    const { app, upstream } = await setup();
+    // conv_minted_1 belongs to the open reservation; conv_other is unknown here
+    // (say a lost webhook for a token minted before a restart).
+    upstream.state.details = {};
+    const today = Math.floor(Date.UTC(2026, 9, 5) / 1000);
+    const conversation = (id, secs) => ({ agent_id: SECRETS.ELEVENLABS_AGENT_ID, conversation_id: id, start_time_unix_secs: today + 60, call_duration_secs: secs, status: 'done' });
+    const before = app.locals.voice.ledger.globalRemaining();
+    upstream.setPages([[conversation('conv_minted_1', 100), conversation('conv_other', 200)]]);
+    await app.locals.voice.reconcile();
+    expect(app.locals.voice.ledger.globalRemaining()).toBe(before - 200);
+    await app.locals.voice.reconcile();
+    expect(app.locals.voice.ledger.globalRemaining()).toBe(before - 200);
   });
 });

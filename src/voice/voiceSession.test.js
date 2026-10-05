@@ -153,7 +153,7 @@ describe('M4: starting a conversation', () => {
     [{ status: 429, body: { available: false, reason: 'device_daily_cap', resetsInSeconds: 3 * 3600 } }, "You've used today's voice time. Voice returns in about 3 hours."],
     [{ status: 503, body: { available: false, reason: 'global_budget', resetsInSeconds: 3 * 3600 } }, "Voice has reached today's limit for everyone. It returns in about 3 hours."],
     [{ status: 503, body: { available: false, reason: 'restoring' } }, 'Voice is starting up. Try again in a moment.'],
-    [{ status: 429, body: { available: false, reason: 'busy' } }, 'The guide is busy. Try again shortly.'],
+    [{ status: 429, body: { available: false, reason: 'busy' } }, 'The guide is busy, try again shortly.'],
   ])('explains a refusal in plain words (%j)', async (refusal, message) => {
     const { session, conversation } = setup({ server: fakeServer({ refusal }) });
     await session.start({ guide: 'rollo' });

@@ -89,11 +89,10 @@ describe('M4: the context reporter', () => {
     ]);
   });
 
-  it('reports a click at once', () => {
+  it('reports a click at once, as the only line', () => {
     const { sent, reporter } = setup();
-    reporter.userInteraction({ type: 'grab', interrupted: null });
     reporter.regionClicked({ id: 19, name: 'Cerebellum' });
-    expect(sent).toEqual(['[player] took hold of me', '[player] clicked region 19 (Cerebellum)']);
+    expect(sent).toEqual(['[player] clicked region 19 (Cerebellum)']);
   });
 
   it('reports idling once after 25 seconds without input, then again only after new activity', () => {

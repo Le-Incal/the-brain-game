@@ -51,7 +51,8 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[]], listFailures = 0, details = {} } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {} } = {}) {
+  let pages = initialPages;
   const requests = [];
   // `details` maps conversation id -> { status, call_duration_secs }; ids not
   // listed answer 404 (the token was never used).
@@ -102,6 +103,9 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[
     fetchImpl,
     requests,
     state,
+    setPages: (next) => {
+      pages = next;
+    },
     tokenRequests: () => requests.filter(({ url }) => url.includes('/conversation/token')),
     historyRequests: () => requests.filter(({ url }) => /\/convai\/conversations(\?|$)/.test(url)),
     detailRequests: () => requests.filter(({ url }) => /\/convai\/conversations\/[^/?]+/.test(url)),

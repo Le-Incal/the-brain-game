@@ -50,16 +50,19 @@ function setup() {
     await runFrames(harness.controls, clock, MOVE_SETTLE_MS);
     return promise;
   }
-  // Runs the pending quiet-period timer, as if 2 s passed with no input.
-  function endQuietPeriod() {
-    const pending = timers.filter((timer) => !timer.cleared && !timer.ran);
+  function runTimers(ms) {
+    const pending = timers.filter((timer) => timer.ms === ms && !timer.cleared && !timer.ran);
     for (const timer of pending) {
       timer.ran = true;
       timer.fn();
     }
     return pending.length;
   }
-  return { ...harness, commands, settle, interactions, controlChanges, timers, endQuietPeriod };
+  // As if 2 s passed with no input.
+  const endQuietPeriod = () => runTimers(2000);
+  // As if the press has been held for 250 ms.
+  const holdPastDebounce = () => runTimers(250);
+  return { ...harness, commands, settle, interactions, controlChanges, timers, endQuietPeriod, holdPastDebounce };
 }
 
 function expectResultShape(result) {
@@ -361,10 +364,11 @@ describe('C17: the player can take hold at any time', () => {
   // Motion stops the instant the player grabs; the conversation does not.
   // The app tells the guide what was interrupted so it can offer to resume.
   it('tells the guide when the player grabs, and hands back once after the quiet period', async () => {
-    const { commands, element, interactions, endQuietPeriod } = setup();
+    const { commands, element, interactions, endQuietPeriod, holdPastDebounce } = setup();
     element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
-    expect(interactions).toEqual([{ type: 'grab', interrupted: null }]);
     expect(commands.getSceneState().userHolding).toBe(true);
+    holdPastDebounce();
+    expect(interactions).toEqual([{ type: 'grab', interrupted: null }]);
 
     element.dispatch('pointermove', { clientX: 470, clientY: 300 });
     element.dispatch('pointerup', { clientX: 470, clientY: 300 });
@@ -378,11 +382,12 @@ describe('C17: the player can take hold at any time', () => {
   });
 
   it('bookmarks the move a grab interrupted', async () => {
-    const { commands, controls, element, interactions } = setup();
+    const { commands, controls, element, interactions, holdPastDebounce } = setup();
     const pending = commands.faceRegion(6, { hemisphere: 'right' });
     await runFrames(controls, clock, 500);
     element.dispatch('pointerdown');
     await flushMicrotasks();
+    holdPastDebounce();
 
     const bookmark = { command: 'faceRegion', regionId: 6, hemisphere: 'left' };
     expect(interactions[0]).toEqual({ type: 'grab', interrupted: bookmark });
@@ -652,7 +657,7 @@ describe('C22: guide and player share the brain like an agent and a user share a
     element.dispatch('pointerup', { clientX: 401, clientY: 300 });
     expect(commands.getSceneState().control).toBe('guide_free');
     expect(timers.filter((t) => !t.cleared)).toHaveLength(0);
-    expect(interactions.map(({ type }) => type)).toEqual(['grab']);
+    expect(interactions).toEqual([]);
   });
 
   it('lets a zoom ride along with a guide turn without cancelling it, then waits out the quiet period', async () => {
@@ -681,6 +686,62 @@ describe('C22: guide and player share the brain like an agent and a user share a
     await runFrames(controls, clock, 1500);
     expect(controls.isMoving).toBe(false);
     expect(controls.orientGroup.quaternion.angleTo(settledByPlayer)).toBeLessThan(1e-6);
+  });
+});
+
+describe('C23: the took-hold message waits 250 ms; the stop does not', () => {
+  // Kyle: a click must not read to the guide as a grab. Motion stops on the
+  // press, locally; only the message waits to see if the press is a click.
+  it('stops a guide move on the press itself', async () => {
+    const { commands, controls, element } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 400);
+    element.dispatch('pointerdown');
+    expect(controls.isMoving).toBe(false);
+    expect(commands.getSceneState().control).toBe('player_holding');
+    expect((await pending).ok).toBe(false);
+    element.dispatch('pointerup');
+  });
+
+  it('sends nothing for a click: the region click is reported on its own', async () => {
+    const { element, interactions, timers } = setup();
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    expect(timers.filter((t) => !t.cleared).map((t) => t.ms)).toEqual([250]);
+    element.dispatch('pointerup', { clientX: 401, clientY: 300 });
+    expect(timers.every((t) => t.cleared)).toBe(true);
+    expect(interactions).toEqual([]);
+  });
+
+  it('announces a press held past 250 ms, with what it interrupted', async () => {
+    const { commands, controls, element, interactions, holdPastDebounce } = setup();
+    const pending = commands.rotateTo('anterior');
+    await runFrames(controls, clock, 300);
+    element.dispatch('pointerdown');
+    await pending;
+    expect(interactions).toEqual([]);
+    holdPastDebounce();
+    expect(interactions).toEqual([{ type: 'grab', interrupted: { command: 'rotateTo', view: 'anterior' } }]);
+    element.dispatch('pointerup');
+  });
+
+  it('announces a quick drag when it ends, then hands back after the quiet period', async () => {
+    const { element, interactions, endQuietPeriod } = setup();
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    element.dispatch('pointermove', { clientX: 470, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 470, clientY: 300 });
+    expect(interactions.map(({ type }) => type)).toEqual(['grab']);
+    endQuietPeriod();
+    expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
+  });
+
+  it('never announces the same press twice', async () => {
+    const { element, interactions, holdPastDebounce, endQuietPeriod } = setup();
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    holdPastDebounce();
+    element.dispatch('pointermove', { clientX: 470, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 470, clientY: 300 });
+    endQuietPeriod();
+    expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
   });
 });
 
