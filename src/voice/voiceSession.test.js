@@ -16,6 +16,7 @@ function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal } = {})
   const requests = [];
   const fetchImpl = async (url, init = {}) => {
     requests.push({ url, init, body: init.body ? JSON.parse(init.body) : undefined });
+    if (url === '/api/voice/event') return { ok: true, status: 204, json: async () => ({}) };
     if (url === '/api/voice/release') return { ok: true, status: 200, json: async () => ({ status: 'released' }) };
     if (url === '/api/voice/token') {
       if (refusal) return { ok: false, status: refusal.status, json: async () => refusal.body };
@@ -135,10 +136,10 @@ describe('M4: a blocked microphone', () => {
     const { session, server, conversation } = setup({ mic: 'denied' });
     await session.start({ guide: 'rollo' });
     expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_BLOCKED_MESSAGE });
+    expect(server.requests.map(({ url }) => url)).not.toContain('/api/voice/token');
     expect(MIC_BLOCKED_MESSAGE).toBe(
       "Your microphone is blocked, so we can't talk aloud. Allow the microphone for this site in your browser settings, then try again. On a school Chromebook, ask your teacher."
     );
-    expect(server.requests).toHaveLength(0);
     expect(conversation.calls).toEqual([]);
   });
 
@@ -147,7 +148,7 @@ describe('M4: a blocked microphone', () => {
     await session.start({ guide: 'rollo' });
     expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_UNAVAILABLE_MESSAGE });
     expect(MIC_UNAVAILABLE_MESSAGE).toBe("This browser can't use a microphone here, so we can't talk aloud.");
-    expect(server.requests).toHaveLength(0);
+    expect(server.requests.map(({ url }) => url)).not.toContain('/api/voice/token');
   });
 });
 
@@ -355,5 +356,26 @@ describe('M4: during and after a conversation', () => {
     const names = conversation.calls.map(([name]) => name);
     expect(names).toEqual(['startSession', 'endSession', 'startSession']);
     expect(conversation.calls.at(-1)[1].overrides).toEqual({ tts: { voiceId: 'voice_sylvi' } });
+  });
+});
+
+describe('M4: reporting a blocked microphone, so we can count it', () => {
+  it.each([
+    ['denied', 'mic_blocked'],
+    ['unavailable', 'mic_unsupported'],
+  ])('a %s mic sends {type: %s} and nothing else', async (mic, type) => {
+    const server = fakeServer();
+    const { session } = setup({ server, mic });
+    await session.start({ guide: 'rollo' });
+    await Promise.resolve();
+    expect(server.requests).toEqual([
+      expect.objectContaining({ url: '/api/voice/event', body: { type }, init: expect.objectContaining({ method: 'POST' }) }),
+    ]);
+  });
+
+  it('a granted mic reports nothing', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo' });
+    expect(server.requests.map(({ url }) => url)).not.toContain('/api/voice/event');
   });
 });
