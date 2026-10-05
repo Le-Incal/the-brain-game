@@ -25,3 +25,21 @@ describe('M2: hatching answers the voice', () => {
     }
   });
 });
+
+describe('M2 decision: guide highlight in the shader', () => {
+  it('has its own uniform', () => {
+    expect(fragmentShader).toContain('uniform float uVoiceRegion;');
+  });
+
+  it("draws the region's own tint under the full linework, after catch feedback", () => {
+    expect(fragmentShader).toContain('bool voiceRegion = uVoiceRegion > -0.5 && validRegion && regionId == int(floor(uVoiceRegion + 0.5));');
+    expect(fragmentShader).toMatch(
+      /else if \(!feedbackMode && \(selectedRegion \|\| voiceRegion\)\) \{\s*finalColor = mix\(tintedRegionColor, uInkColor, totalInk\);/
+    );
+  });
+
+  it('never dims other regions or withdraws their colour for the guide', () => {
+    expect(fragmentShader).not.toMatch(/otherDuringFeedback = [^;]*uVoiceRegion/);
+    expect(fragmentShader).not.toMatch(/colourRegionsActive =[^;]*uVoiceRegion/);
+  });
+});

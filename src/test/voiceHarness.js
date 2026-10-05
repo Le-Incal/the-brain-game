@@ -136,6 +136,7 @@ export function createFakeSceneAdapter(controlOptions = {}) {
       // no source rotation, so this is a pure offset from the pivot.
       toSpecimenSpace: (point) =>
         new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]),
+      toSpecimenDirection: (direction) => new THREE.Vector3(...direction).normalize(),
       setHighlight(regionId) {
         state.highlight = regionId;
       },

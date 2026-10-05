@@ -46,15 +46,15 @@ Done (2026-10-04):
 - `guide_name` test value set to `Rollo`.
 - Settings line in the prompt reverted to the section 4 wording.
 - `userHolding` and `interrupted` added to the live `get_scene_state` tool description.
+- Published, with guardrails: Focus, Prompt Injection, and Content (sexual, harassment, self-harm, profanity). Violence, politics and religion, and medical and legal are deliberately off: the prompt handles medical questions, and anatomy talk must not trip a violence filter.
+- Allowlist: `brain-game.io` and `www.brain-game.io`. ElevenLabs rejects localhost, so the staging domain is added for M4 testing.
+- No audio storage; transcripts retained for 30 days.
 
 Still open:
+- Daily and concurrent call limits: 300 and 10, with bursting and queuing off.
 - Delete the detached `set_voice` tool from the Tools page.
-- Publish the staged changes.
-- Allowlist of hosts (recommended when overrides are on).
-- Authentication once our token server exists (M3).
-- Guardrails.
-- Daily and concurrent conversation limits.
-- Conversation data retention.
+- The Railway staging environment (and its domain on the allowlist).
+- Authentication once M3 is live.
 - Give the two voice IDs to Claude Code for the voice map when M4 starts (they are not secret).
 - Optionally rename the dashboard agent from "The Specimen".
 

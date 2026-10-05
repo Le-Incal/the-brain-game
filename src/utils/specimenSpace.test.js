@@ -86,3 +86,30 @@ describe('createSpecimenSpace', () => {
     expect(space.toSpecimenSpace([11, 2, 3]).toArray()).toEqual([2, 0, 0]);
   });
 });
+
+describe('M2 addition: directions convert by rotation only', () => {
+  // Centroids, labelsPerView and the six view axes all live in the raw model
+  // frame, so axes need the same rotation as points, without scale or offset.
+  it('rotates a raw-frame direction exactly as points move, as a unit vector', () => {
+    const node = readModelNode();
+    const mesh = meshWithTransform(node, RAW_POINTS);
+    const space = createSpecimenSpace({
+      normalization: describeNormalization([mesh]),
+      scale: 1.278,
+      pivot: new THREE.Vector3(0.01, 0.12, -0.03),
+    });
+    const origin = [0.4, 1.1, -0.7];
+    for (const axis of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+      const tip = origin.map((value, i) => value + axis[i]);
+      const expected = space.toSpecimenSpace(tip).sub(space.toSpecimenSpace(origin)).normalize();
+      const converted = space.toSpecimenDirection(axis);
+      expect(converted.length()).toBeCloseTo(1, 9);
+      expect(converted.distanceTo(expected), String(axis)).toBeLessThan(1e-6);
+    }
+  });
+
+  it('leaves directions alone without a source matrix', () => {
+    const space = createSpecimenSpace({ normalization: { center: [1, 2, 3], maxDim: 10 }, scale: 2, pivot: new THREE.Vector3() });
+    expect(space.toSpecimenDirection([0, 0, 3]).toArray()).toEqual([0, 0, 1]);
+  });
+});
