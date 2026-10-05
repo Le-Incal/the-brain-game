@@ -25,6 +25,11 @@ export const SWEEP_INTERVAL_MS = 2 * 60 * 1000;
 export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
 const MAX_OPEN_PER_DEVICE = 1;
 const MAX_OPEN_PER_ADDRESS = 2;
+// A released token stays valid, so a release could open a conversation that
+// skips the caps above (the webhook still charges it late). Releases are
+// therefore scarce; the IP limit is looser because schools share addresses.
+export const RELEASE_LIMIT_PER_DEVICE = { max: 3, windowMs: 60 * 60 * 1000 };
+export const RELEASE_LIMIT_PER_ADDRESS = { max: 10, windowMs: 60 * 60 * 1000 };
 
 const DEVICE_COOKIE = 'bg_device';
 const DEVICE_COOKIE_MAX_AGE_SECS = 365 * 24 * 60 * 60;
@@ -76,6 +81,8 @@ export function createApp({
       })
     : null;
   const tokenLimiter = createRateLimiter({ ...TOKEN_RATE_LIMIT, now });
+  const releaseLimiterByDevice = createRateLimiter({ ...RELEASE_LIMIT_PER_DEVICE, now });
+  const releaseLimiterByAddress = createRateLimiter({ ...RELEASE_LIMIT_PER_ADDRESS, now });
 
   const todaysMidnightSecs = () => {
     const current = new Date(now());
@@ -279,10 +286,16 @@ export function createApp({
     const deviceId = verifyDevice(readCookie(req, DEVICE_COOKIE), config.sessionSecret, requestHost(req));
     if (!deviceId || deviceId !== info.deviceId) return res.status(403).json({ error: 'not_your_reservation' });
     if (info.state !== 'open') return res.status(200).json({ status: 'already_closed' });
+    // Without the conversation id there is nothing to check with ElevenLabs.
+    if (!info.conversationId) return res.status(409).json({ status: 'unverifiable' });
+    const byDevice = releaseLimiterByDevice.take(deviceId);
+    const byAddress = byDevice.allowed ? releaseLimiterByAddress.take(clientAddress(req)) : byDevice;
+    if (!byDevice.allowed || !byAddress.allowed) {
+      res.set('Retry-After', String((byDevice.allowed ? byAddress : byDevice).retryAfterSeconds));
+      return res.status(429).json({ status: 'release_limited' });
+    }
     try {
-      const record = info.conversationId
-        ? await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId: info.conversationId })
-        : null;
+      const record = await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId: info.conversationId });
       if (record && record.status !== 'initiated') return res.status(409).json({ status: 'started' });
       ledger.expire(reservationId);
       return res.status(200).json({ status: 'released' });
