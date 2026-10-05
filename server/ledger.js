@@ -116,6 +116,13 @@ export function createMinuteLedger({
       return byConversation.get(conversationId) ?? null;
     },
 
+    reservationInfo(reservationId) {
+      const reservation = reservations.get(reservationId);
+      if (!reservation) return null;
+      const { deviceId, conversationId, state } = reservation;
+      return { deviceId, conversationId, state };
+    },
+
     openReservationsOlderThan(ageMs) {
       const cutoff = now() - ageMs;
       return openReservations()

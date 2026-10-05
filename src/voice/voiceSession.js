@@ -18,7 +18,8 @@ export const CONSENT_TEXT =
 export const CONSENT_STORAGE_KEY = 'brain-game.voice-consent';
 
 export const MIC_BLOCKED_MESSAGE =
-  "Your microphone is blocked, so we can't talk aloud. On a school Chromebook, ask your teacher to allow it; otherwise allow the microphone for this site in your browser settings, then try again.";
+  "Your microphone is blocked, so we can't talk aloud. Allow the microphone for this site in your browser settings, then try again. On a school Chromebook, ask your teacher.";
+export const START_FAILED_MESSAGE = "We couldn't start the conversation. Please try again.";
 export const MIC_UNAVAILABLE_MESSAGE = "This browser can't use a microphone here, so we can't talk aloud.";
 
 /**
@@ -53,6 +54,27 @@ export function createVoiceSession({
   let cutoffTimer = null;
   let warningTimer = null;
   let maxSeconds = null;
+  // The signed reservation for the conversation being started, kept until it
+  // connects, so a failed start can be released at once.
+  let pendingReservation = null;
+
+  function releasePending() {
+    const reservation = pendingReservation;
+    pendingReservation = null;
+    if (!reservation) return;
+    Promise.resolve()
+      .then(() =>
+        fetchImpl('/api/voice/release', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reservation }),
+        })
+      )
+      .catch(() => {
+        // The server's sweep releases it later in any case.
+      });
+  }
 
   function readConsent() {
     try {
@@ -99,6 +121,7 @@ export function createVoiceSession({
         return;
       }
       maxSeconds = body.maxSeconds;
+      pendingReservation = body.dynamicVariables?.reservation ?? null;
       set({ phase: 'connecting' });
       conversation.startSession({
         conversationToken: body.conversationToken,
@@ -129,6 +152,7 @@ export function createVoiceSession({
 
   function end() {
     clearCutoff();
+    if (state.phase === 'connecting') releasePending();
     if (state.phase === 'connecting' || state.phase === 'connected') conversation.endSession();
     set({ phase: 'idle', conversationId: null });
   }
@@ -153,6 +177,7 @@ export function createVoiceSession({
     },
 
     async handleConnect({ conversationId }) {
+      pendingReservation = null;
       set({ phase: 'connected', conversationId });
       clearCutoff();
       // The server reserved this many seconds; end on time rather than overrun,
@@ -167,6 +192,12 @@ export function createVoiceSession({
 
     handleDisconnect() {
       clearCutoff();
+      if (state.phase === 'connecting') {
+        // It never connected: free the reservation now, not in 30 minutes.
+        releasePending();
+        set({ phase: 'unavailable', message: START_FAILED_MESSAGE, conversationId: null });
+        return;
+      }
       if (state.phase !== 'unavailable') set({ phase: 'idle', conversationId: null });
     },
 

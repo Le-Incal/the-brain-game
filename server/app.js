@@ -267,6 +267,31 @@ export function createApp({
     }
   });
 
+  // A conversation that failed to start: refund now rather than at the sweep,
+  // but only once ElevenLabs confirms it never started. A late conversation
+  // is still charged (the reservation expires rather than closing).
+  app.post('/api/voice/release', express.json({ limit: '2kb' }), async (req, res) => {
+    if (!voiceGate(req, res, { onRefuse: 403 })) return;
+    const reservationId = verifyReservation(req.body?.reservation, config.sessionSecret);
+    if (!reservationId) return res.status(400).json({ error: 'invalid_reservation' });
+    const info = ledger.reservationInfo(reservationId);
+    if (!info) return res.status(404).json({ error: 'unknown_reservation' });
+    const deviceId = verifyDevice(readCookie(req, DEVICE_COOKIE), config.sessionSecret, requestHost(req));
+    if (!deviceId || deviceId !== info.deviceId) return res.status(403).json({ error: 'not_your_reservation' });
+    if (info.state !== 'open') return res.status(200).json({ status: 'already_closed' });
+    try {
+      const record = info.conversationId
+        ? await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId: info.conversationId })
+        : null;
+      if (record && record.status !== 'initiated') return res.status(409).json({ status: 'started' });
+      ledger.expire(reservationId);
+      return res.status(200).json({ status: 'released' });
+    } catch (error) {
+      console.warn(`[voice] release could not check the conversation (${error.message})`);
+      return res.status(503).json({ error: 'upstream' });
+    }
+  });
+
   app.post('/api/voice/webhook/elevenlabs', express.raw({ type: '*/*', limit: '5mb' }), (req, res) => {
     if (!config.available || !config.refundsEnabled) {
       return res.status(503).json({ error: 'webhook_not_configured' });
