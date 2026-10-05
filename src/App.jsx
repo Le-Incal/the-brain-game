@@ -7,6 +7,7 @@ import { VOICE_ENABLED } from './voice/flags';
 import { GUIDES, normalizeGuide, readSavedGuide, saveGuide, studyEntryStep } from './voice/guides';
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
+import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
 
 /** Viewport-height fraction/sec at 1.0× — half the former 0.08 base. */
 const BASE_FALL_SPEED = 0.04;
@@ -804,6 +805,10 @@ export default function App() {
     voiceEnabled: VOICE_ENABLED,
   });
   const studyCaption = gamePhase === 'study' ? getStudyCaption(guide) : null;
+  const showVoiceDebug = shouldShowVoiceDebugPanel({
+    voiceEnabled: VOICE_ENABLED,
+    search: typeof window === 'undefined' ? undefined : window.location.search,
+  });
 
   const describedRegion = getDescribedRegion({
     isNavigating,
@@ -1060,6 +1065,13 @@ export default function App() {
           />
         )}
       </div>
+
+      {showVoiceDebug && (
+        <VoiceDebugPanel
+          visible
+          commands={brainReady ? sceneCommandsRef.current : null}
+        />
+      )}
 
       {studyCaption && (
         <div className="study-caption" style={STYLES.studyCaption} aria-live="polite">
