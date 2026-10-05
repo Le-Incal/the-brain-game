@@ -4,7 +4,7 @@ import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
 import { VOICE_ENABLED } from './voice/flags';
-import { GUIDES, readSavedGuide, saveGuide, studyEntryStep } from './voice/guides';
+import { GUIDES, normalizeGuide, readSavedGuide, saveGuide, studyEntryStep } from './voice/guides';
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 
@@ -75,6 +75,18 @@ export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } 
     return { label: 'Study', action: 'enter-study', active: false };
   }
   return null;
+}
+
+// Until the guide can speak (M4), the caption keeps Study mode from looking
+// as though nothing happened.
+export function getStudyCaption(guide) {
+  const id = normalizeGuide(guide);
+  if (!id) return null;
+  const { name } = GUIDES.find((entry) => entry.id === id);
+  return {
+    title: `Studying with ${name}`,
+    note: `${name} will speak here soon. For now, turn the brain freely and click a region to read about it.`,
+  };
 }
 
 export function sceneModeForPhase(gamePhase) {
@@ -369,6 +381,32 @@ export const STYLES = {
     border: '1px solid #1a1814',
     cursor: 'pointer',
     boxShadow: '3px 3px 0 rgba(26, 24, 20, 0.2)',
+  },
+  studyCaption: {
+    position: 'absolute',
+    top: 'clamp(16px, 3vh, 28px)',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'min(420px, calc(100vw - 32px))',
+    textAlign: 'center',
+    zIndex: 10,
+    pointerEvents: 'none',
+  },
+  studyCaptionTitle: {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 'clamp(15px, 2.2vw, 19px)',
+    fontWeight: 700,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+    color: '#1a1814',
+  },
+  studyCaptionNote: {
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontStyle: 'italic',
+    fontSize: 14,
+    lineHeight: 1.45,
+    color: '#5a4030',
+    marginTop: 6,
   },
   mobileStudyControls: {
     display: 'none',
@@ -765,6 +803,7 @@ export default function App() {
   const studyControl = getStudyControl(gamePhase, brainReady, {
     voiceEnabled: VOICE_ENABLED,
   });
+  const studyCaption = gamePhase === 'study' ? getStudyCaption(guide) : null;
 
   const describedRegion = getDescribedRegion({
     isNavigating,
@@ -1021,6 +1060,13 @@ export default function App() {
           />
         )}
       </div>
+
+      {studyCaption && (
+        <div className="study-caption" style={STYLES.studyCaption} aria-live="polite">
+          <div style={STYLES.studyCaptionTitle}>{studyCaption.title}</div>
+          <div style={STYLES.studyCaptionNote}>{studyCaption.note}</div>
+        </div>
+      )}
 
       {guidePickerOpen && (
         <div
