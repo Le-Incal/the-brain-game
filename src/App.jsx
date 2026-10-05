@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { BrainScene } from './utils/brainScene';
 import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
@@ -8,6 +8,9 @@ import { GUIDES, normalizeGuide, readSavedGuide, saveGuide, studyEntryStep } fro
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
+
+// The ElevenLabs SDK loads only when Study mode opens with the voice flag on.
+const VoicePanel = lazy(() => import('./voice/VoicePanel.jsx'));
 
 /** Viewport-height fraction/sec at 1.0× — half the former 0.08 base. */
 const BASE_FALL_SPEED = 0.04;
@@ -88,6 +91,15 @@ export function getStudyCaption(guide) {
     title: `Studying with ${name}`,
     note: `${name} will speak here soon. For now, turn the brain freely and click a region to read about it.`,
   };
+}
+
+// Like a browser agent's cursor: while the guide turns the brain, say so, and
+// keep the open hand so the player knows they can take hold at any time.
+export function getControlIndicator({ control, guide }) {
+  const id = normalizeGuide(guide);
+  if (control !== 'guide_moving' || !id) return null;
+  const { name } = GUIDES.find((entry) => entry.id === id);
+  return { text: `${name} is turning…`, cursor: 'grab' };
 }
 
 export function sceneModeForPhase(gamePhase) {
@@ -409,6 +421,13 @@ export const STYLES = {
     color: '#5a4030',
     marginTop: 6,
   },
+  controlIndicator: {
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontStyle: 'italic',
+    fontSize: 13,
+    color: '#5a4030',
+    marginTop: 4,
+  },
   mobileStudyControls: {
     display: 'none',
   },
@@ -541,6 +560,9 @@ export default function App() {
   const studyReturnToRef = useRef('ready');
   const sceneCommandsRef = useRef(null);
   const sceneAdapterRef = useRef(null);
+  // The voice panel's context reporter, while the panel is open.
+  const voiceEventsRef = useRef(null);
+  const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
   liveStateRef.current = { gamePhase, colorMode, showLabels };
@@ -559,6 +581,7 @@ export default function App() {
 
   const handleRegionSelect = useCallback((region) => {
     setSelectedRegion(region);
+    if (region) voiceEventsRef.current?.regionClicked(region);
   }, []);
 
   const handleNavigatingChange = useCallback((navigating) => {
@@ -663,7 +686,10 @@ export default function App() {
             setAnnotations: (value) => setShowLabels(value),
           });
           sceneAdapterRef.current = adapter;
-          sceneCommandsRef.current = createSceneCommands(adapter);
+          sceneCommandsRef.current = createSceneCommands(adapter, {
+            onUserInteraction: (event) => voiceEventsRef.current?.userInteraction(event),
+            onControlChange: setControl,
+          });
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
         }
         setBrainReady(true);
@@ -805,6 +831,11 @@ export default function App() {
     voiceEnabled: VOICE_ENABLED,
   });
   const studyCaption = gamePhase === 'study' ? getStudyCaption(guide) : null;
+  const controlIndicator = gamePhase === 'study' ? getControlIndicator({ control, guide }) : null;
+  const changeGuide = (guideId) => {
+    saveGuide(browserStorage(), guideId);
+    setGuide(guideId);
+  };
   const showVoiceDebug = shouldShowVoiceDebugPanel({
     voiceEnabled: VOICE_ENABLED,
     search: typeof window === 'undefined' ? undefined : window.location.search,
@@ -821,7 +852,10 @@ export default function App() {
   return (
     <div style={STYLES.container}>
       <div style={STYLES.stage}>
-        <div ref={mountRef} style={STYLES.canvas} />
+        <div
+          ref={mountRef}
+          style={controlIndicator ? { ...STYLES.canvas, cursor: controlIndicator.cursor } : STYLES.canvas}
+        />
         <div style={STYLES.wordLayer}>
           {activeWordLabel && (
             <div
@@ -1077,7 +1111,24 @@ export default function App() {
         <div className="study-caption" style={STYLES.studyCaption} aria-live="polite">
           <div style={STYLES.studyCaptionTitle}>{studyCaption.title}</div>
           <div style={STYLES.studyCaptionNote}>{studyCaption.note}</div>
+          {controlIndicator && (
+            <div className="control-indicator" style={STYLES.controlIndicator}>
+              {controlIndicator.text}
+            </div>
+          )}
         </div>
+      )}
+
+      {VOICE_ENABLED && brainReady && gamePhase === 'study' && sceneCommandsRef.current && (
+        <Suspense fallback={null}>
+          <VoicePanel
+            guide={guide}
+            onGuideChange={changeGuide}
+            commands={sceneCommandsRef.current}
+            scene={sceneRef.current}
+            voiceEventsRef={voiceEventsRef}
+          />
+        </Suspense>
       )}
 
       {guidePickerOpen && (

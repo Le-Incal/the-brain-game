@@ -19,6 +19,8 @@ export function describeVoiceUnavailable({ reason, resetsInSeconds } = {}) {
       return `Voice has reached today's limit for everyone. It returns ${formatTimeUntilReset(resetsInSeconds)}.`;
     case 'restoring':
       return 'Voice is starting up. Try again in a moment.';
+    case 'busy':
+      return 'The guide is busy, try again shortly.';
     case 'rate_limited':
       return 'Too many conversations from this network. Try again in a few minutes.';
     default:
