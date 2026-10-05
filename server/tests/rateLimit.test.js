@@ -27,13 +27,14 @@ describe('M3: POST /api/voice/token is rate-limited per IP', () => {
     expect(TOKEN_RATE_LIMIT).toEqual({ max: 20, windowMs: 10 * 60 * 1000 });
   });
 
-  it('returns 429 with Retry-After past the limit, per IP, not per device', async () => {
-    const { app } = await startApp({
-      env: { VOICE_DAILY_MAX_SECONDS: '100000', VOICE_GLOBAL_DAILY_MAX_SECONDS: '1000000' },
-      createApp,
-    });
+  // Railway's edge always overwrites X-Real-IP with the client's address
+  // (Railway staff, May 2026); X-Forwarded-For keeps whatever the client sent.
+  const ON_RAILWAY = { RAILWAY_ENVIRONMENT_ID: 'env_test', VOICE_DAILY_MAX_SECONDS: '100000', VOICE_GLOBAL_DAILY_MAX_SECONDS: '1000000' };
+
+  it('returns 429 with Retry-After past the limit, per address, not per device', async () => {
+    const { app } = await startApp({ env: ON_RAILWAY, createApp });
     const mint = (ip) =>
-      request(app).post('/api/voice/token').set('Host', HOST).set('X-Forwarded-For', ip).send({ guide: 'sylvi' });
+      request(app).post('/api/voice/token').set('Host', HOST).set('X-Real-IP', ip).send({ guide: 'sylvi' });
 
     // A fresh device cookie on every request: clearing cookies must not lift the limit.
     for (let i = 0; i < TOKEN_RATE_LIMIT.max; i += 1) {
@@ -45,5 +46,37 @@ describe('M3: POST /api/voice/token is rate-limited per IP', () => {
     expect(refused.body).toMatchObject({ available: false, reason: 'rate_limited' });
 
     expect((await mint('198.51.100.9')).status).toBe(200);
+  });
+
+  it('ignores a client-supplied X-Forwarded-For on Railway', async () => {
+    const { app } = await startApp({ env: ON_RAILWAY, createApp });
+    for (let i = 0; i < TOKEN_RATE_LIMIT.max; i += 1) {
+      await request(app)
+        .post('/api/voice/token')
+        .set('Host', HOST)
+        .set('X-Real-IP', '203.0.113.7')
+        .set('X-Forwarded-For', `10.0.0.${i}`)
+        .send({ guide: 'nobody' });
+    }
+    const refused = await request(app)
+      .post('/api/voice/token')
+      .set('Host', HOST)
+      .set('X-Real-IP', '203.0.113.7')
+      .set('X-Forwarded-For', '10.9.9.9')
+      .send({ guide: 'rollo' });
+    expect(refused.status).toBe(429);
+  });
+
+  it('ignores X-Real-IP off Railway, where nothing overwrites it', async () => {
+    const { app } = await startApp({ env: { VOICE_DAILY_MAX_SECONDS: '100000' }, createApp });
+    for (let i = 0; i < TOKEN_RATE_LIMIT.max; i += 1) {
+      await request(app).post('/api/voice/token').set('Host', HOST).set('X-Real-IP', `192.0.2.${i}`).send({ guide: 'nobody' });
+    }
+    const refused = await request(app)
+      .post('/api/voice/token')
+      .set('Host', HOST)
+      .set('X-Real-IP', '192.0.2.250')
+      .send({ guide: 'rollo' });
+    expect(refused.status).toBe(429);
   });
 });
