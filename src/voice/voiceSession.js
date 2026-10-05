@@ -38,9 +38,39 @@ export async function requestMicrophoneAccess(nav = globalThis.navigator) {
   }
 }
 
+/**
+ * Reports a failed mic check to the server at most once, so the count of
+ * blocked microphones means players, not clicks. One reporter per page load.
+ */
+export function createMicEventReporter(fetchImpl = (...args) => globalThis.fetch(...args)) {
+  let reported = false;
+  return (type) => {
+    if (reported) return;
+    reported = true;
+    Promise.resolve()
+      .then(() =>
+        fetchImpl('/api/voice/event', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type }),
+        })
+      )
+      .catch(() => {});
+  };
+}
+
+// Shared by every conversation on this page (Study mode can be left and re-entered).
+let pageMicReporter = null;
+const reportForThisPage = (type) => {
+  pageMicReporter ??= createMicEventReporter();
+  pageMicReporter(type);
+};
+
 export function createVoiceSession({
   fetchImpl = (...args) => globalThis.fetch(...args),
   requestMicrophone = () => requestMicrophoneAccess(),
+  reportMicEvent = reportForThisPage,
   conversation,
   storage,
   clientTools,
@@ -105,17 +135,8 @@ export function createVoiceSession({
     set({ phase: 'requesting', message: null, conversationId: null });
     const microphone = await requestMicrophone();
     if (microphone !== 'granted') {
-      // Counted so we know how often this happens (the "Type instead" decision).
-      Promise.resolve()
-        .then(() =>
-          fetchImpl('/api/voice/event', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: microphone === 'denied' ? 'mic_blocked' : 'mic_unsupported' }),
-          })
-        )
-        .catch(() => {});
+      // Counted, once per page, so we know how often this happens ("Type instead").
+      reportMicEvent(microphone === 'denied' ? 'mic_blocked' : 'mic_unsupported');
       set({ phase: 'unavailable', message: microphone === 'denied' ? MIC_BLOCKED_MESSAGE : MIC_UNAVAILABLE_MESSAGE });
       return;
     }
