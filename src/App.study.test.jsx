@@ -2,17 +2,23 @@ import { describe, expect, it } from 'vitest';
 import * as AppModule from './App.jsx';
 
 const { enterStudy, leaveStudy, getStudyControl, sceneModeForPhase, getPrimaryControl } = AppModule;
+const ON = { voiceEnabled: true };
 
 describe('M2: entering and leaving Study mode', () => {
   it('enters from the ready screen or a paused game, remembering where it came from', () => {
-    expect(enterStudy('ready')).toEqual({ phase: 'study', returnTo: 'ready' });
-    expect(enterStudy('paused')).toEqual({ phase: 'study', returnTo: 'paused' });
+    expect(enterStudy('ready', ON)).toEqual({ phase: 'study', returnTo: 'ready' });
+    expect(enterStudy('paused', ON)).toEqual({ phase: 'study', returnTo: 'paused' });
   });
 
   it('never enters mid-countdown or while words are falling', () => {
-    expect(enterStudy('countdown')).toBeNull();
-    expect(enterStudy('playing')).toBeNull();
-    expect(enterStudy('study')).toBeNull();
+    expect(enterStudy('countdown', ON)).toBeNull();
+    expect(enterStudy('playing', ON)).toBeNull();
+    expect(enterStudy('study', ON)).toBeNull();
+  });
+
+  it('cannot be entered while the voice build flag is off', () => {
+    expect(enterStudy('ready')).toBeNull();
+    expect(enterStudy('ready', { voiceEnabled: false })).toBeNull();
   });
 
   it('returns where it came from and never resumes falling words by itself', () => {
@@ -25,18 +31,23 @@ describe('M2: entering and leaving Study mode', () => {
 
 describe('M2: Study control', () => {
   it('offers Study when the brain is ready and no game is running', () => {
-    expect(getStudyControl('ready', true)).toEqual({ label: 'Study', action: 'enter-study', active: false });
-    expect(getStudyControl('paused', true)).toEqual({ label: 'Study', action: 'enter-study', active: false });
+    expect(getStudyControl('ready', true, ON)).toEqual({ label: 'Study', action: 'enter-study', active: false });
+    expect(getStudyControl('paused', true, ON)).toEqual({ label: 'Study', action: 'enter-study', active: false });
   });
 
   it('offers a way back out while studying', () => {
-    expect(getStudyControl('study', true)).toEqual({ label: 'Leave Study', action: 'leave-study', active: true });
+    expect(getStudyControl('study', true, ON)).toEqual({ label: 'Leave Study', action: 'leave-study', active: true });
   });
 
   it('offers nothing before the brain loads or during play', () => {
-    expect(getStudyControl('ready', false)).toBeNull();
-    expect(getStudyControl('countdown', true)).toBeNull();
-    expect(getStudyControl('playing', true)).toBeNull();
+    expect(getStudyControl('ready', false, ON)).toBeNull();
+    expect(getStudyControl('countdown', true, ON)).toBeNull();
+    expect(getStudyControl('playing', true, ON)).toBeNull();
+  });
+
+  it('offers nothing at all while the voice build flag is off', () => {
+    expect(getStudyControl('ready', true)).toBeNull();
+    expect(getStudyControl('paused', true, { voiceEnabled: false })).toBeNull();
   });
 
   it('keeps Begin and Pause out of Study mode', () => {
