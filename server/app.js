@@ -23,6 +23,10 @@ export const RESERVATION_EXPIRY_MS = 30 * 60 * 1000;
 export const SWEEP_INTERVAL_MS = 2 * 60 * 1000;
 // Re-read today's real total from ElevenLabs, which bills us.
 export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
+// Blocked microphones never reach the server otherwise; counted to decide
+// whether "Type instead" is worth building.
+export const CLIENT_EVENT_TYPES = new Set(['mic_blocked', 'mic_unsupported']);
+export const EVENT_RATE_LIMIT = { max: 30, windowMs: 60 * 60 * 1000 };
 const MAX_OPEN_PER_DEVICE = 1;
 const MAX_OPEN_PER_ADDRESS = 2;
 // A released token stays valid, so a release could open a conversation that
@@ -57,6 +61,10 @@ export function createApp({
   now = Date.now,
   setTimeoutImpl = setTimeout,
   setIntervalImpl = setInterval,
+  // Lifecycle lines for the private Railway logs. Never a secret, token,
+  // cookie value, device id or address: reservations appear as an 8-character
+  // prefix, conversations by their ElevenLabs id.
+  logger = { info: (line) => console.log(line), warn: (line) => console.warn(line) },
 } = {}) {
   const config = readVoiceConfig(env);
   const app = express();
@@ -83,6 +91,15 @@ export function createApp({
   const tokenLimiter = createRateLimiter({ ...TOKEN_RATE_LIMIT, now });
   const releaseLimiterByDevice = createRateLimiter({ ...RELEASE_LIMIT_PER_DEVICE, now });
   const releaseLimiterByAddress = createRateLimiter({ ...RELEASE_LIMIT_PER_ADDRESS, now });
+  const eventLimiter = createRateLimiter({ ...EVENT_RATE_LIMIT, now });
+  const shortId = (reservationId) => String(reservationId).slice(0, 8);
+  const chargedSeconds = (durationSecs) =>
+    Math.min(config.sessionMaxSeconds, Math.max(0, Math.round(Number(durationSecs) || 0)));
+  function logSettled(reservationId, conversationId, durationSecs, reservedSeconds) {
+    logger.info(
+      `[voice] settled ${shortId(reservationId)} for conversation ${conversationId}: charged ${chargedSeconds(durationSecs)} s of ${reservedSeconds} s reserved`
+    );
+  }
 
   const todaysMidnightSecs = () => {
     const current = new Date(now());
@@ -105,7 +122,7 @@ export function createApp({
 
   if (!config.available) {
     if (config.missing.length || config.invalid.length) {
-      console.warn(
+      logger.warn(
         `[voice] unavailable. Missing: ${config.missing.join(', ') || 'none'}. Invalid: ${config.invalid.join(', ') || 'none'}.`
       );
     }
@@ -119,7 +136,7 @@ export function createApp({
       [reconcileWithElevenLabs, RECONCILE_INTERVAL_MS],
     ]) {
       const timer = setIntervalImpl(() => {
-        task().catch((error) => console.warn(`[voice] ${error.message}`));
+        task().catch((error) => logger.warn(`[voice] ${error.message}`));
       }, interval);
       timer?.unref?.();
     }
@@ -129,17 +146,22 @@ export function createApp({
     for (const { reservationId, conversationId } of ledger.openReservationsOlderThan(RESERVATION_EXPIRY_MS)) {
       if (!conversationId) {
         ledger.expire(reservationId);
+        logger.info(`[voice] expired ${shortId(reservationId)}: no conversation id`);
         continue;
       }
       try {
         const record = await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId });
-        if (!record || record.status === 'initiated') ledger.expire(reservationId);
-        else if (record.status === 'done' || record.status === 'failed') {
+        if (!record || record.status === 'initiated') {
+          ledger.expire(reservationId);
+          logger.info(`[voice] expired ${shortId(reservationId)} for conversation ${conversationId}: never started`);
+        } else if (record.status === 'done' || record.status === 'failed') {
+          const reserved = ledger.reservationInfo(reservationId)?.seconds ?? 0;
           ledger.settle(reservationId, { durationSecs: record.durationSecs, conversationId });
+          logSettled(reservationId, conversationId, record.durationSecs, reserved);
         }
         // Still running: leave it open for the next sweep.
       } catch (error) {
-        console.warn(`[voice] sweep could not check a conversation (${error.message}); retrying next sweep`);
+        logger.warn(`[voice] sweep could not check a conversation (${error.message}); retrying next sweep`);
       }
     }
   }
@@ -166,13 +188,14 @@ export function createApp({
           agentId: config.agentId,
           sinceSecs: todaysMidnightSecs(),
         });
-        ledger.restore(conversations);
+        const counted = ledger.restore(conversations);
+        logger.info(`[voice] restored today: ${counted.conversations} conversations, ${counted.seconds} s used`);
         voice.restored = true;
         markReady();
         return true;
       } catch (error) {
         const delay = RESTORE_RETRY_DELAYS_MS[Math.min(attempt, RESTORE_RETRY_DELAYS_MS.length - 1)];
-        console.warn(`[voice] could not rebuild today's usage (${error.message}); retrying in ${delay / 1000}s`);
+        logger.warn(`[voice] could not rebuild today's usage (${error.message}); retrying in ${delay / 1000}s`);
         const timer = setTimeoutImpl(() => restoreToday(attempt + 1), delay);
         timer?.unref?.();
         return false;
@@ -232,18 +255,26 @@ export function createApp({
     if (!voiceGate(req, res, { onRefuse: 403 })) return;
     const limit = tokenLimiter.take(clientAddress(req));
     if (!limit.allowed) {
+      logger.info('[voice] mint refused: rate_limited');
       res.set('Retry-After', String(limit.retryAfterSeconds));
       return res.status(429).json({ available: false, reason: 'rate_limited' });
     }
     const deviceId = ensureDevice(req, res);
     const guide = typeof req.body?.guide === 'string' ? req.body.guide.trim().toLowerCase() : null;
     if (!GUIDE_NAMES[guide]) return res.status(400).json({ error: 'unknown_guide' });
-    if (!voice.restored) return res.status(503).json({ available: false, reason: 'restoring' });
+    if (!voice.restored) {
+      logger.info('[voice] mint refused: restoring');
+      return res.status(503).json({ available: false, reason: 'restoring' });
+    }
 
     const reservation = ledger.reserve(deviceId, { address: clientAddress(req) });
     if (!reservation.ok) {
-      if (reservation.reason === 'busy') return res.status(429).json({ available: false, reason: 'busy' });
+      if (reservation.reason === 'busy') {
+        logger.info(`[voice] mint refused: busy (${reservation.cap})`);
+        return res.status(429).json({ available: false, reason: 'busy' });
+      }
       const refusal = capRefusal(deviceId);
+      logger.info(`[voice] mint refused: ${refusal.body.reason}`);
       return res.status(refusal.status).json(refusal.body);
     }
     try {
@@ -255,6 +286,9 @@ export function createApp({
       // Server-side matching: webhooks find their reservation by this id, so
       // nothing the browser reports is trusted. The id never goes to the browser.
       ledger.attachConversation(reservation.reservationId, conversationId);
+      logger.info(
+        `[voice] minted ${shortId(reservation.reservationId)} for conversation ${conversationId}: reserved ${reservation.seconds} s (${guide})`
+      );
       const guideName = GUIDE_NAMES[guide];
       return res.json({
         conversationToken,
@@ -269,7 +303,7 @@ export function createApp({
     } catch (error) {
       // No conversation can start, so nothing is owed: refund in full.
       ledger.release(reservation.reservationId);
-      console.warn(`[voice] token mint failed: ${error.message}`);
+      logger.warn(`[voice] token mint failed: ${error.message}`);
       return res.status(502).json({ available: false, reason: 'upstream' });
     }
   });
@@ -287,20 +321,29 @@ export function createApp({
     if (!deviceId || deviceId !== info.deviceId) return res.status(403).json({ error: 'not_your_reservation' });
     if (info.state !== 'open') return res.status(200).json({ status: 'already_closed' });
     // Without the conversation id there is nothing to check with ElevenLabs.
-    if (!info.conversationId) return res.status(409).json({ status: 'unverifiable' });
+    if (!info.conversationId) {
+      logger.info('[voice] release refused: unverifiable');
+      return res.status(409).json({ status: 'unverifiable' });
+    }
     const byDevice = releaseLimiterByDevice.take(deviceId);
     const byAddress = byDevice.allowed ? releaseLimiterByAddress.take(clientAddress(req)) : byDevice;
     if (!byDevice.allowed || !byAddress.allowed) {
+      logger.info('[voice] release refused: limited');
       res.set('Retry-After', String((byDevice.allowed ? byAddress : byDevice).retryAfterSeconds));
       return res.status(429).json({ status: 'release_limited' });
     }
     try {
       const record = await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId: info.conversationId });
-      if (record && record.status !== 'initiated') return res.status(409).json({ status: 'started' });
+      if (record && record.status !== 'initiated') {
+        logger.info('[voice] release refused: started');
+        return res.status(409).json({ status: 'started' });
+      }
       ledger.expire(reservationId);
+      logger.info(`[voice] released ${shortId(reservationId)} for conversation ${info.conversationId}`);
       return res.status(200).json({ status: 'released' });
     } catch (error) {
-      console.warn(`[voice] release could not check the conversation (${error.message})`);
+      logger.info('[voice] release refused: upstream');
+      logger.warn(`[voice] release could not check the conversation (${error.message})`);
       return res.status(503).json({ error: 'upstream' });
     }
   });
@@ -316,7 +359,10 @@ export function createApp({
       secret: config.webhookSecret,
       now,
     });
-    if (!verified.ok) return res.status(401).json({ error: 'invalid_signature' });
+    if (!verified.ok) {
+      logger.info(`[voice] webhook rejected: ${verified.reason.replace(/_/g, ' ')}`);
+      return res.status(401).json({ error: 'invalid_signature' });
+    }
 
     let event;
     try {
@@ -328,13 +374,41 @@ export function createApp({
     const reservationId =
       verifyReservation(data.conversation_initiation_client_data?.dynamic_variables?.reservation, config.sessionSecret) ??
       ledger.reservationForConversation(data.conversation_id);
-    if (event?.type !== 'post_call_transcription' || data.agent_id !== config.agentId || !reservationId) {
+    const ignoredBecause =
+      event?.type !== 'post_call_transcription'
+        ? 'other event'
+        : data.agent_id !== config.agentId
+          ? 'other agent'
+          : !reservationId
+            ? 'no reservation'
+            : null;
+    if (ignoredBecause) {
+      logger.info(`[voice] webhook ignored: ${ignoredBecause}`);
       return res.status(200).json({ status: 'ignored' });
     }
     const report = { durationSecs: data.metadata?.call_duration_secs, conversationId: data.conversation_id };
+    const reserved = ledger.reservationInfo(reservationId)?.seconds ?? 0;
     const settled = ledger.settle(reservationId, report);
+    if (settled === 'settled') logSettled(reservationId, report.conversationId, report.durationSecs, reserved);
+    if (settled === 'duplicate') logger.info(`[voice] webhook duplicate for conversation ${report.conversationId}`);
     if (settled !== 'unknown') return res.status(200).json({ status: settled });
-    return res.status(200).json({ status: ledger.chargeUnreserved(report) });
+    const charged = ledger.chargeUnreserved(report);
+    if (charged === 'charged') {
+      logger.info(`[voice] charged unreserved conversation ${report.conversationId}: ${chargedSeconds(report.durationSecs)} s`);
+    }
+    return res.status(200).json({ status: charged });
+  });
+
+  // Counts what the server cannot otherwise see; stores nothing.
+  app.post('/api/voice/event', express.json({ limit: '1kb' }), (req, res) => {
+    const body = req.body;
+    const valid =
+      body && typeof body === 'object' && Object.keys(body).length === 1 && CLIENT_EVENT_TYPES.has(body.type);
+    if (!valid) return res.status(400).json({ error: 'unknown_event' });
+    const limit = eventLimiter.take(clientAddress(req));
+    if (!limit.allowed) return res.status(429).json({ error: 'rate_limited' });
+    logger.info(`[voice] client event: ${body.type}`);
+    return res.status(204).end();
   });
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));

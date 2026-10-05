@@ -105,6 +105,17 @@ export function createVoiceSession({
     set({ phase: 'requesting', message: null, conversationId: null });
     const microphone = await requestMicrophone();
     if (microphone !== 'granted') {
+      // Counted so we know how often this happens (the "Type instead" decision).
+      Promise.resolve()
+        .then(() =>
+          fetchImpl('/api/voice/event', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: microphone === 'denied' ? 'mic_blocked' : 'mic_unsupported' }),
+          })
+        )
+        .catch(() => {});
       set({ phase: 'unavailable', message: microphone === 'denied' ? MIC_BLOCKED_MESSAGE : MIC_UNAVAILABLE_MESSAGE });
       return;
     }

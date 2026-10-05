@@ -190,21 +190,21 @@ describe('M3 fix: open reservations are capped', () => {
   it('holds at most one open reservation per device', () => {
     const { ledger } = capped();
     expect(ledger.reserve('device-a', { address: '1.1.1.1' }).ok).toBe(true);
-    expect(ledger.reserve('device-a', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy' });
+    expect(ledger.reserve('device-a', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy', cap: 'device' });
   });
 
   it('holds at most two open reservations per address, whatever the device', () => {
     const { ledger } = capped();
     expect(ledger.reserve('d1', { address: '1.1.1.1' }).ok).toBe(true);
     expect(ledger.reserve('d2', { address: '1.1.1.1' }).ok).toBe(true);
-    expect(ledger.reserve('d3', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy' });
+    expect(ledger.reserve('d3', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy', cap: 'address' });
     expect(ledger.reserve('d4', { address: '2.2.2.2' }).ok).toBe(true);
   });
 
   it('holds at most the site-wide number open at once', () => {
     const { ledger } = capped({ maxOpenTotal: 3 });
     for (let i = 0; i < 3; i += 1) expect(ledger.reserve(`d${i}`, { address: `10.0.0.${i}` }).ok).toBe(true);
-    expect(ledger.reserve('d9', { address: '10.0.0.9' })).toEqual({ ok: false, reason: 'busy' });
+    expect(ledger.reserve('d9', { address: '10.0.0.9' })).toEqual({ ok: false, reason: 'busy', cap: 'total' });
   });
 
   it('frees a slot once a reservation settles or is released', () => {

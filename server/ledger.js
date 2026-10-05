@@ -81,12 +81,12 @@ export function createMinuteLedger({
       const deviceLeft = deviceRemaining(deviceId);
       if (deviceLeft < MIN_RESERVATION_SECONDS) return { ok: false, reason: 'device_daily_cap' };
       const open = openReservations();
-      if (
-        open.length >= maxOpenTotal ||
-        open.filter((r) => r.deviceId === deviceId).length >= maxOpenPerDevice ||
-        (address && open.filter((r) => r.address === address).length >= maxOpenPerAddress)
-      ) {
-        return { ok: false, reason: 'busy' };
+      if (open.length >= maxOpenTotal) return { ok: false, reason: 'busy', cap: 'total' };
+      if (open.filter((r) => r.deviceId === deviceId).length >= maxOpenPerDevice) {
+        return { ok: false, reason: 'busy', cap: 'device' };
+      }
+      if (address && open.filter((r) => r.address === address).length >= maxOpenPerAddress) {
+        return { ok: false, reason: 'busy', cap: 'address' };
       }
       const seconds = Math.min(sessionMaxSeconds, deviceLeft, globalLeft);
       const reservationId = randomId();
@@ -119,8 +119,8 @@ export function createMinuteLedger({
     reservationInfo(reservationId) {
       const reservation = reservations.get(reservationId);
       if (!reservation) return null;
-      const { deviceId, conversationId, state } = reservation;
-      return { deviceId, conversationId, state };
+      const { deviceId, conversationId, state, seconds } = reservation;
+      return { deviceId, conversationId, state, seconds };
     },
 
     openReservationsOlderThan(ageMs) {
@@ -174,13 +174,18 @@ export function createMinuteLedger({
      * not already account for: at startup, and on every periodic re-read.
      */
     restore(conversations) {
+      const counted = { conversations: 0, seconds: 0 };
       for (const { conversationId, durationSecs, status } of conversations) {
         if (countedConversations.has(conversationId)) continue;
         const reservationId = byConversation.get(conversationId);
         if (reservationId && reservations.get(reservationId)?.state === 'open') continue;
         countedConversations.add(conversationId);
-        charge(dayKey(now()), null, LIVE_STATUSES.has(status) ? sessionMaxSeconds : capToSession(durationSecs));
+        const seconds = LIVE_STATUSES.has(status) ? sessionMaxSeconds : capToSession(durationSecs);
+        charge(dayKey(now()), null, seconds);
+        counted.conversations += 1;
+        counted.seconds += seconds;
       }
+      return counted;
     },
   };
 }

@@ -115,13 +115,13 @@ describe('Lifecycle logging', () => {
   });
 
   it('logs a rejected webhook without echoing anything it carried', async () => {
-    const { lines, app } = await setup();
+    const { lines, app, clock } = await setup();
     const body = postCallBody({ reservation: 'x.y', durationSecs: 1 });
     await request(app)
       .post('/api/voice/webhook/elevenlabs')
       .set('Host', HOST)
       .set('Content-Type', 'application/json')
-      .set('elevenlabs-signature', 't=1,v0=deadbeef')
+      .set('elevenlabs-signature', signWebhook(body, 'not-the-secret', Math.floor(clock.now() / 1000)))
       .send(body);
     expect(lines).toContain('[voice] webhook rejected: bad signature');
   });
