@@ -81,15 +81,14 @@ export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } 
   return null;
 }
 
-// Until the guide can speak (M4), the caption keeps Study mode from looking
-// as though nothing happened.
+// Points the player to the conversation below the brain.
 export function getStudyCaption(guide) {
   const id = normalizeGuide(guide);
   if (!id) return null;
   const { name } = GUIDES.find((entry) => entry.id === id);
   return {
     title: `Studying with ${name}`,
-    note: `${name} will speak here soon. For now, turn the brain freely and click a region to read about it.`,
+    note: `Talk with ${name} below, or turn the brain freely and click a region to read about it.`,
   };
 }
 

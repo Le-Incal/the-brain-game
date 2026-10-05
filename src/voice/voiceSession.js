@@ -17,8 +17,29 @@ export const CONSENT_TEXT =
 
 export const CONSENT_STORAGE_KEY = 'brain-game.voice-consent';
 
+export const MIC_BLOCKED_MESSAGE =
+  "Your microphone is blocked, so we can't talk aloud. On a school Chromebook, ask your teacher to allow it; otherwise allow the microphone for this site in your browser settings, then try again.";
+export const MIC_UNAVAILABLE_MESSAGE = "This browser can't use a microphone here, so we can't talk aloud.";
+
+/**
+ * The SDK cannot start a voice session without the microphone (WebRTC setup
+ * waits for it and disconnects if refused), so ask before reserving minutes.
+ * Returns 'granted', 'denied' or 'unavailable', and releases the mic at once.
+ */
+export async function requestMicrophoneAccess(nav = globalThis.navigator) {
+  if (!nav?.mediaDevices?.getUserMedia) return 'unavailable';
+  try {
+    const stream = await nav.mediaDevices.getUserMedia({ audio: true });
+    stream?.getTracks?.().forEach((track) => track.stop());
+    return 'granted';
+  } catch (error) {
+    return error?.name === 'NotAllowedError' || error?.name === 'SecurityError' ? 'denied' : 'unavailable';
+  }
+}
+
 export function createVoiceSession({
   fetchImpl = (...args) => globalThis.fetch(...args),
+  requestMicrophone = () => requestMicrophoneAccess(),
   conversation,
   storage,
   clientTools,
@@ -60,6 +81,11 @@ export function createVoiceSession({
 
   async function requestAndStart() {
     set({ phase: 'requesting', message: null, conversationId: null });
+    const microphone = await requestMicrophone();
+    if (microphone !== 'granted') {
+      set({ phase: 'unavailable', message: microphone === 'denied' ? MIC_BLOCKED_MESSAGE : MIC_UNAVAILABLE_MESSAGE });
+      return;
+    }
     try {
       const response = await fetchImpl('/api/voice/token', {
         method: 'POST',
