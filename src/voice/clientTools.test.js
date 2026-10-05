@@ -1,0 +1,129 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const toolsModule = await import('./clientTools.js').catch(() => ({}));
+const { AGENT_TOOL_NAMES, TOOL_TIMEOUT_MS, createClientTools, normalizeToolParams, cancelMovesWhenHidden } = toolsModule;
+
+function recordingCommands(overrides = {}) {
+  const calls = [];
+  const command = (name, result = { ok: true, did: `${name} done`, reason: '' }) => (...args) => {
+    calls.push([name, ...args]);
+    return result;
+  };
+  return {
+    calls,
+    commands: {
+      faceRegion: command('faceRegion'),
+      rotateTo: command('rotateTo'),
+      highlightRegion: command('highlightRegion'),
+      clearHighlight: command('clearHighlight'),
+      setColourRegions: command('setColourRegions'),
+      setAnnotations: command('setAnnotations'),
+      lookupRegion: command('lookupRegion', { ok: true, region: { id: 6, name: "Broca's Area" } }),
+      listRegions: command('listRegions', { ok: true, divisions: [] }),
+      getSceneState: command('getSceneState', { ok: true, view: 'left_lateral' }),
+      ...overrides,
+    },
+  };
+}
+
+describe('M4: the nine client tools', () => {
+  it('match the tools in agent/architect-brief.md section 4 exactly', () => {
+    const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
+    const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+    const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
+    expect(AGENT_TOOL_NAMES).toEqual(headings);
+    expect(AGENT_TOOL_NAMES).toHaveLength(9);
+  });
+
+  it('exposes every tool by its exact name', () => {
+    const tools = createClientTools(recordingCommands().commands);
+    for (const name of AGENT_TOOL_NAMES) expect(typeof tools[name], name).toBe('function');
+  });
+
+  it.each([
+    ['face_region', { region_id: 6, hemisphere: 'left' }, ['faceRegion', 6, { hemisphere: 'left' }]],
+    ['face_region', { region_id: 11 }, ['faceRegion', 11, { hemisphere: undefined }]],
+    ['rotate_to_view', { view: 'posterior' }, ['rotateTo', 'posterior']],
+    ['highlight_region', { region_id: 9 }, ['highlightRegion', 9]],
+    ['clear_highlight', {}, ['clearHighlight']],
+    ['set_colour_regions', { enabled: true }, ['setColourRegions', true]],
+    ['set_annotations', { enabled: 'false' }, ['setAnnotations', 'false']],
+    ['lookup_region', { name: "broca's area" }, ['lookupRegion', { regionId: undefined, name: "broca's area" }]],
+    ['lookup_region', { region_id: 19 }, ['lookupRegion', { regionId: 19, name: undefined }]],
+    ['list_regions', {}, ['listRegions']],
+    ['get_scene_state', {}, ['getSceneState']],
+  ])('%s %j calls the scene command', async (name, params, expected) => {
+    const { commands, calls } = recordingCommands();
+    await createClientTools(commands)[name](params);
+    expect(calls).toEqual([expected]);
+  });
+
+  it('returns each result as JSON text, which is all the SDK passes back to the agent', async () => {
+    const { commands } = recordingCommands();
+    const result = await createClientTools(commands).face_region({ region_id: 6 });
+    expect(typeof result).toBe('string');
+    expect(JSON.parse(result)).toEqual({ ok: true, did: 'faceRegion done', reason: '' });
+  });
+
+  it('accepts parameters sent as a JSON string or nested under arguments', async () => {
+    const { commands, calls } = recordingCommands();
+    const tools = createClientTools(commands);
+    await tools.highlight_region('{"region_id": 4}');
+    await tools.highlight_region({ arguments: { region_id: 5 } });
+    expect(calls).toEqual([
+      ['highlightRegion', 4],
+      ['highlightRegion', 5],
+    ]);
+    expect(normalizeToolParams(null)).toEqual({});
+    expect(normalizeToolParams('not json')).toEqual({});
+  });
+
+  it('answers the agent truthfully when a command throws, and never throws itself', async () => {
+    const { commands } = recordingCommands({
+      rotateTo: () => {
+        throw new Error('scene not ready');
+      },
+    });
+    const result = JSON.parse(await createClientTools(commands).rotate_to_view({ view: 'anterior' }));
+    expect(result).toEqual({ ok: false, did: '', reason: 'scene not ready' });
+  });
+});
+
+describe('M4: a move never outlasts the agent', () => {
+  it('stops waiting before the 8-second agent timeout and cancels the move', async () => {
+    expect(TOOL_TIMEOUT_MS).toBeLessThan(8000);
+    const timers = [];
+    const cancelled = [];
+    const { commands } = recordingCommands({ faceRegion: () => new Promise(() => {}) });
+    const tools = createClientTools(commands, {
+      cancelMoves: (reason) => cancelled.push(reason),
+      setTimeoutImpl: (fn, ms) => timers.push({ fn, ms }),
+    });
+    const pending = tools.face_region({ region_id: 6 });
+    expect(timers.map(({ ms }) => ms)).toEqual([TOOL_TIMEOUT_MS]);
+    timers[0].fn();
+    const result = JSON.parse(await pending);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/too long/i);
+    expect(cancelled).toEqual(['timeout']);
+  });
+
+  it('cancels any move when the tab is hidden, and stops watching on cleanup', () => {
+    const listeners = new Map();
+    const doc = {
+      hidden: false,
+      addEventListener: (type, fn) => listeners.set(type, fn),
+      removeEventListener: (type) => listeners.delete(type),
+    };
+    const cancelled = [];
+    const stop = cancelMovesWhenHidden({ document: doc, cancelMoves: (reason) => cancelled.push(reason) });
+    listeners.get('visibilitychange')();
+    doc.hidden = true;
+    listeners.get('visibilitychange')();
+    expect(cancelled).toEqual(['hidden']);
+    stop();
+    expect(listeners.has('visibilitychange')).toBe(false);
+  });
+});

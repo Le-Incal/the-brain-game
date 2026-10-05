@@ -594,3 +594,19 @@ describe('M2: faceRegion works in specimen space', () => {
     expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
   });
 });
+
+describe('M4: moves stopped by the page say why', () => {
+  it.each([
+    ['hidden', /hidden/i],
+    ['timeout', /too long/i],
+  ])('a move cancelled for %s resolves ok: false with a plain reason', async (reason, pattern) => {
+    const { commands, controls } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 400);
+    controls.cancelMove(reason);
+    const result = await pending;
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(pattern);
+    expect(result.reason).not.toMatch(/user/i);
+  });
+});
