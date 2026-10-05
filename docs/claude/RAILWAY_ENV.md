@@ -29,6 +29,18 @@ All variables are required in production (`ELEVENLABS_WEBHOOK_SECRET` is optiona
 - The browser then calls `startSession({ conversationToken, dynamicVariables, overrides: { tts: { voiceId } } })`, passing `dynamicVariables` exactly as returned. Always send the override, for both guides.
 - Minutes are reserved, then refunded: minting reserves the session cap (or what the device has left, if less) against the device's daily cap and the global budget. ElevenLabs' post-call webhook (`POST /api/voice/webhook/elevenlabs`, header `elevenlabs-signature: t=<secs>,v0=<hex HMAC-SHA256 of "t.body">`) reports the real duration, which settles the reservation. No webhook means no refund.
 - `GET /api/voice/status` returns `{ available, reason?, remainingSeconds? }` so the client knows whether to offer voice.
-- Launch is public, with no access code. The token route is rate-limited per IP.
+- Launch is public, with no access code. The token route is rate-limited per client address: on Railway that is `X-Real-IP`, which Railway's edge always overwrites (Railway staff, May 2026); `X-Forwarded-For` is ignored because it keeps client-supplied values. Off Railway (no `RAILWAY_ENVIRONMENT_ID`) the direct connection address is used.
 - Missing required variables at boot: the server still serves the game, and voice reports itself unavailable (it never crashes the site).
 - Tests (Supertest) use fake values and a mocked ElevenLabs token endpoint; no test reads real secrets.
+
+## Launch checklist
+
+Staging and production share one ElevenLabs agent, and an agent has a single post-call webhook URL. Until launch it points at staging.
+
+1. M5 passes: the 20-question eval and the 7 acceptance conversations.
+2. Production variables set, including `ELEVENLABS_WEBHOOK_SECRET` and `VOICE_HOSTS=www.brain-game.io,brain-game.io`. Leave `VITE_VOICE_ENABLED` unset until the moment of launch.
+3. **Repoint the post-call webhook to `https://www.brain-game.io/api/voice/webhook/elevenlabs`**, and put the secret it shows into production. Without this, production refunds never arrive and the daily budget drains about four times too fast; staging stops receiving them.
+4. Merge `staging` into `main` (this is what switches production from static hosting to `npm start`).
+5. Set `VITE_VOICE_ENABLED=true` in production and deploy.
+6. Check `/api/voice/status` on brain-game.io reports available, and that one short test conversation is refunded.
+

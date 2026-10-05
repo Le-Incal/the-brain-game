@@ -46,9 +46,14 @@ export function createApp({
 } = {}) {
   const config = readVoiceConfig(env);
   const app = express();
-  // Railway terminates TLS at one proxy hop; req.ip is the address it saw.
-  app.set('trust proxy', 1);
   app.disable('x-powered-by');
+  // Railway's edge always overwrites X-Real-IP with the client's address,
+  // while X-Forwarded-For keeps whatever the client sent (Railway staff, May
+  // 2026). Railway sets RAILWAY_ENVIRONMENT_ID on every deployment; off
+  // Railway nothing overwrites the header, so use the direct connection.
+  const onRailway = Boolean(env.RAILWAY_ENVIRONMENT_ID);
+  const clientAddress = (req) =>
+    (onRailway && req.get('x-real-ip')?.trim()) || req.socket.remoteAddress || 'unknown';
 
   const ledger = config.available
     ? createMinuteLedger({
@@ -159,7 +164,7 @@ export function createApp({
 
   app.post('/api/voice/token', express.json({ limit: '2kb' }), async (req, res) => {
     if (!voiceGate(req, res, { onRefuse: 403 })) return;
-    const limit = tokenLimiter.take(req.ip);
+    const limit = tokenLimiter.take(clientAddress(req));
     if (!limit.allowed) {
       res.set('Retry-After', String(limit.retryAfterSeconds));
       return res.status(429).json({ available: false, reason: 'rate_limited' });
