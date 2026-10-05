@@ -3,6 +3,10 @@ import { BrainScene } from './utils/brainScene';
 import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
+import { VOICE_ENABLED } from './voice/flags';
+import { GUIDES, readSavedGuide, saveGuide, studyEntryStep } from './voice/guides';
+import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
+import { createSceneCommands } from './voice/sceneCommands';
 
 /** Viewport-height fraction/sec at 1.0× — half the former 0.08 base. */
 const BASE_FALL_SPEED = 0.04;
@@ -44,6 +48,45 @@ export function getPrimaryControl(gamePhase, brainReady) {
     };
   }
   return null;
+}
+
+// Study mode is where the voice guide works. It opens only from the ready
+// screen or a paused game, so no word is ever mid-fall when the guide speaks.
+const STUDY_ENTRY_PHASES = new Set(['ready', 'paused']);
+
+export function enterStudy(gamePhase, { voiceEnabled = false } = {}) {
+  if (!voiceEnabled || !STUDY_ENTRY_PHASES.has(gamePhase)) return null;
+  return { phase: 'study', returnTo: gamePhase };
+}
+
+// Leaving returns where the player came from, but never restarts falling
+// words by itself: a game that was running comes back paused.
+export function leaveStudy(returnTo) {
+  if (returnTo === 'playing' || returnTo === 'paused') return 'paused';
+  return 'ready';
+}
+
+export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } = {}) {
+  if (!voiceEnabled || !brainReady) return null;
+  if (gamePhase === 'study') {
+    return { label: 'Leave Study', action: 'leave-study', active: true };
+  }
+  if (STUDY_ENTRY_PHASES.has(gamePhase)) {
+    return { label: 'Study', action: 'enter-study', active: false };
+  }
+  return null;
+}
+
+export function sceneModeForPhase(gamePhase) {
+  return gamePhase === 'study' ? 'study' : 'game';
+}
+
+function browserStorage() {
+  try {
+    return typeof window === 'undefined' ? undefined : window.localStorage;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -327,6 +370,55 @@ export const STYLES = {
     cursor: 'pointer',
     boxShadow: '3px 3px 0 rgba(26, 24, 20, 0.2)',
   },
+  mobileStudyControls: {
+    display: 'none',
+  },
+  guidePicker: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 20,
+    width: 'min(340px, calc(100vw - 32px))',
+    padding: '20px 22px',
+    textAlign: 'center',
+    background: 'rgba(247, 240, 220, 0.97)',
+    border: '1px solid #1a1814',
+    boxShadow:
+      'inset 0 0 0 3px #f7f0dc, inset 0 0 0 4px rgba(26, 24, 20, 0.24), 3px 3px 0 rgba(26, 24, 20, 0.18)',
+  },
+  guidePickerTitle: {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 16,
+    fontWeight: 700,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+    color: '#1a1814',
+  },
+  guidePickerNote: {
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontStyle: 'italic',
+    fontSize: 14,
+    lineHeight: 1.45,
+    color: '#5a4030',
+    margin: '10px 0 16px',
+  },
+  guidePickerChoices: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  guidePickerCancel: {
+    marginTop: 14,
+    background: 'transparent',
+    border: 'none',
+    fontFamily: "'EB Garamond', Georgia, serif",
+    fontStyle: 'italic',
+    fontSize: 13,
+    color: '#5a4030',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
   countdown: {
     fontFamily: "'Playfair Display', Georgia, serif",
     fontSize: 'clamp(52px, 10vw, 92px)',
@@ -405,6 +497,14 @@ export default function App() {
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [guide, setGuide] = useState(() => readSavedGuide(browserStorage()));
+  const [guidePickerOpen, setGuidePickerOpen] = useState(false);
+  const studyReturnToRef = useRef('ready');
+  const sceneCommandsRef = useRef(null);
+  const sceneAdapterRef = useRef(null);
+  // The guide's adapter reads App state from outside React's render cycle.
+  const liveStateRef = useRef({});
+  liveStateRef.current = { gamePhase, colorMode, showLabels };
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -435,6 +535,9 @@ export default function App() {
       onNavigatingChange: handleNavigatingChange,
     });
     sceneRef.current = brainScene;
+    // StrictMode mounts this effect twice in development; a discarded scene's
+    // model can finish loading after its replacement, so it must not attach.
+    let disposed = false;
     // Atlas work needs to drive the viewer from outside React: setting a known
     // orbit angle and reading back what the surface shows there is how a paint
     // change is checked against the model rather than against a memory of it.
@@ -511,6 +614,19 @@ export default function App() {
           },
         });
         gameRef.current = game;
+        if (VOICE_ENABLED && !disposed) {
+          const adapter = createBrainSceneAdapter({
+            scene: brainScene,
+            getMode: () => sceneModeForPhase(liveStateRef.current.gamePhase),
+            getColourRegions: () => liveStateRef.current.colorMode,
+            setColourRegions: (value) => setColorMode(value),
+            getAnnotations: () => liveStateRef.current.showLabels,
+            setAnnotations: (value) => setShowLabels(value),
+          });
+          sceneAdapterRef.current = adapter;
+          sceneCommandsRef.current = createSceneCommands(adapter);
+          if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
+        }
         setBrainReady(true);
         setLoading(false);
       })
@@ -523,6 +639,10 @@ export default function App() {
       });
 
     return () => {
+      disposed = true;
+      sceneCommandsRef.current?.dispose?.();
+      sceneCommandsRef.current = null;
+      sceneAdapterRef.current = null;
       gameRef.current?.dispose();
       gameRef.current = null;
       window.clearTimeout(countdownTimerRef.current);
@@ -612,6 +732,39 @@ export default function App() {
       setGamePhase('playing');
     }
   };
+
+  const beginStudy = () => {
+    const transition = enterStudy(gamePhase, { voiceEnabled: VOICE_ENABLED });
+    if (!transition) return;
+    studyReturnToRef.current = transition.returnTo;
+    sceneRef.current?.enterStudyMode();
+    setGamePhase(transition.phase);
+  };
+
+  const handleStudyControl = (action) => {
+    if (action === 'enter-study') {
+      if (studyEntryStep(guide) === 'pick-guide') {
+        setGuidePickerOpen(true);
+        return;
+      }
+      beginStudy();
+    } else if (action === 'leave-study') {
+      sceneAdapterRef.current?.resetForGame();
+      setGamePhase(leaveStudy(studyReturnToRef.current));
+    }
+    setMobileSettingsOpen(false);
+  };
+
+  const chooseGuide = (guideId) => {
+    saveGuide(browserStorage(), guideId);
+    setGuide(guideId);
+    setGuidePickerOpen(false);
+    beginStudy();
+  };
+
+  const studyControl = getStudyControl(gamePhase, brainReady, {
+    voiceEnabled: VOICE_ENABLED,
+  });
 
   const describedRegion = getDescribedRegion({
     isNavigating,
@@ -716,6 +869,16 @@ export default function App() {
             </span>
           </label>
         </div>
+        {studyControl && (
+          <div className="mobile-study-controls" style={STYLES.mobileStudyControls}>
+            <ToggleButton
+              label={studyControl.label}
+              active={studyControl.active}
+              onClick={() => handleStudyControl(studyControl.action)}
+              mini
+            />
+          </div>
+        )}
       </div>
       <div className="score-display" style={{ ...STYLES.score, ...STYLES.scorePosition }}>
         Score: {score}
@@ -848,7 +1011,51 @@ export default function App() {
           onClick={() => setShowLabels(!showLabels)}
           compact
         />
+        {studyControl && (
+          <ToggleButton
+            className="study-control"
+            label={studyControl.label}
+            active={studyControl.active}
+            onClick={() => handleStudyControl(studyControl.action)}
+            compact
+          />
+        )}
       </div>
+
+      {guidePickerOpen && (
+        <div
+          className="guide-picker"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="guide-picker-title"
+          style={STYLES.guidePicker}
+        >
+          <div id="guide-picker-title" style={STYLES.guidePickerTitle}>
+            Choose your guide
+          </div>
+          <div style={STYLES.guidePickerNote}>
+            Both are this same brain; only the voice differs. You can change
+            your guide later in Settings.
+          </div>
+          <div style={STYLES.guidePickerChoices}>
+            {GUIDES.map(({ id, name }) => (
+              <ToggleButton
+                key={id}
+                label={name}
+                active={false}
+                onClick={() => chooseGuide(id)}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setGuidePickerOpen(false)}
+            style={STYLES.guidePickerCancel}
+          >
+            Not now
+          </button>
+        </div>
+      )}
     </div>
   );
 }
