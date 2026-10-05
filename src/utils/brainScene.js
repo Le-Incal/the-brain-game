@@ -22,6 +22,8 @@ import {
   computeCerebrumPivot,
   createAtlasAnnotationDefinitions,
 } from './brainLoader';
+import { createSpecimenSpace } from './specimenSpace';
+import { mockVoiceLevel, smoothVoiceLevel } from '../voice/voiceLevel';
 
 // Where the orbit target sits. The camera turns about this point, so the
 // specimen is displaced from it rather than moved with it.
@@ -235,6 +237,40 @@ export function computeHighlightPulse(elapsedMs) {
   return 0.35 + 0.65 * wave;
 }
 
+// The guide's highlight is the region's own Colour Regions tint at full
+// strength under unchanged linework, held steadily until cleared.
+export const VOICE_HIGHLIGHT_PULSE = 1;
+
+/**
+ * Which region is lit and how strongly. Game feedback wins while it runs and
+ * is unchanged from before; otherwise the guide's highlight holds steadily.
+ */
+export function resolveHighlight({ now, feedback, voiceRegionId }) {
+  if (feedback && now < feedback.until) {
+    return { regionId: feedback.regionId, pulse: computeHighlightPulse(now - feedback.startedAt) };
+  }
+  if (voiceRegionId !== null && voiceRegionId !== undefined) {
+    return { regionId: voiceRegionId, pulse: VOICE_HIGHLIGHT_PULSE };
+  }
+  return { regionId: -1, pulse: 0 };
+}
+
+/**
+ * Game feedback drives uHighlight (it isolates the answer and dims the rest).
+ * The guide's highlight has its own uniform so it never dims other regions.
+ */
+export function toHighlightUniforms({ now, feedback, voiceRegionId }) {
+  const resolved = resolveHighlight({ now, feedback, voiceRegionId });
+  const feedbackActive = Boolean(feedback && now < feedback.until);
+  return feedbackActive
+    ? { uHighlight: resolved.regionId, uHighlightPulse: resolved.pulse, uVoiceRegion: -1 }
+    : { uHighlight: -1, uHighlightPulse: 0, uVoiceRegion: resolved.regionId };
+}
+
+export function createVoiceUniforms() {
+  return { uVoiceLevel: { value: 0 } };
+}
+
 export class BrainScene {
   constructor(container, options = {}) {
     this.container = container;
@@ -305,6 +341,8 @@ export class BrainScene {
       uHighlight: { value: -1.0 },
       uHighlightPulse: { value: 0.0 },
       uSelectedRegion: { value: -1.0 },
+      uVoiceRegion: { value: -1.0 },
+      ...createVoiceUniforms(),
       uInkColor: { value: new THREE.Color(0x1a1a1a) },
       uPaperColor: { value: new THREE.Color(0xf3eee4) },
     };
@@ -350,6 +388,13 @@ export class BrainScene {
     this.selectedRegionId = -1;
     this._highlightUntil = 0;
     this._highlightStartedAt = 0;
+    this._feedback = null;
+    this._voiceHighlight = null;
+    this._voiceLevel = 0;
+    this._voiceLevelTarget = 0;
+    this._useMockVoiceLevel = false;
+    this._lastVoiceFrameAt = performance.now();
+    this._specimenSpace = null;
     this.labelObjects = [];
     this._labelWorldPosition = new THREE.Vector3();
     this._labelCenterWorld = new THREE.Vector3();
@@ -460,6 +505,13 @@ export class BrainScene {
     this.specimenOrientGroup.add(brainGroup);
 
     const pivot = computeCerebrumPivot(this.brainMeshes);
+    if (this.brainNormalization) {
+      this._specimenSpace = createSpecimenSpace({
+        normalization: this.brainNormalization,
+        scale: BRAIN_SCALE,
+        pivot,
+      });
+    }
     const pivotOffset = pivot.clone().multiplyScalar(-BRAIN_SCALE);
     brainGroup.position.copy(pivotOffset);
     this.labelGroup.position.copy(pivotOffset);
@@ -729,25 +781,73 @@ export class BrainScene {
     const now = performance.now();
     this._highlightUntil = now + durationMs;
     this._highlightStartedAt = now;
-    this.uniforms.uHighlight.value = regionId ?? -1.0;
-    this.uniforms.uHighlightPulse.value = computeHighlightPulse(0);
+    this._feedback = { regionId: regionId ?? -1, startedAt: now, until: now + durationMs };
+    this._applyHighlightUniforms(now);
   }
 
   _updateHighlightFeedback() {
-    if (!this._highlightUntil) return;
-
     const now = performance.now();
-    if (now >= this._highlightUntil) {
-      this.uniforms.uHighlight.value = -1.0;
-      this.uniforms.uHighlightPulse.value = 0.0;
+    if (this._feedback && now >= this._feedback.until) {
+      this._feedback = null;
       this._highlightUntil = 0;
       this._highlightStartedAt = 0;
-      return;
     }
+    this._applyHighlightUniforms(now);
+  }
 
-    this.uniforms.uHighlightPulse.value = computeHighlightPulse(
-      now - this._highlightStartedAt
-    );
+  _applyHighlightUniforms(now) {
+    const next = toHighlightUniforms({
+      now,
+      feedback: this._feedback,
+      voiceRegionId: this._voiceHighlight,
+    });
+    this.uniforms.uHighlight.value = next.uHighlight;
+    this.uniforms.uHighlightPulse.value = next.uHighlightPulse;
+    this.uniforms.uVoiceRegion.value = next.uVoiceRegion;
+  }
+
+  /** The guide's highlight: held until cleared, never dims other regions. */
+  setVoiceHighlight(regionId) {
+    this._voiceHighlight = regionId ?? null;
+    this._applyHighlightUniforms(performance.now());
+  }
+
+  getVoiceHighlight() {
+    return this._voiceHighlight;
+  }
+
+  /** Raw model frame to the specimen's frame; null until the brain loads. */
+  toSpecimenSpace(point) {
+    return this._specimenSpace ? this._specimenSpace.toSpecimenSpace(point) : null;
+  }
+
+  toSpecimenDirection(direction) {
+    return this._specimenSpace ? this._specimenSpace.toSpecimenDirection(direction) : null;
+  }
+
+  /** Study mode keeps the specimen on what the guide shows. */
+  enterStudyMode() {
+    this.controls.stopAutoRotate();
+  }
+
+  /** Target speaking level, 0 to 1 (M4 feeds the guide's output volume). */
+  setVoiceLevel(level) {
+    this._voiceLevelTarget = Number.isFinite(level) ? level : 0;
+  }
+
+  /** Drives the voice level from a deterministic stand-in until M4. */
+  useMockVoiceLevel(enabled) {
+    this._useMockVoiceLevel = Boolean(enabled);
+    if (!enabled) this._voiceLevelTarget = 0;
+  }
+
+  _updateVoiceLevel() {
+    const now = performance.now();
+    const dt = Math.min((now - this._lastVoiceFrameAt) / 1000, 0.1);
+    this._lastVoiceFrameAt = now;
+    const target = this._useMockVoiceLevel ? mockVoiceLevel(now) : this._voiceLevelTarget;
+    this._voiceLevel = smoothVoiceLevel(this._voiceLevel, target, dt);
+    this.uniforms.uVoiceLevel.value = this._voiceLevel;
   }
 
   getRegionIdAtNormalized(nx, ny) {
@@ -880,6 +980,7 @@ export class BrainScene {
     this.controls.update();
     this._syncNavigatingState();
     this._updateHighlightFeedback();
+    this._updateVoiceLevel();
     this._updateRaycast();
     this._updateLabelLayout();
 

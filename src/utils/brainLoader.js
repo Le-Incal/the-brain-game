@@ -163,6 +163,33 @@ export function applyVertexRegionAttributes(meshes, buffer) {
   return applied;
 }
 
+/**
+ * Bounds of the meshes as the scene places them, plus the source transform
+ * the loader bakes into the vertices. regionGeometry.json is measured from the
+ * raw mesh positions of the first mesh, so the voice layer needs that matrix
+ * to find where a region is drawn.
+ */
+export function describeNormalization(meshes) {
+  // Compute the aggregate bounds directly from typed arrays. Avoid building
+  // an array-of-arrays for every GLB vertex: on the production specimen that
+  // causes a large allocation and browser pause on each reload.
+  const bbox = new THREE.Box3();
+  const transformedPoint = new THREE.Vector3();
+  meshes.forEach((mesh) => {
+    const pos = mesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      transformedPoint.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      bbox.expandByPoint(transformedPoint);
+    }
+  });
+  const size = bbox.getSize(new THREE.Vector3());
+  return {
+    center: bbox.getCenter(new THREE.Vector3()).toArray(),
+    maxDim: Math.max(size.x, size.y, size.z),
+    sourceMatrix: meshes[0] ? meshes[0].matrixWorld.toArray() : null,
+  };
+}
+
 export function bakeAndNormalizeMesh(mesh, center, maxDim) {
   const geometry = mesh.geometry;
   const positions = geometry.getAttribute('position');
@@ -458,26 +485,13 @@ export async function loadBrainModel(url = '/brain.glb') {
 
         gltf.scene.updateMatrixWorld(true);
 
-        // Compute the aggregate bounds directly from typed arrays. Avoid building
-        // an array-of-arrays for every GLB vertex: on the production specimen that
-        // causes a large allocation and browser pause on each reload.
-        const bbox = new THREE.Box3();
-        const transformedPoint = new THREE.Vector3();
-        let vertexCount = 0;
-        meshes.forEach((mesh) => {
-          const pos = mesh.geometry.attributes.position;
-          vertexCount += pos.count;
-          for (let i = 0; i < pos.count; i++) {
-            transformedPoint
-              .fromBufferAttribute(pos, i)
-              .applyMatrix4(mesh.matrixWorld);
-            bbox.expandByPoint(transformedPoint);
-          }
-        });
-
-        const center = bbox.getCenter(new THREE.Vector3());
-        const size = bbox.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
+        const vertexCount = meshes.reduce(
+          (total, mesh) => total + mesh.geometry.attributes.position.count,
+          0
+        );
+        const normalization = describeNormalization(meshes);
+        const center = new THREE.Vector3(...normalization.center);
+        const { maxDim } = normalization;
 
         const atlasAttributeResults = meshes.map((mesh) =>
           decodeAtlasVertexAttributes(mesh.geometry)
@@ -492,10 +506,7 @@ export async function loadBrainModel(url = '/brain.glb') {
         });
         brainGroup.userData.atlasVertexAttributesValid =
           atlasVertexAttributesValid;
-        brainGroup.userData.normalization = {
-          center: center.toArray(),
-          maxDim,
-        };
+        brainGroup.userData.normalization = normalization;
 
         resolve({
           group: brainGroup,

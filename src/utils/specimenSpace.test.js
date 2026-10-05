@@ -52,8 +52,11 @@ describe('describeNormalization', () => {
     const size = bounds.getSize(new THREE.Vector3());
 
     const normalization = describeNormalization([mesh]);
-    expect(normalization.center).toEqual(bounds.getCenter(new THREE.Vector3()).toArray());
-    expect(normalization.maxDim).toBeCloseTo(Math.max(size.x, size.y, size.z), 12);
+    // The mesh stores float32 positions, so compare to float32 precision.
+    bounds.getCenter(new THREE.Vector3()).toArray().forEach((value, axis) => {
+      expect(normalization.center[axis]).toBeCloseTo(value, 6);
+    });
+    expect(normalization.maxDim).toBeCloseTo(Math.max(size.x, size.y, size.z), 6);
     expect(normalization.sourceMatrix).toEqual(mesh.matrixWorld.toArray());
   });
 });

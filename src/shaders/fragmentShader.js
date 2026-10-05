@@ -16,6 +16,11 @@ const fragmentShader = /* glsl */ `
   // feedback. Driven from the render loop so the colour can pulse.
   uniform float uHighlightPulse;
   uniform float uSelectedRegion;
+  // The guide's highlight (Study mode): the region's own Colour Regions tint
+  // under unchanged linework. Unlike catch feedback it never dims the rest.
+  uniform float uVoiceRegion;
+  // The guide's speaking level, 0 to 1. Silence (0) renders the engraving as is.
+  uniform float uVoiceLevel;
 
   uniform vec3 uInkColor;
   uniform vec3 uPaperColor;
@@ -26,6 +31,8 @@ const fragmentShader = /* glsl */ `
   const float REGION_PARCHMENT_BLEND = 0.45;
   // Non-target engraving during feedback: still readable, clearly recessed.
   const float FEEDBACK_OTHER_INK = 0.38;
+  #define VOICE_HATCH_GAIN 0.25
+  #define VOICE_EDGE_GAIN 0.35
 
   varying vec2 vUv0;
   varying vec2 vUvRegionId;
@@ -132,14 +139,15 @@ const fragmentShader = /* glsl */ `
     float structuralInk = max(cavityInk, curvatureInk);
 
     float viewFacing = clamp(dot(normal, viewDirection), 0.0, 1.0);
-    float silhouette = pow(1.0 - viewFacing, 3.2) * 0.48;
+    float silhouette = pow(1.0 - viewFacing, 3.2) * 0.48 * (1.0 + uVoiceLevel * VOICE_EDGE_GAIN);
     structuralInk = max(structuralInk, silhouette);
 
     float hatchMask = smoothstep(0.42, 0.74, tonalDarkness);
     float deepHatchMask = smoothstep(0.62, 0.88, tonalDarkness);
 
-    float hatch1 = triplanarHatch(vWorldPosition, normal, 0.72, 26.0, 0.055) * hatchMask * 0.34;
-    float hatch2 = triplanarHatch(vWorldPosition, normal, -0.48, 31.0, 0.045) * deepHatchMask * 0.26;
+    float voiceHatch = 1.0 + uVoiceLevel * VOICE_HATCH_GAIN;
+    float hatch1 = triplanarHatch(vWorldPosition, normal, 0.72, 26.0 * voiceHatch, 0.055) * hatchMask * 0.34;
+    float hatch2 = triplanarHatch(vWorldPosition, normal, -0.48, 31.0 * voiceHatch, 0.045) * deepHatchMask * 0.26;
     float hatchInk = max(hatch1, hatch2);
     // Keep the baked strokes modestly lighter without changing their threshold;
     // derivative filtering preserves sharpness and suppresses subpixel shimmer.
@@ -164,6 +172,7 @@ const fragmentShader = /* glsl */ `
     int highlightRegionId = int(floor(uHighlight + 0.5));
     bool feedbackRegion = feedbackMode && validRegion && regionId == highlightRegionId;
     bool otherDuringFeedback = feedbackMode && !feedbackRegion;
+    bool voiceRegion = uVoiceRegion > -0.5 && validRegion && regionId == int(floor(uVoiceRegion + 0.5));
     // Feedback isolates the answer: withdraw every other colour wash.
     bool colourRegionsActive =
       uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion;
@@ -194,7 +203,7 @@ const fragmentShader = /* glsl */ `
         clamp(uHighlightPulse, 0.0, 1.0)
       );
       finalColor = mix(pulsedFill, uInkColor, totalInk);
-    } else if (!feedbackMode && selectedRegion) {
+    } else if (!feedbackMode && (selectedRegion || voiceRegion)) {
       finalColor = mix(tintedRegionColor, uInkColor, totalInk);
     }
 

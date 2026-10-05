@@ -277,6 +277,15 @@ export class BrainOrbitControls {
     });
   }
 
+  /**
+   * Study mode stops the spin so the specimen stays on what the guide just
+   * showed. Unlike a grab, this is not the player's first interaction, so the
+   * onFirstInteraction callback still fires when they first take hold.
+   */
+  stopAutoRotate() {
+    this.autoRotate = false;
+  }
+
   /** Observes the player taking hold (grab) and letting go (release). */
   subscribeUserInput(listener) {
     this._userInputListeners.add(listener);

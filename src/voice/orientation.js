@@ -23,6 +23,11 @@ export const VIEW_AXES = {
 const SUPERIOR = new THREE.Vector3(0, 1, 0);
 const ANTERIOR = new THREE.Vector3(0, 0, 1);
 
+// Anatomical axes are measured in the raw model frame. A scene whose model
+// carries a source rotation passes `convert` to rotate them into the
+// specimen's frame; by default they are used as they are.
+const identityConvert = (axis) => new THREE.Vector3(...axis).normalize();
+
 // Below this, superior is too close to the facing direction to define "up"
 // (about 17 degrees from vertical), so anterior takes over as on a plate.
 const MIN_UP_COMPONENT = 0.3;
@@ -49,10 +54,10 @@ function perpendicularUp(direction, preferredUp) {
  * while keeping an anatomical up toward screen-up: superior by default,
  * anterior when the direction is too close to vertical for superior to work.
  */
-export function orientationFacing(direction, frame, preferredUp = SUPERIOR) {
+export function orientationFacing(direction, frame, preferredUp = SUPERIOR, fallbackUp = ANTERIOR) {
   const forward = direction.clone().normalize();
   const up =
-    perpendicularUp(forward, preferredUp) ?? perpendicularUp(forward, ANTERIOR);
+    perpendicularUp(forward, preferredUp) ?? perpendicularUp(forward, fallbackUp);
   const side = new THREE.Vector3().crossVectors(up, forward);
 
   const screenSide = new THREE.Vector3().crossVectors(frame.screenUp, frame.toCamera);
@@ -62,18 +67,19 @@ export function orientationFacing(direction, frame, preferredUp = SUPERIOR) {
   return new THREE.Quaternion().setFromRotationMatrix(rotation).normalize();
 }
 
-export function orientationForView(view, frame) {
-  const axis = new THREE.Vector3(...VIEW_AXES[view]);
+export function orientationForView(view, frame, convert = identityConvert) {
+  const axis = convert(VIEW_AXES[view]);
+  const anterior = convert(ANTERIOR.toArray());
   // Top and bottom views put anterior up, the anatomy-plate convention.
-  const up = view === 'superior' || view === 'inferior' ? ANTERIOR : SUPERIOR;
-  return orientationFacing(axis, frame, up);
+  const up = view === 'superior' || view === 'inferior' ? anterior : convert(SUPERIOR.toArray());
+  return orientationFacing(axis, frame, up, anterior);
 }
 
 /** Nearest standard view to the viewer, and whether it is squarely that view. */
-export function classifyView(quaternion, frame) {
+export function classifyView(quaternion, frame, convert = identityConvert) {
   let best = { view: VIEWS[0], dot: -Infinity };
   for (const view of VIEWS) {
-    const dot = new THREE.Vector3(...VIEW_AXES[view]).applyQuaternion(quaternion).dot(frame.toCamera);
+    const dot = convert(VIEW_AXES[view]).applyQuaternion(quaternion).dot(frame.toCamera);
     if (dot > best.dot) best = { view, dot };
   }
   return { view: best.view, viewExact: best.dot > EXACT_VIEW_DOT };

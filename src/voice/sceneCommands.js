@@ -6,7 +6,9 @@
  * through a scene adapter so they run without WebGL:
  *
  *   controls            BrainOrbitControls (moveTo, subscribeUserInput)
- *   getPivot()          specimen pivot in regionGeometry space
+ *   toSpecimenSpace(point), toSpecimenDirection(axis)
+ *                       raw model frame (regionGeometry, view axes) to the
+ *                       specimen's frame; null until the specimen has loaded
  *   setHighlight(id|null), getHighlight()
  *   setColourRegions(bool), getColourRegions()
  *   setAnnotations(bool), getAnnotations()
@@ -30,6 +32,7 @@ const STUDY_ONLY_REASON = 'I can only change the scene in Study mode.';
 const HOLDING_REASON = 'The user is holding me; I will not move while they do.';
 const USER_GRAB_REASON = 'The user took hold of me mid-turn, so I stopped where they grabbed me.';
 const REPLACED_REASON = 'This turn was replaced by a later move before it finished.';
+const NOT_LOADED_REASON = 'I have not loaded yet, so I cannot turn.';
 
 // Medial regions face the midline, so no exterior view shows them squarely.
 // Each turns to the standard view whose generated labels include it.
@@ -106,7 +109,13 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
 
   const frame = () => getViewFrame(controls.camera, controls.target);
   const inStudy = () => adapter.getMode() === 'study';
-  const currentView = () => classifyView(controls.orientGroup.quaternion, frame());
+  const loaded = () =>
+    adapter.toSpecimenSpace([0, 0, 0]) !== null && adapter.toSpecimenDirection([1, 0, 0]) !== null;
+  // View axes share the raw model frame with the region geometry, so they
+  // take the same rotation. Before loading there is nothing to rotate yet.
+  const convertAxis = (axis) =>
+    adapter.toSpecimenDirection(axis) ?? new THREE.Vector3(...axis).normalize();
+  const currentView = () => classifyView(controls.orientGroup.quaternion, frame(), convertAxis);
 
   const unsubscribe = controls.subscribeUserInput((event) => {
     if (event.type === 'grab') {
@@ -132,8 +141,16 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
   }
 
   function facingDirection(point) {
-    const pivot = adapter.getPivot();
-    return new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]).normalize();
+    return adapter.toSpecimenSpace(point).normalize();
+  }
+
+  function orientationFacingRegion(point) {
+    return orientationFacing(
+      facingDirection(point),
+      frame(),
+      convertAxis([0, 1, 0]),
+      convertAxis([0, 0, 1])
+    );
   }
 
   function nearerHemisphere(geometry) {
@@ -148,6 +165,7 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
     if (userHolding) return fail(HOLDING_REASON);
+    if (!loaded()) return fail(NOT_LOADED_REASON);
 
     const region = REGION_BY_ID.get(id);
     const geometry = regionGeometry.regions[String(id)];
@@ -158,11 +176,11 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
     let arrived;
     const medialView = MEDIAL_REGION_VIEWS[id];
     if (medialView) {
-      quaternion = orientationForView(medialView, frame());
+      quaternion = orientationForView(medialView, frame(), convertAxis);
       arrived = `Turned to my ${viewLabel(medialView)} view and highlighted my ${region.name}. It lies on my medial surface, facing the midline, so the shading marks where it lies.`;
     } else if (region.hemisphere === 'left') {
       side = 'left';
-      quaternion = orientationFacing(facingDirection(geometry.centroidLeft), frame());
+      quaternion = orientationFacingRegion(geometry.centroidLeft);
       arrived =
         requested === 'right'
           ? `My ${region.name} exists only on my left hemisphere, so I turned my left side to you and highlighted it.`
@@ -170,7 +188,7 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
     } else {
       side = requested === 'left' || requested === 'right' ? requested : nearerHemisphere(geometry);
       const centroid = side === 'left' ? geometry.centroidLeft : geometry.centroidRight;
-      quaternion = orientationFacing(facingDirection(centroid), frame());
+      quaternion = orientationFacingRegion(centroid);
       arrived = `Turned my ${side} ${region.name} toward you and highlighted it.`;
     }
 
@@ -188,8 +206,9 @@ export function createSceneCommands(adapter, { onUserInteraction } = {}) {
       return fail(`Unknown view "${view}". Valid views: ${VIEWS.join(', ')}.`);
     }
     if (userHolding) return fail(HOLDING_REASON);
+    if (!loaded()) return fail(NOT_LOADED_REASON);
 
-    const outcome = await move({ command: 'rotateTo', view }, orientationForView(view, frame()));
+    const outcome = await move({ command: 'rotateTo', view }, orientationForView(view, frame(), convertAxis));
     if (outcome.completed) return ok(`Turned to my ${viewLabel(view)} view.`);
     return fail(
       outcome.reason === 'user' ? USER_GRAB_REASON : REPLACED_REASON,
