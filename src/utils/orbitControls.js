@@ -187,6 +187,10 @@ export class BrainOrbitControls {
       totalDx * totalDx + totalDy * totalDy
     );
 
+    // Player input, so the guide's quiet period restarts. A hover never
+    // reaches here: only a pointer that is held down counts.
+    this._emitUserInput({ type: 'drag', mode: this._dragMode });
+
     if (this._dragMode === 'pan') {
       const rect = this.domElement.getBoundingClientRect();
       const deltaY = e.clientY - this._lastPointerY;
@@ -250,6 +254,8 @@ export class BrainOrbitControls {
       this.autoRotate = false;
       if (this._onInteraction) this._onInteraction();
     }
+    // Zoom never cancels a guide turn, but it is player input.
+    this._emitUserInput({ type: 'zoom' });
   }
 
   get isMoving() {
@@ -286,7 +292,12 @@ export class BrainOrbitControls {
     this.autoRotate = false;
   }
 
-  /** Observes the player taking hold (grab) and letting go (release). */
+  /** Stops a programmatic move where it is (a hidden tab, a tool timeout). */
+  cancelMove(reason) {
+    this._endMove({ completed: false, reason });
+  }
+
+  /** Observes player input: grab, drag, zoom and release. */
   subscribeUserInput(listener) {
     this._userInputListeners.add(listener);
     return () => this._userInputListeners.delete(listener);

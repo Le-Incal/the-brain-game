@@ -614,6 +614,7 @@ describe('C22: guide and player share the brain like an agent and a user share a
   it('refuses guide moves while the player is still exploring, with a plain reason', async () => {
     const { commands, controls, element, settle } = setup();
     await grabDragRelease(element);
+    await runFrames(controls, clock, 300); // let the drag's own smoothing finish
     const before = controls.orientGroup.quaternion.clone();
     for (const result of [await settle(commands.faceRegion(17)), await settle(commands.rotateTo('superior'))]) {
       expect(result.ok).toBe(false);
