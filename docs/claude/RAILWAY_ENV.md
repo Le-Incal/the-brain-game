@@ -23,6 +23,8 @@ All variables are required in production (`ELEVENLABS_WEBHOOK_SECRET` is optiona
 
 ## How M3 uses them
 
+- Start command: `npm start` (`node server/index.js`) after `npm run build`. Adding the `start` script is what moves Railway from static hosting to the Node server, so it reaches production only when the `staging` branch is merged into `main`, after it works on staging.
+
 - `POST /api/voice/token` with `{ guide: 'rollo' | 'sylvi' }`: checks the device cookie (issuing one if absent), the per-IP rate limit, the per-device caps and the global daily budget, mints a conversation token for `ELEVENLABS_AGENT_ID` with `ELEVENLABS_API_KEY`, and returns `{ conversationToken, guideName, voiceId, maxSeconds, dynamicVariables: { guide_name, reservation } }`. The voice map lives on the server (from `VOICE_ID_*`), so a voice can be swapped in Railway without a redeploy of the client.
 - The browser then calls `startSession({ conversationToken, dynamicVariables, overrides: { tts: { voiceId } } })`, passing `dynamicVariables` exactly as returned. Always send the override, for both guides.
 - Minutes are reserved, then refunded: minting reserves the session cap (or what the device has left, if less) against the device's daily cap and the global budget. ElevenLabs' post-call webhook (`POST /api/voice/webhook/elevenlabs`, header `elevenlabs-signature: t=<secs>,v0=<hex HMAC-SHA256 of "t.body">`) reports the real duration, which settles the reservation. No webhook means no refund.
