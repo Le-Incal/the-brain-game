@@ -25,19 +25,19 @@ describe('GameEngine', () => {
 
   it('uses a readable default fall speed', () => {
     const engine = new GameEngine(mockScene(null));
-    expect(engine.fallSpeed).toBe(0.08);
+    expect(engine.fallSpeed).toBe(0.04);
   });
 
   it('updates and safely clamps the falling-word speed', () => {
     const engine = new GameEngine(mockScene(null));
 
-    engine.setFallSpeed(0.12);
-    expect(engine.fallSpeed).toBe(0.12);
+    engine.setFallSpeed(0.06);
+    expect(engine.fallSpeed).toBe(0.06);
 
     engine.setFallSpeed(1);
-    expect(engine.fallSpeed).toBe(0.16);
+    expect(engine.fallSpeed).toBe(0.08);
     engine.setFallSpeed(0);
-    expect(engine.fallSpeed).toBe(0.04);
+    expect(engine.fallSpeed).toBe(0.02);
   });
 
   it('does not begin dropping words until started', () => {

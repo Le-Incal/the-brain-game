@@ -4,9 +4,11 @@ import { execFileSync } from 'node:child_process';
 import {
   configureColorMap,
   configureRegionIdMap,
+  computeHighlightPulse,
   computeLabelLeaderWidth,
   createRegionPaletteUniforms,
   getAtlasViewForDirection,
+  getCompositionVerticalShiftCssPx,
   getResponsiveSpecimenScale,
   getResponsiveSpecimenVerticalOffset,
   matchRegionColorSrgb,
@@ -23,6 +25,16 @@ describe('BrainScene startup data', () => {
     expect(regionIds).not.toBe(REGION_IDS);
     expect(regionColors).toHaveLength(REGIONS.length);
     expect(regionColors.every((color) => color.isColor)).toBe(true);
+  });
+});
+
+describe('computeHighlightPulse', () => {
+  it('keeps the target colour visible while oscillating', () => {
+    const samples = [0, 200, 400, 600, 800].map(computeHighlightPulse);
+
+    expect(Math.min(...samples)).toBeGreaterThanOrEqual(0.35);
+    expect(Math.max(...samples)).toBeLessThanOrEqual(1);
+    expect(new Set(samples.map((value) => value.toFixed(3))).size).toBeGreaterThan(1);
   });
 });
 
@@ -52,6 +64,14 @@ describe('getResponsiveSpecimenScale', () => {
   it('moves the phone specimen below the description panel', () => {
     expect(getResponsiveSpecimenVerticalOffset(375)).toBe(-0.2);
     expect(getResponsiveSpecimenVerticalOffset(1200)).toBe(0);
+  });
+
+  it('keeps the desktop composition drop off the phone', () => {
+    // Laptop/desktop stay half an inch lower; phone returns to the pre-drop height.
+    expect(getCompositionVerticalShiftCssPx(375)).toBe(0);
+    expect(getCompositionVerticalShiftCssPx(480)).toBe(0);
+    expect(getCompositionVerticalShiftCssPx(481)).toBe(-48);
+    expect(getCompositionVerticalShiftCssPx(1200)).toBe(-48);
   });
 });
 

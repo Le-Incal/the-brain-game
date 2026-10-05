@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   default as App,
   colorModeForDifficulty,
+  getDescribedRegion,
   getPrimaryControl,
   shouldShowHeader,
   shouldShowInstructions,
@@ -103,6 +104,31 @@ describe('landing instructions', () => {
     expect(shouldShowInstructions('countdown')).toBe(false);
     expect(shouldShowInstructions('playing')).toBe(false);
     expect(shouldShowInstructions('paused')).toBe(false);
+  });
+});
+
+describe('region description while navigating', () => {
+  const hovered = { id: 4, name: 'Broca\'s Area' };
+  const selected = { id: 5, name: 'Wernicke\'s Area' };
+
+  it('keeps hover and selection copy when the specimen is idle', () => {
+    expect(
+      getDescribedRegion({ hoveredRegion: hovered })
+    ).toEqual(hovered);
+    expect(
+      getDescribedRegion({ selectedRegion: selected, hoveredRegion: hovered })
+    ).toEqual(selected);
+  });
+
+  it('hides region title and description while gripping to orbit', () => {
+    // Falling words share that panel space; a grip is navigation, not study.
+    expect(
+      getDescribedRegion({
+        isNavigating: true,
+        selectedRegion: selected,
+        hoveredRegion: hovered,
+      })
+    ).toBeNull();
   });
 });
 

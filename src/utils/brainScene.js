@@ -201,6 +201,15 @@ export function getResponsiveSpecimenVerticalOffset(viewportWidth) {
   return 0;
 }
 
+/**
+ * Desktop/laptop composition drop in CSS pixels. Phones keep the pre-drop
+ * height so the specimen is not pushed further down a short viewport.
+ */
+export function getCompositionVerticalShiftCssPx(viewportWidth) {
+  if (viewportWidth <= 480) return 0;
+  return BRAIN_VERTICAL_SHIFT_CSS_PX;
+}
+
 export function computeLabelLeaderWidth(
   side,
   anchorX,
@@ -215,6 +224,15 @@ export function computeLabelLeaderWidth(
     28,
     brainRadiusPx + 56
   );
+}
+
+/**
+ * Catch/miss feedback pulse for the highlighted region's colour wash.
+ * Returns 0–1; never fully extinguishes the target colour.
+ */
+export function computeHighlightPulse(elapsedMs) {
+  const wave = 0.5 + 0.5 * Math.sin((elapsedMs / 1000) * Math.PI * 2 * 1.25);
+  return 0.35 + 0.65 * wave;
 }
 
 export class BrainScene {
@@ -285,6 +303,7 @@ export class BrainScene {
       uRegionColors: { value: regionColors },
       uRegionIds: { value: regionIds },
       uHighlight: { value: -1.0 },
+      uHighlightPulse: { value: 0.0 },
       uSelectedRegion: { value: -1.0 },
       uInkColor: { value: new THREE.Color(0x1a1a1a) },
       uPaperColor: { value: new THREE.Color(0xf3eee4) },
@@ -326,8 +345,11 @@ export class BrainScene {
     this.hoveredRegion = null;
     this.onHoverChange = options.onHoverChange || null;
     this.onRegionSelect = options.onRegionSelect || null;
+    this.onNavigatingChange = options.onNavigatingChange || null;
+    this._isNavigating = false;
     this.selectedRegionId = -1;
     this._highlightUntil = 0;
+    this._highlightStartedAt = 0;
     this.labelObjects = [];
     this._labelWorldPosition = new THREE.Vector3();
     this._labelCenterWorld = new THREE.Vector3();
@@ -704,16 +726,28 @@ export class BrainScene {
   }
 
   beginHighlightFeedback(regionId, durationMs = 2000, _options = {}) {
-    this._highlightUntil = performance.now() + durationMs;
+    const now = performance.now();
+    this._highlightUntil = now + durationMs;
+    this._highlightStartedAt = now;
     this.uniforms.uHighlight.value = regionId ?? -1.0;
+    this.uniforms.uHighlightPulse.value = computeHighlightPulse(0);
   }
 
-  _clearExpiredFeedback() {
+  _updateHighlightFeedback() {
+    if (!this._highlightUntil) return;
+
     const now = performance.now();
-    if (this._highlightUntil && now >= this._highlightUntil) {
+    if (now >= this._highlightUntil) {
       this.uniforms.uHighlight.value = -1.0;
+      this.uniforms.uHighlightPulse.value = 0.0;
       this._highlightUntil = 0;
+      this._highlightStartedAt = 0;
+      return;
     }
+
+    this.uniforms.uHighlightPulse.value = computeHighlightPulse(
+      now - this._highlightStartedAt
+    );
   }
 
   getRegionIdAtNormalized(nx, ny) {
@@ -741,6 +775,18 @@ export class BrainScene {
     // the current transforms before intersecting the anatomical meshes.
     this.specimenGroup.updateMatrixWorld(true);
     this.camera.updateMatrixWorld();
+  }
+
+  _syncNavigatingState() {
+    const navigating = Boolean(this.controls?.isDragging);
+    if (navigating === this._isNavigating) return;
+    this._isNavigating = navigating;
+    // Gripping to orbit should never pin a hover title over falling words.
+    if (navigating && this.hoveredRegion) {
+      this.hoveredRegion = null;
+      if (this.onHoverChange) this.onHoverChange(null);
+    }
+    if (this.onNavigatingChange) this.onNavigatingChange(navigating);
   }
 
   _updateRaycast() {
@@ -791,7 +837,9 @@ export class BrainScene {
     // Moving the orbit target would carry the camera with it and leave the
     // specimen where it was, so the composition shift offsets the specimen from
     // the target, as the responsive offset and pan already do.
-    const shift = (BRAIN_VERTICAL_SHIFT_CSS_PX / this.height) * viewportHeight;
+    const shift =
+      (getCompositionVerticalShiftCssPx(this.width) / this.height) *
+      viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET;
     this.specimenGroup.position.y =
       baseY +
@@ -830,7 +878,8 @@ export class BrainScene {
     requestAnimationFrame(() => this._animate());
 
     this.controls.update();
-    this._clearExpiredFeedback();
+    this._syncNavigatingState();
+    this._updateHighlightFeedback();
     this._updateRaycast();
     this._updateLabelLayout();
 
