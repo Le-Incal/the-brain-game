@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 const sessionModule = await import('./voiceSession.js').catch(() => ({}));
-const { createVoiceSession, CONSENT_TEXT, CONSENT_STORAGE_KEY, MIC_BLOCKED_MESSAGE, MIC_UNAVAILABLE_MESSAGE, requestMicrophoneAccess } =
-  sessionModule;
+const {
+  createVoiceSession,
+  createMicEventReporter,
+  CONSENT_TEXT,
+  CONSENT_STORAGE_KEY,
+  MIC_BLOCKED_MESSAGE,
+  MIC_UNAVAILABLE_MESSAGE,
+  requestMicrophoneAccess,
+} = sessionModule;
 
 const TOKEN_RESPONSE = {
   conversationToken: 'conv_token_abc',
@@ -47,7 +54,7 @@ function memoryStorage() {
   return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => (data[k] = String(v)) };
 }
 
-function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted' } = {}) {
+function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter } = {}) {
   const conversation = fakeConversation();
   const timers = [];
   const order = [];
@@ -66,6 +73,8 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
       order.push('microphone');
       return mic;
     },
+    // One reporter per page load; a fresh one per test unless shared on purpose.
+    reportMicEvent: micReporter ?? createMicEventReporter?.(trackedServer.fetchImpl),
     conversation,
     storage,
     clientTools,
@@ -379,3 +388,29 @@ describe('M4: reporting a blocked microphone, so we can count it', () => {
     expect(server.requests.map(({ url }) => url)).not.toContain('/api/voice/event');
   });
 });
+
+describe('M4: the blocked-mic count means players, not clicks', () => {
+  it('sends the event once per page load, however many times Talk is pressed', async () => {
+    const server = fakeServer();
+    const { session } = setup({ server, mic: 'denied' });
+    await session.start({ guide: 'rollo' });
+    await session.start({ guide: 'rollo' });
+    await session.start({ guide: 'sylvi' });
+    await Promise.resolve();
+    expect(server.requests.filter(({ url }) => url === '/api/voice/event')).toHaveLength(1);
+  });
+
+  it('stays at one across conversations on the same page (leaving and re-entering Study mode)', async () => {
+    const server = fakeServer();
+    const micReporter = createMicEventReporter(server.fetchImpl);
+    const first = setup({ server, mic: 'denied', micReporter });
+    await first.session.start({ guide: 'rollo' });
+    const second = setup({ server, mic: 'unavailable', micReporter });
+    await second.session.start({ guide: 'rollo' });
+    await Promise.resolve();
+    expect(server.requests.filter(({ url }) => url === '/api/voice/event')).toEqual([
+      expect.objectContaining({ body: { type: 'mic_blocked' } }),
+    ]);
+  });
+});
+
