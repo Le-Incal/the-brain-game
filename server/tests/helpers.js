@@ -51,7 +51,7 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {} } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true } = {}) {
   let pages = initialPages;
   const requests = [];
   // `details` maps conversation id -> { status, call_duration_secs }; ids not
@@ -69,7 +69,7 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
     if (href.includes('/v1/convai/conversation/token')) {
       if (!ok) return reply(500, { detail: 'upstream failure' });
       state.minted += 1;
-      return reply(200, { token, conversation_id: `conv_minted_${state.minted}` });
+      return reply(200, tokenConversationIds ? { token, conversation_id: `conv_minted_${state.minted}` } : { token });
     }
     const detail = href.match(/\/v1\/convai\/conversations\/([^/?]+)/);
     if (detail) {
