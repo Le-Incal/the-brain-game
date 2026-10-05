@@ -212,7 +212,10 @@ describe('B7: the player taking hold is observable', () => {
 
     element.dispatch('pointermove', { clientX: 470, clientY: 300 });
     element.dispatch('pointerup', { clientX: 470, clientY: 300 });
-    expect(events[1]).toEqual({ type: 'release', mode: 'rotate', wasClick: false });
+    expect(events.slice(1)).toEqual([
+      { type: 'drag', mode: 'rotate' },
+      { type: 'release', mode: 'rotate', wasClick: false },
+    ]);
   });
 
   it('marks a click and a shift-drag pan for what they are', () => {
@@ -233,11 +236,22 @@ describe('B7: the player taking hold is observable', () => {
     ]);
   });
 
-  it('does not treat scroll-zoom as taking hold', () => {
+  // Kyle's control model: zoom never cancels a turn, but it is player input,
+  // so it restarts the quiet period. It is reported as zoom, not as a grab.
+  it('reports scroll-zoom as zoom, not as taking hold', () => {
     const { controls, element } = createControls();
     const events = [];
     controls.subscribeUserInput((event) => events.push(event));
     element.dispatch('wheel', { deltaY: 100 });
+    expect(events).toEqual([{ type: 'zoom' }]);
+  });
+
+  it('never reports a hover (a resting mouse or a drifting trackpad)', () => {
+    const { controls, element } = createControls();
+    const events = [];
+    controls.subscribeUserInput((event) => events.push(event));
+    element.dispatch('pointermove', { clientX: 410, clientY: 300 });
+    element.dispatch('pointermove', { clientX: 420, clientY: 305 });
     expect(events).toEqual([]);
   });
 

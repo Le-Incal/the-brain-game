@@ -33,14 +33,33 @@ afterEach(() => {
 function setup() {
   const harness = createFakeSceneAdapter();
   const interactions = [];
+  const controlChanges = [];
+  const timers = [];
   const commands = createSceneCommands(harness.adapter, {
     onUserInteraction: (event) => interactions.push(event),
+    onControlChange: (control) => controlChanges.push(control),
+    setTimeoutImpl: (fn, ms) => {
+      timers.push({ fn, ms, cleared: false });
+      return timers.length - 1;
+    },
+    clearTimeoutImpl: (id) => {
+      if (timers[id]) timers[id].cleared = true;
+    },
   });
   async function settle(promise) {
     await runFrames(harness.controls, clock, MOVE_SETTLE_MS);
     return promise;
   }
-  return { ...harness, commands, settle, interactions };
+  // Runs the pending quiet-period timer, as if 2 s passed with no input.
+  function endQuietPeriod() {
+    const pending = timers.filter((timer) => !timer.cleared && !timer.ran);
+    for (const timer of pending) {
+      timer.ran = true;
+      timer.fn();
+    }
+    return pending.length;
+  }
+  return { ...harness, commands, settle, interactions, controlChanges, timers, endQuietPeriod };
 }
 
 function expectResultShape(result) {
@@ -341,16 +360,21 @@ describe('C15: listRegions', () => {
 describe('C17: the player can take hold at any time', () => {
   // Motion stops the instant the player grabs; the conversation does not.
   // The app tells the guide what was interrupted so it can offer to resume.
-  it('tells the guide when the player grabs and releases with no move running', async () => {
-    const { commands, element, interactions } = setup();
+  it('tells the guide when the player grabs, and hands back once after the quiet period', async () => {
+    const { commands, element, interactions, endQuietPeriod } = setup();
     element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
     expect(interactions).toEqual([{ type: 'grab', interrupted: null }]);
     expect(commands.getSceneState().userHolding).toBe(true);
 
-    element.dispatch('pointerup', { clientX: 400, clientY: 300 });
+    element.dispatch('pointermove', { clientX: 470, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 470, clientY: 300 });
+    expect(interactions).toHaveLength(1);
+    expect(commands.getSceneState().userHolding).toBe(false);
+
+    endQuietPeriod();
     const scene = commands.getSceneState();
-    expect(interactions[1]).toEqual({ type: 'release', view: scene.view, viewExact: scene.viewExact });
-    expect(scene.userHolding).toBe(false);
+    expect(interactions[1]).toEqual({ type: 'handoff', view: scene.view, viewExact: scene.viewExact });
+    expect(interactions).toHaveLength(2);
   });
 
   it('bookmarks the move a grab interrupted', async () => {
@@ -404,13 +428,14 @@ describe('C17: the player can take hold at any time', () => {
   });
 
   it('clears the bookmark once a later move completes', async () => {
-    const { commands, controls, element, settle } = setup();
+    const { commands, controls, element, settle, endQuietPeriod } = setup();
     const pending = commands.faceRegion(17);
     await runFrames(controls, clock, 500);
     element.dispatch('pointerdown');
     await pending;
     element.dispatch('pointerup');
     expect(commands.getSceneState().interrupted).not.toBeNull();
+    endQuietPeriod();
 
     await settle(commands.faceRegion(17));
     expect(commands.getSceneState().interrupted).toBeNull();
@@ -537,6 +562,125 @@ describe('C21: a move replaced by a later one says so', () => {
     expect(result.reason).not.toMatch(/user/i);
     expect((await settle(later)).ok).toBe(true);
     expect(commands.getSceneState().interrupted).toBeNull();
+  });
+});
+
+describe('C22: guide and player share the brain like an agent and a user share a cursor', () => {
+  const QUIET_MS = 2000;
+
+  async function grabDragRelease(element) {
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    element.dispatch('pointermove', { clientX: 460, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 460, clientY: 300 });
+    await flushMicrotasks();
+  }
+
+  it('starts with the brain free for the guide', () => {
+    const { commands } = setup();
+    expect(commands.getSceneState().control).toBe('guide_free');
+  });
+
+  it('reports guide_moving during a guide move, then guide_free', async () => {
+    const { commands, controlChanges, settle } = setup();
+    const pending = commands.rotateTo('posterior');
+    expect(commands.getSceneState().control).toBe('guide_moving');
+    await settle(pending);
+    expect(commands.getSceneState().control).toBe('guide_free');
+    expect(controlChanges).toEqual(['guide_moving', 'guide_free']);
+  });
+
+  it('reports player_holding while held and player_exploring after letting go', async () => {
+    const { commands, element } = setup();
+    element.dispatch('pointerdown');
+    expect(commands.getSceneState().control).toBe('player_holding');
+    element.dispatch('pointermove', { clientX: 460, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 460, clientY: 300 });
+    expect(commands.getSceneState().control).toBe('player_exploring');
+  });
+
+  it('returns control 2 s after the last input', async () => {
+    const { commands, element, timers, endQuietPeriod } = setup();
+    await grabDragRelease(element);
+    expect(timers.filter((t) => !t.cleared).map((t) => t.ms)).toEqual([QUIET_MS]);
+    endQuietPeriod();
+    expect(commands.getSceneState().control).toBe('guide_free');
+  });
+
+  it('refuses guide moves while the player is still exploring, with a plain reason', async () => {
+    const { commands, controls, element, settle } = setup();
+    await grabDragRelease(element);
+    const before = controls.orientGroup.quaternion.clone();
+    for (const result of [await settle(commands.faceRegion(17)), await settle(commands.rotateTo('superior'))]) {
+      expect(result.ok).toBe(false);
+      expect(result.reason).toMatch(/exploring/i);
+    }
+    expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
+  });
+
+  it.each([
+    ['a new grab', (element) => { element.dispatch('pointerdown'); element.dispatch('pointerup'); }],
+    ['a drag', (element) => { element.dispatch('pointerdown'); element.dispatch('pointermove', { clientX: 300, clientY: 300 }); element.dispatch('pointerup', { clientX: 300, clientY: 300 }); }],
+    ['a zoom', (element) => element.dispatch('wheel', { deltaY: 80 })],
+  ])('restarts the clock on %s', async (_label, input) => {
+    const { commands, element, timers } = setup();
+    await grabDragRelease(element);
+    const first = timers.length - 1;
+    input(element);
+    expect(timers[first].cleared).toBe(true);
+    expect(timers.at(-1)).toMatchObject({ ms: QUIET_MS, cleared: false });
+    expect(commands.getSceneState().control).toBe('player_exploring');
+  });
+
+  it('never counts a hover', async () => {
+    const { commands, element, timers } = setup();
+    element.dispatch('pointermove', { clientX: 420, clientY: 310 });
+    expect(commands.getSceneState().control).toBe('guide_free');
+    expect(timers).toHaveLength(0);
+  });
+
+  it('sends one handoff when the brain is free, not a release and a handoff', async () => {
+    const { element, interactions, endQuietPeriod } = setup();
+    await grabDragRelease(element);
+    element.dispatch('wheel', { deltaY: 50 });
+    endQuietPeriod();
+    expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
+  });
+
+  it('frees the brain at once after a plain click, with no quiet period and no handoff', async () => {
+    const { commands, element, interactions, timers } = setup();
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 401, clientY: 300 });
+    expect(commands.getSceneState().control).toBe('guide_free');
+    expect(timers.filter((t) => !t.cleared)).toHaveLength(0);
+    expect(interactions.map(({ type }) => type)).toEqual(['grab']);
+  });
+
+  it('lets a zoom ride along with a guide turn without cancelling it, then waits out the quiet period', async () => {
+    const { commands, controls, element, settle, endQuietPeriod } = setup();
+    const pending = commands.rotateTo('posterior');
+    await runFrames(controls, clock, 400);
+    element.dispatch('wheel', { deltaY: 80 });
+    const result = await settle(pending);
+    expect(result.ok).toBe(true);
+    expect(commands.getSceneState().control).toBe('player_exploring');
+    endQuietPeriod();
+    expect(commands.getSceneState().control).toBe('guide_free');
+  });
+
+  it('never moves the brain by itself when control returns', async () => {
+    const { commands, controls, element, endQuietPeriod } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 400);
+    element.dispatch('pointerdown');
+    await pending;
+    element.dispatch('pointermove', { clientX: 460, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 460, clientY: 300 });
+    await runFrames(controls, clock, 300); // let the drag's own smoothing finish
+    const settledByPlayer = controls.orientGroup.quaternion.clone();
+    endQuietPeriod();
+    await runFrames(controls, clock, 1500);
+    expect(controls.isMoving).toBe(false);
+    expect(controls.orientGroup.quaternion.angleTo(settledByPlayer)).toBeLessThan(1e-6);
   });
 });
 

@@ -1,17 +1,31 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const contextModule = await import('./contextUpdates.js').catch(() => ({}));
 const {
+  CONTEXT_MESSAGES,
   formatRegionClicked,
   formatGrab,
-  formatRelease,
-  formatViewChange,
+  formatHandoff,
   formatIdle,
   formatStudyEntered,
   createContextReporter,
 } = contextModule;
 
-describe('M4: contextual updates use the formats in the agent prompt', () => {
+describe('M4: every contextual update, worded in one place', () => {
+  // The agent prompt quotes these exactly, so they change only here.
+  it('locks the wording', () => {
+    expect(CONTEXT_MESSAGES).toEqual({
+      regionClicked: '[player] clicked region {id} ({name})',
+      tookHold: '[player] took hold of me',
+      tookHoldInterrupted: '[player] took hold of me; interrupted: {move}',
+      handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
+      idle: '[player] idle {seconds}s',
+      studyEntered: '[player] entered Study mode',
+    });
+  });
+
   it('reports a clicked region', () => {
     expect(formatRegionClicked({ id: 13, name: "Wernicke's Area" })).toBe("[player] clicked region 13 (Wernicke's Area)");
   });
@@ -29,20 +43,31 @@ describe('M4: contextual updates use the formats in the agent prompt', () => {
     expect(formatGrab({ interrupted: null })).toBe('[player] took hold of me');
   });
 
-  it('reports letting go, with the view', () => {
-    expect(formatRelease({ view: 'left_lateral', viewExact: false })).toBe('[player] let go; now viewing left_lateral (not exact)');
-    expect(formatRelease({ view: 'superior', viewExact: true })).toBe('[player] let go; now viewing superior (exact)');
-  });
-
-  it('reports a new view with the visible regions in id order', () => {
-    expect(formatViewChange({ view: 'posterior', visibleRegions: [{ id: 17 }, { id: 9 }, { id: 18 }, { id: 10 }, { id: 19 }] })).toBe(
-      '[player] rotated; now viewing posterior; visible: 9,10,17,18,19'
+  it('hands control back once, with the view', () => {
+    expect(formatHandoff({ view: 'left_lateral', viewExact: false })).toBe(
+      '[player] let go; now viewing left_lateral (not exact); you may move me again'
+    );
+    expect(formatHandoff({ view: 'superior', viewExact: true })).toBe(
+      '[player] let go; now viewing superior (exact); you may move me again'
     );
   });
 
   it('reports idling and entering Study mode', () => {
     expect(formatIdle(25)).toBe('[player] idle 25s');
     expect(formatStudyEntered()).toBe('[player] entered Study mode');
+  });
+
+  it('matches every example line in the agent brief', () => {
+    const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
+    const examples = [...brief.matchAll(/^\s*(\[player\][^\n`]*)$/gm)].map((match) => match[1].trim());
+    expect(examples.length).toBeGreaterThan(0);
+    const patterns = Object.values(CONTEXT_MESSAGES).map(
+      (template) =>
+        new RegExp(`^${template.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{[a-z]+\}/g, '.+')}$`)
+    );
+    for (const line of examples) {
+      expect(patterns.some((pattern) => pattern.test(line)), line).toBe(true);
+    }
   });
 });
 
@@ -54,33 +79,19 @@ describe('M4: the context reporter', () => {
     return { sent, reporter, advance: (ms) => (now += ms) };
   }
 
-  it('sends a grab, then on release the let-go line and, if the view changed, the new view', () => {
+  it('sends the grab at once and the handoff when control returns: two lines, not three', () => {
     const { sent, reporter } = setup();
     reporter.userInteraction({ type: 'grab', interrupted: { command: 'faceRegion', regionId: 6, hemisphere: 'left' } });
-    reporter.userInteraction({ type: 'release', view: 'posterior', viewExact: false, wasClick: false }, {
-      visibleRegions: [{ id: 17 }, { id: 18 }],
-    });
+    reporter.userInteraction({ type: 'handoff', view: 'posterior', viewExact: false });
     expect(sent).toEqual([
       '[player] took hold of me; interrupted: face_region 6 (left)',
-      '[player] let go; now viewing posterior (not exact)',
-      '[player] rotated; now viewing posterior; visible: 17,18',
+      '[player] let go; now viewing posterior (not exact); you may move me again',
     ]);
   });
 
-  it('does not repeat the view when it has not changed', () => {
-    const { sent, reporter } = setup();
-    const release = { type: 'release', view: 'anterior', viewExact: false, wasClick: false };
-    reporter.userInteraction({ type: 'grab', interrupted: null });
-    reporter.userInteraction(release, { visibleRegions: [{ id: 1 }] });
-    reporter.userInteraction({ type: 'grab', interrupted: null });
-    reporter.userInteraction(release, { visibleRegions: [{ id: 1 }] });
-    expect(sent.filter((line) => line.includes('rotated'))).toHaveLength(1);
-  });
-
-  it('stays quiet about a click (the region click is reported instead)', () => {
+  it('reports a click at once', () => {
     const { sent, reporter } = setup();
     reporter.userInteraction({ type: 'grab', interrupted: null });
-    reporter.userInteraction({ type: 'release', view: 'left_lateral', viewExact: false, wasClick: true }, { visibleRegions: [] });
     reporter.regionClicked({ id: 19, name: 'Cerebellum' });
     expect(sent).toEqual(['[player] took hold of me', '[player] clicked region 19 (Cerebellum)']);
   });
@@ -99,7 +110,6 @@ describe('M4: the context reporter', () => {
     reporter.regionClicked({ id: 1, name: 'Prefrontal Cortex' });
     advance(25_000);
     reporter.tick();
-    expect(sent.at(-1)).toBe('[player] idle 25s');
     expect(sent.filter((line) => line.includes('idle'))).toHaveLength(2);
   });
 });
