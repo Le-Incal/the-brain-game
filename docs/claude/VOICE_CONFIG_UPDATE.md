@@ -39,16 +39,24 @@ Written in claude.ai with Kyle after configuring the live ElevenLabs agent. The 
 - **"Specimen" is retired** everywhere the agent speaks. The prompt avoids the word entirely so the agent cannot adopt it as a name.
 - **`log_knowledge_gap` is out of the prompt** until the M3 server and webhook exist. It comes back then.
 
-## 3. Still to do on the ElevenLabs side (Kyle, by hand in the dashboard; we no longer use the Agent Architect)
+## 3. ElevenLabs dashboard tasks (Kyle, by hand; we no longer use the Agent Architect)
 
-- If Sylvi's voice is attached to the agent as an "additional voice", remove it. That list is multi-voice, which tells the LLM it may switch voices mid-reply. The app reaches Sylvi's voice through the Voice ID override, which should accept any voice in the workspace; M4 confirms this with a live test, and if it fails we re-attach it.
-- Set the `guide_name` test value to `Rollo` so dashboard tests match the primary voice.
-- Revert the prompt's Settings line to the section 4 wording (the accent wording is gone).
+Done (2026-10-04):
+- Sylvi's voice removed as an "additional voice"; the app reaches it through the Voice ID override (M4 confirms with a live test, and re-attaches it if that fails).
+- `guide_name` test value set to `Rollo`.
+- Settings line in the prompt reverted to the section 4 wording.
+- `userHolding` and `interrupted` added to the live `get_scene_state` tool description.
+
+Still open:
+- Delete the detached `set_voice` tool from the Tools page.
+- Publish the staged changes.
+- Allowlist of hosts (recommended when overrides are on).
+- Authentication once our token server exists (M3).
+- Guardrails.
+- Daily and concurrent conversation limits.
+- Conversation data retention.
 - Give the two voice IDs to Claude Code for the voice map when M4 starts (they are not secret).
-- Delete the detached `set_voice` tool from the Tools page, then publish the staged changes.
-- Add `userHolding` and `interrupted` to the live `get_scene_state` tool description (the brief already has them).
 - Optionally rename the dashboard agent from "The Specimen".
-- Later, with M3: an allowlist of hosts (ElevenLabs recommends one when overrides are on) and authentication once our token server exists.
 
 ## 4. System prompt (verbatim, as staged)
 
@@ -146,11 +154,13 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 Ah. A visitor. I am {{guide_name}}, the brain before you, drawn in ink and, for the moment, awake. Ask me anything about what I am made of, or simply name a part of me and I shall turn to show you.
 ```
 
-## 6. Waiting on Kyle (do not decide these)
+## 6. Decided (Kyle, 2026-10-04)
 
-1. A guide change mid-conversation: apply it to the next conversation, or switch now (ends this one). Recommended: next conversation, plus a "Switch now" button that warns it ends the current conversation.
-2. First visit: pick a guide on entering Study mode, or start with Rollo (the default) and change it in Settings.
-3. The 20 region narrative files generated from the graph: build now for testing, or after steward review.
+1. **A guide change mid-conversation** takes effect at the next conversation. Settings also offers "Switch now", which warns that it ends the current conversation.
+2. **First visit:** on first entry to Study mode the player picks Sylvi or Rollo; Settings changes it later.
+3. **Launch is public from day one, with no access code.** M3 drops access-code login for an anonymous signed device cookie (per-device caps), a per-IP rate limit on `POST /api/voice/token`, and a global daily minute budget (`VOICE_GLOBAL_DAILY_MAX_SECONDS`); when the budget is spent, voice reports itself unavailable until the next day and the game is unaffected. M5 (the 20-question eval and the 7 acceptance conversations) is the launch gate. Until launch, Study mode and all voice UI stay behind `VITE_VOICE_ENABLED`, off in production, and the M3 switch to the Node start command happens on Railway staging first.
+
+Still waiting on Kyle: the 20 region narrative files generated from the graph, built now for testing or after steward review.
 
 ## 7. Repo changes for Claude Code (docs and one data fix; one commit; do not push)
 

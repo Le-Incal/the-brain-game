@@ -84,7 +84,7 @@ Notes since that handoff was written:
 - The tool names and parameters in the M1 contract are exactly what the live ElevenLabs agent calls. Do not rename them.
 - M1's `lookupRegion` returns `{ ok, region: { id, name, division, hemisphere, subtitle, description, factoid } }`, with `description` taken from `clickDescription`.
 
-Later milestones (from `VOICE_LAYER_PLAN.md`): M2 Study mode and the `uVoiceLevel` shader uniform; M3 Express server (login, token mint, minute caps, gap webhook); M4 voice bridge with `@elevenlabs/react`; M5 agent config pulled into the repo and a 20-question integrity eval.
+Later milestones (from `VOICE_LAYER_PLAN.md`): M2 Study mode and the `uVoiceLevel` shader uniform; M3 Express server (anonymous device cookie, token mint, rate limit, minute caps and global budget, gap webhook); M4 voice bridge with `@elevenlabs/react`; M5 agent config pulled into the repo and a 20-question integrity eval.
 
 ## 6. File map
 
@@ -109,7 +109,7 @@ Later milestones (from `VOICE_LAYER_PLAN.md`): M2 Study mode and the `uVoiceLeve
 3. **Word bank:** 16 words accept alternate regions that no source supports. Tighten or keep?
 4. **Region 8 name:** currently the default, Somatosensory Association Cortex.
 5. ~~**Sylvi and Rollo**~~ **Resolved 2026-10-04:** one agent, one prompt with `guide_name`, one British voice per guide, Rollo the default. Recorded in `docs/claude/VOICE_CONFIG_UPDATE.md`, whose section 6 holds the follow-up questions.
-6. **Voice quotas:** 8-minute sessions and a 15-minute daily cap behind an access code, or public?
+6. ~~**Voice quotas**~~ **Resolved 2026-10-04:** public from day one, no access code; 8-minute sessions and a 15-minute daily cap per device, plus a per-IP rate limit and a global daily budget. See `docs/claude/VOICE_CONFIG_UPDATE.md` section 6.
 7. **Pronunciation dictionary:** listen to `knowledge/build/pronunciations.pls` through ElevenLabs before relying on it.
 
 ## 8. Kickoff prompt

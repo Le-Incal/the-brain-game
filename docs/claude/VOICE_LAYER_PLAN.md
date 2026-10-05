@@ -1,7 +1,7 @@
 # Brain Game: Voice Layer Plan (V1)
 
 Status: PLAN PHASE. No code written. Awaiting confirmation to start M1 tests.
-Date: 2026-10-01 (updated 2026-10-02: guide names; 2026-10-04: guide voices and knowledge base, see `docs/claude/VOICE_CONFIG_UPDATE.md`)
+Date: 2026-10-01 (updated 2026-10-02: guide names; 2026-10-04: guide voices and knowledge base, see `docs/claude/VOICE_CONFIG_UPDATE.md`; later 2026-10-04: public launch, guide choice, build flag)
 
 Mirror of the claude.ai Project doc `claude/VOICE_LAYER_PLAN.md`, copied into the repo so local Claude Code sessions can read it.
 
@@ -23,6 +23,12 @@ Mirror of the claude.ai Project doc `claude/VOICE_LAYER_PLAN.md`, copied into th
 | Knowledge base | Attached, RAG on: the 21 files in `knowledge/kb/{anatomy,cells,physiology}`. The graph still reaches the agent only through tools; tools win any disagreement. |
 | "Specimen" | Retired everywhere the agent speaks; the prompt avoids the word. |
 | `log_knowledge_gap` | Out of the prompt until the M3 server and webhook exist. |
+| Guide change mid-conversation | Takes effect at the next conversation. Settings also offers "Switch now", which warns that it ends the current conversation. (Kyle, 2026-10-04) |
+| First visit | On first entry to Study mode the player picks Sylvi or Rollo; Settings changes it later. (Kyle, 2026-10-04) |
+| Launch access | Public from day one, no access code. Abuse and cost are held by per-device caps on an anonymous signed cookie, a per-IP rate limit on the token route, and a global daily minute budget. (Kyle, 2026-10-04) |
+| Launch gate | Nothing goes public until M5 passes: the 20-question eval and the 7 acceptance conversations in `agent/architect-brief.md`. |
+| Build flag | `main` deploys to brain-game.io on push, so Study mode and all voice UI stay behind `VITE_VOICE_ENABLED` (off in production) until launch. |
+| Staging first | The M3 switch from static hosting to the Node start command happens on a Railway staging environment first, never on production. |
 
 ## Architecture: three layers
 
@@ -46,9 +52,10 @@ A pure, testable command API over the existing scene. Voice is one client of it;
 
 ### Layer 3: Server (new; Express on Railway)
 - Serves `dist/`, replaces static hosting.
-- Access-code login with HMAC-signed, host-bound httpOnly cookie (ported from Atlas).
-- `POST /api/voice/token` mints a conversation token only after cookie and quota check. Agent ID never ships to the client (Atlas exposed it).
-- Metering per device: 8-minute session cap, 15-minute daily cap (from September design; confirm).
+- No login: launch is public. An anonymous, HMAC-signed, host-bound httpOnly device cookie (signing ported from Atlas) identifies the device for its caps.
+- `POST /api/voice/token` mints a conversation token only after the device cookie, the per-IP rate limit and the caps pass. Agent ID never ships to the client (Atlas exposed it).
+- Metering per device: 8-minute session cap, 15-minute daily cap, counted across conversations.
+- Global daily minute budget (`VOICE_GLOBAL_DAILY_MAX_SECONDS`). When it is spent, voice reports itself unavailable until the next day; the game is unaffected.
 - `POST /api/voice/log-gap` webhook with shared-secret verification (Atlas webhooks were unauthenticated).
 
 ## Agent tools (V1)
@@ -70,23 +77,22 @@ No orb. The brain is the body.
 ## Milestones (TDD each: failing tests, commit, implement)
 - M1 Scene commands + orbit tween with drag-cancel. Pure unit tests, no voice.
 - M2 Study mode shell (gamePhase `study`, game paused) + `uVoiceLevel` shader uniform driven by a mock level. Includes a test that entering Study mode turns auto-rotate off, so the brain does not drift away from a region the guide just faced; the player's own controls stay unchanged. Also wires the real BrainScene adapter for the M1 scene commands.
-- M3 Express server: login, token mint, quotas, gap webhook. Supertest. Minute caps count per player per day across conversations, so switching guides cannot reset the 8-minute session or 15-minute daily cap.
-- M4 Voice bridge: client tools, normalization, contextual updates. Mocked SDK. Adds the Settings guide picker, the voice-map module (guide to ElevenLabs voice ID), and restarting the conversation on a guide switch.
-- M5 Agent config in repo + 20-question integrity eval script (myths, lateralization, buried regions, out-of-scope).
+- M3 Express server: anonymous device cookie, token mint, per-IP rate limit on the token route, per-device caps, global daily budget, gap webhook. Supertest. Minute caps count per player per day across conversations, so switching guides cannot reset the 8-minute session or 15-minute daily cap. Deployed to a Railway staging environment first.
+- M4 Voice bridge: client tools, normalization, contextual updates. Mocked SDK. Adds the Settings guide picker (change applies to the next conversation; "Switch now" warns and restarts), the voice-map module (guide to ElevenLabs voice ID), and restarting the conversation on a guide switch.
+- M5 Agent config in repo + 20-question integrity eval script (myths, lateralization, buried regions, out-of-scope). Launch gate: the eval and the 7 acceptance conversations must pass before voice goes public.
 
 ## M2 test list (written 2026-10-04)
 
 - **Specimen space.** `regionGeometry.json` is measured from raw mesh positions, but the painted model's node carries an 8.1 degree rotation and a translation that the loader bakes in. `describeNormalization` records the source matrix with the bounds; `createSpecimenSpace` maps a geometry point to where the scene draws it inside the specimen. The scene adapter exposes this as `toSpecimenSpace(point)`, replacing M1's `getPivot()`. `faceRegion` fails truthfully ("not loaded") until the specimen exists.
 - **Persistent guide highlight.** `resolveHighlight` holds the voice highlight steadily (`VOICE_HIGHLIGHT_PULSE`) until cleared; game feedback takes over while it runs and behaves exactly as before when there is no voice highlight.
 - **BrainScene adapter.** `createBrainSceneAdapter` drives the scene controls and voice highlight, routes colour and labels through App state (so the on-screen toggles stay in sync), reports App's mode, and clears the guide highlight on leaving Study mode (`resetForGame`).
+- **Build flag.** `isVoiceEnabled` reads `VITE_VOICE_ENABLED` (only the string `'true'` enables it); with it off, no Study control appears and Study mode cannot be entered.
+- **First guide choice.** Entering Study mode with no saved guide asks the player to pick Sylvi or Rollo first; the choice is saved per browser and survives blocked storage (falls back to asking).
 - **Study mode.** Entered from the ready screen or a paused game only, never mid-countdown or mid-fall; leaving returns where it came from and never resumes falling words. A Study control appears when the brain is ready and no game runs; Begin and Pause stay out of Study mode. `sceneModeForPhase` reports `'study'` only in Study mode.
 - **Auto-rotate.** `stopAutoRotate()` on entering Study mode stops the spin without counting as the player's first interaction; drag, zoom and the camera are unchanged. It stays off after leaving.
 - **Voice level.** `uVoiceLevel` starts at 0; the shader applies it only as `(1.0 + uVoiceLevel * GAIN)` factors on hatch density and edge weight (gains at most 0.5), so silence renders today's engraving. `smoothVoiceLevel` rises fast and falls slowly, clamped to 0..1; `mockVoiceLevel` drives it until M4.
 
 ## Open
-- Guide change mid-conversation: apply to the next conversation, or switch now (ends this one). Kyle to decide.
-- First visit: pick a guide on entering Study mode, or start with Rollo and change it in Settings. Kyle to decide.
 - Region 15: piriform cortex or midbrain.
-- Confirm quotas (8 min session, 15 min daily) and access-code gating vs public.
 - Buried or medial regions (cingulate, precuneus, primary auditory inside the lateral sulcus) need a defined `faceRegion` view and spoken caveat.
 - Railway deploy switches from static to Node start command.

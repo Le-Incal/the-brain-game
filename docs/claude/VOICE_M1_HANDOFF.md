@@ -18,7 +18,7 @@ Reference implementation we shipped before: the Atlas for Urban Intelligence, co
 
 - **M1 (this handoff):** scene command layer plus programmatic move in orbit controls. Pure logic, no voice, no UI.
 - M2: Study mode shell plus `uVoiceLevel` shader uniform (hatching responds to voice volume).
-- M3: Express server: access-code login, conversation-token mint, 8-min session and 15-min daily caps, `log-gap` webhook with secret.
+- M3: Express server: anonymous device cookie (public launch, no access code), conversation-token mint, per-IP rate limit, 8-min session and 15-min daily caps, global daily budget, `log-gap` webhook with secret.
 - M4: Voice bridge with `@elevenlabs/react` (current package, requires `ConversationProvider`), client tools, `sendContextualUpdate`.
 - M5: Agent config pulled into repo via ElevenLabs CLI; 20-question integrity eval.
 
