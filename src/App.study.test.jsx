@@ -65,11 +65,11 @@ describe('M2: scene mode for the guide', () => {
 });
 
 describe('M2: Study mode says what it is', () => {
-  // Until the voice arrives (M4), Study mode must not look like nothing happened.
-  it('names the chosen guide and says what the player can do meanwhile', () => {
+  // Kyle, 2026-10-05: the voice panel now sits below the brain.
+  it('names the chosen guide and points to the conversation below', () => {
     expect(AppModule.getStudyCaption('rollo')).toEqual({
       title: 'Studying with Rollo',
-      note: 'Rollo will speak here soon. For now, turn the brain freely and click a region to read about it.',
+      note: 'Talk with Rollo below, or turn the brain freely and click a region to read about it.',
     });
     expect(AppModule.getStudyCaption('sylvi').title).toBe('Studying with Sylvi');
   });

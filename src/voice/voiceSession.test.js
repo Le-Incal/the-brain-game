@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 const sessionModule = await import('./voiceSession.js').catch(() => ({}));
-const { createVoiceSession, CONSENT_TEXT, CONSENT_STORAGE_KEY } = sessionModule;
+const { createVoiceSession, CONSENT_TEXT, CONSENT_STORAGE_KEY, MIC_BLOCKED_MESSAGE, MIC_UNAVAILABLE_MESSAGE, requestMicrophoneAccess } =
+  sessionModule;
 
 const TOKEN_RESPONSE = {
   conversationToken: 'conv_token_abc',
@@ -44,13 +45,25 @@ function memoryStorage() {
   return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => (data[k] = String(v)) };
 }
 
-function setup({ server = fakeServer(), storage = memoryStorage(), consented = true } = {}) {
+function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted' } = {}) {
   const conversation = fakeConversation();
   const timers = [];
+  const order = [];
+  const trackedServer = {
+    ...server,
+    fetchImpl: (url, init) => {
+      order.push(url);
+      return server.fetchImpl(url, init);
+    },
+  };
   if (consented) storage.setItem(CONSENT_STORAGE_KEY, '1');
   const clientTools = { face_region: () => '{}' };
   const session = createVoiceSession({
-    fetchImpl: server.fetchImpl,
+    fetchImpl: trackedServer.fetchImpl,
+    requestMicrophone: async () => {
+      order.push('microphone');
+      return mic;
+    },
     conversation,
     storage,
     clientTools,
@@ -62,7 +75,7 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
       if (timers[id]) timers[id].cleared = true;
     },
   });
-  return { session, conversation, server, storage, timers, clientTools };
+  return { session, conversation, server, storage, timers, clientTools, order };
 }
 
 describe('M4: consent before the mic first opens', () => {
@@ -103,6 +116,62 @@ describe('M4: consent before the mic first opens', () => {
     session.declineConsent();
     expect(session.getState().phase).toBe('idle');
     expect(server.requests).toHaveLength(0);
+  });
+});
+
+describe('M4: a blocked microphone', () => {
+  // The SDK cannot start a voice session without the mic: WebRTC setup waits
+  // for the microphone and disconnects if it is refused (checked in
+  // @elevenlabs/client 1.26.0). So the app asks for the mic before the token,
+  // and no minutes are reserved for a conversation that cannot happen.
+  it('asks for the microphone after consent and before the token', async () => {
+    const { session, order } = setup();
+    await session.start({ guide: 'rollo' });
+    expect(order).toEqual(['microphone', '/api/voice/token']);
+  });
+
+  it('explains a blocked microphone plainly and reserves nothing', async () => {
+    const { session, server, conversation } = setup({ mic: 'denied' });
+    await session.start({ guide: 'rollo' });
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_BLOCKED_MESSAGE });
+    expect(MIC_BLOCKED_MESSAGE).toBe(
+      "Your microphone is blocked, so we can't talk aloud. On a school Chromebook, ask your teacher to allow it; otherwise allow the microphone for this site in your browser settings, then try again."
+    );
+    expect(server.requests).toHaveLength(0);
+    expect(conversation.calls).toEqual([]);
+  });
+
+  it('explains when there is no microphone to use', async () => {
+    const { session, server } = setup({ mic: 'unavailable' });
+    await session.start({ guide: 'rollo' });
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_UNAVAILABLE_MESSAGE });
+    expect(MIC_UNAVAILABLE_MESSAGE).toBe("This browser can't use a microphone here, so we can't talk aloud.");
+    expect(server.requests).toHaveLength(0);
+  });
+});
+
+describe('M4: requestMicrophoneAccess', () => {
+  it('reports granted and releases the microphone at once', async () => {
+    const stopped = [];
+    const stream = { getTracks: () => [{ stop: () => stopped.push('track') }] };
+    const nav = { mediaDevices: { getUserMedia: async (constraints) => (constraints.audio ? stream : null) } };
+    expect(await requestMicrophoneAccess(nav)).toBe('granted');
+    expect(stopped).toEqual(['track']);
+  });
+
+  it.each([
+    ['NotAllowedError', 'denied'],
+    ['SecurityError', 'denied'],
+    ['NotFoundError', 'unavailable'],
+    ['NotReadableError', 'unavailable'],
+  ])('reports %s as %s', async (name, expected) => {
+    const nav = { mediaDevices: { getUserMedia: async () => { throw Object.assign(new Error(name), { name }); } } };
+    expect(await requestMicrophoneAccess(nav)).toBe(expected);
+  });
+
+  it('reports unavailable without media devices (an insecure page or an old browser)', async () => {
+    expect(await requestMicrophoneAccess({})).toBe('unavailable');
+    expect(await requestMicrophoneAccess(undefined)).toBe('unavailable');
   });
 });
 
