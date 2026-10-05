@@ -74,6 +74,15 @@ No orb. The brain is the body.
 - M4 Voice bridge: client tools, normalization, contextual updates. Mocked SDK. Adds the Settings guide picker, the voice-map module (guide to ElevenLabs voice ID), and restarting the conversation on a guide switch.
 - M5 Agent config in repo + 20-question integrity eval script (myths, lateralization, buried regions, out-of-scope).
 
+## M2 test list (written 2026-10-04)
+
+- **Specimen space.** `regionGeometry.json` is measured from raw mesh positions, but the painted model's node carries an 8.1 degree rotation and a translation that the loader bakes in. `describeNormalization` records the source matrix with the bounds; `createSpecimenSpace` maps a geometry point to where the scene draws it inside the specimen. The scene adapter exposes this as `toSpecimenSpace(point)`, replacing M1's `getPivot()`. `faceRegion` fails truthfully ("not loaded") until the specimen exists.
+- **Persistent guide highlight.** `resolveHighlight` holds the voice highlight steadily (`VOICE_HIGHLIGHT_PULSE`) until cleared; game feedback takes over while it runs and behaves exactly as before when there is no voice highlight.
+- **BrainScene adapter.** `createBrainSceneAdapter` drives the scene controls and voice highlight, routes colour and labels through App state (so the on-screen toggles stay in sync), reports App's mode, and clears the guide highlight on leaving Study mode (`resetForGame`).
+- **Study mode.** Entered from the ready screen or a paused game only, never mid-countdown or mid-fall; leaving returns where it came from and never resumes falling words. A Study control appears when the brain is ready and no game runs; Begin and Pause stay out of Study mode. `sceneModeForPhase` reports `'study'` only in Study mode.
+- **Auto-rotate.** `stopAutoRotate()` on entering Study mode stops the spin without counting as the player's first interaction; drag, zoom and the camera are unchanged. It stays off after leaving.
+- **Voice level.** `uVoiceLevel` starts at 0; the shader applies it only as `(1.0 + uVoiceLevel * GAIN)` factors on hatch density and edge weight (gains at most 0.5), so silence renders today's engraving. `smoothVoiceLevel` rises fast and falls slowly, clamped to 0..1; `mockVoiceLevel` drives it until M4.
+
 ## Open
 - Guide change mid-conversation: apply to the next conversation, or switch now (ends this one). Kyle to decide.
 - First visit: pick a guide on entering Study mode, or start with Rollo and change it in Settings. Kyle to decide.

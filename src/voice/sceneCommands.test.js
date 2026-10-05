@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import * as THREE from 'three';
 import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import {
@@ -556,5 +557,40 @@ describe('C: every command reports truthfully', () => {
       ].sort()
     );
     expect(VIEWS).toEqual(ALL_VIEWS);
+  });
+});
+
+describe('M2: faceRegion works in specimen space', () => {
+  // The adapter maps generated region geometry into the space the specimen is
+  // drawn in (the painted model carries a source rotation). Facing must use it.
+  it('faces the region where the adapter says it is drawn', async () => {
+    const { adapter, controls } = createFakeSceneAdapter();
+    const tilt = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 6);
+    const pivot = adapter.getPivot();
+    adapter.toSpecimenSpace = (point) =>
+      new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]).applyQuaternion(tilt);
+    const commands = createSceneCommands(adapter);
+
+    const pending = commands.faceRegion(11, { hemisphere: 'left' });
+    await runFrames(controls, clock, MOVE_SETTLE_MS);
+    expect((await pending).ok).toBe(true);
+
+    const drawn = adapter.toSpecimenSpace(regionGeometry.regions['11'].centroidLeft).normalize();
+    expect(drawn.applyQuaternion(controls.orientGroup.quaternion).dot(toCameraDirection(controls))).toBeGreaterThan(0.99);
+  });
+
+  it('fails truthfully before the specimen has loaded', async () => {
+    const { adapter, controls, state } = createFakeSceneAdapter();
+    adapter.toSpecimenSpace = () => null;
+    const commands = createSceneCommands(adapter);
+    const before = controls.orientGroup.quaternion.clone();
+
+    const pending = commands.faceRegion(11);
+    await runFrames(controls, clock, MOVE_SETTLE_MS);
+    const result = await pending;
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/loaded/i);
+    expect(state.highlight).toBeNull();
+    expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
   });
 });

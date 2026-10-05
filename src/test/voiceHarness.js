@@ -132,6 +132,10 @@ export function createFakeSceneAdapter(controlOptions = {}) {
     adapter: {
       controls: harness.controls,
       getPivot: () => pivot,
+      // Geometry space to specimen (orientGroup) space. The fake specimen has
+      // no source rotation, so this is a pure offset from the pivot.
+      toSpecimenSpace: (point) =>
+        new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]),
       setHighlight(regionId) {
         state.highlight = regionId;
       },
