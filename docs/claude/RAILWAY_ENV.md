@@ -17,6 +17,7 @@ Values live only in Railway. Never commit them, and never give any of them a `VI
 | `VOICE_SESSION_MAX_SECONDS` | no | Per-conversation cap. `480`. |
 | `VOICE_DAILY_MAX_SECONDS` | no | Per-player daily cap across all conversations. `900`. |
 | `VOICE_GLOBAL_DAILY_MAX_SECONDS` | no | Global daily minute budget across all players. When spent, voice reports itself unavailable until the next UTC day; the game is unaffected. |
+| `VOICE_MAX_OPEN_RESERVATIONS` | no | Site-wide cap on reservations open at once (minted but not yet settled). `10`, matching the ElevenLabs concurrent call limit. Beyond it, and beyond one per device or two per address, players are told the guide is busy. |
 | `ELEVENLABS_WEBHOOK_SECRET` | yes | HMAC secret of the ElevenLabs post-call webhook. The webhook route verifies every delivery with it before refunding unused minutes. Required in production (without refunds the budget drains about four times too fast); optional elsewhere. |
 
 All variables are required in production (`ELEVENLABS_WEBHOOK_SECRET` is optional outside it); if any is missing or invalid, voice reports itself unavailable. `ELEVENLABS_API_KEY` must also be allowed to read conversation history: on startup the server rebuilds today's global usage from it. On staging, `VOICE_HOSTS` must hold the staging domain. The caps have no silent defaults. Later, the `log_knowledge_gap` server tool gets its own shared secret (not the post-call webhook secret).

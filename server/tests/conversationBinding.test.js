@@ -5,15 +5,15 @@ import { HOST, SECRETS, cookieFrom, postCallBody, signWebhook, startApp } from '
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
 
-// Fallback for matching: if ElevenLabs does not echo the reservation dynamic
-// variable, the client reports its conversation id against its reservation.
-describe('M4: conversation id fallback for matching a webhook to its reservation', () => {
+// ElevenLabs returns the conversation id with the token (checked against the
+// SDK's TokenResponseModel), so the server records it at mint. A webhook then
+// matches its reservation even if the reservation variable is not echoed,
+// without trusting anything the client reports.
+describe('M4: matching a webhook through the conversation id recorded at mint', () => {
   async function setup() {
     const { app, clock } = await startApp({ createApp });
     const minted = await request(app).post('/api/voice/token').set('Host', HOST).send({ guide: 'rollo' });
     const cookie = cookieFrom(minted);
-    const reservation = minted.body.dynamicVariables.reservation;
-    const bind = (body) => request(app).post('/api/voice/conversation').set('Host', HOST).set('Cookie', cookie).send(body);
     const remaining = async () =>
       (await request(app).get('/api/voice/status').set('Host', HOST).set('Cookie', cookie)).body.remainingSeconds;
     const deliver = (rawBody) =>
@@ -23,33 +23,25 @@ describe('M4: conversation id fallback for matching a webhook to its reservation
         .set('Content-Type', 'application/json')
         .set('elevenlabs-signature', signWebhook(rawBody, SECRETS.ELEVENLABS_WEBHOOK_SECRET, Math.floor(clock.now() / 1000)))
         .send(rawBody);
-    return { app, reservation, bind, remaining, deliver };
+    return { app, minted, remaining, deliver };
   }
 
-  it('settles a webhook without the reservation variable through the reported conversation id', async () => {
-    const { reservation, bind, remaining, deliver } = await setup();
-    expect((await bind({ reservation, conversationId: 'conv_77' })).status).toBe(204);
-    const response = await deliver(postCallBody({ reservation: undefined, conversationId: 'conv_77', durationSecs: 120 }));
+  it('never sends the conversation id to the browser', async () => {
+    const { minted } = await setup();
+    expect(JSON.stringify(minted.body)).not.toContain('conv_minted_1');
+  });
+
+  it('settles a webhook without the reservation variable through the recorded conversation id', async () => {
+    const { remaining, deliver } = await setup();
+    const response = await deliver(postCallBody({ reservation: undefined, conversationId: 'conv_minted_1', durationSecs: 120 }));
     expect(response.body).toMatchObject({ status: 'settled' });
     expect(await remaining()).toBe(780);
   });
 
-  it('rejects a forged reservation', async () => {
-    const { reservation, bind } = await setup();
-    const forged = `${reservation.split('.')[0]}.AAAAAAAAAAAAAAAAAAAA`;
-    expect((await bind({ reservation: forged, conversationId: 'conv_78' })).status).toBe(400);
-  });
-
-  it('binds a reservation once; a later different conversation id is refused', async () => {
-    const { reservation, bind } = await setup();
-    expect((await bind({ reservation, conversationId: 'conv_79' })).status).toBe(204);
-    expect((await bind({ reservation, conversationId: 'conv_79' })).status).toBe(204);
-    expect((await bind({ reservation, conversationId: 'conv_80' })).status).toBe(409);
-  });
-
-  it('rejects a missing or oversized conversation id', async () => {
-    const { reservation, bind } = await setup();
-    expect((await bind({ reservation })).status).toBe(400);
-    expect((await bind({ reservation, conversationId: 'x'.repeat(300) })).status).toBe(400);
+  it('still ignores a webhook with neither a valid reservation nor a known conversation', async () => {
+    const { remaining, deliver } = await setup();
+    const response = await deliver(postCallBody({ reservation: undefined, conversationId: 'conv_stranger', durationSecs: 0 }));
+    expect(response.body).toMatchObject({ status: 'ignored' });
+    expect(await remaining()).toBe(420);
   });
 });

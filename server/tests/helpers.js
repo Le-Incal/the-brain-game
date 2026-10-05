@@ -23,6 +23,7 @@ export function makeEnv(overrides = {}) {
     VOICE_SESSION_MAX_SECONDS: '480',
     VOICE_DAILY_MAX_SECONDS: '900',
     VOICE_GLOBAL_DAILY_MAX_SECONDS: '18000',
+    VOICE_MAX_OPEN_RESERVATIONS: '10',
     NODE_ENV: 'production',
     ...overrides,
   };
@@ -50,9 +51,11 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[]], listFailures = 0 } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[]], listFailures = 0, details = {} } = {}) {
   const requests = [];
-  const state = { listFailures };
+  // `details` maps conversation id -> { status, call_duration_secs }; ids not
+  // listed answer 404 (the token was never used).
+  const state = { listFailures, minted: 0, details };
   const reply = (status, body) => ({
     ok: status >= 200 && status < 300,
     status,
@@ -63,7 +66,21 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[
     const href = String(url);
     requests.push({ url: href, init });
     if (href.includes('/v1/convai/conversation/token')) {
-      return ok ? reply(200, { token }) : reply(500, { detail: 'upstream failure' });
+      if (!ok) return reply(500, { detail: 'upstream failure' });
+      state.minted += 1;
+      return reply(200, { token, conversation_id: `conv_minted_${state.minted}` });
+    }
+    const detail = href.match(/\/v1\/convai\/conversations\/([^/?]+)/);
+    if (detail) {
+      const record = state.details[decodeURIComponent(detail[1])];
+      if (!record) return reply(404, { detail: 'conversation not found' });
+      return reply(200, {
+        agent_id: SECRETS.ELEVENLABS_AGENT_ID,
+        conversation_id: decodeURIComponent(detail[1]),
+        status: record.status,
+        metadata: { start_time_unix_secs: 1791199000, call_duration_secs: record.call_duration_secs },
+        conversation_initiation_client_data: { dynamic_variables: record.dynamic_variables ?? {} },
+      });
     }
     if (href.includes('/v1/convai/conversations')) {
       if (state.listFailures > 0) {
@@ -86,7 +103,8 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[
     requests,
     state,
     tokenRequests: () => requests.filter(({ url }) => url.includes('/conversation/token')),
-    historyRequests: () => requests.filter(({ url }) => url.includes('/convai/conversations')),
+    historyRequests: () => requests.filter(({ url }) => /\/convai\/conversations(\?|$)/.test(url)),
+    detailRequests: () => requests.filter(({ url }) => /\/convai\/conversations\/[^/?]+/.test(url)),
   };
 }
 
@@ -94,9 +112,15 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages = [[
  * Builds the app and waits for today's usage to be restored from ElevenLabs,
  * as the real server does before it offers voice.
  */
-export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(), distDir = tempDist(), createApp } = {}) {
+export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(), distDir = tempDist(), createApp, setIntervalImpl } = {}) {
   const upstream = fakeElevenLabs(elevenLabs);
-  const app = createApp({ env: makeEnv(env), distDir, fetchImpl: upstream.fetchImpl, now: clock.now });
+  const app = createApp({
+    env: makeEnv(env),
+    distDir,
+    fetchImpl: upstream.fetchImpl,
+    now: clock.now,
+    setIntervalImpl: setIntervalImpl ?? (() => null),
+  });
   await app.locals.voice.ready;
   return { app, clock, upstream };
 }

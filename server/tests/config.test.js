@@ -16,6 +16,7 @@ describe('M3: voice configuration', () => {
       'VOICE_SESSION_MAX_SECONDS',
       'VOICE_DAILY_MAX_SECONDS',
       'VOICE_GLOBAL_DAILY_MAX_SECONDS',
+      'VOICE_MAX_OPEN_RESERVATIONS',
     ]);
   });
 
@@ -26,6 +27,7 @@ describe('M3: voice configuration', () => {
       sessionMaxSeconds: 480,
       dailyMaxSeconds: 900,
       globalDailyMaxSeconds: 18000,
+      maxOpenReservations: 10,
       hosts: ['www.brain-game.io', 'brain-game.io'],
       voices: { rollo: 'voice_rollo_test', sylvi: 'voice_sylvi_test' },
       production: true,
@@ -48,6 +50,7 @@ describe('M3: voice configuration', () => {
     ['VOICE_DAILY_MAX_SECONDS', '-5'],
     ['VOICE_GLOBAL_DAILY_MAX_SECONDS', '0'],
     ['VOICE_SESSION_SECRET', 'too-short'],
+    ['VOICE_MAX_OPEN_RESERVATIONS', '0'],
   ])('is unavailable when %s is invalid (%j)', (name, value) => {
     const config = readVoiceConfig(makeEnv({ [name]: value }));
     expect(config.available).toBe(false);

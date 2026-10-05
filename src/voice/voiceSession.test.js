@@ -23,7 +23,6 @@ function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal } = {})
         : token;
       return { ok: tokenStatus === 200, status: tokenStatus, json: async () => body };
     }
-    if (url === '/api/voice/conversation') return { ok: true, status: 204, json: async () => ({}) };
     return { ok: false, status: 404, json: async () => ({}) };
   };
   return { fetchImpl, requests };
@@ -132,15 +131,12 @@ describe('M4: starting a conversation', () => {
     ]);
   });
 
-  it('on connect, reports the conversation id with its reservation (the matching fallback)', async () => {
+  it('on connect, records the conversation and reports nothing back (the server matched it at mint)', async () => {
     const { session, server } = setup();
     await session.start({ guide: 'rollo' });
     await session.handleConnect({ conversationId: 'conv_123' });
     expect(session.getState()).toMatchObject({ phase: 'connected', guide: 'rollo', conversationId: 'conv_123' });
-    expect(server.requests.at(-1)).toMatchObject({
-      url: '/api/voice/conversation',
-      body: { reservation: 'resid.sig', conversationId: 'conv_123' },
-    });
+    expect(server.requests.map(({ url }) => url)).toEqual(['/api/voice/token']);
   });
 
   it('ends the conversation itself at the reserved time', async () => {
@@ -157,6 +153,7 @@ describe('M4: starting a conversation', () => {
     [{ status: 429, body: { available: false, reason: 'device_daily_cap', resetsInSeconds: 3 * 3600 } }, "You've used today's voice time. Voice returns in about 3 hours."],
     [{ status: 503, body: { available: false, reason: 'global_budget', resetsInSeconds: 3 * 3600 } }, "Voice has reached today's limit for everyone. It returns in about 3 hours."],
     [{ status: 503, body: { available: false, reason: 'restoring' } }, 'Voice is starting up. Try again in a moment.'],
+    [{ status: 429, body: { available: false, reason: 'busy' } }, 'The guide is busy. Try again shortly.'],
   ])('explains a refusal in plain words (%j)', async (refusal, message) => {
     const { session, conversation } = setup({ server: fakeServer({ refusal }) });
     await session.start({ guide: 'rollo' });

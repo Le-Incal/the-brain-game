@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { HOST, SECRETS, cookieFrom, expectNoSecrets, startApp } from './helpers.js';
+import { HOST, SECRETS, cookieFrom, expectNoSecrets, postCallBody, signWebhook, startApp } from './helpers.js';
 
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
@@ -78,11 +78,24 @@ describe('M3: secrets never reach the browser', () => {
 
 describe('M3: per-device and global caps', () => {
   it('reserves against the device: a second conversation gets what is left, then none', async () => {
-    const { app } = await setup();
+    const { app, clock } = await setup();
+    // One open reservation per device, so each conversation is reported
+    // (here, used in full) before the next is minted.
+    const useInFull = (minted, conversationId) => {
+      const body = postCallBody({ reservation: minted.body.dynamicVariables.reservation, conversationId, durationSecs: 480 });
+      return request(app)
+        .post('/api/voice/webhook/elevenlabs')
+        .set('Host', HOST)
+        .set('Content-Type', 'application/json')
+        .set('elevenlabs-signature', signWebhook(body, SECRETS.ELEVENLABS_WEBHOOK_SECRET, Math.floor(clock.now() / 1000)))
+        .send(body);
+    };
     const first = await mint(app);
     const cookie = cookieFrom(first);
+    await useInFull(first, 'conv_a');
     const second = await mint(app, 'rollo', cookie);
     expect(second.body.maxSeconds).toBe(420);
+    await useInFull(second, 'conv_b');
     const third = await mint(app, 'rollo', cookie);
     expect(third.status).toBe(429);
     // 12:00 UTC in the fake clock: the caps reset in 12 hours.

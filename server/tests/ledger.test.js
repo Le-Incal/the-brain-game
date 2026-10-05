@@ -182,3 +182,77 @@ describe('M3: rebuilding today from ElevenLabs after a restart', () => {
     expect(ledger.globalRemaining()).toBe(18000 - 480);
   });
 });
+
+describe('M3 fix: open reservations are capped', () => {
+  const capped = (overrides = {}) =>
+    setup({ maxOpenPerDevice: 1, maxOpenPerAddress: 2, maxOpenTotal: 10, globalDailyMaxSeconds: 1_000_000, dailyMaxSeconds: 100_000, ...overrides });
+
+  it('holds at most one open reservation per device', () => {
+    const { ledger } = capped();
+    expect(ledger.reserve('device-a', { address: '1.1.1.1' }).ok).toBe(true);
+    expect(ledger.reserve('device-a', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy' });
+  });
+
+  it('holds at most two open reservations per address, whatever the device', () => {
+    const { ledger } = capped();
+    expect(ledger.reserve('d1', { address: '1.1.1.1' }).ok).toBe(true);
+    expect(ledger.reserve('d2', { address: '1.1.1.1' }).ok).toBe(true);
+    expect(ledger.reserve('d3', { address: '1.1.1.1' })).toEqual({ ok: false, reason: 'busy' });
+    expect(ledger.reserve('d4', { address: '2.2.2.2' }).ok).toBe(true);
+  });
+
+  it('holds at most the site-wide number open at once', () => {
+    const { ledger } = capped({ maxOpenTotal: 3 });
+    for (let i = 0; i < 3; i += 1) expect(ledger.reserve(`d${i}`, { address: `10.0.0.${i}` }).ok).toBe(true);
+    expect(ledger.reserve('d9', { address: '10.0.0.9' })).toEqual({ ok: false, reason: 'busy' });
+  });
+
+  it('frees a slot once a reservation settles or is released', () => {
+    const { ledger } = capped();
+    const first = ledger.reserve('device-a', { address: '1.1.1.1' });
+    ledger.settle(first.reservationId, { durationSecs: 30, conversationId: 'c1' });
+    const second = ledger.reserve('device-a', { address: '1.1.1.1' });
+    expect(second.ok).toBe(true);
+    ledger.release(second.reservationId);
+    expect(ledger.reserve('device-a', { address: '1.1.1.1' }).ok).toBe(true);
+  });
+});
+
+describe('M3 fix: expired reservations', () => {
+  it('lists open reservations older than a cutoff, with their conversation ids', () => {
+    const { clock, ledger } = setup();
+    const old = ledger.reserve('device-a');
+    ledger.attachConversation(old.reservationId, 'conv_old');
+    clock.advance(30 * 60 * 1000);
+    ledger.reserve('device-b');
+    expect(ledger.openReservationsOlderThan(25 * 60 * 1000)).toEqual([
+      { reservationId: old.reservationId, conversationId: 'conv_old' },
+    ]);
+  });
+
+  it('finds a reservation by the conversation id recorded at mint', () => {
+    const { ledger } = setup();
+    const { reservationId } = ledger.reserve('device-a');
+    ledger.attachConversation(reservationId, 'conv_x');
+    expect(ledger.reservationForConversation('conv_x')).toBe(reservationId);
+    expect(ledger.reservationForConversation('conv_unknown')).toBeNull();
+  });
+
+  it('releasing an expired, unused reservation refunds it in full', () => {
+    const { ledger } = setup();
+    const { reservationId } = ledger.reserve('device-a');
+    ledger.expire(reservationId);
+    expect(ledger.deviceRemaining('device-a')).toBe(900);
+    expect(ledger.globalRemaining()).toBe(18000);
+    expect(ledger.openReservationsOlderThan(0)).toEqual([]);
+  });
+
+  it('still charges a conversation that turns up after its reservation expired', () => {
+    const { ledger } = setup();
+    const { reservationId } = ledger.reserve('device-a');
+    ledger.expire(reservationId);
+    expect(ledger.settle(reservationId, { durationSecs: 200, conversationId: 'late' })).toBe('settled');
+    expect(ledger.globalRemaining()).toBe(18000 - 200);
+    expect(ledger.settle(reservationId, { durationSecs: 200, conversationId: 'late' })).toBe('duplicate');
+  });
+});

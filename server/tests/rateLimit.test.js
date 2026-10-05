@@ -33,12 +33,14 @@ describe('M3: POST /api/voice/token is rate-limited per IP', () => {
 
   it('returns 429 with Retry-After past the limit, per address, not per device', async () => {
     const { app } = await startApp({ env: ON_RAILWAY, createApp });
-    const mint = (ip) =>
-      request(app).post('/api/voice/token').set('Host', HOST).set('X-Real-IP', ip).send({ guide: 'sylvi' });
+    const mint = (ip, guide = 'sylvi') =>
+      request(app).post('/api/voice/token').set('Host', HOST).set('X-Real-IP', ip).send({ guide });
 
-    // A fresh device cookie on every request: clearing cookies must not lift the limit.
+    // Every request counts, whatever it asks for, with a fresh device cookie
+    // each time: clearing cookies must not lift the limit. (Requests for an
+    // unknown guide reserve nothing, so the open-reservation cap stays out of it.)
     for (let i = 0; i < TOKEN_RATE_LIMIT.max; i += 1) {
-      expect((await mint('203.0.113.7')).status, `request ${i + 1}`).toBe(200);
+      expect((await mint('203.0.113.7', 'nobody')).status, `request ${i + 1}`).toBe(400);
     }
     const refused = await mint('203.0.113.7');
     expect(refused.status).toBe(429);
