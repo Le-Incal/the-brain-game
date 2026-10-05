@@ -16,6 +16,7 @@ function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal } = {})
   const requests = [];
   const fetchImpl = async (url, init = {}) => {
     requests.push({ url, init, body: init.body ? JSON.parse(init.body) : undefined });
+    if (url === '/api/voice/release') return { ok: true, status: 200, json: async () => ({ status: 'released' }) };
     if (url === '/api/voice/token') {
       if (refusal) return { ok: false, status: refusal.status, json: async () => refusal.body };
       const guide = JSON.parse(init.body).guide;
@@ -135,7 +136,7 @@ describe('M4: a blocked microphone', () => {
     await session.start({ guide: 'rollo' });
     expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_BLOCKED_MESSAGE });
     expect(MIC_BLOCKED_MESSAGE).toBe(
-      "Your microphone is blocked, so we can't talk aloud. On a school Chromebook, ask your teacher to allow it; otherwise allow the microphone for this site in your browser settings, then try again."
+      "Your microphone is blocked, so we can't talk aloud. Allow the microphone for this site in your browser settings, then try again. On a school Chromebook, ask your teacher."
     );
     expect(server.requests).toHaveLength(0);
     expect(conversation.calls).toEqual([]);
@@ -147,6 +148,36 @@ describe('M4: a blocked microphone', () => {
     expect(session.getState()).toMatchObject({ phase: 'unavailable', message: MIC_UNAVAILABLE_MESSAGE });
     expect(MIC_UNAVAILABLE_MESSAGE).toBe("This browser can't use a microphone here, so we can't talk aloud.");
     expect(server.requests).toHaveLength(0);
+  });
+});
+
+describe('M4: a conversation that fails to start releases its reservation at once', () => {
+  // Otherwise the one-per-device cap tells the player "the guide is busy" for
+  // up to 30 minutes. The server confirms with ElevenLabs before refunding.
+  it('asks the server to release it when the session errors before connecting', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleDisconnect({ reason: 'error', message: 'Could not establish connection' });
+    expect(server.requests.at(-1)).toMatchObject({ url: '/api/voice/release', body: { reservation: 'resid.sig' } });
+    expect(server.requests.at(-1).init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: "We couldn't start the conversation. Please try again." });
+  });
+
+  it('releases it when the player ends before it connects', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo' });
+    session.end();
+    await Promise.resolve();
+    expect(server.requests.map(({ url }) => url)).toContain('/api/voice/release');
+  });
+
+  it('never asks once the conversation has connected', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    await session.handleDisconnect({ reason: 'error', message: 'dropped' });
+    session.end();
+    expect(server.requests.map(({ url }) => url)).not.toContain('/api/voice/release');
   });
 });
 
