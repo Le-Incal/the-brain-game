@@ -10,6 +10,7 @@ export const CONTEXT_MESSAGES = {
   handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
   idle: '[player] idle {seconds}s',
   studyEntered: '[player] entered Study mode',
+  timeWarning: '[app] about 30 seconds of our conversation remain',
 };
 
 export const IDLE_AFTER_MS = 25_000;
@@ -36,6 +37,8 @@ export const formatHandoff = ({ view, viewExact }) =>
 export const formatIdle = (seconds) => fill(CONTEXT_MESSAGES.idle, { seconds });
 
 export const formatStudyEntered = () => CONTEXT_MESSAGES.studyEntered;
+
+export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
 
 /**
  * Turns scene events into updates. Idle is reported once after 25 s without

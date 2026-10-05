@@ -8,6 +8,9 @@
  */
 import { normalizeGuide } from './guides.js';
 import { describeVoiceUnavailable } from './voiceAvailability.js';
+import { formatTimeWarning } from './contextUpdates.js';
+
+const WARN_BEFORE_END_MS = 30_000;
 
 export const CONSENT_TEXT =
   "Talking with your guide sends your voice to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
@@ -27,6 +30,7 @@ export function createVoiceSession({
   let consentGiven = readConsent();
   let pendingGuide = null;
   let cutoffTimer = null;
+  let warningTimer = null;
   let maxSeconds = null;
 
   function readConsent() {
@@ -44,7 +48,14 @@ export function createVoiceSession({
 
   function clearCutoff() {
     if (cutoffTimer !== null) clearTimeoutImpl(cutoffTimer);
+    if (warningTimer !== null) clearTimeoutImpl(warningTimer);
     cutoffTimer = null;
+    warningTimer = null;
+  }
+
+  function warnGuide() {
+    warningTimer = null;
+    if (state.phase === 'connected') conversation.sendContextualUpdate(formatTimeWarning());
   }
 
   async function requestAndStart() {
@@ -118,8 +129,14 @@ export function createVoiceSession({
     async handleConnect({ conversationId }) {
       set({ phase: 'connected', conversationId });
       clearCutoff();
-      // The server reserved this many seconds; end on time rather than overrun.
-      if (maxSeconds) cutoffTimer = setTimeoutImpl(end, maxSeconds * 1000);
+      // The server reserved this many seconds; end on time rather than overrun,
+      // and tell the guide 30 s before so it can say goodbye.
+      if (maxSeconds) {
+        cutoffTimer = setTimeoutImpl(end, maxSeconds * 1000);
+        const warnIn = maxSeconds * 1000 - WARN_BEFORE_END_MS;
+        if (warnIn > 0) warningTimer = setTimeoutImpl(warnGuide, warnIn);
+        else warnGuide();
+      }
     },
 
     handleDisconnect() {
