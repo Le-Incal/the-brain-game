@@ -14,9 +14,17 @@ import { createMinuteLedger, MIN_RESERVATION_SECONDS } from './ledger.js';
 import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
 import { randomId, signDevice, signReservation, verifyDevice, verifyReservation } from './signing.js';
 import { verifyElevenLabsSignature } from './webhook.js';
-import { fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
+import { fetchConversation, fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
+// A reservation still open this long (token window, plus the 8-minute session
+// cap, plus margin) is looked up: unused ones are refunded, used ones settled.
+export const RESERVATION_EXPIRY_MS = 30 * 60 * 1000;
+export const SWEEP_INTERVAL_MS = 2 * 60 * 1000;
+// Re-read today's real total from ElevenLabs, which bills us.
+export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
+const MAX_OPEN_PER_DEVICE = 1;
+const MAX_OPEN_PER_ADDRESS = 2;
 
 const DEVICE_COOKIE = 'bg_device';
 const DEVICE_COOKIE_MAX_AGE_SECS = 365 * 24 * 60 * 60;
@@ -43,6 +51,7 @@ export function createApp({
   fetchImpl = globalThis.fetch,
   now = Date.now,
   setTimeoutImpl = setTimeout,
+  setIntervalImpl = setInterval,
 } = {}) {
   const config = readVoiceConfig(env);
   const app = express();
@@ -60,12 +69,27 @@ export function createApp({
         sessionMaxSeconds: config.sessionMaxSeconds,
         dailyMaxSeconds: config.dailyMaxSeconds,
         globalDailyMaxSeconds: config.globalDailyMaxSeconds,
+        maxOpenPerDevice: MAX_OPEN_PER_DEVICE,
+        maxOpenPerAddress: MAX_OPEN_PER_ADDRESS,
+        maxOpenTotal: config.maxOpenReservations,
         now,
       })
     : null;
   const tokenLimiter = createRateLimiter({ ...TOKEN_RATE_LIMIT, now });
 
-  const voice = { ledger, restored: false, ready: null, lastAttempt: Promise.resolve(false) };
+  const todaysMidnightSecs = () => {
+    const current = new Date(now());
+    return Math.floor(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate()) / 1000);
+  };
+
+  const voice = {
+    ledger,
+    restored: false,
+    ready: null,
+    lastAttempt: Promise.resolve(false),
+    sweep: () => Promise.resolve(),
+    reconcile: () => Promise.resolve(),
+  };
   let markReady;
   voice.ready = new Promise((resolve) => {
     markReady = resolve;
@@ -81,6 +105,47 @@ export function createApp({
     markReady();
   } else {
     restoreToday(0);
+    voice.sweep = sweepStaleReservations;
+    voice.reconcile = reconcileWithElevenLabs;
+    for (const [task, interval] of [
+      [sweepStaleReservations, SWEEP_INTERVAL_MS],
+      [reconcileWithElevenLabs, RECONCILE_INTERVAL_MS],
+    ]) {
+      const timer = setIntervalImpl(() => {
+        task().catch((error) => console.warn(`[voice] ${error.message}`));
+      }, interval);
+      timer?.unref?.();
+    }
+  }
+
+  async function sweepStaleReservations() {
+    for (const { reservationId, conversationId } of ledger.openReservationsOlderThan(RESERVATION_EXPIRY_MS)) {
+      if (!conversationId) {
+        ledger.expire(reservationId);
+        continue;
+      }
+      try {
+        const record = await fetchConversation({ fetchImpl, apiKey: config.apiKey, conversationId });
+        if (!record || record.status === 'initiated') ledger.expire(reservationId);
+        else if (record.status === 'done' || record.status === 'failed') {
+          ledger.settle(reservationId, { durationSecs: record.durationSecs, conversationId });
+        }
+        // Still running: leave it open for the next sweep.
+      } catch (error) {
+        console.warn(`[voice] sweep could not check a conversation (${error.message}); retrying next sweep`);
+      }
+    }
+  }
+
+  async function reconcileWithElevenLabs() {
+    if (!voice.restored) return;
+    const conversations = await fetchConversationsSince({
+      fetchImpl,
+      apiKey: config.apiKey,
+      agentId: config.agentId,
+      sinceSecs: todaysMidnightSecs(),
+    });
+    ledger.restore(conversations);
   }
 
   // Today's global usage lives in ElevenLabs' records (it bills us), so a
@@ -88,17 +153,11 @@ export function createApp({
   function restoreToday(attempt) {
     voice.lastAttempt = (async () => {
       try {
-        const current = now();
-        const midnight = Date.UTC(
-          new Date(current).getUTCFullYear(),
-          new Date(current).getUTCMonth(),
-          new Date(current).getUTCDate()
-        );
         const conversations = await fetchConversationsSince({
           fetchImpl,
           apiKey: config.apiKey,
           agentId: config.agentId,
-          sinceSecs: Math.floor(midnight / 1000),
+          sinceSecs: todaysMidnightSecs(),
         });
         ledger.restore(conversations);
         voice.restored = true;
@@ -174,17 +233,21 @@ export function createApp({
     if (!GUIDE_NAMES[guide]) return res.status(400).json({ error: 'unknown_guide' });
     if (!voice.restored) return res.status(503).json({ available: false, reason: 'restoring' });
 
-    const reservation = ledger.reserve(deviceId);
+    const reservation = ledger.reserve(deviceId, { address: clientAddress(req) });
     if (!reservation.ok) {
+      if (reservation.reason === 'busy') return res.status(429).json({ available: false, reason: 'busy' });
       const refusal = capRefusal(deviceId);
       return res.status(refusal.status).json(refusal.body);
     }
     try {
-      const conversationToken = await fetchConversationToken({
+      const { token: conversationToken, conversationId } = await fetchConversationToken({
         fetchImpl,
         apiKey: config.apiKey,
         agentId: config.agentId,
       });
+      // Server-side matching: webhooks find their reservation by this id, so
+      // nothing the browser reports is trusted. The id never goes to the browser.
+      ledger.attachConversation(reservation.reservationId, conversationId);
       const guideName = GUIDE_NAMES[guide];
       return res.json({
         conversationToken,
@@ -224,10 +287,9 @@ export function createApp({
       return res.status(200).json({ status: 'ignored' });
     }
     const data = event?.data ?? {};
-    const reservationId = verifyReservation(
-      data.conversation_initiation_client_data?.dynamic_variables?.reservation,
-      config.sessionSecret
-    );
+    const reservationId =
+      verifyReservation(data.conversation_initiation_client_data?.dynamic_variables?.reservation, config.sessionSecret) ??
+      ledger.reservationForConversation(data.conversation_id);
     if (event?.type !== 'post_call_transcription' || data.agent_id !== config.agentId || !reservationId) {
       return res.status(200).json({ status: 'ignored' });
     }

@@ -14,9 +14,15 @@ export const REQUIRED_VOICE_VARIABLES = [
   'VOICE_SESSION_MAX_SECONDS',
   'VOICE_DAILY_MAX_SECONDS',
   'VOICE_GLOBAL_DAILY_MAX_SECONDS',
+  'VOICE_MAX_OPEN_RESERVATIONS',
 ];
 
-const SECONDS_VARIABLES = ['VOICE_SESSION_MAX_SECONDS', 'VOICE_DAILY_MAX_SECONDS', 'VOICE_GLOBAL_DAILY_MAX_SECONDS'];
+const SECONDS_VARIABLES = [
+  'VOICE_SESSION_MAX_SECONDS',
+  'VOICE_DAILY_MAX_SECONDS',
+  'VOICE_GLOBAL_DAILY_MAX_SECONDS',
+  'VOICE_MAX_OPEN_RESERVATIONS',
+];
 const MIN_SESSION_SECRET_LENGTH = 32;
 
 const present = (value) => typeof value === 'string' && value.trim() !== '';
@@ -60,6 +66,7 @@ export function readVoiceConfig(env = {}) {
     sessionMaxSeconds: positiveSeconds(env.VOICE_SESSION_MAX_SECONDS),
     dailyMaxSeconds: positiveSeconds(env.VOICE_DAILY_MAX_SECONDS),
     globalDailyMaxSeconds: positiveSeconds(env.VOICE_GLOBAL_DAILY_MAX_SECONDS),
+    maxOpenReservations: positiveSeconds(env.VOICE_MAX_OPEN_RESERVATIONS),
     webhookSecret,
     refundsEnabled: webhookSecret !== null,
   };

@@ -9,7 +9,20 @@ export async function fetchConversationToken({ fetchImpl, apiKey, agentId }) {
   if (!response.ok) throw new Error(`ElevenLabs token request failed (${response.status})`);
   const body = await response.json();
   if (typeof body?.token !== 'string' || !body.token) throw new Error('ElevenLabs token response had no token');
-  return body.token;
+  // TokenResponseModel carries the conversation id the token will open.
+  return { token: body.token, conversationId: typeof body.conversation_id === 'string' ? body.conversation_id : null };
+}
+
+/** One conversation's status and length, or null if ElevenLabs has no such conversation. */
+export async function fetchConversation({ fetchImpl, apiKey, conversationId }) {
+  const response = await fetchImpl(`${API}/v1/convai/conversations/${encodeURIComponent(conversationId)}`, {
+    method: 'GET',
+    headers: { 'xi-api-key': apiKey },
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`ElevenLabs conversation request failed (${response.status})`);
+  const body = await response.json();
+  return { status: body?.status, durationSecs: body?.metadata?.call_duration_secs ?? 0 };
 }
 
 /** Every conversation for the agent that started at or after `sinceSecs`. */
