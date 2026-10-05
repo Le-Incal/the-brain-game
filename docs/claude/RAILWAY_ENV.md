@@ -16,14 +16,17 @@ Values live only in Railway. Never commit them, and never give any of them a `VI
 | `VOICE_HOSTS` | no | Comma-separated hosts the cookie is bound to: `www.brain-game.io,brain-game.io`. |
 | `VOICE_SESSION_MAX_SECONDS` | no | Per-conversation cap. `480`. |
 | `VOICE_DAILY_MAX_SECONDS` | no | Per-player daily cap across all conversations. `900`. |
-| `VOICE_GLOBAL_DAILY_MAX_SECONDS` | no | Global daily minute budget across all players. When spent, voice reports itself unavailable until the next day; the game is unaffected. |
+| `VOICE_GLOBAL_DAILY_MAX_SECONDS` | no | Global daily minute budget across all players. When spent, voice reports itself unavailable until the next UTC day; the game is unaffected. |
+| `ELEVENLABS_WEBHOOK_SECRET` | yes | HMAC secret of the ElevenLabs post-call webhook. The webhook route verifies every delivery with it before refunding unused minutes. Optional: without it voice still works, but every conversation stays charged its full reservation. |
 
-Later, when the gap webhook is configured in ElevenLabs: `ELEVENLABS_WEBHOOK_SECRET` (yes), the shared secret the webhook route verifies.
+All variables except `ELEVENLABS_WEBHOOK_SECRET` are required; if any is missing or invalid, voice reports itself unavailable. The caps have no silent defaults. Later, the `log_knowledge_gap` server tool gets its own shared secret (not the post-call webhook secret).
 
 ## How M3 uses them
 
-- `POST /api/voice/token` with `{ guide: 'rollo' | 'sylvi' }`: checks the device cookie (issuing one if absent), the per-IP rate limit, the per-device caps and the global daily budget, mints a conversation token for `ELEVENLABS_AGENT_ID` with `ELEVENLABS_API_KEY`, and returns `{ conversationToken, guideName, voiceId }`. The voice map lives on the server (from `VOICE_ID_*`), so a voice can be swapped in Railway without a redeploy of the client.
-- The browser then calls `startSession({ conversationToken, dynamicVariables: { guide_name: guideName }, overrides: { tts: { voiceId } } })`. Always send the override, for both guides.
+- `POST /api/voice/token` with `{ guide: 'rollo' | 'sylvi' }`: checks the device cookie (issuing one if absent), the per-IP rate limit, the per-device caps and the global daily budget, mints a conversation token for `ELEVENLABS_AGENT_ID` with `ELEVENLABS_API_KEY`, and returns `{ conversationToken, guideName, voiceId, maxSeconds, dynamicVariables: { guide_name, reservation } }`. The voice map lives on the server (from `VOICE_ID_*`), so a voice can be swapped in Railway without a redeploy of the client.
+- The browser then calls `startSession({ conversationToken, dynamicVariables, overrides: { tts: { voiceId } } })`, passing `dynamicVariables` exactly as returned. Always send the override, for both guides.
+- Minutes are reserved, then refunded: minting reserves the session cap (or what the device has left, if less) against the device's daily cap and the global budget. ElevenLabs' post-call webhook (`POST /api/voice/webhook/elevenlabs`, header `elevenlabs-signature: t=<secs>,v0=<hex HMAC-SHA256 of "t.body">`) reports the real duration, which settles the reservation. No webhook means no refund.
+- `GET /api/voice/status` returns `{ available, reason?, remainingSeconds? }` so the client knows whether to offer voice.
 - Launch is public, with no access code. The token route is rate-limited per IP.
 - Missing required variables at boot: the server still serves the game, and voice reports itself unavailable (it never crashes the site).
 - Tests (Supertest) use fake values and a mocked ElevenLabs token endpoint; no test reads real secrets.
