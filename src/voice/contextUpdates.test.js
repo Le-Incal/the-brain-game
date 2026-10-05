@@ -10,6 +10,7 @@ const {
   formatHandoff,
   formatIdle,
   formatStudyEntered,
+  formatTimeWarning,
   createContextReporter,
 } = contextModule;
 
@@ -23,7 +24,12 @@ describe('M4: every contextual update, worded in one place', () => {
       handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
       idle: '[player] idle {seconds}s',
       studyEntered: '[player] entered Study mode',
+      timeWarning: '[app] about 30 seconds of our conversation remain',
     });
+  });
+
+  it('warns the guide that time is nearly up', () => {
+    expect(formatTimeWarning()).toBe('[app] about 30 seconds of our conversation remain');
   });
 
   it('reports a clicked region', () => {
@@ -59,7 +65,7 @@ describe('M4: every contextual update, worded in one place', () => {
 
   it('matches every example line in the agent brief', () => {
     const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
-    const examples = [...brief.matchAll(/^\s*(\[player\][^\n`]*)$/gm)].map((match) => match[1].trim());
+    const examples = [...brief.matchAll(/^\s*(\[(?:player|app)\][^\n`]*)$/gm)].map((match) => match[1].trim());
     expect(examples.length).toBeGreaterThan(0);
     const patterns = Object.values(CONTEXT_MESSAGES).map(
       (template) =>

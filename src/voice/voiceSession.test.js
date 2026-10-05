@@ -169,6 +169,39 @@ describe('M4: starting a conversation', () => {
   });
 });
 
+describe('M4: warning the guide before the cutoff', () => {
+  // The app ends the conversation at its reserved time, which can be under
+  // 8 minutes; 30 s before that, the guide is told so it can say goodbye.
+  it('sends the warning once, 30 s before the reserved time', async () => {
+    const { session, conversation, timers } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    const warning = timers.find(({ ms }) => ms === 450_000);
+    expect(warning).toBeDefined();
+    warning.fn();
+    expect(conversation.calls.filter(([name]) => name === 'sendContextualUpdate')).toEqual([
+      ['sendContextualUpdate', '[app] about 30 seconds of our conversation remain'],
+    ]);
+  });
+
+  it('warns at once when less than 30 s was reserved', async () => {
+    const short = fakeServer({ token: { ...TOKEN_RESPONSE, maxSeconds: 20 } });
+    const { session, conversation, timers } = setup({ server: short });
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    expect(conversation.calls.at(-1)).toEqual(['sendContextualUpdate', '[app] about 30 seconds of our conversation remain']);
+    expect(timers.some(({ ms }) => ms === 20_000)).toBe(true);
+  });
+
+  it('drops the warning when the conversation ends first', async () => {
+    const { session, timers } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    session.end();
+    expect(timers.find(({ ms }) => ms === 450_000).cleared).toBe(true);
+  });
+});
+
 describe('M4: during and after a conversation', () => {
   it('reads the guide speaking level only while connected', async () => {
     const { session } = setup();
