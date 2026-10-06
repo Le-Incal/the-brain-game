@@ -65,11 +65,12 @@ describe('M2: scene mode for the guide', () => {
 });
 
 describe('M2: Study mode says what it is', () => {
-  // Kyle, 2026-10-05: the voice panel now sits below the brain.
-  it('names the chosen guide and points to the conversation below', () => {
+  // Kyle, 2026-10-06: the voice panel sits on the right on desktop and at
+  // the bottom on phones, so the caption names the panel, not a direction.
+  it('names the chosen guide and points to the voice panel', () => {
     expect(AppModule.getStudyCaption('rollo')).toEqual({
       title: 'Studying with Rollo',
-      note: 'Talk with Rollo below, or turn the brain freely and click a region to read about it.',
+      note: 'Talk with Rollo in the voice panel, or turn the brain freely and click a region to read about it.',
     });
     expect(AppModule.getStudyCaption('sylvi').title).toBe('Studying with Sylvi');
   });
