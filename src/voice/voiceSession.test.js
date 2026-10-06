@@ -63,6 +63,7 @@ function memoryStorage() {
 
 function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter, clock } = {}) {
   const ended = [];
+  const started = [];
   const conversation = fakeConversation();
   const timers = [];
   const order = [];
@@ -95,8 +96,9 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
     },
     now: clock ? () => clock.now : undefined,
     onConversationEnd: () => ended.push(true),
+    onConversationStart: () => started.push(true),
   });
-  return { session, conversation, server, storage, timers, clientTools, order, ended };
+  return { session, conversation, server, storage, timers, clientTools, order, ended, started };
 }
 
 describe('M4: consent before the mic first opens', () => {
@@ -485,6 +487,44 @@ describe('"The guide is busy" right after this page\'s own conversation', () => 
     const { session, timers } = await talkAgain({ busyTimes: 1, secondsAfterEnd: 61 });
     expect(session.getState()).toMatchObject({ phase: 'unavailable', message: 'The guide is busy, try again shortly.' });
     expect(timers.filter((t) => t.ms === 5000)).toHaveLength(0);
+  });
+});
+
+describe('One conversation at a time', () => {
+  // Live run 16:08:53: a second token request came a second after a mint.
+  it('ignores a second Talk while the first is starting', async () => {
+    const { session, server } = setup();
+    const first = session.start({ guide: 'rollo' });
+    const second = session.start({ guide: 'rollo' });
+    await Promise.all([first, second]);
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token')).toHaveLength(1);
+  });
+
+  it('ignores Talk while connected', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    await session.start({ guide: 'rollo' });
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token')).toHaveLength(1);
+  });
+
+  it('a guide switch while connecting waits for the next conversation instead of starting a second', async () => {
+    const { session, server, conversation } = setup();
+    await session.start({ guide: 'rollo' });
+    expect(session.getState().phase).toBe('connecting');
+    await session.switchGuideNow('sylvi');
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token')).toHaveLength(1);
+    expect(conversation.calls.filter(([name]) => name === 'endSession')).toHaveLength(0);
+    await session.handleConnect({ conversationId: 'c' });
+    session.end();
+    await session.start({});
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body).toEqual({ guide: 'sylvi' });
+  });
+
+  it('clears any lingering highlight when a new conversation starts', async () => {
+    const { session, started } = setup();
+    await session.start({ guide: 'rollo' });
+    expect(started).toHaveLength(1);
   });
 });
 

@@ -27,26 +27,29 @@ describe('M2: hatching answers the voice', () => {
 });
 
 describe('M2 decision: guide highlight in the shader', () => {
-  it('has its own uniform', () => {
-    expect(fragmentShader).toContain('uniform float uVoiceRegion;');
+  // Tours (Kyle, 2026-10-06): a whole lobe lights at once, so the guide's
+  // highlight is a 20-slot mask over the painted regions.
+  it('has its own uniforms: a 20-slot mask and an on switch', () => {
+    expect(fragmentShader).toContain('uniform float uVoiceMask[20];');
+    expect(fragmentShader).toContain('uniform float uVoiceActive;');
   });
 
-  it("draws the region's own tint under the full linework, after catch feedback", () => {
-    expect(fragmentShader).toContain('bool voiceRegion = uVoiceRegion > -0.5 && validRegion && regionId == int(floor(uVoiceRegion + 0.5));');
+  it("draws each lit region's own tint under the full linework, after catch feedback", () => {
+    expect(fragmentShader).toContain('bool voiceRegion = validRegion && isVoiceRegion(regionId);');
     expect(fragmentShader).toMatch(
       /else if \(!feedbackMode && \(selectedRegion \|\| voiceRegion\)\) \{\s*finalColor = mix\(tintedRegionColor, uInkColor, totalInk\);/
     );
   });
 
   it('never dims the linework of other regions for the guide', () => {
-    expect(fragmentShader).not.toMatch(/otherDuringFeedback = [^;]*(uVoiceRegion|voiceActive)/);
+    expect(fragmentShader).not.toMatch(/otherDuringFeedback = [^;]*(uVoiceMask|voiceActive)/);
   });
 
   // Kyle, after the first live run: with Colour Regions on, the guide's
   // highlight was invisible among the other washes. It now isolates its
   // region exactly as a player selection does; linework never changes.
   it('withdraws the other colour washes while the guide highlights a region, as a selection does', () => {
-    expect(fragmentShader).toContain('bool voiceActive = uVoiceRegion > -0.5;');
+    expect(fragmentShader).toContain('bool voiceActive = uVoiceActive > 0.5;');
     expect(fragmentShader).toContain(
       'uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion && !voiceActive'
     );

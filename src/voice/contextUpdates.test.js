@@ -11,6 +11,7 @@ const {
   formatIdle,
   formatStudyEntered,
   formatTimeWarning,
+  formatTourWaiting,
   createContextReporter,
 } = contextModule;
 
@@ -25,7 +26,12 @@ describe('M4: every contextual update, worded in one place', () => {
       idle: '[player] idle {seconds}s',
       studyEntered: '[player] entered Study mode',
       timeWarning: '[app] about 30 seconds of our conversation remain',
+      tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
     });
+  });
+
+  it('nudges a stalled tour', () => {
+    expect(formatTourWaiting({ stop: 3, of: 7 })).toBe('[app] the tour is waiting at stop 3 of 7');
   });
 
   it('warns the guide that time is nearly up', () => {

@@ -23,6 +23,10 @@ function recordingCommands(overrides = {}) {
       lookupRegion: command('lookupRegion', { ok: true, region: { id: 6, name: "Broca's Area" } }),
       listRegions: command('listRegions', { ok: true, divisions: [] }),
       getSceneState: command('getSceneState', { ok: true, view: 'left_lateral' }),
+      faceLobe: command('faceLobe'),
+      startTour: command('startTour', { ok: true, did: 'Started the tour.', reason: '', stops: [] }),
+      nextTourStop: command('nextTourStop', { ok: true, did: 'Turned.', reason: '', stop: 1, of: 7 }),
+      endTour: command('endTour', { ok: true, did: 'Ended the tour.', reason: '', done: true }),
       ...overrides,
     },
   };
@@ -34,7 +38,7 @@ describe('M4: the nine client tools', () => {
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
-    expect(AGENT_TOOL_NAMES).toHaveLength(9);
+    expect(AGENT_TOOL_NAMES).toHaveLength(13);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -54,6 +58,10 @@ describe('M4: the nine client tools', () => {
     ['lookup_region', { region_id: 19 }, ['lookupRegion', { regionId: 19, name: undefined }]],
     ['list_regions', {}, ['listRegions']],
     ['get_scene_state', {}, ['getSceneState']],
+    ['face_lobe', { lobe: 'Temporal Lobe' }, ['faceLobe', 'Temporal Lobe']],
+    ['start_tour', {}, ['startTour']],
+    ['next_tour_stop', {}, ['nextTourStop']],
+    ['end_tour', {}, ['endTour']],
   ])('%s %j calls the scene command', async (name, params, expected) => {
     const { commands, calls } = recordingCommands();
     await createClientTools(commands)[name](params);

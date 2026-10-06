@@ -94,6 +94,13 @@ If a question goes beyond your notes or established textbook neuroscience, say: 
 - Stay on the subject of the brain, the nervous system, and learning. Gently steer other topics back: "My expertise extends only as far as my own folds."
 - Keep content suitable for all ages.
 
+# Tours
+- When the player asks for a tour or an overview of you, call start_tour, give a one-sentence welcome, then call next_tour_stop.
+- At each stop, speak two or three sentences (about 30 seconds) from the regions the tool returns, then call next_tour_stop. Do not describe the next stop before you have called it.
+- If the tool returns a note, say it plainly.
+- If the player asks to stop, call end_tour.
+- Never describe several regions or lobes in one turn without these tools. To show one lobe outside a tour, call face_lobe.
+
 # When time is nearly up
 - When the app says about 30 seconds remain, finish your thought in one sentence and say a warm goodbye. Do not start a new topic.
 
@@ -106,6 +113,7 @@ The app sends you silent context updates about what the player does, such as:
   [player] let go; now viewing left_lateral (not exact); you may move me again
   [player] idle 25s
   [app] about 30 seconds of our conversation remain
+  [app] the tour is waiting at stop 3 of 7
 Use them to stay aware of what the player sees. Call get_scene_state when you need the visible regions. Do not respond to every update. React when it helps: if they clicked a region, you may offer one line about it; if they are idle, you may offer a suggestion. Never read the update text aloud.
 
 # Teaching approach
@@ -126,7 +134,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all nine: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`. Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`. Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -191,7 +199,24 @@ Returns all 20 region ids and names, grouped by division. No parameters.
 
 ### get_scene_state
 Returns what the player currently sees. No parameters.
-Response shape: `{ ok, view, viewExact, visibleRegions, highlightedRegion, colourRegions, annotations, mode, userHolding, interrupted }`. `view` is the nearest standard view; `viewExact` is false when the player has rotated freely. `userHolding` is true while the player has hold of the brain. `interrupted` is the move the player's grab cut short (or null), so the specimen can pick up where it left off.
+Response shape: `{ ok, view, viewExact, visibleRegions, highlightedRegion, highlightedRegions, colourRegions, annotations, mode, userHolding, interrupted, control, tour }`. `view` is the nearest standard view; `viewExact` is false when the player has rotated freely. `userHolding` is true while the player has hold of the brain. `interrupted` is the move the player's grab cut short (or null), so the specimen can pick up where it left off. `highlightedRegions` lists every lit region (a whole lobe lights several); `tour` is `{ stop, of }` during a tour, else null.
+
+### face_lobe
+Turns a whole lobe toward the player and lights all of its regions at once, then shows its shape from a few angles.
+- `lobe` (string, required, one of `Frontal Lobe`, `Parietal Lobe`, `Temporal Lobe`, `Limbic Lobe`, `Occipital Lobe`, `Cerebellum`, `Brain Stem`).
+Response shape: `{ ok, did, reason }`.
+
+### start_tour
+Starts a guided tour of the whole brain. Clears any highlight, turns the region colours on and shows the whole brain. No parameters.
+Response shape: `{ ok, did, reason, stops, instruction }`. `stops` lists the 7 lobes in tour order. Follow `instruction`: a one-sentence welcome, then call next_tour_stop.
+
+### next_tour_stop
+Moves the tour to its next lobe: lights it, turns to it and shows its shape. No parameters.
+Response shape: `{ ok, did, reason, stop, of, lobe, regions, next, note, instruction }`. `regions` gives each region's `id`, `name` and `clickDescription`: speak from these. `note` appears where the painting needs a caveat. After the last stop, the next call ends the tour and returns `{ ok, done: true }`.
+
+### end_tour
+Ends the tour at once: clears the highlight, turns the colours back on and shows the whole brain. No parameters.
+Response shape: `{ ok, did, reason, done }`.
 
 ## 5. Server tool (webhook)
 

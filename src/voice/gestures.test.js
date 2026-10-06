@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mockVoiceLevel } from './voiceLevel.js';
 
 const gestureModule = await import('./gestures.js').catch(() => ({}));
-const { GESTURE_MAX_RADIANS, createGesture, stepGesture, gestureSuppressed } = gestureModule;
+const { GESTURE_MAX_RADIANS, createGesture, stepGesture, gestureStrength } = gestureModule;
 
 const FRAME = 1 / 60;
 
@@ -61,13 +61,29 @@ describe('Embodied gestures while the guide speaks', () => {
     expect(Math.abs(silent.at(-1).pitch)).toBeLessThan(1e-3);
   });
 
-  it('is suppressed whenever anything else is directing attention', () => {
-    const free = { control: 'guide_free', highlightedRegion: null, reducedMotion: false };
-    expect(gestureSuppressed(free)).toBe(false);
+  // Kyle, 2026-10-06: a lit region kept the brain dead while the guide
+  // talked. Lit and still now means half strength; moving, showcasing, held
+  // or explored still means none.
+  it('runs at full strength when free, half while a region or lobe stays lit, none otherwise', () => {
+    const free = { control: 'guide_free', highlighted: false, reducedMotion: false };
+    expect(gestureStrength(free)).toBe(1);
+    expect(gestureStrength({ ...free, highlighted: true })).toBe(0.5);
     for (const control of ['guide_moving', 'player_holding', 'player_exploring']) {
-      expect(gestureSuppressed({ ...free, control }), control).toBe(true);
+      expect(gestureStrength({ ...free, control }), control).toBe(0);
+      expect(gestureStrength({ ...free, control, highlighted: true }), control).toBe(0);
     }
-    expect(gestureSuppressed({ ...free, highlightedRegion: 5 })).toBe(true);
-    expect(gestureSuppressed({ ...free, reducedMotion: true })).toBe(true);
+    expect(gestureStrength({ ...free, reducedMotion: true })).toBe(0);
+  });
+
+  it('half strength stays within half the amplitude', () => {
+    const gesture = createGesture();
+    const frames = [];
+    for (let i = 0; i < 60 * 20; i += 1) {
+      frames.push(stepGesture(gesture, { dtSeconds: FRAME, level: mockVoiceLevel(i * FRAME * 1000), strength: 0.5 }));
+    }
+    for (const { yaw, pitch } of frames) {
+      expect(Math.abs(yaw)).toBeLessThanOrEqual(GESTURE_MAX_RADIANS / 2);
+      expect(Math.abs(pitch)).toBeLessThanOrEqual(GESTURE_MAX_RADIANS / 2);
+    }
   });
 });
