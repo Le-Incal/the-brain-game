@@ -692,6 +692,16 @@ export default function App() {
           sceneCommandsRef.current = createSceneCommands(adapter, {
             onUserInteraction: (event) => voiceEventsRef.current?.userInteraction(event),
             onControlChange: setControl,
+            onTourEvent: (event) => voiceEventsRef.current?.tourEvent?.(event),
+            // Each arrival shows the shape of what was lit, once.
+            showcase: true,
+            reducedMotion: () => {
+              try {
+                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              } catch {
+                return false;
+              }
+            },
           });
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
         }

@@ -17,6 +17,10 @@ export const AGENT_TOOL_NAMES = [
   'lookup_region',
   'list_regions',
   'get_scene_state',
+  'face_lobe',
+  'start_tour',
+  'next_tour_stop',
+  'end_tour',
 ];
 
 // Under the agent's 8 s response timeout, so the agent always hears the truth.
@@ -78,6 +82,10 @@ export function createClientTools(commands, { cancelMoves = () => {}, setTimeout
     lookup_region: run((p) => commands.lookupRegion({ regionId: p.region_id, name: p.name })),
     list_regions: run(() => commands.listRegions()),
     get_scene_state: run(() => commands.getSceneState()),
+    face_lobe: run((p) => commands.faceLobe(p.lobe), { timed: true }),
+    start_tour: run(() => commands.startTour(), { timed: true }),
+    next_tour_stop: run(() => commands.nextTourStop(), { timed: true }),
+    end_tour: run(() => commands.endTour(), { timed: true }),
   };
 }
 

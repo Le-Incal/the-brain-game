@@ -16,7 +16,8 @@ import { createContextReporter } from './contextUpdates.js';
 import { appendMessage, messageFromSdk } from './transcript.js';
 import { planGuideChange, SWITCH_NOW_WARNING } from './guideSettings.js';
 import { TRANSCRIPT_STYLE, VOICE_PANEL_STYLE, visibleTranscript } from './voicePanelLayout.js';
-import { createGesture, gestureSuppressed, stepGesture } from './gestures.js';
+import { createGesture, gestureStrength, stepGesture } from './gestures.js';
+import { createTourStallGuard } from './tourStallGuard.js';
 
 const INK = '#1a1814';
 const STYLES = {
@@ -71,11 +72,15 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   const [guideNote, setGuideNote] = useState(null);
   const sessionRef = useRef(null);
   const sdkRef = useRef(null);
+  const stallGuardRef = useRef(null);
 
   const sdk = useConversation({
     onConnect: ({ conversationId }) => sessionRef.current?.handleConnect({ conversationId }),
     onDisconnect: (details) => sessionRef.current?.handleDisconnect(details),
+    // The tour stall guard listens for the guide falling quiet at a stop.
+    onModeChange: ({ mode }) => stallGuardRef.current?.guideSpeaking(mode === 'speaking'),
     onMessage: (payload) => {
+      if (payload?.role === 'user') stallGuardRef.current?.playerActivity();
       const line = messageFromSdk(payload, GUIDES.find((g) => g.id === sessionRef.current?.getState().guide)?.name ?? 'Guide');
       if (line) setTranscript((list) => appendMessage(list, line));
     },
@@ -99,6 +104,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       onChange: setState,
       // The guide lets go of the brain when the conversation is over.
       onConversationEnd: () => commands.clearHighlight(),
+      // A new conversation never inherits a region lit by the last one.
+      onConversationStart: () => commands.clearHighlight(),
     });
   }, [commands, scene]);
   sessionRef.current = session;
@@ -106,7 +113,19 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   // Scene events reach the guide only while a conversation is connected.
   useEffect(() => {
     const reporter = createContextReporter({ send: (text) => session.sendContext(text) });
-    voiceEventsRef.current = reporter;
+    const stallGuard = createTourStallGuard({ send: (text) => session.sendContext(text) });
+    stallGuardRef.current = stallGuard;
+    voiceEventsRef.current = {
+      ...reporter,
+      userInteraction: (event) => {
+        if (event.type === 'grab') stallGuard.playerActivity();
+        reporter.userInteraction(event);
+      },
+      tourEvent: (event) => {
+        if (event.type === 'stop') stallGuard.stopShown(event);
+        else if (event.type === 'end') stallGuard.tourEnded();
+      },
+    };
     const idle = window.setInterval(() => reporter.tick(), 1000);
     const stopWatching = cancelMovesWhenHidden({
       document,
@@ -115,6 +134,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     return () => {
       window.clearInterval(idle);
       stopWatching();
+      stallGuard.tourEnded();
+      stallGuardRef.current = null;
       voiceEventsRef.current = null;
     };
   }, [session, scene, voiceEventsRef]);
@@ -133,13 +154,12 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     const tick = (now) => {
       const level = session.outputLevel();
       scene.setVoiceLevel(level);
-      const selected = scene.selectedRegionId >= 0 ? scene.selectedRegionId : null;
-      const suppressed = gestureSuppressed({
+      const strength = gestureStrength({
         control: controlRef.current,
-        highlightedRegion: scene.getVoiceHighlight() ?? selected,
+        highlighted: scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0,
         reducedMotion,
       });
-      scene.setGesture(stepGesture(gesture, { dtSeconds: (now - last) / 1000, level, suppressed }));
+      scene.setGesture(stepGesture(gesture, { dtSeconds: (now - last) / 1000, level, strength }));
       last = now;
       frame = requestAnimationFrame(tick);
     };

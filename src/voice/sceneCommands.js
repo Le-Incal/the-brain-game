@@ -30,6 +30,16 @@ import * as THREE from 'three';
 import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
+import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, tourStop } from './lobes.js';
+
+// The whole-brain view a tour starts and ends on.
+const OVERVIEW_VIEW = 'left_lateral';
+
+// After arriving, the brain shows the shape of what it lit: a turn either
+// way, a slight tilt, then back to the best view, once, about 6 s in all.
+const SHOWCASE_STEP_MS = 1500;
+const SHOWCASE_TURN_DEGREES = 20;
+const SHOWCASE_TILT_DEGREES = 8;
 
 const REGION_BY_ID = new Map(brainRegions.regions.map((region) => [region.id, region]));
 const MIN_REGION_ID = Math.min(...REGION_BY_ID.keys());
@@ -128,6 +138,9 @@ export function createSceneCommands(
   {
     onUserInteraction,
     onControlChange,
+    onTourEvent,
+    showcase = false,
+    reducedMotion = () => false,
     setTimeoutImpl = setTimeout,
     clearTimeoutImpl = clearTimeout,
   } = {}
@@ -136,6 +149,9 @@ export function createSceneCommands(
   let userHolding = false;
   let interrupted = null;
   let currentMove = null;
+  let showcaseToken = null;
+  // { index } of the last stop shown, -1 before the first; null outside a tour.
+  let tour = null;
 
   // Shared control: the quiet period after player input, and the press that
   // has not been announced yet.
@@ -147,7 +163,7 @@ export function createSceneCommands(
 
   function control() {
     if (userHolding) return 'player_holding';
-    if (currentMove) return 'guide_moving';
+    if (currentMove || showcaseToken) return 'guide_moving';
     if (quietTimer !== null) return 'player_exploring';
     return 'guide_free';
   }
@@ -229,16 +245,48 @@ export function createSceneCommands(
     }
   });
 
-  async function move(bookmark, quaternion) {
+  async function move(bookmark, quaternion, { durationMs } = {}) {
     const token = { bookmark };
     currentMove = token;
-    const settled = controls.moveTo(quaternion);
+    const settled = controls.moveTo(quaternion, durationMs ? { durationMs } : undefined);
     notifyControl();
     const outcome = await settled;
     if (currentMove === token) currentMove = null;
     if (outcome.completed) interrupted = null;
     notifyControl();
     return outcome;
+  }
+
+  /**
+   * Shows the shape of what was just lit: a turn either way, a slight tilt,
+   * then back to the best view. Once; it counts as the guide moving; a grab
+   * cancels it, the next move replaces it, and reduced motion skips it.
+   */
+  function startShowcase(best) {
+    if (!showcase || reducedMotion()) return;
+    const token = {};
+    showcaseToken = token;
+    const { toCamera, screenUp } = frame();
+    const screenRight = new THREE.Vector3().crossVectors(screenUp, toCamera).normalize();
+    const turn = (axis, degrees) =>
+      new THREE.Quaternion().setFromAxisAngle(axis, THREE.MathUtils.degToRad(degrees)).multiply(best);
+    const steps = [
+      turn(screenUp, SHOWCASE_TURN_DEGREES),
+      turn(screenUp, -SHOWCASE_TURN_DEGREES),
+      turn(screenRight, SHOWCASE_TILT_DEGREES),
+      best.clone(),
+    ];
+    (async () => {
+      for (const target of steps) {
+        if (showcaseToken !== token) return;
+        const outcome = await move(null, target, { durationMs: SHOWCASE_STEP_MS });
+        if (!outcome.completed) break;
+      }
+      if (showcaseToken === token) {
+        showcaseToken = null;
+        notifyControl();
+      }
+    })();
   }
 
   /** Why the guide may not move the brain right now, or null if it may. */
@@ -303,7 +351,10 @@ export function createSceneCommands(
     // The light goes on as the turn begins, so the player sees where we are going.
     adapter.setHighlight(id);
     const outcome = await move({ command: 'faceRegion', regionId: id, hemisphere: side }, quaternion);
-    if (outcome.completed) return ok(arrived);
+    if (outcome.completed) {
+      startShowcase(quaternion);
+      return ok(arrived);
+    }
     const lit = `Highlighted my ${region.name}, but did not finish turning it toward you.`;
     return fail(stoppedReason(outcome.reason), lit);
   }
@@ -316,9 +367,101 @@ export function createSceneCommands(
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
+    // A broad view never leaves a region lit.
+    adapter.setHighlight(null);
     const outcome = await move({ command: 'rotateTo', view }, orientationForView(view, frame(), convertAxis));
     if (outcome.completed) return ok(`Turned to my ${viewLabel(view)} view.`);
     return fail(stoppedReason(outcome.reason), `Started turning to my ${viewLabel(view)} view but did not finish.`);
+  }
+
+  function lobeMiddle(ids, side) {
+    const key = side === 'left' ? 'centroidLeft' : 'centroidRight';
+    const points = ids.map((id) => regionGeometry.regions[String(id)][key]).filter(Boolean);
+    if (points.length === 0) return null;
+    return points
+      .map((point) => adapter.toSpecimenSpace(point))
+      .reduce((sum, point) => sum.add(point), new THREE.Vector3())
+      .divideScalar(points.length);
+  }
+
+  async function faceLobe(lobeName, { bookmark } = {}) {
+    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    const lobe = normalizeLobe(lobeName);
+    if (!lobe) return fail(`Unknown lobe "${lobeName}". Valid lobes: ${LOBE_NAMES.join(', ')}.`);
+    if (moveRefusal()) return fail(moveRefusal());
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+
+    const ids = lobeRegionIds(lobe);
+    let quaternion;
+    let arrived;
+    if (lobe === 'Limbic Lobe') {
+      const view = MEDIAL_REGION_VIEWS[16];
+      quaternion = orientationForView(view, frame(), convertAxis);
+      arrived = `Turned to my ${viewLabel(view)} view and lit my limbic lobe. ${LIMBIC_NOTE}`;
+    } else {
+      const { toCamera } = frame();
+      const facing = (middle) =>
+        middle ? middle.clone().normalize().applyQuaternion(controls.orientGroup.quaternion).dot(toCamera) : -Infinity;
+      const left = lobeMiddle(ids, 'left');
+      const right = lobeMiddle(ids, 'right');
+      const side = facing(left) >= facing(right) ? 'left' : 'right';
+      const middle = side === 'left' ? left : right;
+      quaternion = orientationFacing(middle.normalize(), frame(), convertAxis([0, 1, 0]), convertAxis([0, 0, 1]));
+      arrived = `Turned my ${side} ${lobe} toward you and lit all of it.`;
+    }
+
+    adapter.setHighlight(ids);
+    const outcome = await move(bookmark ?? { command: 'faceLobe', lobe }, quaternion);
+    if (outcome.completed) {
+      startShowcase(quaternion);
+      return ok(arrived);
+    }
+    return fail(stoppedReason(outcome.reason), `Lit my ${lobe}, but did not finish turning it toward you.`);
+  }
+
+  // Clear the lights, colours on, the whole brain in view: how a tour begins and ends.
+  async function showWholeBrain(bookmark) {
+    adapter.setHighlight(null);
+    adapter.setColourRegions(true);
+    return move(bookmark, orientationForView(OVERVIEW_VIEW, frame(), convertAxis));
+  }
+
+  async function finishTour(did) {
+    tour = null;
+    onTourEvent?.({ type: 'end' });
+    await showWholeBrain({ command: 'endTour' });
+    return { ...ok(did), done: true };
+  }
+
+  async function startTour() {
+    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (moveRefusal()) return fail(moveRefusal());
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+    tour = { index: -1 };
+    onTourEvent?.({ type: 'start' });
+    await showWholeBrain({ command: 'startTour' });
+    return {
+      ...ok('Started the tour: colours on and my whole left side toward you.'),
+      stops: TOUR_ORDER,
+      instruction: 'Give a one-sentence welcome, then call next_tour_stop.',
+    };
+  }
+
+  async function nextTourStop() {
+    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!tour) return fail('No tour is running. Call start_tour first.');
+    const index = tour.index + 1;
+    if (index >= TOUR_ORDER.length) return finishTour('That was the whole tour; my colours are back on.');
+    tour.index = index;
+    const stop = tourStop(index);
+    const result = await faceLobe(stop.lobe, { bookmark: { command: 'tourStop', stop: stop.stop, lobe: stop.lobe } });
+    onTourEvent?.({ type: 'stop', stop: stop.stop, of: stop.of });
+    return { ...stop, ok: result.ok, did: result.did, reason: result.reason };
+  }
+
+  async function endTour() {
+    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    return finishTour('Ended the tour; my colours are back on.');
   }
 
   function highlightRegion(regionId) {
@@ -390,6 +533,8 @@ export function createSceneCommands(
 
   function getSceneState() {
     const { view, viewExact } = currentView();
+    const lit = adapter.getHighlight();
+    const litIds = lit === null || lit === undefined ? [] : [].concat(lit);
     return {
       ok: true,
       view,
@@ -399,18 +544,24 @@ export function createSceneCommands(
         name,
         visibleFraction,
       })),
-      highlightedRegion: adapter.getHighlight() ?? null,
+      highlightedRegion: litIds.length === 1 ? litIds[0] : null,
+      highlightedRegions: litIds,
       colourRegions: adapter.getColourRegions(),
       annotations: adapter.getAnnotations(),
       mode: adapter.getMode(),
       userHolding,
       interrupted,
       control: control(),
+      tour: tour ? { stop: tour.index + 1, of: TOUR_ORDER.length } : null,
     };
   }
 
   const commands = {
     faceRegion,
+    faceLobe: (lobe) => faceLobe(lobe),
+    startTour,
+    nextTourStop,
+    endTour,
     rotateTo,
     highlightRegion,
     clearHighlight,

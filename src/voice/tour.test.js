@@ -171,10 +171,17 @@ describe('Safety net: a broad move never leaves a region lit', () => {
 
 describe('Showcase: after arriving, the brain shows the shape of what it lit', () => {
   it('answers the agent on arrival, then glides through about 6 s of angles and settles on the best view', async () => {
-    const { commands, controls, settle } = setup({ showcase: true });
-    const result = await settle(commands.faceRegion(17));
+    const { commands, controls } = setup({ showcase: true });
+    // Capture the best view at the moment the agent hears back, before the
+    // showcase has turned the brain at all.
+    let result = null;
+    let best = null;
+    commands.faceRegion(17).then((value) => {
+      result = value;
+      best = controls.orientGroup.quaternion.clone();
+    });
+    while (!result) await runFrames(controls, clock, 1000 / 60);
     expect(result.ok).toBe(true);
-    const best = controls.orientGroup.quaternion.clone();
     expect(commands.getSceneState().control).toBe('guide_moving');
     let furthest = 0;
     for (let t = 0; t < SHOWCASE_MS + 500; t += 250) {

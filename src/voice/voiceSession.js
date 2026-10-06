@@ -84,6 +84,7 @@ export function createVoiceSession({
   now = Date.now,
   onChange = () => {},
   onConversationEnd = () => {},
+  onConversationStart = () => {},
 }) {
   let state = { phase: 'idle', guide: null, message: null, conversationId: null };
   let consentGiven = readConsent();
@@ -151,8 +152,12 @@ export function createVoiceSession({
     if (state.phase === 'connected') conversation.sendContextualUpdate(formatTimeWarning());
   }
 
+  const starting = () => state.phase === 'requesting' || state.phase === 'connecting';
+
   async function requestAndStart() {
     set({ phase: 'requesting', message: null, conversationId: null });
+    // A new conversation never inherits a region lit by the last one.
+    onConversationStart();
     clearRetry();
     busyRetries = 0;
     const microphone = await requestMicrophone();
@@ -205,6 +210,9 @@ export function createVoiceSession({
   }
 
   async function start({ guide } = {}) {
+    // One conversation at a time: a second Talk while one is starting or
+    // running does nothing.
+    if (starting() || state.phase === 'connected') return;
     const chosen = normalizeGuide(guide) ?? pendingGuide ?? state.guide;
     pendingGuide = null;
     if (!chosen) {
@@ -293,6 +301,13 @@ export function createVoiceSession({
     },
 
     async switchGuideNow(next) {
+      // While a conversation is still starting, switching would start a
+      // second one; the new guide takes the next conversation instead.
+      if (starting()) {
+        const id = normalizeGuide(next);
+        if (id) pendingGuide = id;
+        return;
+      }
       end();
       await start({ guide: next });
     },
