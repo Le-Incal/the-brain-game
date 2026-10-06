@@ -358,7 +358,16 @@ export class BrainScene {
     this.specimenGroup = new THREE.Group();
     this.specimenRotationGroup = new THREE.Group();
     this.specimenOrientGroup = new THREE.Group();
-    this.specimenRotationGroup.add(this.specimenOrientGroup);
+    // The guide's gestures (a slight sway and nod while it speaks) live on
+    // their own group, so the orientation the controls and the voice layer
+    // read and drive is never touched by them.
+    this.specimenGestureGroup = new THREE.Group();
+    this.specimenRotationGroup.add(this.specimenGestureGroup);
+    this.specimenGestureGroup.add(this.specimenOrientGroup);
+    this._gestureYawAxis = new THREE.Vector3(0, 1, 0);
+    this._gesturePitchAxis = new THREE.Vector3();
+    this._gestureYaw = new THREE.Quaternion();
+    this._gesturePitch = new THREE.Quaternion();
     this.specimenGroup.add(this.specimenRotationGroup);
     this.scene.add(this.specimenGroup);
     this._specimenPanY = 0;
@@ -806,7 +815,23 @@ export class BrainScene {
     this.uniforms.uVoiceRegion.value = next.uVoiceRegion;
   }
 
-  /** The guide's highlight: held until cleared, never dims other regions. */
+  /** Sway (about world up) and nod (about the screen's horizontal), in radians. */
+  setGesture({ yaw = 0, pitch = 0 } = {}) {
+    this._gesturePitchAxis.set(1, 0, 0).applyQuaternion(this.camera.quaternion).normalize();
+    this._gestureYaw.setFromAxisAngle(this._gestureYawAxis, yaw);
+    this._gesturePitch.setFromAxisAngle(this._gesturePitchAxis, pitch);
+    this.specimenGestureGroup.quaternion.copy(this._gestureYaw).multiply(this._gesturePitch);
+  }
+
+  /** Clears the player's selection, as a click on the selected region would. */
+  clearSelection() {
+    if (this.selectedRegionId < 0) return;
+    this.selectedRegionId = -1;
+    this.uniforms.uSelectedRegion.value = -1;
+    this.onRegionSelect?.(null);
+  }
+
+  /** The guide's highlight: held until cleared; isolates its region like a selection. */
   setVoiceHighlight(regionId) {
     this._voiceHighlight = regionId ?? null;
     this._applyHighlightUniforms(performance.now());

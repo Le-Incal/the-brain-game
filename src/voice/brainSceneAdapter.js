@@ -17,7 +17,15 @@ export function createBrainSceneAdapter({
     controls: scene.controls,
     toSpecimenSpace: (point) => scene.toSpecimenSpace(point),
     toSpecimenDirection: (direction) => scene.toSpecimenDirection(direction),
-    setHighlight: (regionId) => scene.setVoiceHighlight(regionId),
+    // One focus at a time: the guide lighting a region clears the player's
+    // selection (and its description); a player click clears the guide's light.
+    setHighlight: (regionId) => {
+      if (regionId !== null && regionId !== undefined) scene.clearSelection?.();
+      scene.setVoiceHighlight(regionId);
+    },
+    playerSelected: (regionId) => {
+      if (regionId !== null && regionId !== undefined) scene.setVoiceHighlight(null);
+    },
     getHighlight: () => scene.getVoiceHighlight(),
     setColourRegions,
     getColourRegions,

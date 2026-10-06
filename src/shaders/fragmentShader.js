@@ -172,10 +172,12 @@ const fragmentShader = /* glsl */ `
     int highlightRegionId = int(floor(uHighlight + 0.5));
     bool feedbackRegion = feedbackMode && validRegion && regionId == highlightRegionId;
     bool otherDuringFeedback = feedbackMode && !feedbackRegion;
+    bool voiceActive = uVoiceRegion > -0.5;
     bool voiceRegion = uVoiceRegion > -0.5 && validRegion && regionId == int(floor(uVoiceRegion + 0.5));
-    // Feedback isolates the answer: withdraw every other colour wash.
+    // Feedback, a selection and the guide's highlight each isolate their
+    // region: withdraw every other colour wash. Linework never changes.
     bool colourRegionsActive =
-      uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion;
+      uColorMode > 0.5 && !selectionActive && !feedbackMode && validRegion && !voiceActive;
 
     vec3 shadedPaper = uPaperColor * (1.0 - tonalDarkness * 0.10);
     // Ink is the top layer. Max-composition preserves line contrast and avoids
