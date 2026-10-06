@@ -19,14 +19,19 @@ const TOKEN_RESPONSE = {
   dynamicVariables: { guide_name: 'Rollo', reservation: 'resid.sig' },
 };
 
-function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal } = {}) {
+function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal, busyTimes = 0 } = {}) {
   const requests = [];
+  let busyLeft = busyTimes;
   const fetchImpl = async (url, init = {}) => {
     requests.push({ url, init, body: init.body ? JSON.parse(init.body) : undefined });
     if (url === '/api/voice/event') return { ok: true, status: 204, json: async () => ({}) };
     if (url === '/api/voice/release') return { ok: true, status: 200, json: async () => ({ status: 'released' }) };
     if (url === '/api/voice/token') {
       if (refusal) return { ok: false, status: refusal.status, json: async () => refusal.body };
+      if (busyLeft > 0) {
+        busyLeft -= 1;
+        return { ok: false, status: 429, json: async () => ({ available: false, reason: 'busy' }) };
+      }
       const guide = JSON.parse(init.body).guide;
       const body = guide === 'sylvi'
         ? { ...token, guideName: 'Sylvi', voiceId: 'voice_sylvi', dynamicVariables: { guide_name: 'Sylvi', reservation: 'r2.s2' } }
@@ -54,7 +59,8 @@ function memoryStorage() {
   return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => (data[k] = String(v)) };
 }
 
-function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter } = {}) {
+function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter, clock } = {}) {
+  const ended = [];
   const conversation = fakeConversation();
   const timers = [];
   const order = [];
@@ -85,8 +91,10 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
     clearTimeoutImpl: (id) => {
       if (timers[id]) timers[id].cleared = true;
     },
+    now: clock ? () => clock.now : undefined,
+    onConversationEnd: () => ended.push(true),
   });
-  return { session, conversation, server, storage, timers, clientTools, order };
+  return { session, conversation, server, storage, timers, clientTools, order, ended };
 }
 
 describe('M4: consent before the mic first opens', () => {
@@ -411,6 +419,68 @@ describe('M4: the blocked-mic count means players, not clicks', () => {
     expect(server.requests.filter(({ url }) => url === '/api/voice/event')).toEqual([
       expect.objectContaining({ body: { type: 'mic_blocked' } }),
     ]);
+  });
+});
+
+describe('The guide lets go of the brain when the conversation ends', () => {
+  it.each([
+    ['ends', (session) => session.end()],
+    ['disconnects', (session) => session.handleDisconnect({ reason: 'agent' })],
+    ['is switched to the other guide', (session) => session.switchGuideNow('sylvi')],
+  ])('signals the end when the conversation %s', async (_label, act) => {
+    const { session, ended } = setup();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'c' });
+    await act(session);
+    expect(ended.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('"The guide is busy" right after this page\'s own conversation', () => {
+  // Live run: Sylvi ended about 13:38:35, Talk was pressed at 13:38:38 and
+  // refused busy (device), her webhook settled at 13:38:58.
+  async function talkAgain({ busyTimes, secondsAfterEnd }) {
+    const clock = { now: 1_000_000 };
+    const server = fakeServer({ busyTimes });
+    const context = setup({ server, clock });
+    await context.session.start({ guide: 'rollo' });
+    await context.session.handleConnect({ conversationId: 'c1' });
+    context.session.end();
+    clock.now += secondsAfterEnd * 1000;
+    await context.session.start({ guide: 'rollo' });
+    return { ...context, clock };
+  }
+
+  async function runRetry(timers) {
+    const retry = timers.filter((t) => t.ms === 5000 && !t.cleared && !t.ran).at(-1);
+    if (!retry) return false;
+    retry.ran = true;
+    await retry.fn();
+    return true;
+  }
+
+  it('says the guide is getting ready and retries every 5 s until it can start', async () => {
+    const { session, timers, conversation } = await talkAgain({ busyTimes: 2, secondsAfterEnd: 3 });
+    expect(session.getState()).toMatchObject({ phase: 'requesting', message: 'One moment, Rollo is getting ready…' });
+    expect(await runRetry(timers)).toBe(true);
+    expect(session.getState().message).toBe('One moment, Rollo is getting ready…');
+    expect(await runRetry(timers)).toBe(true);
+    expect(session.getState().phase).toBe('connecting');
+    expect(conversation.calls.filter(([name]) => name === 'startSession')).toHaveLength(2);
+  });
+
+  it('gives up after 45 s and shows the busy message', async () => {
+    const { session, timers } = await talkAgain({ busyTimes: 100, secondsAfterEnd: 3 });
+    let retries = 0;
+    while (await runRetry(timers)) retries += 1;
+    expect(retries).toBe(9);
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: 'The guide is busy, try again shortly.' });
+  });
+
+  it('shows the busy message at once when this page has not just ended a conversation', async () => {
+    const { session, timers } = await talkAgain({ busyTimes: 1, secondsAfterEnd: 61 });
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: 'The guide is busy, try again shortly.' });
+    expect(timers.filter((t) => t.ms === 5000)).toHaveLength(0);
   });
 });
 

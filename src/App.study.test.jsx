@@ -98,3 +98,12 @@ describe('M4: showing who is driving', () => {
     expect(AppModule.getControlIndicator({ control: 'guide_moving', guide: null })).toBeNull();
   });
 });
+
+describe('Guide picker copy', () => {
+  it('points to the voice panel, since Settings does not exist on desktop', () => {
+    expect(AppModule.GUIDE_PICKER_NOTE).toBe(
+      'Both are this same brain; only the voice differs. You can switch guides later in the voice panel.'
+    );
+  });
+});
+

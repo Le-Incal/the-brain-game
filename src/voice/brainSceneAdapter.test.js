@@ -26,9 +26,12 @@ afterEach(() => {
 function createStubScene({ loaded = true, space = null } = {}) {
   const { controls, element } = createControls();
   let voiceHighlight = null;
+  const selectionCleared = [];
   return {
     element,
     controls,
+    selectionCleared,
+    clearSelection: () => selectionCleared.push(true),
     setVoiceHighlight(regionId) {
       voiceHighlight = regionId;
     },
@@ -184,3 +187,37 @@ describe('M2 addition: views use converted axes through the real adapter', () =>
     expect(drawn.applyQuaternion(scene.controls.orientGroup.quaternion).dot(toCamera(scene.controls))).toBeGreaterThan(0.99);
   });
 });
+
+describe('One focus at a time (after the first live run)', () => {
+  it("a guide highlight clears the player's selection and its description", () => {
+    const scene = createStubScene();
+    const adapter = createBrainSceneAdapter({ scene, ...createAppState().callbacks });
+    adapter.setHighlight(5);
+    expect(scene.selectionCleared).toHaveLength(1);
+    expect(scene.getVoiceHighlight()).toBe(5);
+  });
+
+  it("clearing the guide's highlight leaves the player's selection alone", () => {
+    const scene = createStubScene();
+    const adapter = createBrainSceneAdapter({ scene, ...createAppState().callbacks });
+    adapter.setHighlight(null);
+    expect(scene.selectionCleared).toHaveLength(0);
+  });
+
+  it("a player click clears the guide's highlight", () => {
+    const scene = createStubScene();
+    const adapter = createBrainSceneAdapter({ scene, ...createAppState().callbacks });
+    adapter.setHighlight(5);
+    adapter.playerSelected(12);
+    expect(scene.getVoiceHighlight()).toBeNull();
+  });
+
+  it("a click that deselects leaves the guide's highlight alone", () => {
+    const scene = createStubScene();
+    const adapter = createBrainSceneAdapter({ scene, ...createAppState().callbacks });
+    adapter.setHighlight(5);
+    adapter.playerSelected(null);
+    expect(scene.getVoiceHighlight()).toBe(5);
+  });
+});
+
