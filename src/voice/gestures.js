@@ -25,13 +25,17 @@ export function createGesture() {
   return { phrase: 0, emphasis: 0, weight: 0, phase: 0, yaw: 0, pitch: 0 };
 }
 
-/** Advances the gesture one frame and returns its { yaw, pitch } in radians. */
-export function stepGesture(state, { dtSeconds, level, suppressed }) {
+/**
+ * Advances the gesture one frame and returns its { yaw, pitch } in radians.
+ * `strength` (0 to 1) scales it; `suppressed` is strength 0.
+ */
+export function stepGesture(state, { dtSeconds, level, suppressed = false, strength = 1 }) {
   const dt = Math.max(0, Math.min(dtSeconds, 0.1));
   const voice = clamp01(level);
   state.phrase = follow(state.phrase, voice, dt, PHRASE_SECONDS);
   state.emphasis = follow(state.emphasis, Math.max(0, voice - state.phrase), dt, EMPHASIS_SECONDS);
-  state.weight = follow(state.weight, suppressed ? 0 : 1, dt, ENVELOPE_SECONDS);
+  const target = suppressed ? 0 : Math.min(1, Math.max(0, Number.isFinite(strength) ? strength : 0));
+  state.weight = follow(state.weight, target, dt, ENVELOPE_SECONDS);
   state.phase = (state.phase + dt * 2 * Math.PI * SWAY_HZ) % (2 * Math.PI);
 
   const sway = GESTURE_MAX_RADIANS * SWAY_SHARE * Math.min(1, state.phrase * 1.6) * Math.sin(state.phase);
@@ -39,8 +43,8 @@ export function stepGesture(state, { dtSeconds, level, suppressed }) {
   state.yaw = follow(state.yaw, sway * state.weight, dt, OUTPUT_SECONDS);
   state.pitch = follow(state.pitch, nod * state.weight, dt, OUTPUT_SECONDS);
 
-  // Fully settled while suppressed: exactly still, not a lingering tremor.
-  if (suppressed && state.weight < 1e-3 && Math.abs(state.yaw) < 1e-5 && Math.abs(state.pitch) < 1e-5) {
+  // Fully settled while off: exactly still, not a lingering tremor.
+  if (target === 0 && state.weight < 1e-3 && Math.abs(state.yaw) < 1e-5 && Math.abs(state.pitch) < 1e-5) {
     state.weight = 0;
     state.yaw = 0;
     state.pitch = 0;
@@ -48,7 +52,12 @@ export function stepGesture(state, { dtSeconds, level, suppressed }) {
   return { yaw: state.yaw, pitch: state.pitch };
 }
 
-/** Gestures give way to anything else directing attention, and to reduced motion. */
-export function gestureSuppressed({ control, highlightedRegion, reducedMotion }) {
-  return control !== 'guide_free' || (highlightedRegion !== null && highlightedRegion !== undefined) || Boolean(reducedMotion);
+/**
+ * Full strength while the brain is free; half while a region or lobe stays lit
+ * and still, so the brain never sits dead while the guide talks; none while
+ * it is moving or showcasing, held or explored, or with reduced motion.
+ */
+export function gestureStrength({ control, highlighted, reducedMotion }) {
+  if (reducedMotion || control !== 'guide_free') return 0;
+  return highlighted ? 0.5 : 1;
 }

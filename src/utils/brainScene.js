@@ -259,12 +259,25 @@ export function resolveHighlight({ now, feedback, voiceRegionId }) {
  * Game feedback drives uHighlight (it isolates the answer and dims the rest).
  * The guide's highlight has its own uniform so it never dims other regions.
  */
-export function toHighlightUniforms({ now, feedback, voiceRegionId }) {
-  const resolved = resolveHighlight({ now, feedback, voiceRegionId });
+export function toHighlightUniforms({ now, feedback, voiceRegionIds }) {
+  const ids = Array.isArray(voiceRegionIds) ? voiceRegionIds : [];
   const feedbackActive = Boolean(feedback && now < feedback.until);
-  return feedbackActive
-    ? { uHighlight: resolved.regionId, uHighlightPulse: resolved.pulse, uVoiceRegion: -1 }
-    : { uHighlight: -1, uHighlightPulse: 0, uVoiceRegion: resolved.regionId };
+  if (feedbackActive) {
+    const resolved = resolveHighlight({ now, feedback, voiceRegionId: null });
+    return {
+      uHighlight: resolved.regionId,
+      uHighlightPulse: resolved.pulse,
+      uVoiceMask: REGION_IDS.map(() => 0),
+      uVoiceActive: 0,
+    };
+  }
+  // A mask in the painted-region order of uRegionIds, so a lobe lights at once.
+  return {
+    uHighlight: -1,
+    uHighlightPulse: 0,
+    uVoiceMask: REGION_IDS.map((id) => (ids.includes(id) ? 1 : 0)),
+    uVoiceActive: ids.length > 0 ? 1 : 0,
+  };
 }
 
 export function createVoiceUniforms() {
@@ -341,7 +354,8 @@ export class BrainScene {
       uHighlight: { value: -1.0 },
       uHighlightPulse: { value: 0.0 },
       uSelectedRegion: { value: -1.0 },
-      uVoiceRegion: { value: -1.0 },
+      uVoiceMask: { value: REGION_IDS.map(() => 0) },
+      uVoiceActive: { value: 0 },
       ...createVoiceUniforms(),
       uInkColor: { value: new THREE.Color(0x1a1a1a) },
       uPaperColor: { value: new THREE.Color(0xf3eee4) },
@@ -808,11 +822,12 @@ export class BrainScene {
     const next = toHighlightUniforms({
       now,
       feedback: this._feedback,
-      voiceRegionId: this._voiceHighlight,
+      voiceRegionIds: this._voiceHighlight,
     });
     this.uniforms.uHighlight.value = next.uHighlight;
     this.uniforms.uHighlightPulse.value = next.uHighlightPulse;
-    this.uniforms.uVoiceRegion.value = next.uVoiceRegion;
+    this.uniforms.uVoiceMask.value = next.uVoiceMask;
+    this.uniforms.uVoiceActive.value = next.uVoiceActive;
   }
 
   /** Sway (about world up) and nod (about the screen's horizontal), in radians. */
@@ -831,9 +846,13 @@ export class BrainScene {
     this.onRegionSelect?.(null);
   }
 
-  /** The guide's highlight: held until cleared; isolates its region like a selection. */
-  setVoiceHighlight(regionId) {
-    this._voiceHighlight = regionId ?? null;
+  /**
+   * The guide's highlight: one region id, a list (a whole lobe), or null.
+   * Held until cleared; isolates its regions like a selection.
+   */
+  setVoiceHighlight(regionIds) {
+    const ids = regionIds === null || regionIds === undefined ? [] : [].concat(regionIds);
+    this._voiceHighlight = ids.length > 0 ? ids : null;
     this._applyHighlightUniforms(performance.now());
   }
 

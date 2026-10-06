@@ -11,6 +11,7 @@ export const CONTEXT_MESSAGES = {
   idle: '[player] idle {seconds}s',
   studyEntered: '[player] entered Study mode',
   timeWarning: '[app] about 30 seconds of our conversation remain',
+  tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
 };
 
 export const IDLE_AFTER_MS = 25_000;
@@ -39,6 +40,8 @@ export const formatIdle = (seconds) => fill(CONTEXT_MESSAGES.idle, { seconds });
 export const formatStudyEntered = () => CONTEXT_MESSAGES.studyEntered;
 
 export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
+
+export const formatTourWaiting = ({ stop, of }) => fill(CONTEXT_MESSAGES.tourWaiting, { stop, of });
 
 /**
  * Turns scene events into updates. Idle is reported once after 25 s without

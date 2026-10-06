@@ -16,9 +16,12 @@ const fragmentShader = /* glsl */ `
   // feedback. Driven from the render loop so the colour can pulse.
   uniform float uHighlightPulse;
   uniform float uSelectedRegion;
-  // The guide's highlight (Study mode): the region's own Colour Regions tint
-  // under unchanged linework. Unlike catch feedback it never dims the rest.
-  uniform float uVoiceRegion;
+  // The guide's highlight (Study mode): each lit region's own Colour Regions
+  // tint under unchanged linework. A mask over the painted regions (in
+  // uRegionIds order) so a whole lobe can light at once. Unlike catch
+  // feedback it never dims the rest.
+  uniform float uVoiceMask[20];
+  uniform float uVoiceActive;
   // The guide's speaking level, 0 to 1. Silence (0) renders the engraving as is.
   uniform float uVoiceLevel;
 
@@ -102,6 +105,16 @@ const fragmentShader = /* glsl */ `
     return int(floor(best + 0.5));
   }
 
+  bool isVoiceRegion(int regionId) {
+    bool lit = false;
+    for (int i = 0; i < 20; i++) {
+      if (uVoiceMask[i] > 0.5 && int(floor(uRegionIds[i] + 0.5)) == regionId) {
+        lit = true;
+      }
+    }
+    return lit;
+  }
+
   vec3 getRegionColor(int regionId) {
     vec3 color = uRegionColors[0];
     for (int i = 0; i < 20; i++) {
@@ -172,8 +185,8 @@ const fragmentShader = /* glsl */ `
     int highlightRegionId = int(floor(uHighlight + 0.5));
     bool feedbackRegion = feedbackMode && validRegion && regionId == highlightRegionId;
     bool otherDuringFeedback = feedbackMode && !feedbackRegion;
-    bool voiceActive = uVoiceRegion > -0.5;
-    bool voiceRegion = uVoiceRegion > -0.5 && validRegion && regionId == int(floor(uVoiceRegion + 0.5));
+    bool voiceActive = uVoiceActive > 0.5;
+    bool voiceRegion = validRegion && isVoiceRegion(regionId);
     // Feedback, a selection and the guide's highlight each isolate their
     // region: withdraw every other colour wash. Linework never changes.
     bool colourRegionsActive =
