@@ -81,6 +81,9 @@ export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } 
   return null;
 }
 
+export const GUIDE_PICKER_NOTE =
+  'Both are this same brain; only the voice differs. You can switch guides later in the voice panel.';
+
 // Points the player to the conversation below the brain.
 export function getStudyCaption(guide) {
   const id = normalizeGuide(guide);
@@ -580,6 +583,7 @@ export default function App() {
 
   const handleRegionSelect = useCallback((region) => {
     setSelectedRegion(region);
+    sceneAdapterRef.current?.playerSelected(region?.id ?? null);
     if (region) voiceEventsRef.current?.regionClicked(region);
   }, []);
 
@@ -1126,6 +1130,7 @@ export default function App() {
             commands={sceneCommandsRef.current}
             scene={sceneRef.current}
             voiceEventsRef={voiceEventsRef}
+            control={control}
           />
         </Suspense>
       )}
@@ -1142,8 +1147,7 @@ export default function App() {
             Choose your guide
           </div>
           <div style={STYLES.guidePickerNote}>
-            Both are this same brain; only the voice differs. You can change
-            your guide later in Settings.
+            {GUIDE_PICKER_NOTE}
           </div>
           <div style={STYLES.guidePickerChoices}>
             {GUIDES.map(({ id, name }) => (

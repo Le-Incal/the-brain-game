@@ -19,16 +19,18 @@ const TOKEN_RESPONSE = {
   dynamicVariables: { guide_name: 'Rollo', reservation: 'resid.sig' },
 };
 
-function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal, busyTimes = 0 } = {}) {
+function fakeServer({ token = TOKEN_RESPONSE, tokenStatus = 200, refusal, busyTimes = 0, busyAfter = 0 } = {}) {
   const requests = [];
   let busyLeft = busyTimes;
+  let tokensSeen = 0;
   const fetchImpl = async (url, init = {}) => {
     requests.push({ url, init, body: init.body ? JSON.parse(init.body) : undefined });
     if (url === '/api/voice/event') return { ok: true, status: 204, json: async () => ({}) };
     if (url === '/api/voice/release') return { ok: true, status: 200, json: async () => ({ status: 'released' }) };
     if (url === '/api/voice/token') {
       if (refusal) return { ok: false, status: refusal.status, json: async () => refusal.body };
-      if (busyLeft > 0) {
+      tokensSeen += 1;
+      if (tokensSeen > busyAfter && busyLeft > 0) {
         busyLeft -= 1;
         return { ok: false, status: 429, json: async () => ({ available: false, reason: 'busy' }) };
       }
@@ -441,7 +443,9 @@ describe('"The guide is busy" right after this page\'s own conversation', () => 
   // refused busy (device), her webhook settled at 13:38:58.
   async function talkAgain({ busyTimes, secondsAfterEnd }) {
     const clock = { now: 1_000_000 };
-    const server = fakeServer({ busyTimes });
+    // The first token (the conversation that just ended) is granted; the
+    // refusals start with the next request.
+    const server = fakeServer({ busyTimes, busyAfter: 1 });
     const context = setup({ server, clock });
     await context.session.start({ guide: 'rollo' });
     await context.session.handleConnect({ conversationId: 'c1' });

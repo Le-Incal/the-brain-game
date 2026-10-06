@@ -15,23 +15,12 @@ import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter } from './contextUpdates.js';
 import { appendMessage, messageFromSdk } from './transcript.js';
 import { planGuideChange, SWITCH_NOW_WARNING } from './guideSettings.js';
+import { TRANSCRIPT_STYLE, VOICE_PANEL_STYLE, visibleTranscript } from './voicePanelLayout.js';
+import { createGesture, gestureSuppressed, stepGesture } from './gestures.js';
 
 const INK = '#1a1814';
 const STYLES = {
-  panel: {
-    position: 'absolute',
-    left: '50%',
-    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)',
-    transform: 'translateX(-50%)',
-    zIndex: 11,
-    width: 'min(420px, calc(100vw - 32px))',
-    padding: '10px 14px',
-    background: 'rgba(247, 240, 220, 0.94)',
-    border: `1px solid ${INK}`,
-    fontFamily: "'EB Garamond', Georgia, serif",
-    color: INK,
-    textAlign: 'center',
-  },
+  panel: VOICE_PANEL_STYLE,
   row: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   button: (active) => ({
     fontFamily: "'Playfair Display', Georgia, serif",
@@ -45,16 +34,7 @@ const STYLES = {
     cursor: 'pointer',
   }),
   note: { fontStyle: 'italic', fontSize: 13, lineHeight: 1.4, color: '#5a4030', margin: '6px 0' },
-  transcript: {
-    maxHeight: 120,
-    overflowY: 'auto',
-    textAlign: 'left',
-    fontSize: 13,
-    lineHeight: 1.4,
-    marginTop: 8,
-    borderTop: '1px solid rgba(26, 24, 20, 0.2)',
-    paddingTop: 6,
-  },
+  transcript: TRANSCRIPT_STYLE,
   input: {
     flex: 1,
     minWidth: 0,
@@ -74,7 +54,17 @@ function browserStorage() {
   }
 }
 
-function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef }) {
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
+function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef, control }) {
+  const controlRef = useRef(control);
+  controlRef.current = control;
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
   const [transcript, setTranscript] = useState([]);
   const [typed, setTyped] = useState('');
@@ -107,6 +97,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       storage: browserStorage(),
       clientTools,
       onChange: setState,
+      // The guide lets go of the brain when the conversation is over.
+      onConversationEnd: () => commands.clearHighlight(),
     });
   }, [commands, scene]);
   sessionRef.current = session;
@@ -131,17 +123,31 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     if (state.phase === 'connected') voiceEventsRef.current?.studyEntered();
   }, [state.phase, voiceEventsRef]);
 
-  // The hatching answers the guide's voice.
+  // The hatching answers the guide's voice, and the brain gestures gently
+  // while it speaks, unless anything else is directing attention.
   useEffect(() => {
     let frame;
-    const tick = () => {
-      scene.setVoiceLevel(session.outputLevel());
+    let last = performance.now();
+    const gesture = createGesture();
+    const reducedMotion = prefersReducedMotion();
+    const tick = (now) => {
+      const level = session.outputLevel();
+      scene.setVoiceLevel(level);
+      const selected = scene.selectedRegionId >= 0 ? scene.selectedRegionId : null;
+      const suppressed = gestureSuppressed({
+        control: controlRef.current,
+        highlightedRegion: scene.getVoiceHighlight() ?? selected,
+        reducedMotion,
+      });
+      scene.setGesture(stepGesture(gesture, { dtSeconds: (now - last) / 1000, level, suppressed }));
+      last = now;
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
       scene.setVoiceLevel(0);
+      scene.setGesture({ yaw: 0, pitch: 0 });
     };
   }, [session, scene]);
 
@@ -201,7 +207,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
               </button>
             ))}
           </div>
-          {state.phase === 'requesting' || state.phase === 'connecting' ? (
+          {(state.phase === 'requesting' || state.phase === 'connecting') && !state.message ? (
             <div style={STYLES.note}>Waking {name}…</div>
           ) : null}
           {state.message ? <div style={STYLES.note}>{state.message}</div> : null}
@@ -225,7 +231,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
           ) : null}
           {transcript.length > 0 && (
             <div style={STYLES.transcript} aria-live="polite">
-              {transcript.map((line) => (
+              {visibleTranscript(transcript).map((line) => (
                 <div key={line.id}>
                   <strong style={{ fontWeight: line.fromGuide ? 600 : 400 }}>{line.speaker}:</strong> {line.text}
                 </div>

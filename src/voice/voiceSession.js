@@ -6,11 +6,16 @@
  *   idle -> needs-consent -> requesting -> connecting -> connected -> idle
  *                                     \-> unavailable (with a plain message)
  */
-import { normalizeGuide } from './guides.js';
+import { GUIDES, normalizeGuide } from './guides.js';
 import { describeVoiceUnavailable } from './voiceAvailability.js';
 import { formatTimeWarning } from './contextUpdates.js';
 
 const WARN_BEFORE_END_MS = 30_000;
+// Right after this page's own conversation, the server may still count it
+// open until ElevenLabs' webhook lands (about 20 s in the first live run).
+const RETRY_BUSY_WITHIN_MS = 60_000;
+const BUSY_RETRY_EVERY_MS = 5_000;
+const BUSY_RETRIES = 9; // 45 s
 
 export const CONSENT_TEXT =
   "Talking with your guide sends your voice to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
@@ -76,13 +81,28 @@ export function createVoiceSession({
   clientTools,
   setTimeoutImpl = setTimeout,
   clearTimeoutImpl = clearTimeout,
+  now = Date.now,
   onChange = () => {},
+  onConversationEnd = () => {},
 }) {
   let state = { phase: 'idle', guide: null, message: null, conversationId: null };
   let consentGiven = readConsent();
   let pendingGuide = null;
   let cutoffTimer = null;
   let warningTimer = null;
+  let retryTimer = null;
+  let busyRetries = 0;
+  let lastConversationEndedAt = null;
+
+  function conversationOver() {
+    lastConversationEndedAt = now();
+    onConversationEnd();
+  }
+
+  function clearRetry() {
+    if (retryTimer !== null) clearTimeoutImpl(retryTimer);
+    retryTimer = null;
+  }
   let maxSeconds = null;
   // The signed reservation for the conversation being started, kept until it
   // connects, so a failed start can be released at once.
@@ -133,6 +153,8 @@ export function createVoiceSession({
 
   async function requestAndStart() {
     set({ phase: 'requesting', message: null, conversationId: null });
+    clearRetry();
+    busyRetries = 0;
     const microphone = await requestMicrophone();
     if (microphone !== 'granted') {
       // Counted, once per page, so we know how often this happens ("Type instead").
@@ -140,6 +162,10 @@ export function createVoiceSession({
       set({ phase: 'unavailable', message: microphone === 'denied' ? MIC_BLOCKED_MESSAGE : MIC_UNAVAILABLE_MESSAGE });
       return;
     }
+    await requestToken();
+  }
+
+  async function requestToken() {
     try {
       const response = await fetchImpl('/api/voice/token', {
         method: 'POST',
@@ -149,12 +175,23 @@ export function createVoiceSession({
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
+        const justEnded = lastConversationEndedAt !== null && now() - lastConversationEndedAt <= RETRY_BUSY_WITHIN_MS;
+        if (body?.reason === 'busy' && justEnded && busyRetries < BUSY_RETRIES) {
+          const name = GUIDES.find((g) => g.id === state.guide)?.name ?? 'your guide';
+          set({ phase: 'requesting', message: `One moment, ${name} is getting ready…` });
+          retryTimer = setTimeoutImpl(() => {
+            retryTimer = null;
+            busyRetries += 1;
+            return requestToken();
+          }, BUSY_RETRY_EVERY_MS);
+          return;
+        }
         set({ phase: 'unavailable', message: describeVoiceUnavailable(body) });
         return;
       }
       maxSeconds = body.maxSeconds;
       pendingReservation = body.dynamicVariables?.reservation ?? null;
-      set({ phase: 'connecting' });
+      set({ phase: 'connecting', message: null });
       conversation.startSession({
         conversationToken: body.conversationToken,
         connectionType: 'webrtc',
@@ -184,8 +221,10 @@ export function createVoiceSession({
 
   function end() {
     clearCutoff();
+    clearRetry();
     if (state.phase === 'connecting') releasePending();
     if (state.phase === 'connecting' || state.phase === 'connected') conversation.endSession();
+    if (state.phase === 'connected') conversationOver();
     set({ phase: 'idle', conversationId: null });
   }
 
@@ -230,6 +269,7 @@ export function createVoiceSession({
         set({ phase: 'unavailable', message: START_FAILED_MESSAGE, conversationId: null });
         return;
       }
+      if (state.phase === 'connected') conversationOver();
       if (state.phase !== 'unavailable') set({ phase: 'idle', conversationId: null });
     },
 
