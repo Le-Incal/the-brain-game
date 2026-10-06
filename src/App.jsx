@@ -84,14 +84,14 @@ export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } 
 export const GUIDE_PICKER_NOTE =
   'Both are this same brain; only the voice differs. You can switch guides later in the voice panel.';
 
-// Points the player to the conversation below the brain.
+// Points the player to the voice panel (right on desktop, bottom on phones).
 export function getStudyCaption(guide) {
   const id = normalizeGuide(guide);
   if (!id) return null;
   const { name } = GUIDES.find((entry) => entry.id === id);
   return {
     title: `Studying with ${name}`,
-    note: `Talk with ${name} below, or turn the brain freely and click a region to read about it.`,
+    note: `Talk with ${name} in the voice panel, or turn the brain freely and click a region to read about it.`,
   };
 }
 
