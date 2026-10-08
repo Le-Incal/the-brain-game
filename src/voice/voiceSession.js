@@ -16,6 +16,9 @@ const WARN_BEFORE_END_MS = 30_000;
 const RETRY_BUSY_WITHIN_MS = 60_000;
 const BUSY_RETRY_EVERY_MS = 5_000;
 const BUSY_RETRIES = 9; // 45 s
+// The session summary keeps the most recent calls; the end is what we debug.
+const SUMMARY_TOOL_LIMIT = 200;
+const DISCONNECT_REASONS = new Set(['agent', 'error', 'user']);
 
 export const CONSENT_TEXT =
   "Talking with your guide sends your voice to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
@@ -85,6 +88,7 @@ export function createVoiceSession({
   onChange = () => {},
   onConversationEnd = () => {},
   onConversationStart = () => {},
+  sendBeacon = (url, data) => globalThis.navigator?.sendBeacon?.(url, data) ?? false,
 }) {
   let state = { phase: 'idle', guide: null, message: null, conversationId: null };
   let consentGiven = readConsent();
@@ -94,10 +98,54 @@ export function createVoiceSession({
   let retryTimer = null;
   let busyRetries = 0;
   let lastConversationEndedAt = null;
+  // The connected conversation, for its summary: the reservation's 8-character
+  // prefix (the server logs the same prefix), when it connected, its tool calls.
+  let sessionTag = null;
+  let connectedAt = null;
+  let toolCalls = [];
 
-  function conversationOver() {
+  function conversationOver(reason) {
     lastConversationEndedAt = now();
+    sendSummary(reason);
     onConversationEnd();
+  }
+
+  /**
+   * One line in our logs per conversation: how it ended, how long it ran and
+   * every tool call. Sent once; a closing tab sends it by beacon, which the
+   * browser delivers after the page is gone.
+   */
+  function sendSummary(reason, { beacon = false } = {}) {
+    if (connectedAt === null) return;
+    const body = JSON.stringify({
+      type: 'session_summary',
+      session: sessionTag ?? 'none',
+      reason,
+      durationSecs: Math.round((now() - connectedAt) / 1000),
+      tools: toolCalls,
+    });
+    connectedAt = null;
+    toolCalls = [];
+    let beaconSent = false;
+    if (beacon) {
+      try {
+        beaconSent = Boolean(sendBeacon('/api/voice/event', body));
+      } catch {
+        beaconSent = false;
+      }
+    }
+    if (beaconSent) return;
+    Promise.resolve()
+      .then(() =>
+        fetchImpl('/api/voice/event', {
+          method: 'POST',
+          credentials: 'same-origin',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        })
+      )
+      .catch(() => {});
   }
 
   function clearRetry() {
@@ -196,6 +244,7 @@ export function createVoiceSession({
       }
       maxSeconds = body.maxSeconds;
       pendingReservation = body.dynamicVariables?.reservation ?? null;
+      sessionTag = pendingReservation ? String(pendingReservation).split('.')[0].slice(0, 8) : null;
       set({ phase: 'connecting', message: null });
       conversation.startSession({
         conversationToken: body.conversationToken,
@@ -227,19 +276,19 @@ export function createVoiceSession({
     await requestAndStart();
   }
 
-  function end() {
+  function end(reason = 'user') {
     clearCutoff();
     clearRetry();
     if (state.phase === 'connecting') releasePending();
     if (state.phase === 'connecting' || state.phase === 'connected') conversation.endSession();
-    if (state.phase === 'connected') conversationOver();
+    if (state.phase === 'connected') conversationOver(reason);
     set({ phase: 'idle', conversationId: null });
   }
 
   return {
     getState: () => ({ ...state }),
     start,
-    end,
+    end: () => end('user'),
 
     async acceptConsent() {
       consentGiven = true;
@@ -258,18 +307,20 @@ export function createVoiceSession({
     async handleConnect({ conversationId }) {
       pendingReservation = null;
       set({ phase: 'connected', conversationId });
+      connectedAt = now();
+      toolCalls = [];
       clearCutoff();
       // The server reserved this many seconds; end on time rather than overrun,
       // and tell the guide 30 s before so it can say goodbye.
       if (maxSeconds) {
-        cutoffTimer = setTimeoutImpl(end, maxSeconds * 1000);
+        cutoffTimer = setTimeoutImpl(() => end('time_limit'), maxSeconds * 1000);
         const warnIn = maxSeconds * 1000 - WARN_BEFORE_END_MS;
         if (warnIn > 0) warningTimer = setTimeoutImpl(warnGuide, warnIn);
         else warnGuide();
       }
     },
 
-    handleDisconnect() {
+    handleDisconnect(details) {
       clearCutoff();
       if (state.phase === 'connecting') {
         // It never connected: free the reservation now, not in 30 minutes.
@@ -277,8 +328,21 @@ export function createVoiceSession({
         set({ phase: 'unavailable', message: START_FAILED_MESSAGE, conversationId: null });
         return;
       }
-      if (state.phase === 'connected') conversationOver();
+      if (state.phase === 'connected') {
+        conversationOver(DISCONNECT_REASONS.has(details?.reason) ? details.reason : 'unknown');
+      }
       if (state.phase !== 'unavailable') set({ phase: 'idle', conversationId: null });
+    },
+
+    recordToolCall(name, ok) {
+      if (state.phase !== 'connected' || connectedAt === null) return;
+      toolCalls.push({ name, ok, msSinceStart: now() - connectedAt });
+      if (toolCalls.length > SUMMARY_TOOL_LIMIT) toolCalls.shift();
+    },
+
+    /** The tab is closing: the most common real ending. */
+    pageClosing() {
+      if (state.phase === 'connected') sendSummary('page_closed', { beacon: true });
     },
 
     outputLevel() {
@@ -308,7 +372,7 @@ export function createVoiceSession({
         if (id) pendingGuide = id;
         return;
       }
-      end();
+      end('user');
       await start({ guide: next });
     },
   };

@@ -134,7 +134,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`. Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except next_tour_stop, which uses `execution_mode: post_tool_speech` so it runs only after the audio of the guide's narration has finished. Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -213,6 +213,7 @@ Response shape: `{ ok, did, reason, stops, instruction }`. `stops` lists the 7 l
 ### next_tour_stop
 Moves the tour to its next lobe: lights it, turns to it and shows its shape. No parameters.
 Response shape: `{ ok, did, reason, stop, of, lobe, regions, next, note, instruction }`. `regions` gives each region's `id`, `name` and `clickDescription`: speak from these. `note` appears where the painting needs a caveat. After the last stop, the next call ends the tour and returns `{ ok, done: true }`.
+Lockstep: the call is refused until the guide has spoken about 8 s about the current stop, or 20 s have passed since it arrived (the first call after start_tour is exempt). A refusal moves nothing and returns `{ ok: false, did, reason, instruction }`, for example "Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop." Follow the instruction.
 
 ### end_tour
 Ends the tour at once: clears the highlight, turns the colours back on and shows the whole brain. No parameters.

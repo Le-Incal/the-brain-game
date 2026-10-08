@@ -18,6 +18,7 @@ import { planGuideChange, SWITCH_NOW_WARNING } from './guideSettings.js';
 import { TRANSCRIPT_STYLE, VOICE_PANEL_STYLE, visibleTranscript } from './voicePanelLayout.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
 import { createTourStallGuard } from './tourStallGuard.js';
+import { createTourPacer } from './tourPacer.js';
 
 const INK = '#1a1814';
 const STYLES = {
@@ -73,12 +74,18 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   const sessionRef = useRef(null);
   const sdkRef = useRef(null);
   const stallGuardRef = useRef(null);
+  // The tour moves on only after the guide has spoken about the current stop.
+  const tourPacer = useMemo(() => createTourPacer(), []);
 
   const sdk = useConversation({
     onConnect: ({ conversationId }) => sessionRef.current?.handleConnect({ conversationId }),
     onDisconnect: (details) => sessionRef.current?.handleDisconnect(details),
-    // The tour stall guard listens for the guide falling quiet at a stop.
-    onModeChange: ({ mode }) => stallGuardRef.current?.guideSpeaking(mode === 'speaking'),
+    // The stall guard listens for the guide falling quiet at a stop; the
+    // pacer counts how long it has spoken there.
+    onModeChange: ({ mode }) => {
+      stallGuardRef.current?.guideSpeaking(mode === 'speaking');
+      tourPacer.guideSpeaking(mode === 'speaking');
+    },
     onMessage: (payload) => {
       if (payload?.role === 'user') stallGuardRef.current?.playerActivity();
       const line = messageFromSdk(payload, GUIDES.find((g) => g.id === sessionRef.current?.getState().guide)?.name ?? 'Guide');
@@ -91,6 +98,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   const session = useMemo(() => {
     const clientTools = createClientTools(commands, {
       cancelMoves: (reason) => scene.controls.cancelMove(reason),
+      tourPacer,
+      onToolCall: (name, ok) => sessionRef.current?.recordToolCall(name, ok),
     });
     return createVoiceSession({
       conversation: {
@@ -107,7 +116,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       // A new conversation never inherits a region lit by the last one.
       onConversationStart: () => commands.clearHighlight(),
     });
-  }, [commands, scene]);
+  }, [commands, scene, tourPacer]);
   sessionRef.current = session;
 
   // Scene events reach the guide only while a conversation is connected.
@@ -173,6 +182,13 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
 
   // Leaving Study mode ends the conversation.
   useEffect(() => () => session.end(), [session]);
+
+  // Closing the tab is how most conversations really end; it still gets its summary.
+  useEffect(() => {
+    const onPageHide = () => session.pageClosing();
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [session]);
 
   const name = GUIDES.find((g) => g.id === guide)?.name ?? 'your guide';
   const active = state.phase === 'connected' || state.phase === 'connecting' || state.phase === 'requesting';

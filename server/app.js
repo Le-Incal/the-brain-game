@@ -27,6 +27,63 @@ export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
 // whether "Type instead" is worth building.
 export const CLIENT_EVENT_TYPES = new Set(['mic_blocked', 'mic_unsupported']);
 export const EVENT_RATE_LIMIT = { max: 30, windowMs: 60 * 60 * 1000 };
+// One per conversation: how it ended, how long it ran, every client tool call.
+// Checked field by field so nothing but these values can reach the logs.
+export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown']);
+export const SESSION_SUMMARY_TOOL_LIMIT = 200;
+const SESSION_SUMMARY_KEYS = ['durationSecs', 'reason', 'session', 'tools', 'type'];
+const TOOL_CALL_KEYS = ['msSinceStart', 'name', 'ok'];
+
+const hasExactKeys = (value, keys) =>
+  Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+
+function isToolCall(call) {
+  return (
+    call !== null &&
+    typeof call === 'object' &&
+    !Array.isArray(call) &&
+    hasExactKeys(call, TOOL_CALL_KEYS) &&
+    typeof call.name === 'string' &&
+    /^[a-z_]{1,40}$/.test(call.name) &&
+    typeof call.ok === 'boolean' &&
+    Number.isInteger(call.msSinceStart) &&
+    call.msSinceStart >= 0 &&
+    call.msSinceStart <= 3_600_000
+  );
+}
+
+export function isSessionSummary(body) {
+  return (
+    body.type === 'session_summary' &&
+    hasExactKeys(body, SESSION_SUMMARY_KEYS) &&
+    typeof body.session === 'string' &&
+    /^[A-Za-z0-9_-]{1,8}$/.test(body.session) &&
+    SESSION_END_REASONS.has(body.reason) &&
+    typeof body.durationSecs === 'number' &&
+    Number.isFinite(body.durationSecs) &&
+    body.durationSecs >= 0 &&
+    body.durationSecs <= 3600 &&
+    Array.isArray(body.tools) &&
+    body.tools.length <= SESSION_SUMMARY_TOOL_LIMIT &&
+    body.tools.every(isToolCall)
+  );
+}
+
+export function formatSessionSummary({ session, reason, durationSecs, tools }) {
+  const calls = tools.map(({ name, ok, msSinceStart }) => `${name} ${ok ? 'ok' : 'failed'} ${(Math.round(msSinceStart / 100) / 10).toFixed(1)}s`);
+  const head = `[voice] session ${session} ended (${reason}) after ${Math.round(durationSecs)} s; ${tools.length} tool calls`;
+  return calls.length ? `${head}: ${calls.join(', ')}` : head;
+}
+
+// A tab-close beacon arrives as text/plain; everything else as JSON.
+function readEventBody(body) {
+  if (typeof body !== 'string') return body;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
+}
 const MAX_OPEN_PER_DEVICE = 1;
 const MAX_OPEN_PER_ADDRESS = 2;
 // A released token stays valid, so a release could open a conversation that
@@ -399,17 +456,24 @@ export function createApp({
     return res.status(200).json({ status: charged });
   });
 
-  // Counts what the server cannot otherwise see; stores nothing.
-  app.post('/api/voice/event', express.json({ limit: '1kb' }), (req, res) => {
-    const body = req.body;
-    const valid =
-      body && typeof body === 'object' && Object.keys(body).length === 1 && CLIENT_EVENT_TYPES.has(body.type);
-    if (!valid) return res.status(400).json({ error: 'unknown_event' });
-    const limit = eventLimiter.take(clientAddress(req));
-    if (!limit.allowed) return res.status(429).json({ error: 'rate_limited' });
-    logger.info(`[voice] client event: ${body.type}`);
-    return res.status(204).end();
-  });
+  // Counts what the server cannot otherwise see, and logs each conversation's
+  // summary; stores nothing. 16 kb fits a summary of 200 tool calls.
+  app.post(
+    '/api/voice/event',
+    express.json({ limit: '16kb' }),
+    express.text({ type: 'text/plain', limit: '16kb' }),
+    (req, res) => {
+      const body = readEventBody(req.body);
+      const isObject = body !== null && typeof body === 'object' && !Array.isArray(body);
+      const micEvent = isObject && Object.keys(body).length === 1 && CLIENT_EVENT_TYPES.has(body.type);
+      const summary = isObject && isSessionSummary(body);
+      if (!micEvent && !summary) return res.status(400).json({ error: 'unknown_event' });
+      const limit = eventLimiter.take(clientAddress(req));
+      if (!limit.allowed) return res.status(429).json({ error: 'rate_limited' });
+      logger.info(summary ? formatSessionSummary(body) : `[voice] client event: ${body.type}`);
+      return res.status(204).end();
+    }
+  );
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 

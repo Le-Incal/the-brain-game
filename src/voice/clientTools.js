@@ -47,8 +47,16 @@ export function normalizeToolParams(parameters) {
 
 const TIMED_OUT = { ok: false, did: '', reason: 'The turn took too long, so I stopped it.' };
 
-export function createClientTools(commands, { cancelMoves = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}) {
-  const run = (call, { timed = false } = {}) => async (raw) => {
+/**
+ * `tourPacer` (optional) holds next_tour_stop until the guide has spoken about
+ * the current stop. `onToolCall(name, ok)` hears every call, for the session
+ * summary.
+ */
+export function createClientTools(
+  commands,
+  { cancelMoves = () => {}, tourPacer = null, onToolCall = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}
+) {
+  const run = (name, call, { timed = false } = {}) => async (raw) => {
     const params = normalizeToolParams(raw);
     let timer = null;
     try {
@@ -64,28 +72,53 @@ export function createClientTools(commands, { cancelMoves = () => {}, setTimeout
             }),
           ])
         : await work;
+      onToolCall(name, result?.ok !== false);
       return JSON.stringify(result);
     } catch (error) {
+      onToolCall(name, false);
       return JSON.stringify({ ok: false, did: '', reason: error?.message ?? String(error) });
     } finally {
       if (timer !== null) clearTimeoutImpl?.(timer);
     }
   };
 
+  async function startTour() {
+    const result = await commands.startTour();
+    if (result?.ok) tourPacer?.tourStarted();
+    return result;
+  }
+
+  async function nextTourStop() {
+    const refused = tourPacer?.request();
+    if (refused) return refused;
+    let result;
+    try {
+      result = await commands.nextTourStop();
+    } finally {
+      tourPacer?.arrived(result);
+    }
+    return result;
+  }
+
+  async function endTour() {
+    tourPacer?.tourEnded();
+    return commands.endTour();
+  }
+
   return {
-    face_region: run((p) => commands.faceRegion(p.region_id, { hemisphere: p.hemisphere }), { timed: true }),
-    rotate_to_view: run((p) => commands.rotateTo(p.view), { timed: true }),
-    highlight_region: run((p) => commands.highlightRegion(p.region_id)),
-    clear_highlight: run(() => commands.clearHighlight()),
-    set_colour_regions: run((p) => commands.setColourRegions(p.enabled)),
-    set_annotations: run((p) => commands.setAnnotations(p.enabled)),
-    lookup_region: run((p) => commands.lookupRegion({ regionId: p.region_id, name: p.name })),
-    list_regions: run(() => commands.listRegions()),
-    get_scene_state: run(() => commands.getSceneState()),
-    face_lobe: run((p) => commands.faceLobe(p.lobe), { timed: true }),
-    start_tour: run(() => commands.startTour(), { timed: true }),
-    next_tour_stop: run(() => commands.nextTourStop(), { timed: true }),
-    end_tour: run(() => commands.endTour(), { timed: true }),
+    face_region: run('face_region', (p) => commands.faceRegion(p.region_id, { hemisphere: p.hemisphere }), { timed: true }),
+    rotate_to_view: run('rotate_to_view', (p) => commands.rotateTo(p.view), { timed: true }),
+    highlight_region: run('highlight_region', (p) => commands.highlightRegion(p.region_id)),
+    clear_highlight: run('clear_highlight', () => commands.clearHighlight()),
+    set_colour_regions: run('set_colour_regions', (p) => commands.setColourRegions(p.enabled)),
+    set_annotations: run('set_annotations', (p) => commands.setAnnotations(p.enabled)),
+    lookup_region: run('lookup_region', (p) => commands.lookupRegion({ regionId: p.region_id, name: p.name })),
+    list_regions: run('list_regions', () => commands.listRegions()),
+    get_scene_state: run('get_scene_state', () => commands.getSceneState()),
+    face_lobe: run('face_lobe', (p) => commands.faceLobe(p.lobe), { timed: true }),
+    start_tour: run('start_tour', startTour, { timed: true }),
+    next_tour_stop: run('next_tour_stop', nextTourStop, { timed: true }),
+    end_tour: run('end_tour', endTour, { timed: true }),
   };
 }
 
