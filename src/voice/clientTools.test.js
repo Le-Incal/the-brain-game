@@ -135,3 +135,120 @@ describe('M4: a move never outlasts the agent', () => {
     expect(listeners.has('visibilitychange')).toBe(false);
   });
 });
+
+describe('The brief and the dashboard agree on execution mode', () => {
+  const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
+  const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+  const settings = section.split('\n').find((line) => line.startsWith('Create each as a **Client tool**'));
+
+  // next_tour_stop runs after the guide's audio for the turn has finished, so
+  // the lobe lights as the guide starts on it, not a stop ahead of the voice.
+  it('says next_tour_stop runs post_tool_speech and the other twelve run immediate', () => {
+    expect(settings).toMatch(/`execution_mode: immediate`/);
+    expect(settings).toMatch(/next_tour_stop[^.]*`execution_mode: post_tool_speech`/);
+  });
+
+  it("documents next_tour_stop's refusal and its instruction", () => {
+    const tool = section.slice(section.indexOf('### next_tour_stop'), section.indexOf('### end_tour'));
+    expect(tool).toMatch(/ok: false/);
+    expect(tool).toMatch(/instruction/);
+    expect(tool).toMatch(/8 s/);
+    expect(tool).toMatch(/20 s/);
+  });
+});
+
+const pacerModule = await import('./tourPacer.js').catch(() => ({}));
+
+describe('next_tour_stop waits for the guide (lockstep gate)', () => {
+  function pacedTools() {
+    const clock = { now: 0 };
+    const pacer = pacerModule.createTourPacer({ now: () => clock.now });
+    let stop = 0;
+    const { commands, calls } = recordingCommands({
+      nextTourStop: () => {
+        calls.push(['nextTourStop']);
+        stop += 1;
+        return { ok: true, did: 'Turned.', reason: '', stop, of: 7, lobe: ['Frontal Lobe', 'Parietal Lobe'][stop - 1] };
+      },
+    });
+    const tools = createClientTools(commands, { tourPacer: pacer });
+    return { tools, calls, pacer, clock };
+  }
+
+  it('refuses a chained call without moving the brain, and tells the guide what to do', async () => {
+    const { tools, calls } = pacedTools();
+    await tools.start_tour({});
+    expect(JSON.parse(await tools.next_tour_stop({}))).toMatchObject({ ok: true, stop: 1 });
+    const refused = JSON.parse(await tools.next_tour_stop({}));
+    expect(refused).toMatchObject({
+      ok: false,
+      instruction: 'Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop.',
+    });
+    expect(calls.filter(([name]) => name === 'nextTourStop')).toHaveLength(1);
+  });
+
+  it('moves on once the guide has spoken about the stop', async () => {
+    const { tools, calls, pacer, clock } = pacedTools();
+    await tools.start_tour({});
+    await tools.next_tour_stop({});
+    pacer.guideSpeaking(true);
+    clock.now += 8000;
+    pacer.guideSpeaking(false);
+    expect(JSON.parse(await tools.next_tour_stop({}))).toMatchObject({ ok: true, stop: 2, lobe: 'Parietal Lobe' });
+    expect(calls.filter(([name]) => name === 'nextTourStop')).toHaveLength(2);
+  });
+
+  it('end_tour is never gated, and clears the gate', async () => {
+    const { tools, calls } = pacedTools();
+    await tools.start_tour({});
+    await tools.next_tour_stop({});
+    expect(JSON.parse(await tools.end_tour({}))).toMatchObject({ ok: true, done: true });
+    expect(JSON.parse(await tools.next_tour_stop({})).ok).toBe(true);
+    expect(calls.filter(([name]) => name === 'nextTourStop')).toHaveLength(2);
+  });
+
+  it('works without a pacer exactly as before', async () => {
+    const { commands, calls } = recordingCommands();
+    const tools = createClientTools(commands);
+    await tools.next_tour_stop({});
+    await tools.next_tour_stop({});
+    expect(calls).toEqual([['nextTourStop'], ['nextTourStop']]);
+  });
+});
+
+describe('Every tool call is reported for the session summary', () => {
+  it('reports each call by name with whether it succeeded', async () => {
+    const reported = [];
+    const { commands } = recordingCommands({
+      rotateTo: () => {
+        throw new Error('scene not ready');
+      },
+    });
+    const tools = createClientTools(commands, { onToolCall: (name, ok) => reported.push([name, ok]) });
+    await tools.face_region({ region_id: 6 });
+    await tools.rotate_to_view({ view: 'anterior' });
+    await tools.lookup_region({ region_id: 19 });
+    expect(reported).toEqual([
+      ['face_region', true],
+      ['rotate_to_view', false],
+      ['lookup_region', true],
+    ]);
+  });
+
+  it('reports a gate refusal as a failed next_tour_stop', async () => {
+    const reported = [];
+    const pacer = pacerModule.createTourPacer({ now: () => 0 });
+    const { commands } = recordingCommands({
+      nextTourStop: () => ({ ok: true, did: 'Turned.', reason: '', stop: 1, of: 7, lobe: 'Frontal Lobe' }),
+    });
+    const tools = createClientTools(commands, { tourPacer: pacer, onToolCall: (name, ok) => reported.push([name, ok]) });
+    await tools.start_tour({});
+    await tools.next_tour_stop({});
+    await tools.next_tour_stop({});
+    expect(reported).toEqual([
+      ['start_tour', true],
+      ['next_tour_stop', true],
+      ['next_tour_stop', false],
+    ]);
+  });
+});

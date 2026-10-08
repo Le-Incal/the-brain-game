@@ -61,7 +61,7 @@ function memoryStorage() {
   return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => (data[k] = String(v)) };
 }
 
-function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter, clock } = {}) {
+function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter, clock, beacon } = {}) {
   const ended = [];
   const started = [];
   const conversation = fakeConversation();
@@ -97,6 +97,7 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
     now: clock ? () => clock.now : undefined,
     onConversationEnd: () => ended.push(true),
     onConversationStart: () => started.push(true),
+    ...(beacon ? { sendBeacon: beacon } : {}),
   });
   return { session, conversation, server, storage, timers, clientTools, order, ended, started };
 }
@@ -528,3 +529,176 @@ describe('One conversation at a time', () => {
   });
 });
 
+
+// Live run: a session died at 55 s and we could not see why or what the guide
+// had called. Each conversation now ends with one summary line in our logs.
+describe('Session summary: one report per conversation', () => {
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+  const summariesIn = (server) =>
+    server.requests.filter(({ url, body }) => url === '/api/voice/event' && body?.type === 'session_summary');
+
+  async function connected({ token, beacon } = {}) {
+    const clock = { now: 1_000_000 };
+    const server = fakeServer(token ? { token } : {});
+    const context = setup({ server, clock, beacon });
+    await context.session.start({ guide: 'rollo' });
+    await context.session.handleConnect({ conversationId: 'conv_123' });
+    return { ...context, clock };
+  }
+
+  it('sends the end reason, the duration and every tool call, once, when the agent ends the conversation', async () => {
+    const { session, server, clock } = await connected();
+    clock.now += 1200;
+    session.recordToolCall('start_tour', true);
+    clock.now += 2300;
+    session.recordToolCall('next_tour_stop', true);
+    clock.now += 1500;
+    session.recordToolCall('next_tour_stop', false);
+    clock.now += 50_000;
+    session.handleDisconnect({ reason: 'agent' });
+    session.handleDisconnect({ reason: 'agent' });
+    await flush();
+    const summaries = summariesIn(server);
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0].body).toEqual({
+      type: 'session_summary',
+      session: 'resid',
+      reason: 'agent',
+      durationSecs: 55,
+      tools: [
+        { name: 'start_tour', ok: true, msSinceStart: 1200 },
+        { name: 'next_tour_stop', ok: true, msSinceStart: 3500 },
+        { name: 'next_tour_stop', ok: false, msSinceStart: 5000 },
+      ],
+    });
+    expect(summaries[0].init).toMatchObject({ method: 'POST', keepalive: true, credentials: 'same-origin' });
+  });
+
+  it.each([
+    ['the player ends it', (s) => s.end(), 'user'],
+    ['the reserved time runs out', (s, timers) => timers.find(({ ms }) => ms === 480_000).fn(), 'time_limit'],
+    ['the connection fails', (s) => s.handleDisconnect({ reason: 'error', message: 'socket closed' }), 'error'],
+    ['the SDK gives no reason', (s) => s.handleDisconnect(), 'unknown'],
+    ['the guide is switched', (s) => s.switchGuideNow('sylvi'), 'user'],
+  ])('reports the reason when %s', async (_label, act, reason) => {
+    const { session, server, timers } = await connected();
+    await act(session, timers);
+    session.handleDisconnect({ reason: 'user' });
+    await flush();
+    expect(summariesIn(server).map(({ body }) => body.reason)).toEqual([reason]);
+  });
+
+  it('sends nothing for a conversation that never connected', async () => {
+    const server = fakeServer();
+    const { session } = setup({ server });
+    await session.start({ guide: 'rollo' });
+    session.handleDisconnect({ reason: 'error' });
+    await flush();
+    expect(summariesIn(server)).toHaveLength(0);
+  });
+
+  it('records tool calls only while connected, and starts fresh each conversation', async () => {
+    const { session, server, clock } = await connected();
+    session.recordToolCall('face_region', true);
+    session.end();
+    session.recordToolCall('face_region', true);
+    await session.start({ guide: 'rollo' });
+    session.recordToolCall('face_region', true);
+    await session.handleConnect({ conversationId: 'conv_456' });
+    clock.now += 700;
+    session.recordToolCall('rotate_to_view', true);
+    session.end();
+    await flush();
+    expect(summariesIn(server).map(({ body }) => body.tools.map(({ name }) => name))).toEqual([
+      ['face_region'],
+      ['rotate_to_view'],
+    ]);
+  });
+
+  it('keeps the last 200 tool calls', async () => {
+    const { session, server, clock } = await connected();
+    for (let i = 0; i < 250; i += 1) {
+      clock.now += 10;
+      session.recordToolCall(i < 50 ? 'face_region' : 'get_scene_state', true);
+    }
+    session.end();
+    await flush();
+    const { tools } = summariesIn(server)[0].body;
+    expect(tools).toHaveLength(200);
+    expect(tools.every(({ name }) => name === 'get_scene_state')).toBe(true);
+    expect(tools.at(-1).msSinceStart).toBe(2500);
+  });
+
+  it('carries no id beyond the 8-character reservation prefix: no conversation id, no signature', async () => {
+    const token = { ...TOKEN_RESPONSE, dynamicVariables: { guide_name: 'Rollo', reservation: 'AbCdEfGhIjKlMnOp.secret-signature' } };
+    const { session, server } = await connected({ token });
+    session.end();
+    await flush();
+    const [summary] = summariesIn(server);
+    expect(summary.body.session).toBe('AbCdEfGh');
+    const text = JSON.stringify(summary.body);
+    for (const value of ['conv_123', 'IjKlMnOp', 'secret-signature', 'conv_token_abc']) expect(text).not.toContain(value);
+  });
+
+  describe('closing the tab, the most common real ending', () => {
+    function beacon() {
+      const sent = [];
+      const send = (url, data) => {
+        sent.push({ url, body: JSON.parse(data) });
+        return true;
+      };
+      return { sent, send };
+    }
+
+    it('sends the summary by beacon, once, with the reason page_closed', async () => {
+      const { sent, send } = beacon();
+      const { session, server, clock } = await connected({ beacon: send });
+      clock.now += 900;
+      session.recordToolCall('start_tour', true);
+      clock.now += 41_100;
+      session.pageClosing();
+      session.pageClosing();
+      session.handleDisconnect({ reason: 'error' });
+      await flush();
+      expect(sent).toEqual([
+        {
+          url: '/api/voice/event',
+          body: {
+            type: 'session_summary',
+            session: 'resid',
+            reason: 'page_closed',
+            durationSecs: 42,
+            tools: [{ name: 'start_tour', ok: true, msSinceStart: 900 }],
+          },
+        },
+      ]);
+      expect(summariesIn(server)).toHaveLength(0);
+    });
+
+    it('sends the beacon as a plain string, which needs no preflight', async () => {
+      const seen = [];
+      const { session } = await connected({ beacon: (url, data) => seen.push(typeof data) && true });
+      session.pageClosing();
+      expect(seen).toEqual(['string']);
+    });
+
+    it('falls back to a keepalive fetch when the beacon is refused', async () => {
+      const { session, server } = await connected({ beacon: () => false });
+      session.pageClosing();
+      await flush();
+      expect(summariesIn(server).map(({ body, init }) => [body.reason, init.keepalive])).toEqual([['page_closed', true]]);
+    });
+
+    it('does nothing when no conversation is connected', async () => {
+      const { sent, send } = beacon();
+      const server = fakeServer();
+      const { session } = setup({ server, beacon: send });
+      session.pageClosing();
+      await session.start({ guide: 'rollo' });
+      session.pageClosing();
+      await flush();
+      expect(sent).toHaveLength(0);
+      expect(summariesIn(server)).toHaveLength(0);
+    });
+  });
+});

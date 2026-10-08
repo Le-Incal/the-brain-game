@@ -177,3 +177,106 @@ describe('Counting blocked microphones: POST /api/voice/event', () => {
     expect(lines).toContain('[voice] client event: mic_unsupported');
   });
 });
+
+// Live run: a session died at 55 s with nothing in our logs to say why or what
+// the guide had called. The browser sends one summary per conversation; the
+// server checks its shape strictly and writes it as one line.
+describe('Session summary: POST /api/voice/event', () => {
+  const SUMMARY = {
+    type: 'session_summary',
+    session: 'AbCd-_12',
+    reason: 'agent',
+    durationSecs: 55,
+    tools: [
+      { name: 'start_tour', ok: true, msSinceStart: 1200 },
+      { name: 'next_tour_stop', ok: true, msSinceStart: 3450 },
+      { name: 'next_tour_stop', ok: false, msSinceStart: 5000 },
+    ],
+  };
+  const post = (app, body, type = 'application/json') =>
+    request(app)
+      .post('/api/voice/event')
+      .set('Host', HOST)
+      .set('X-Real-IP', ADDRESS)
+      .set('Content-Type', type)
+      .send(typeof body === 'string' ? body : JSON.stringify(body));
+
+  it('accepts a summary with 204 and writes exactly one line with the reason, duration and every call', async () => {
+    const { lines, app } = await setup();
+    const before = lines.length;
+    const response = await post(app, SUMMARY);
+    expect(response.status).toBe(204);
+    expect(lines.slice(before)).toEqual([
+      '[voice] session AbCd-_12 ended (agent) after 55 s; 3 tool calls: start_tour ok 1.2s, next_tour_stop ok 3.5s, next_tour_stop failed 5.0s',
+    ]);
+    expectNothingSensitive(lines);
+  });
+
+  it('writes a session with no tool calls', async () => {
+    const { lines, app } = await setup();
+    await post(app, { ...SUMMARY, reason: 'page_closed', durationSecs: 7.6, tools: [] });
+    expect(lines.at(-1)).toBe('[voice] session AbCd-_12 ended (page_closed) after 8 s; 0 tool calls');
+  });
+
+  it('accepts the plain-text body a tab-close beacon sends', async () => {
+    const { lines, app } = await setup();
+    const response = await post(app, JSON.stringify(SUMMARY), 'text/plain;charset=UTF-8');
+    expect(response.status).toBe(204);
+    expect(lines.at(-1)).toMatch(/^\[voice\] session AbCd-_12 ended \(agent\)/);
+  });
+
+  it.each(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown'])('accepts the reason %s', async (reason) => {
+    const { app } = await setup();
+    expect((await post(app, { ...SUMMARY, reason })).status).toBe(204);
+  });
+
+  it('accepts 200 tool calls, which is more than the 1 kb the mic events need', async () => {
+    const { lines, app } = await setup();
+    const tools = Array.from({ length: 200 }, (_, i) => ({ name: 'next_tour_stop', ok: i % 2 === 0, msSinceStart: 479_000 + i }));
+    expect((await post(app, { ...SUMMARY, tools })).status).toBe(204);
+    expect(lines.at(-1)).toMatch(/; 200 tool calls: /);
+  });
+
+  it.each([
+    ['201 tool calls', { tools: Array.from({ length: 201 }, () => ({ name: 'face_region', ok: true, msSinceStart: 1 })) }],
+    ['an unknown reason', { reason: 'guardrail' }],
+    ['an extra field', { conversationId: 'conv_123' }],
+    ['a missing session', { session: undefined }],
+    ['a session longer than 8 characters', { session: 'AbCdEfGhI' }],
+    ['a session with other characters', { session: 'ab cd.ef' }],
+    ['a negative duration', { durationSecs: -1 }],
+    ['a duration over an hour', { durationSecs: 3601 }],
+    ['a duration as text', { durationSecs: '55' }],
+    ['tools that are not a list', { tools: 'start_tour' }],
+    ['a tool name with other characters', { tools: [{ name: '<script>', ok: true, msSinceStart: 1 }] }],
+    ['a tool name in capitals', { tools: [{ name: 'Face_Region', ok: true, msSinceStart: 1 }] }],
+    ['a tool with ok as text', { tools: [{ name: 'face_region', ok: 'true', msSinceStart: 1 }] }],
+    ['a tool with a fractional time', { tools: [{ name: 'face_region', ok: true, msSinceStart: 1.5 }] }],
+    ['a tool with a negative time', { tools: [{ name: 'face_region', ok: true, msSinceStart: -1 }] }],
+    ['a tool with an extra field', { tools: [{ name: 'face_region', ok: true, msSinceStart: 1, region: 6 }] }],
+  ])('rejects %s with 400 and writes nothing', async (_label, patch) => {
+    const { lines, app } = await setup();
+    const before = lines.length;
+    const body = JSON.parse(JSON.stringify({ ...SUMMARY, ...patch }));
+    expect((await post(app, body)).status).toBe(400);
+    expect(lines.length).toBe(before);
+  });
+
+  it('rejects plain text that is not JSON', async () => {
+    const { lines, app } = await setup();
+    const before = lines.length;
+    expect((await post(app, 'not json', 'text/plain')).status).toBe(400);
+    expect(lines.length).toBe(before);
+  });
+
+  it('still rejects a mic event with extra fields', async () => {
+    const { app } = await setup();
+    expect((await post(app, { type: 'mic_blocked', tools: [] })).status).toBe(400);
+  });
+
+  it('shares the per-address rate limit with the mic events', async () => {
+    const { app } = await setup();
+    for (let i = 0; i < EVENT_RATE_LIMIT.max; i += 1) await post(app, { type: 'mic_blocked' });
+    expect((await post(app, SUMMARY)).status).toBe(429);
+  });
+});
