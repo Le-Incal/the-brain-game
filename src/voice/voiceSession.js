@@ -334,9 +334,12 @@ export function createVoiceSession({
       if (state.phase !== 'unavailable') set({ phase: 'idle', conversationId: null });
     },
 
-    recordToolCall(name, ok) {
+    /** `detail` is `{ refused: true, spokenMs }` when the tour gate refused the call. */
+    recordToolCall(name, ok, detail) {
       if (state.phase !== 'connected' || connectedAt === null) return;
-      toolCalls.push({ name, ok, msSinceStart: now() - connectedAt });
+      const call = { name, ok, msSinceStart: now() - connectedAt };
+      if (detail?.refused) Object.assign(call, { ok: false, refused: true, spokenMs: detail.spokenMs });
+      toolCalls.push(call);
       if (toolCalls.length > SUMMARY_TOOL_LIMIT) toolCalls.shift();
     },
 

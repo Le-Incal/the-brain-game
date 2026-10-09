@@ -33,6 +33,9 @@ export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limi
 export const SESSION_SUMMARY_TOOL_LIMIT = 200;
 const SESSION_SUMMARY_KEYS = ['durationSecs', 'reason', 'session', 'tools', 'type'];
 const TOOL_CALL_KEYS = ['msSinceStart', 'name', 'ok'];
+// A tour gate refusal adds the speech the gate measured at the stop.
+const REFUSED_CALL_KEYS = [...TOOL_CALL_KEYS, 'refused', 'spokenMs'];
+const isMilliseconds = (value) => Number.isInteger(value) && value >= 0 && value <= 3_600_000;
 
 const hasExactKeys = (value, keys) =>
   Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
@@ -42,13 +45,12 @@ function isToolCall(call) {
     call !== null &&
     typeof call === 'object' &&
     !Array.isArray(call) &&
-    hasExactKeys(call, TOOL_CALL_KEYS) &&
+    (hasExactKeys(call, TOOL_CALL_KEYS) ||
+      (hasExactKeys(call, REFUSED_CALL_KEYS) && call.refused === true && call.ok === false && isMilliseconds(call.spokenMs))) &&
     typeof call.name === 'string' &&
     /^[a-z_]{1,40}$/.test(call.name) &&
     typeof call.ok === 'boolean' &&
-    Number.isInteger(call.msSinceStart) &&
-    call.msSinceStart >= 0 &&
-    call.msSinceStart <= 3_600_000
+    isMilliseconds(call.msSinceStart)
   );
 }
 
@@ -69,8 +71,14 @@ export function isSessionSummary(body) {
   );
 }
 
+const seconds = (ms) => `${(Math.round(ms / 100) / 10).toFixed(1)}s`;
+
 export function formatSessionSummary({ session, reason, durationSecs, tools }) {
-  const calls = tools.map(({ name, ok, msSinceStart }) => `${name} ${ok ? 'ok' : 'failed'} ${(Math.round(msSinceStart / 100) / 10).toFixed(1)}s`);
+  const calls = tools.map(({ name, ok, msSinceStart, refused, spokenMs }) =>
+    refused
+      ? `${name} refused ${seconds(msSinceStart)} (spoke ${seconds(spokenMs)})`
+      : `${name} ${ok ? 'ok' : 'failed'} ${seconds(msSinceStart)}`
+  );
   const head = `[voice] session ${session} ended (${reason}) after ${Math.round(durationSecs)} s; ${tools.length} tool calls`;
   return calls.length ? `${head}: ${calls.join(', ')}` : head;
 }

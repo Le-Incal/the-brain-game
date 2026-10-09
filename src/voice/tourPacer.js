@@ -15,7 +15,17 @@ import { TOUR_ORDER } from './lobes.js';
 export const TOUR_STOP_MIN_SPEECH_MS = 8000;
 export const TOUR_STOP_PASS_AFTER_MS = 20000;
 
-const refusal = (reason, instruction) => ({ ok: false, did: '', reason, instruction });
+// The speech measured when a call was refused, for the session summary. A
+// symbol key, so JSON.stringify leaves it out of the agent's answer.
+export const GATE_REFUSAL = Symbol('gateRefusal');
+
+const refusal = (reason, instruction, spokenMs) => ({
+  ok: false,
+  did: '',
+  reason,
+  instruction,
+  [GATE_REFUSAL]: { spokenMs: Math.round(spokenMs) },
+});
 
 export function createTourPacer({ now = Date.now } = {}) {
   let speakingSince = null;
@@ -53,16 +63,19 @@ export function createTourPacer({ now = Date.now } = {}) {
         const coming = TOUR_ORDER[tour.index + 1];
         return refusal(
           `I am still turning to my ${coming}.`,
-          `Wait for next_tour_stop to answer, describe the ${coming}, then call next_tour_stop.`
+          `Wait for next_tour_stop to answer, describe the ${coming}, then call next_tour_stop.`,
+          spokenMs()
         );
       }
       const welcome = tour.index < 0;
       const waited = now() - tour.arrivedAt >= TOUR_STOP_PASS_AFTER_MS;
-      if (!welcome && !waited && spokenMs() < TOUR_STOP_MIN_SPEECH_MS) {
+      const spoken = spokenMs();
+      if (!welcome && !waited && spoken < TOUR_STOP_MIN_SPEECH_MS) {
         const lobe = TOUR_ORDER[tour.index];
         return refusal(
           `The tour waits until I have spoken about my ${lobe}.`,
-          `Describe the ${lobe} first (two or three sentences), then call next_tour_stop.`
+          `Describe the ${lobe} first (two or three sentences), then call next_tour_stop.`,
+          spoken
         );
       }
       tour.inFlight = true;

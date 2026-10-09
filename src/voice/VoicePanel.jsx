@@ -99,7 +99,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     const clientTools = createClientTools(commands, {
       cancelMoves: (reason) => scene.controls.cancelMove(reason),
       tourPacer,
-      onToolCall: (name, ok) => sessionRef.current?.recordToolCall(name, ok),
+      onToolCall: (name, ok, detail) => sessionRef.current?.recordToolCall(name, ok, detail),
     });
     return createVoiceSession({
       conversation: {

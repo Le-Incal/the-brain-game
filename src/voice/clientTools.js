@@ -6,6 +6,7 @@
  */
 
 import { coerceBooleanLike } from './sceneCommands.js';
+import { GATE_REFUSAL } from './tourPacer.js';
 
 export const AGENT_TOOL_NAMES = [
   'face_region',
@@ -49,8 +50,8 @@ const TIMED_OUT = { ok: false, did: '', reason: 'The turn took too long, so I st
 
 /**
  * `tourPacer` (optional) holds next_tour_stop until the guide has spoken about
- * the current stop. `onToolCall(name, ok)` hears every call, for the session
- * summary.
+ * the current stop. `onToolCall(name, ok, detail)` hears every call, for the
+ * session summary; a gate refusal adds `{ refused: true, spokenMs }`.
  */
 export function createClientTools(
   commands,
@@ -72,7 +73,9 @@ export function createClientTools(
             }),
           ])
         : await work;
-      onToolCall(name, result?.ok !== false);
+      const gate = result?.[GATE_REFUSAL];
+      if (gate) onToolCall(name, false, { refused: true, spokenMs: gate.spokenMs });
+      else onToolCall(name, result?.ok !== false);
       return JSON.stringify(result);
     } catch (error) {
       onToolCall(name, false);
