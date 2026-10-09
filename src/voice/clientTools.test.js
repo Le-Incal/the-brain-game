@@ -252,3 +252,27 @@ describe('Every tool call is reported for the session summary', () => {
     ]);
   });
 });
+
+describe('A gate refusal is reported as refused, with the speech it measured', () => {
+  it('hands the refusal and its measured speech to onToolCall, and nothing extra to the agent', async () => {
+    const reported = [];
+    const clock = { now: 0 };
+    const pacer = pacerModule.createTourPacer({ now: () => clock.now });
+    const { commands } = recordingCommands({
+      nextTourStop: () => ({ ok: true, did: 'Turned.', reason: '', stop: 1, of: 7, lobe: 'Frontal Lobe' }),
+    });
+    const tools = createClientTools(commands, { tourPacer: pacer, onToolCall: (...args) => reported.push(args) });
+    await tools.start_tour({});
+    await tools.next_tour_stop({});
+    pacer.guideSpeaking(true);
+    clock.now += 3100;
+    pacer.guideSpeaking(false);
+    const answer = JSON.parse(await tools.next_tour_stop({}));
+    expect(reported).toEqual([
+      ['start_tour', true],
+      ['next_tour_stop', true],
+      ['next_tour_stop', false, { refused: true, spokenMs: 3100 }],
+    ]);
+    expect(Object.keys(answer).sort()).toEqual(['did', 'instruction', 'ok', 'reason']);
+  });
+});

@@ -262,6 +262,34 @@ describe('Session summary: POST /api/voice/event', () => {
     expect(lines.length).toBe(before);
   });
 
+  it('writes a gate refusal as refused, with the speech it measured', async () => {
+    const { lines, app } = await setup();
+    const tools = [
+      { name: 'next_tour_stop', ok: true, msSinceStart: 3450 },
+      { name: 'next_tour_stop', ok: false, msSinceStart: 14_200, refused: true, spokenMs: 3100 },
+      { name: 'next_tour_stop', ok: false, msSinceStart: 15_000 },
+    ];
+    expect((await post(app, { ...SUMMARY, tools })).status).toBe(204);
+    expect(lines.at(-1)).toBe(
+      '[voice] session AbCd-_12 ended (agent) after 55 s; 3 tool calls: next_tour_stop ok 3.5s, next_tour_stop refused 14.2s (spoke 3.1s), next_tour_stop failed 15.0s'
+    );
+  });
+
+  it.each([
+    ['refused on a call that succeeded', { name: 'next_tour_stop', ok: true, msSinceStart: 1, refused: true, spokenMs: 0 }],
+    ['refused set to false', { name: 'next_tour_stop', ok: false, msSinceStart: 1, refused: false, spokenMs: 0 }],
+    ['refused without the measured speech', { name: 'next_tour_stop', ok: false, msSinceStart: 1, refused: true }],
+    ['measured speech without refused', { name: 'next_tour_stop', ok: false, msSinceStart: 1, spokenMs: 0 }],
+    ['fractional measured speech', { name: 'next_tour_stop', ok: false, msSinceStart: 1, refused: true, spokenMs: 1.5 }],
+    ['negative measured speech', { name: 'next_tour_stop', ok: false, msSinceStart: 1, refused: true, spokenMs: -1 }],
+    ['measured speech as text', { name: 'next_tour_stop', ok: false, msSinceStart: 1, refused: true, spokenMs: '3100' }],
+  ])('rejects a tool call with %s', async (_label, call) => {
+    const { lines, app } = await setup();
+    const before = lines.length;
+    expect((await post(app, { ...SUMMARY, tools: [call] })).status).toBe(400);
+    expect(lines.length).toBe(before);
+  });
+
   it('rejects plain text that is not JSON', async () => {
     const { lines, app } = await setup();
     const before = lines.length;

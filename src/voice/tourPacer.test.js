@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const pacerModule = await import('./tourPacer.js').catch(() => ({}));
-const { createTourPacer, TOUR_STOP_MIN_SPEECH_MS, TOUR_STOP_PASS_AFTER_MS } = pacerModule;
+const { createTourPacer, TOUR_STOP_MIN_SPEECH_MS, TOUR_STOP_PASS_AFTER_MS, GATE_REFUSAL } = pacerModule;
 
 function setup() {
   const clock = { now: 0 };
@@ -175,5 +175,46 @@ describe('Tour lockstep gate', () => {
     arrive(1, 'Frontal Lobe');
     pacer.tourStarted();
     expect(pacer.request()).toBeNull();
+  });
+});
+
+// A refusal right after a full narration means the threshold or the speech
+// measure is wrong; one with no narration means the gate caught a chain. The
+// logs can tell them apart only if the refusal carries what was measured.
+describe('A refusal carries the speech it measured, for the logs only', () => {
+  it('records the speech measured at the stop, in whole milliseconds', () => {
+    const { pacer, arrive, speak } = setup();
+    pacer.tourStarted();
+    pacer.request();
+    arrive(1, 'Frontal Lobe');
+    speak(3100.4);
+    expect(pacer.request()[GATE_REFUSAL]).toEqual({ spokenMs: 3100 });
+  });
+
+  it('records speech still in progress', () => {
+    const { pacer, arrive, wait } = setup();
+    pacer.tourStarted();
+    pacer.request();
+    arrive(1, 'Frontal Lobe');
+    pacer.guideSpeaking(true);
+    wait(2500);
+    expect(pacer.request()[GATE_REFUSAL]).toEqual({ spokenMs: 2500 });
+  });
+
+  it('records it for a call refused while a stop is on its way', () => {
+    const { pacer } = setup();
+    pacer.tourStarted();
+    pacer.request();
+    expect(pacer.request()[GATE_REFUSAL]).toEqual({ spokenMs: 0 });
+  });
+
+  it('never sends it to the agent', () => {
+    const { pacer, arrive, speak } = setup();
+    pacer.tourStarted();
+    pacer.request();
+    arrive(1, 'Frontal Lobe');
+    speak(3100);
+    const sent = JSON.parse(JSON.stringify(pacer.request()));
+    expect(Object.keys(sent).sort()).toEqual(['did', 'instruction', 'ok', 'reason']);
   });
 });

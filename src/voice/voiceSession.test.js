@@ -640,6 +640,20 @@ describe('Session summary: one report per conversation', () => {
     for (const value of ['conv_123', 'IjKlMnOp', 'secret-signature', 'conv_token_abc']) expect(text).not.toContain(value);
   });
 
+  it('marks a gate refusal as refused, with the speech the gate measured', async () => {
+    const { session, server, clock } = await connected();
+    clock.now += 14_200;
+    session.recordToolCall('next_tour_stop', false, { refused: true, spokenMs: 3100 });
+    clock.now += 100;
+    session.recordToolCall('next_tour_stop', false);
+    session.end();
+    await flush();
+    expect(summariesIn(server)[0].body.tools).toEqual([
+      { name: 'next_tour_stop', ok: false, msSinceStart: 14_200, refused: true, spokenMs: 3100 },
+      { name: 'next_tour_stop', ok: false, msSinceStart: 14_300 },
+    ]);
+  });
+
   describe('closing the tab, the most common real ending', () => {
     function beacon() {
       const sent = [];
