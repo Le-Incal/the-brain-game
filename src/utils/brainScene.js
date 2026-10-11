@@ -240,6 +240,9 @@ export function computeHighlightPulse(elapsedMs) {
 // The guide's highlight is the region's own Colour Regions tint at full
 // strength under unchanged linework, held steadily until cleared.
 export const VOICE_HIGHLIGHT_PULSE = 1;
+// The rest of a lit lobe while one of its regions has the guide's focus: a
+// paler wash of its own colour, so the named region stands out.
+export const VOICE_WASH_LEVEL = 0.4;
 
 /**
  * Which region is lit and how strongly. Game feedback wins while it runs and
@@ -259,8 +262,9 @@ export function resolveHighlight({ now, feedback, voiceRegionId }) {
  * Game feedback drives uHighlight (it isolates the answer and dims the rest).
  * The guide's highlight has its own uniform so it never dims other regions.
  */
-export function toHighlightUniforms({ now, feedback, voiceRegionIds }) {
+export function toHighlightUniforms({ now, feedback, voiceRegionIds, voiceFocusIds = null }) {
   const ids = Array.isArray(voiceRegionIds) ? voiceRegionIds : [];
+  const focus = Array.isArray(voiceFocusIds) && voiceFocusIds.length > 0 ? voiceFocusIds : null;
   const feedbackActive = Boolean(feedback && now < feedback.until);
   if (feedbackActive) {
     const resolved = resolveHighlight({ now, feedback, voiceRegionId: null });
@@ -272,10 +276,15 @@ export function toHighlightUniforms({ now, feedback, voiceRegionIds }) {
     };
   }
   // A mask in the painted-region order of uRegionIds, so a lobe lights at once.
+  // With a focus, the focus is full and the rest of the lit regions wash.
+  const level = (id) => {
+    if (!ids.includes(id)) return 0;
+    return !focus || focus.includes(id) ? 1 : VOICE_WASH_LEVEL;
+  };
   return {
     uHighlight: -1,
     uHighlightPulse: 0,
-    uVoiceMask: REGION_IDS.map((id) => (ids.includes(id) ? 1 : 0)),
+    uVoiceMask: REGION_IDS.map(level),
     uVoiceActive: ids.length > 0 ? 1 : 0,
   };
 }
@@ -413,6 +422,7 @@ export class BrainScene {
     this._highlightStartedAt = 0;
     this._feedback = null;
     this._voiceHighlight = null;
+    this._voiceFocus = null;
     this._voiceLevel = 0;
     this._voiceLevelTarget = 0;
     this._useMockVoiceLevel = false;
@@ -823,6 +833,7 @@ export class BrainScene {
       now,
       feedback: this._feedback,
       voiceRegionIds: this._voiceHighlight,
+      voiceFocusIds: this._voiceFocus,
     });
     this.uniforms.uHighlight.value = next.uHighlight;
     this.uniforms.uHighlightPulse.value = next.uHighlightPulse;
@@ -850,9 +861,10 @@ export class BrainScene {
    * The guide's highlight: one region id, a list (a whole lobe), or null.
    * Held until cleared; isolates its regions like a selection.
    */
-  setVoiceHighlight(regionIds) {
+  setVoiceHighlight(regionIds, { focus = null } = {}) {
     const ids = regionIds === null || regionIds === undefined ? [] : [].concat(regionIds);
     this._voiceHighlight = ids.length > 0 ? ids : null;
+    this._voiceFocus = this._voiceHighlight && focus ? [].concat(focus) : null;
     this._applyHighlightUniforms(performance.now());
   }
 

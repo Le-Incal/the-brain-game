@@ -1,3 +1,5 @@
+import { guideFocusEntry } from './guideFocus.js';
+
 /**
  * Connects the M1 scene commands to the real BrainScene and App.
  *
@@ -12,6 +14,8 @@ export function createBrainSceneAdapter({
   setColourRegions,
   getAnnotations,
   setAnnotations,
+  // The left panel's entry for what the guide is showing, or null.
+  onGuideFocus = () => {},
 }) {
   return {
     controls: scene.controls,
@@ -19,12 +23,19 @@ export function createBrainSceneAdapter({
     toSpecimenDirection: (direction) => scene.toSpecimenDirection(direction),
     // One focus at a time: the guide lighting a region clears the player's
     // selection (and its description); a player click clears the guide's light.
-    setHighlight: (regionId) => {
+    // `focus`: regions given full emphasis over the rest of what is lit (a
+    // tour stop's lobe stays washed while the named region stands out).
+    setHighlight: (regionId, { focus = null } = {}) => {
       if (regionId !== null && regionId !== undefined) scene.clearSelection?.();
-      scene.setVoiceHighlight(regionId);
+      if (focus) scene.setVoiceHighlight(regionId, { focus });
+      else scene.setVoiceHighlight(regionId);
+      onGuideFocus(guideFocusEntry(regionId, focus));
     },
     playerSelected: (regionId) => {
-      if (regionId !== null && regionId !== undefined) scene.setVoiceHighlight(null);
+      if (regionId !== null && regionId !== undefined) {
+        scene.setVoiceHighlight(null);
+        onGuideFocus(null);
+      }
     },
     getHighlight: () => scene.getVoiceHighlight(),
     setColourRegions,
@@ -33,6 +44,9 @@ export function createBrainSceneAdapter({
     getAnnotations,
     getMode,
     /** Leaving Study mode: the game never inherits the guide's highlight. */
-    resetForGame: () => scene.setVoiceHighlight(null),
+    resetForGame: () => {
+      scene.setVoiceHighlight(null);
+      onGuideFocus(null);
+    },
   };
 }

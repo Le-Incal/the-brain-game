@@ -108,11 +108,23 @@ const fragmentShader = /* glsl */ `
   bool isVoiceRegion(int regionId) {
     bool lit = false;
     for (int i = 0; i < 20; i++) {
-      if (uVoiceMask[i] > 0.5 && int(floor(uRegionIds[i] + 0.5)) == regionId) {
+      if (uVoiceMask[i] > 0.99 && int(floor(uRegionIds[i] + 0.5)) == regionId) {
         lit = true;
       }
     }
     return lit;
+  }
+
+  // Between 0 and 1: the rest of a lobe while one region has the guide's focus.
+  float voiceWashLevel(int regionId) {
+    float level = 0.0;
+    for (int i = 0; i < 20; i++) {
+      float mask = uVoiceMask[i];
+      if (mask > 0.01 && mask <= 0.99 && int(floor(uRegionIds[i] + 0.5)) == regionId) {
+        level = mask;
+      }
+    }
+    return level;
   }
 
   vec3 getRegionColor(int regionId) {
@@ -187,6 +199,7 @@ const fragmentShader = /* glsl */ `
     bool otherDuringFeedback = feedbackMode && !feedbackRegion;
     bool voiceActive = uVoiceActive > 0.5;
     bool voiceRegion = validRegion && isVoiceRegion(regionId);
+    float voiceWash = validRegion && !voiceRegion ? voiceWashLevel(regionId) : 0.0;
     // Feedback, a selection and the guide's highlight each isolate their
     // region: withdraw every other colour wash. Linework never changes.
     bool colourRegionsActive =
@@ -220,6 +233,8 @@ const fragmentShader = /* glsl */ `
       finalColor = mix(pulsedFill, uInkColor, totalInk);
     } else if (!feedbackMode && (selectedRegion || voiceRegion)) {
       finalColor = mix(tintedRegionColor, uInkColor, totalInk);
+    } else if (!feedbackMode && voiceWash > 0.0) {
+      finalColor = mix(mix(shadedPaper, tintedRegionColor, voiceWash), uInkColor, totalInk);
     }
 
     gl_FragColor = vec4(finalColor, 1.0);

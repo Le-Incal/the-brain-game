@@ -1,0 +1,25 @@
+{
+  "note": "Left-panel text for the five lobes the guide can show, approved by Kyle 2026-10-10 from knowledge/kb (anatomy.lobes, anatomy.limbic_system). Cerebellum and Brain Stem reuse regions 19 and 20.",
+  "lobes": {
+    "Frontal Lobe": {
+      "subtitle": "The Province of Will",
+      "description": "The largest lobe, about a third of the cortex. It plans, decides and keeps personality and emotion in check. At its rear edge it issues the commands for voluntary movement, and in most people, on the left, for speech."
+    },
+    "Parietal Lobe": {
+      "subtitle": "The Body's Cartographer",
+      "description": "It receives touch, temperature, pressure and pain, and works out where the body is and where things lie around it, guiding the hand to what the eye has found."
+    },
+    "Temporal Lobe": {
+      "subtitle": "Hall of Sound and Memory",
+      "description": "It hears, understands language, and recognises faces and objects. On its inner side it helps lay down new memories."
+    },
+    "Limbic Lobe": {
+      "subtitle": "The Border of Feeling",
+      "description": "Named by Broca in 1878 for the border it traces around the brain's core, it binds emotion to memory and attention. Only its cingulate cortex is shown on this specimen; the parahippocampal gyrus and hippocampal formation lie hidden within."
+    },
+    "Occipital Lobe": {
+      "subtitle": "The Theatre of Sight",
+      "description": "It turns light into vision, from the first detection of edges to depth and motion, then passes what it sees forward: to the temporal lobe to be recognised, to the parietal lobe to be located."
+    }
+  }
+}

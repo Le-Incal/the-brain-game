@@ -31,10 +31,18 @@ export function shouldShowInstructions(gamePhase, selectedRegion = null) {
 export function getDescribedRegion({
   isNavigating = false,
   selectedRegion = null,
+  guideFocus = null,
   hoveredRegion = null,
 } = {}) {
   if (isNavigating) return null;
-  return selectedRegion || hoveredRegion;
+  // A click wins; the guide's focus beats a cursor that happens to rest on the brain.
+  return selectedRegion || guideFocus || hoveredRegion;
+}
+
+/** The full text under the title: for a click or the guide's focus, never a hover. */
+export function getDescribedText({ isNavigating = false, selectedRegion = null, guideFocus = null } = {}) {
+  if (isNavigating) return null;
+  return (selectedRegion || guideFocus)?.description ?? null;
 }
 
 export function getPrimaryControl(gamePhase, brainReady) {
@@ -544,6 +552,8 @@ export default function App() {
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  // What the voice guide is showing, for the left panel (Study mode only).
+  const [guideFocus, setGuideFocus] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -687,6 +697,7 @@ export default function App() {
             setColourRegions: (value) => setColorMode(value),
             getAnnotations: () => liveStateRef.current.showLabels,
             setAnnotations: (value) => setShowLabels(value),
+            onGuideFocus: setGuideFocus,
           });
           sceneAdapterRef.current = adapter;
           sceneCommandsRef.current = createSceneCommands(adapter, {
@@ -857,8 +868,10 @@ export default function App() {
   const describedRegion = getDescribedRegion({
     isNavigating,
     selectedRegion,
+    guideFocus,
     hoveredRegion,
   });
+  const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
   const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
   const primaryControl = getPrimaryControl(gamePhase, brainReady);
 
@@ -1050,7 +1063,7 @@ export default function App() {
                   {describedRegion.name}
                 </span>
               )}
-              {selectedRegion && (
+              {describedText && (
                 <span
                   style={{
                     display: 'block',
@@ -1060,7 +1073,7 @@ export default function App() {
                     letterSpacing: '0.03em',
                   }}
                 >
-                  {selectedRegion.description}
+                  {describedText}
                 </span>
               )}
             </div>
