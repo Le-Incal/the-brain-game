@@ -225,7 +225,7 @@ describe('Session summary: POST /api/voice/event', () => {
     expect(lines.at(-1)).toMatch(/^\[voice\] session AbCd-_12 ended \(agent\)/);
   });
 
-  it.each(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown'])('accepts the reason %s', async (reason) => {
+  it.each(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown', 'rest'])('accepts the reason %s', async (reason) => {
     const { app } = await setup();
     expect((await post(app, { ...SUMMARY, reason })).status).toBe(204);
   });

@@ -196,3 +196,15 @@ describe('What the notice says while the welcome plays', () => {
     });
   });
 });
+
+describe('What the notice says without a microphone', () => {
+  it('says the guide carries on in writing, while it talks or rests', () => {
+    for (const phase of ['connected', 'resting']) {
+      expect(noticeFor(phase, null, 'Sylvi', { micRefused: true }), phase).toEqual({ text: 'Microphone off. Write to Sylvi below.' });
+    }
+  });
+
+  it('says nothing while a conversation rests with the microphone on', () => {
+    expect(noticeFor('resting', null, 'Sylvi')).toBeNull();
+  });
+});
