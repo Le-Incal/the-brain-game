@@ -4,6 +4,8 @@ import { HOST, SECRETS, cookieFrom, postCallBody, signWebhook, startApp } from '
 
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
+const ledgerModule = await import('../ledger.js').catch(() => ({}));
+const { CLOSING_SLACK_SECONDS } = ledgerModule;
 
 // Kyle, 2026-10-11: one conversation on screen, many underneath. The live
 // session rests after 30 s of quiet and wakes when the visitor speaks or
@@ -46,16 +48,28 @@ describe('A conversation the page reports ended', () => {
     expect((await mint(cookie)).status).toBe(200);
   });
 
-  it('keeps the minutes held until ElevenLabs settles them', async () => {
-    const { mint, ended, status, deliver } = await setup();
+  it('holds only the time since the token was minted, until ElevenLabs settles it', async () => {
+    const { mint, ended, status, deliver, clock } = await setup();
     const first = await mint();
     const cookie = cookieFrom(first);
     const reservation = first.body.dynamicVariables.reservation;
     expect((await status(cookie)).body.remainingSeconds).toBe(900 - 480);
+    // A conversation cannot have run longer than since its token was minted.
+    clock.advance(60_000);
     await ended(reservation, cookie);
-    expect((await status(cookie)).body.remainingSeconds).toBe(900 - 480);
+    expect((await status(cookie)).body.remainingSeconds).toBe(900 - (60 + CLOSING_SLACK_SECONDS));
     await deliver(postCallBody({ reservation, conversationId: 'conv_minted_1', durationSecs: 40 }));
     expect((await status(cookie)).body.remainingSeconds).toBe(900 - 40);
+  });
+
+  it('still charges the real length if a conversation ran on after the page said it ended', async () => {
+    const { mint, ended, status, deliver } = await setup();
+    const first = await mint();
+    const cookie = cookieFrom(first);
+    const reservation = first.body.dynamicVariables.reservation;
+    await ended(reservation, cookie);
+    await deliver(postCallBody({ reservation, conversationId: 'conv_minted_1', durationSecs: 300 }));
+    expect((await status(cookie)).body.remainingSeconds).toBe(900 - 300);
   });
 
   it("accepts only the device's own, genuine reservation", async () => {
