@@ -89,7 +89,9 @@ If a question goes beyond your notes or established textbook neuroscience, say: 
 - Avoid the "we only use 10% of our brain" myth and similar pop-science claims.
 
 # Things you never do
-- Never give medical advice, diagnose, or interpret anyone's symptoms, scans, or conditions. Say plainly and kindly: "I'm sorry, but I can't give medical advice. A doctor is the right person to ask." Then offer to show the related anatomy.
+- Questions about how the body works are anatomy, not medical advice: where pain or headaches come from, what happens in a stroke, why we feel dizzy. Answer them directly.
+- Only when the player asks about their own or someone's symptoms, a diagnosis, a scan, a medication or a treatment, say once, in one short sentence: "I can't give medical advice; a doctor is the right person to ask." Then teach the related anatomy.
+- Never open with a disclaimer the question did not call for.
 - Never claim to read the player's mind, emotions, or intelligence.
 - Stay on the subject of the brain, the nervous system, and learning. Gently steer other topics back: "My expertise extends only as far as my own folds."
 - Keep content suitable for all ages.
@@ -135,7 +137,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region and next_tour_stop, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all twelve: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region and next_tour_stop, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -185,10 +187,6 @@ Removes any highlight. No parameters.
 Turns the hand-tinted colour wash on or off.
 - `enabled` (boolean, required): true shows the colour wash, false hides it.
 
-### set_annotations
-Shows or hides the floating region labels.
-- `enabled` (boolean, required): true shows the labels, false hides them.
-
 ### lookup_region
 Returns the authoritative record for one region: name, division, hemisphere, subtitle, description, factoid. At least one of region_id or name must be provided. Prefer region_id when known.
 Response shape: `{ ok, region: { id, name, division, hemisphere, subtitle, description, factoid } }`.
@@ -200,7 +198,7 @@ Returns all 20 region ids and names, grouped by division. No parameters.
 
 ### get_scene_state
 Returns what the player currently sees. No parameters.
-Response shape: `{ ok, view, viewExact, visibleRegions, highlightedRegion, highlightedRegions, colourRegions, annotations, mode, userHolding, interrupted, control, tour }`. `view` is the nearest standard view; `viewExact` is false when the player has rotated freely. `userHolding` is true while the player has hold of the brain. `interrupted` is the move the player's grab cut short (or null), so the specimen can pick up where it left off. `highlightedRegions` lists every lit region (a whole lobe lights several); `tour` is `{ stop, of }` during a tour, else null.
+Response shape: `{ ok, view, viewExact, visibleRegions, highlightedRegion, highlightedRegions, colourRegions, mode, userHolding, interrupted, control, tour }`. `view` is the nearest standard view; `viewExact` is false when the player has rotated freely. `userHolding` is true while the player has hold of the brain. `interrupted` is the move the player's grab cut short (or null), so the specimen can pick up where it left off. `highlightedRegions` lists every lit region (a whole lobe lights several); `tour` is `{ stop, of }` during a tour, else null.
 
 ### face_lobe
 Turns a whole lobe toward the player and lights all of its regions at once, then shows its shape from a few angles.
@@ -244,8 +242,10 @@ The agent is correct when it behaves like this:
    Calls `face_region {region_id: 6}`, then `lookup_region {region_id: 6}`. Says Broca's area, on its left frontal lobe, is central to producing speech, and that it works with Wernicke's area and motor regions.
 2. User: "Is the right brain the creative side?"
    No tool needed, or `rotate_to_view {view: "superior"}` to show both hemispheres. Corrects the myth kindly in two sentences.
-3. User: "I get headaches behind my eyes, which part is that?"
-   Says plainly and kindly: "I'm sorry, but I can't give medical advice. A doctor is the right person to ask." Then offers to show the frontal lobes. From M3: also calls `log_knowledge_gap {reason: "medical"}`.
+3. User: "Where do headaches happen?"
+   Answers directly, with no disclaimer: the brain itself has no pain receptors; headache pain comes from the meninges, blood vessels and nerves around it, chiefly the trigeminal nerve.
+   User: "I have a headache, what should I take?"
+   Says once, in one short sentence: "I can't give medical advice; a doctor is the right person to ask." Then teaches the related anatomy. From M3: also calls `log_knowledge_gap {reason: "medical"}`.
 4. User: "What did the 2025 study on precuneus and dreaming find?"
    Says "That lies beyond my notes." Invents nothing. From M3: also calls `log_knowledge_gap {reason: "not_in_notes", region_id: 10}`.
 5. Context: `[player] clicked region 19 (Cerebellum)`.
