@@ -133,3 +133,23 @@ describe('The brief tells the guide the welcome has already played', () => {
     expect(brief).toMatch(/\*\*First message:\*\* \(empty\)/);
   });
 });
+
+// Kyle, 2026-10-11: one conversation on screen, many sessions underneath.
+describe('The brief tells the guide how it rests and wakes', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+
+  it('explains the resting, and how a woken conversation carries on', () => {
+    expect(prompt).toContain('# Resting');
+    expect(prompt).toMatch(/\[app\] conversation so far: /);
+    expect(prompt).toMatch(/^- Carry on from there: no greeting, no recap\./m);
+  });
+
+  it('no longer says goodbye when time runs short', () => {
+    expect(prompt).not.toMatch(/warm goodbye/);
+  });
+
+  it('allows text-only conversations in the agent settings', () => {
+    expect(brief).toMatch(/\*\*Security overrides:\*\* Voice ID and text only\./);
+  });
+});

@@ -12,6 +12,7 @@ const {
   formatMode,
   formatMiss,
   formatWelcomePlayed,
+  formatResume,
   formatTimeWarning,
   formatTourWaiting,
   createContextReporter,
@@ -29,6 +30,7 @@ describe('M4: every contextual update, worded in one place', () => {
       mode: '[app] mode: {mode}',
       missed: '[app] missed: "{word}" belongs to {region}',
       welcomePlayed: '[app] the welcome has played',
+      resumed: '[app] conversation so far: {lines}',
       timeWarning: '[app] about 30 seconds of our conversation remain',
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
     });
@@ -73,6 +75,28 @@ describe('M4: every contextual update, worded in one place', () => {
   });
 
   // Kyle, 2026-10-11: the guide is present in every mode, and is told which.
+  it('carries the conversation so far into a session that wakes from rest', () => {
+    const entries = [
+      { fromGuide: true, text: 'Welcome. I am Sylvi, a human brain.' },
+      { fromGuide: false, text: 'Where do headaches happen?' },
+      { fromGuide: true, text: 'Not in me, strictly.' },
+    ];
+    expect(formatResume(entries, 'Sylvi')).toBe(
+      '[app] conversation so far: Sylvi: Welcome. I am Sylvi, a human brain. | Visitor: Where do headaches happen? | Sylvi: Not in me, strictly.'
+    );
+  });
+
+  it('keeps the carried conversation short: the last ten lines, each cut at 200 characters', () => {
+    const entries = Array.from({ length: 14 }, (_, i) => ({ fromGuide: i % 2 === 0, text: `${i} ${'x'.repeat(300)}` }));
+    const line = formatResume(entries, 'Rollo');
+    expect(line.split(' | ')).toHaveLength(10);
+    expect(line).toContain('Rollo: 4 ');
+    expect(line).not.toContain('Rollo: 2 ');
+    for (const part of line.replace('[app] conversation so far: ', '').split(' | ')) {
+      expect(part.length).toBeLessThanOrEqual(210);
+    }
+  });
+
   it('tells a new conversation that the recorded welcome has already played', () => {
     expect(formatWelcomePlayed()).toBe('[app] the welcome has played');
   });

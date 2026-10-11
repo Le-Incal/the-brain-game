@@ -738,3 +738,85 @@ describe('Session summary: one report per conversation', () => {
     });
   });
 });
+
+// Kyle, 2026-10-11: one conversation on screen, many sessions underneath.
+describe('Writing without a microphone: a text-only conversation', () => {
+  it('starts without asking for the microphone, and asks ElevenLabs for text only', async () => {
+    const { session, order, conversation } = setup();
+    await session.start({ guide: 'sylvi', mode: 'text' });
+    expect(order).not.toContain('microphone');
+    const [, config] = conversation.calls.find(([name]) => name === 'startSession');
+    expect(config.textOnly).toBe(true);
+    expect(config.overrides.conversation).toEqual({ textOnly: true });
+    expect(session.getState().mode).toBe('text');
+  });
+
+  it('carries on in text when the microphone is refused, and says so', async () => {
+    const { session, conversation } = setup({ mic: 'denied' });
+    await session.start({ guide: 'sylvi', mode: 'auto' });
+    const [, config] = conversation.calls.find(([name]) => name === 'startSession');
+    expect(config.textOnly).toBe(true);
+    expect(session.getState()).toMatchObject({ mode: 'text', micRefused: true });
+  });
+
+  it('still asks for the microphone in voice', async () => {
+    const { session, order, conversation } = setup();
+    await session.start({ guide: 'sylvi', mode: 'voice' });
+    expect(order).toContain('microphone');
+    const [, config] = conversation.calls.find(([name]) => name === 'startSession');
+    expect(config.textOnly).toBeUndefined();
+    expect(session.getState().mode).toBe('voice');
+  });
+});
+
+describe('Resting and waking', () => {
+  it('rests quietly: the conversation ends, and the phase says resting, not idle', async () => {
+    const { session, conversation } = setup();
+    await session.start({ guide: 'sylvi', mode: 'voice' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    session.rest();
+    expect(conversation.calls.at(-1)).toEqual(['endSession']);
+    expect(session.getState().phase).toBe('resting');
+  });
+
+  it('wakes in the same mode it rested in', async () => {
+    const { session, conversation } = setup();
+    await session.start({ guide: 'sylvi', mode: 'text' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    session.rest();
+    await session.wake();
+    const starts = conversation.calls.filter(([name]) => name === 'startSession');
+    expect(starts).toHaveLength(2);
+    expect(starts[1][1].textOnly).toBe(true);
+  });
+
+  it('rests rather than stopping when the session reaches its time limit', async () => {
+    const { session, timers } = setup();
+    await session.start({ guide: 'sylvi', mode: 'voice' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    const cutoff = timers.find(({ ms }) => ms === 480_000);
+    cutoff.fn();
+    expect(session.getState().phase).toBe('resting');
+  });
+
+  it('tells the server the moment a conversation ends, so the next can start at once', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo', mode: 'voice' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    session.rest();
+    await Promise.resolve();
+    await Promise.resolve();
+    const report = server.requests.find(({ url }) => url === '/api/voice/ended');
+    expect(report?.body).toEqual({ reservation: 'resid.sig' });
+  });
+
+  it('reports the end when ElevenLabs disconnects too', async () => {
+    const { session, server } = setup();
+    await session.start({ guide: 'rollo', mode: 'voice' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    session.handleDisconnect({ reason: 'agent' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(server.requests.some(({ url }) => url === '/api/voice/ended')).toBe(true);
+  });
+});
