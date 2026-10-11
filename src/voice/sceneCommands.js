@@ -11,7 +11,6 @@
  *                       specimen's frame; null until the specimen has loaded
  *   setHighlight(id|null), getHighlight()
  *   setColourRegions(bool), getColourRegions()
- *   setAnnotations(bool), getAnnotations()
  *   getMode()           'study' while the guide may act on the scene
  *
  * The player always wins. Guide and player share the brain the way an agent
@@ -165,13 +164,16 @@ export function createSceneCommands(
   let showcaseToken = null;
   // { index, length } of the last stop shown, -1 before the first; null outside a tour.
   let tour = null;
-  // The region given full emphasis over a lit lobe, and the last automatic turn.
+  // The region given full emphasis over a lit lobe, whether the guide's words
+  // lit what is shown (it then holds through a turn), and the last automatic turn.
   let litFocus = null;
+  let litByWords = false;
   let lastFollowTurnAt = -Infinity;
 
   // Every light goes through here, so the focus is always known.
-  function light(ids, focus = null) {
+  function light(ids, focus = null, { byWords = false } = {}) {
     litFocus = focus;
+    litByWords = byWords && ids !== null && ids !== undefined;
     if (focus) adapter.setHighlight(ids, { focus });
     else adapter.setHighlight(ids);
   }
@@ -407,8 +409,9 @@ export function createSceneCommands(
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
-    // A broad view never leaves a region lit.
-    light(null);
+    // A broad view never leaves a tool's region lit. What the guide's words
+    // lit holds until the next name, a lighting tool or the player.
+    if (!litByWords) light(null);
     const outcome = await move({ command: 'rotateTo', view }, orientationForView(view, frame(), convertAxis));
     if (outcome.completed) return ok(`Turned to my ${viewLabel(view)} view.`);
     return fail(stoppedReason(outcome.reason), `Started turning to my ${viewLabel(view)} view but did not finish.`);
@@ -579,7 +582,7 @@ export function createSceneCommands(
     }
     if (sameLight(ids, focus)) return skipped;
 
-    light(ids, focus);
+    light(ids, focus, { byWords: true });
     if (inView(target) || !mayTurnForWords()) return { did: 'lit' };
     lastFollowTurnAt = now();
     const { quaternion } = target.kind === 'region' ? regionPose(target.id) : lobePose(target.lobe);
@@ -611,10 +614,6 @@ export function createSceneCommands(
 
   function setColourRegions(enabled) {
     return setFlag(enabled, (value) => adapter.setColourRegions(value), 'the region colours');
-  }
-
-  function setAnnotations(enabled) {
-    return setFlag(enabled, (value) => adapter.setAnnotations(value), 'the region labels');
   }
 
   function lookupRegion({ regionId, name } = {}) {
@@ -670,7 +669,6 @@ export function createSceneCommands(
       highlightedRegion: litIds.length === 1 ? litIds[0] : null,
       highlightedRegions: litIds,
       colourRegions: adapter.getColourRegions(),
-      annotations: adapter.getAnnotations(),
       mode: adapter.getMode(),
       userHolding,
       interrupted,
@@ -689,12 +687,11 @@ export function createSceneCommands(
     highlightRegion,
     clearHighlight,
     setColourRegions,
-    setAnnotations,
     lookupRegion,
     listRegions,
     getSceneState,
   };
-  // Kept off the enumerable keys: the agent contract is exactly thirteen commands.
+  // Kept off the enumerable keys: the agent contract is exactly twelve commands.
   Object.defineProperty(commands, 'followName', { value: followName, enumerable: false });
   Object.defineProperty(commands, 'dispose', {
     value: () => {
