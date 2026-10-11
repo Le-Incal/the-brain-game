@@ -4,13 +4,8 @@ import {
   default as App,
   colorModeForDifficulty,
   getDescribedRegion,
-  getBarControl,
   getDescribedText,
-  getPrimaryControl,
-  HowToPlay,
-  shouldShowBegin,
   shouldShowHeader,
-  shouldShowInstructions,
   STYLES,
 } from './App.jsx';
 
@@ -40,74 +35,35 @@ describe('mobile viewport layout', () => {
     expect(STYLES.container.height).toBe('100dvh');
   });
 
-  it('renders an accessible collapsed mobile settings menu', () => {
+  it('keeps the score apart from the bottom bar', () => {
     const markup = renderToStaticMarkup(<App />);
-
-    expect(markup).toContain('aria-label="Open game settings"');
-    expect(markup).toContain('aria-expanded="false"');
-    expect(markup).toContain('aria-controls="mobile-settings-panel"');
-    expect(markup).toContain('id="mobile-settings-panel"');
-  });
-
-  it('keeps the score separate from the speed settings panel', () => {
-    const markup = renderToStaticMarkup(<App />);
-    const panelEnd = markup.indexOf('</div>', markup.indexOf('id="mobile-settings-panel"'));
-    const scorePosition = markup.indexOf('Score:');
-
-    expect(scorePosition).toBeGreaterThan(panelEnd);
-  });
-
-  it('keeps the mobile menu trigger visually unboxed', () => {
-    expect(STYLES.mobileSettingsToggle.background).toBe('transparent');
-    expect(STYLES.mobileSettingsToggle.border).toBe('none');
-    expect(STYLES.mobileSettingsToggle.boxShadow).toBe('none');
-    expect(STYLES.mobileSettingsLine.background).toBe('rgba(26, 24, 20, 0.62)');
+    const barEnd = markup.indexOf('</div>', markup.indexOf('class="game-controls"'));
+    expect(markup.indexOf('Score:')).toBeGreaterThan(barEnd);
   });
 });
 
-describe('bottom primary control', () => {
-  it('starts with a highlighted Begin action', () => {
-    expect(getPrimaryControl('ready', true)).toEqual({
-      label: 'Begin',
-      active: true,
-      action: 'start',
-    });
+// Kyle, 2026-10-11: four persistent buttons under the brain; How to Play,
+// Begin and the phone menu give way to them and to the Settings panel.
+describe('The front door', () => {
+  it('puts Colour Regions, Play the Game, Study the Brain and Settings in the bar, in order', () => {
+    const markup = renderToStaticMarkup(<App />);
+    const bar = markup.slice(markup.indexOf('class="game-controls"'));
+    const order = ['Colour Regions', 'Play the Game', 'Study the Brain', 'Settings'].map((label) => bar.indexOf(`>${label}</button>`));
+    for (const position of order) expect(position).toBeGreaterThan(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it('preserves the first position for Pause and Resume', () => {
-    expect(getPrimaryControl('playing', true)).toEqual({
-      label: 'Pause',
-      active: false,
-      mobileActive: true,
-      action: 'pause',
-    });
-    expect(getPrimaryControl('paused', true)).toEqual({
-      label: 'Resume',
-      active: true,
-      mobileActive: true,
-      action: 'pause',
-    });
+  it('opens Settings as a disclosure', () => {
+    const markup = renderToStaticMarkup(<App />);
+    expect(markup).toMatch(/aria-expanded="false"[^>]*aria-controls="settings-panel"[^>]*>Settings</);
   });
 
-  it('does not offer Begin until the specimen is ready', () => {
-    expect(getPrimaryControl('ready', false)).toBeNull();
-    expect(getPrimaryControl('countdown', true)).toBeNull();
-  });
-});
-
-describe('landing instructions', () => {
-  it('shows instructions before the game starts', () => {
-    expect(shouldShowInstructions('ready')).toBe(true);
-  });
-
-  it('replaces instructions with a clicked region description', () => {
-    expect(shouldShowInstructions('ready', { id: 4 })).toBe(false);
-  });
-
-  it('hides instructions once Begin starts the countdown', () => {
-    expect(shouldShowInstructions('countdown')).toBe(false);
-    expect(shouldShowInstructions('playing')).toBe(false);
-    expect(shouldShowInstructions('paused')).toBe(false);
+  it('no longer shows How to Play, Begin or the phone menu', () => {
+    const markup = renderToStaticMarkup(<App />);
+    expect(markup).not.toContain('How to Play');
+    expect(markup).not.toContain('>Begin<');
+    expect(markup).not.toContain('Open game settings');
+    expect(markup).not.toContain('mobile-settings-panel');
   });
 });
 
@@ -154,14 +110,13 @@ describe('difficulty and the region palette', () => {
   it('opens on easy with the colours already showing', () => {
     const markup = renderToStaticMarkup(<App />);
 
-    expect(toggleState(markup, 'Easy')).toBe(true);
     expect(toggleState(markup, 'Colour Regions')).toBe(true);
   });
 
   it('reports the state of every toggle to assistive technology', () => {
     const markup = renderToStaticMarkup(<App />);
 
-    expect(toggleState(markup, 'Hard')).toBe(false);
+    expect(toggleState(markup, 'Study the Brain')).toBe(false);
     // Kyle, 2026-10-11: the Annotations toggle is gone.
     expect(toggleState(markup, 'Annotations')).toBeNull();
   });
@@ -189,38 +144,5 @@ describe('The left panel follows the guide', () => {
   it('hides everything while the player grips the brain', () => {
     expect(getDescribedRegion({ isNavigating: true, guideFocus })).toBeNull();
     expect(getDescribedText({ isNavigating: true, guideFocus })).toBeNull();
-  });
-});
-
-// Kyle, 2026-10-11: Begin moves to the left, under the How to Play text, and
-// stays with the instructions on mobile.
-describe('Begin sits under How to Play', () => {
-  it('renders after the instructions, as a pressable button', () => {
-    const markup = renderToStaticMarkup(<HowToPlay onBegin={() => {}} />);
-    expect(markup.indexOf('How to Play')).toBeGreaterThanOrEqual(0);
-    expect(markup.indexOf('Begin')).toBeGreaterThan(markup.indexOf('region by region'));
-    expect(markup).toMatch(/<button[^>]*class="start-button"/);
-    expect(markup).toMatch(/pointer-events:auto/);
-  });
-
-  it('shows no Begin without a way to begin', () => {
-    expect(renderToStaticMarkup(<HowToPlay />)).not.toContain('Begin');
-  });
-
-  it('offers Begin only when the specimen is ready to play', () => {
-    expect(shouldShowBegin('ready', true)).toBe(true);
-    expect(shouldShowBegin('ready', false)).toBe(false);
-    for (const phase of ['countdown', 'playing', 'paused', 'study']) expect(shouldShowBegin(phase, true)).toBe(false);
-  });
-
-  it('leaves only Pause and Resume in the bottom bar', () => {
-    expect(getBarControl('ready', true)).toBeNull();
-    expect(getBarControl('playing', true)).toMatchObject({ label: 'Pause' });
-    expect(getBarControl('paused', true)).toMatchObject({ label: 'Resume' });
-    expect(getBarControl('study', true)).toBeNull();
-  });
-
-  it('no longer floats Begin in the middle of the screen', () => {
-    expect(renderToStaticMarkup(<App />)).not.toContain('ready-prompt');
   });
 });
