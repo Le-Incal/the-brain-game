@@ -80,6 +80,8 @@ export class BrainOrbitControls {
     this.isDragging = false;
     this.autoRotate = options.autoRotate ?? true;
     this.autoRotateSpeed = options.autoRotateSpeed ?? 0.003;
+    // The voice guide's slow idle turn, in radians a second; 0 is off.
+    this._idleTurnRate = 0;
     this.activePointerId = null;
     // High enough to track the pointer within roughly one frame, while the
     // render-loop interpolation still filters uneven pointer-event timing.
@@ -154,6 +156,7 @@ export class BrainOrbitControls {
 
     // The player always wins: a grab ends any programmatic move where it is.
     this._endMove({ completed: false, reason: 'user' });
+    this._idleTurnRate = 0;
 
     this.activePointerId = e.pointerId;
     this.domElement.setPointerCapture?.(e.pointerId);
@@ -292,6 +295,15 @@ export class BrainOrbitControls {
     this.autoRotate = false;
   }
 
+  /**
+   * A slow turn about the vertical while nothing is lit and no one is
+   * touching (the voice guide's floating). A grab stops it until it is set
+   * again; a programmatic move pauses it.
+   */
+  setIdleTurn(radiansPerSecond) {
+    this._idleTurnRate = Math.max(0, Number(radiansPerSecond) || 0);
+  }
+
   /** Stops a programmatic move where it is (a hidden tab, a tool timeout). */
   cancelMove(reason) {
     this._endMove({ completed: false, reason });
@@ -342,6 +354,11 @@ export class BrainOrbitControls {
         this._worldUp,
         this.autoRotateSpeed
       );
+      this.targetQuaternion.premultiply(this._autoRotation).normalize();
+    }
+
+    if (this._idleTurnRate > 0 && !this.isDragging) {
+      this._autoRotation.setFromAxisAngle(this._worldUp, this._idleTurnRate * deltaSeconds);
       this.targetQuaternion.premultiply(this._autoRotation).normalize();
     }
 
