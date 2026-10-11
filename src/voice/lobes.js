@@ -36,9 +36,15 @@ export function lobeRegionIds(lobe) {
   return brainRegions.divisions.find(({ name }) => name === lobe)?.regions ?? [];
 }
 
-export function tourStop(index) {
+/** "short" when the player asked for a quick, short or brief tour; otherwise "full". */
+export function normalizeTourLength(value) {
+  return typeof value === 'string' && /\b(short|quick|brief)\b/i.test(value) ? 'short' : 'full';
+}
+
+export function tourStop(index, { length = 'full' } = {}) {
   const lobe = TOUR_ORDER[index];
   const last = index === TOUR_ORDER.length - 1;
+  const ask = length === 'short' ? 'In one sentence' : 'In two or three sentences (about 30 seconds)';
   const stop = {
     stop: index + 1,
     of: TOUR_ORDER.length,
@@ -49,8 +55,8 @@ export function tourStop(index) {
     }),
     next: last ? null : TOUR_ORDER[index + 1],
     instruction: last
-      ? 'In two or three sentences (about 30 seconds), describe this part of me from these regions, then call next_tour_stop to finish the tour.'
-      : 'In two or three sentences (about 30 seconds), describe this part of me from these regions, then call next_tour_stop.',
+      ? `${ask}, describe this part of me from these regions, then call next_tour_stop to finish the tour.`
+      : `${ask}, describe this part of me from these regions, then call next_tour_stop.`,
   };
   if (lobe === 'Limbic Lobe') stop.note = LIMBIC_NOTE;
   return stop;

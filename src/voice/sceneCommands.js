@@ -30,7 +30,7 @@ import * as THREE from 'three';
 import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
-import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, tourStop } from './lobes.js';
+import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, normalizeTourLength, tourStop } from './lobes.js';
 
 // The whole-brain view a tour starts and ends on.
 const OVERVIEW_VIEW = 'left_lateral';
@@ -40,6 +40,18 @@ const OVERVIEW_VIEW = 'left_lateral';
 const SHOWCASE_STEP_MS = 1500;
 const SHOWCASE_TURN_DEGREES = 20;
 const SHOWCASE_TILT_DEGREES = 8;
+
+// Kyle: from below the brain stem is hard to see. It is shown from the front
+// right, tilted up so the viewer looks a little at its underside.
+export const BRAIN_STEM_VIEW_TILT_DEGREES = 15;
+const BRAIN_STEM_ID = 20;
+
+// Following the guide's words: a name already this squarely in view only
+// lights; turns to names out of view are at least this far apart.
+export const FOLLOW_TURN_MIN_INTERVAL_MS = 2500;
+const FOLLOW_VISIBLE_SCORE = 0.5;
+// Within this of a region's own pose, it counts as shown (about 20 degrees).
+const SHOWN_POSE_RADIANS = 0.35;
 
 const REGION_BY_ID = new Map(brainRegions.regions.map((region) => [region.id, region]));
 const MIN_REGION_ID = Math.min(...REGION_BY_ID.keys());
@@ -140,6 +152,7 @@ export function createSceneCommands(
     onControlChange,
     onTourEvent,
     showcase = false,
+    now = () => performance.now(),
     reducedMotion = () => false,
     setTimeoutImpl = setTimeout,
     clearTimeoutImpl = clearTimeout,
@@ -150,8 +163,18 @@ export function createSceneCommands(
   let interrupted = null;
   let currentMove = null;
   let showcaseToken = null;
-  // { index } of the last stop shown, -1 before the first; null outside a tour.
+  // { index, length } of the last stop shown, -1 before the first; null outside a tour.
   let tour = null;
+  // The region given full emphasis over a lit lobe, and the last automatic turn.
+  let litFocus = null;
+  let lastFollowTurnAt = -Infinity;
+
+  // Every light goes through here, so the focus is always known.
+  function light(ids, focus = null) {
+    litFocus = focus;
+    if (focus) adapter.setHighlight(ids, { focus });
+    else adapter.setHighlight(ids);
+  }
 
   // Shared control: the quiet period after player input, and the press that
   // has not been announced yet.
@@ -316,13 +339,15 @@ export function createSceneCommands(
     return facing(geometry.centroidLeft) >= facing(geometry.centroidRight) ? 'left' : 'right';
   }
 
-  async function faceRegion(regionId, { hemisphere } = {}) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
-    const id = parseRegionId(regionId);
-    if (id === null) return fail(REGION_RANGE_REASON);
-    if (moveRefusal()) return fail(moveRefusal());
-    if (!loaded()) return fail(NOT_LOADED_REASON);
+  function brainStemPose() {
+    const tilt = THREE.MathUtils.degToRad(BRAIN_STEM_VIEW_TILT_DEGREES);
+    // Toward the viewer: anterior and the specimen's right (-x), a little inferior.
+    const direction = convertAxis([-Math.SQRT1_2 * Math.cos(tilt), -Math.sin(tilt), Math.SQRT1_2 * Math.cos(tilt)]);
+    return orientationFacing(direction, frame(), convertAxis([0, 1, 0]), convertAxis([0, 0, 1]));
+  }
 
+  /** How to show a region: { quaternion, side, arrived }. */
+  function regionPose(id, { hemisphere } = {}) {
     const region = REGION_BY_ID.get(id);
     const geometry = regionGeometry.regions[String(id)];
     const requested = typeof hemisphere === 'string' ? hemisphere.trim().toLowerCase() : null;
@@ -331,7 +356,10 @@ export function createSceneCommands(
     let side = null;
     let arrived;
     const medialView = MEDIAL_REGION_VIEWS[id];
-    if (medialView) {
+    if (id === BRAIN_STEM_ID) {
+      quaternion = brainStemPose();
+      arrived = `Turned my ${region.name} toward you from the front right, tilted up so you can see it, and highlighted it.`;
+    } else if (medialView) {
       quaternion = orientationForView(medialView, frame(), convertAxis);
       arrived = `Turned to my ${viewLabel(medialView)} view and highlighted my ${region.name}. It lies on my medial surface, facing the midline, so the shading marks where it lies.`;
     } else if (region.hemisphere === 'left') {
@@ -347,9 +375,21 @@ export function createSceneCommands(
       quaternion = orientationFacingRegion(centroid);
       arrived = `Turned my ${side} ${region.name} toward you and highlighted it.`;
     }
+    return { quaternion, side, arrived };
+  }
+
+  async function faceRegion(regionId, { hemisphere } = {}) {
+    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    const id = parseRegionId(regionId);
+    if (id === null) return fail(REGION_RANGE_REASON);
+    if (moveRefusal()) return fail(moveRefusal());
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+
+    const region = REGION_BY_ID.get(id);
+    const { quaternion, side, arrived } = regionPose(id, { hemisphere });
 
     // The light goes on as the turn begins, so the player sees where we are going.
-    adapter.setHighlight(id);
+    light(id);
     const outcome = await move({ command: 'faceRegion', regionId: id, hemisphere: side }, quaternion);
     if (outcome.completed) {
       startShowcase(quaternion);
@@ -368,7 +408,7 @@ export function createSceneCommands(
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
     // A broad view never leaves a region lit.
-    adapter.setHighlight(null);
+    light(null);
     const outcome = await move({ command: 'rotateTo', view }, orientationForView(view, frame(), convertAxis));
     if (outcome.completed) return ok(`Turned to my ${viewLabel(view)} view.`);
     return fail(stoppedReason(outcome.reason), `Started turning to my ${viewLabel(view)} view but did not finish.`);
@@ -384,6 +424,36 @@ export function createSceneCommands(
       .divideScalar(points.length);
   }
 
+  /** Which side of a lobe faces the viewer more, and how squarely (1 is head-on). */
+  function lobeFacing(ids) {
+    const { toCamera } = frame();
+    const facing = (middle) =>
+      middle ? middle.clone().normalize().applyQuaternion(controls.orientGroup.quaternion).dot(toCamera) : -Infinity;
+    const left = lobeMiddle(ids, 'left');
+    const right = lobeMiddle(ids, 'right');
+    return facing(left) >= facing(right) ? { side: 'left', middle: left, score: facing(left) } : { side: 'right', middle: right, score: facing(right) };
+  }
+
+  /** How to show a lobe: { quaternion, arrived }. */
+  function lobePose(lobe) {
+    const ids = lobeRegionIds(lobe);
+    let quaternion;
+    let arrived;
+    if (lobe === 'Brain Stem') {
+      quaternion = brainStemPose();
+      arrived = 'Turned my brain stem toward you from the front right, tilted up so you can see it, and lit it.';
+    } else if (lobe === 'Limbic Lobe') {
+      const view = MEDIAL_REGION_VIEWS[16];
+      quaternion = orientationForView(view, frame(), convertAxis);
+      arrived = `Turned to my ${viewLabel(view)} view and lit my limbic lobe. ${LIMBIC_NOTE}`;
+    } else {
+      const { side, middle } = lobeFacing(ids);
+      quaternion = orientationFacing(middle.normalize(), frame(), convertAxis([0, 1, 0]), convertAxis([0, 0, 1]));
+      arrived = `Turned my ${side} ${lobe} toward you and lit all of it.`;
+    }
+    return { quaternion, arrived };
+  }
+
   async function faceLobe(lobeName, { bookmark } = {}) {
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
     const lobe = normalizeLobe(lobeName);
@@ -392,25 +462,9 @@ export function createSceneCommands(
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
     const ids = lobeRegionIds(lobe);
-    let quaternion;
-    let arrived;
-    if (lobe === 'Limbic Lobe') {
-      const view = MEDIAL_REGION_VIEWS[16];
-      quaternion = orientationForView(view, frame(), convertAxis);
-      arrived = `Turned to my ${viewLabel(view)} view and lit my limbic lobe. ${LIMBIC_NOTE}`;
-    } else {
-      const { toCamera } = frame();
-      const facing = (middle) =>
-        middle ? middle.clone().normalize().applyQuaternion(controls.orientGroup.quaternion).dot(toCamera) : -Infinity;
-      const left = lobeMiddle(ids, 'left');
-      const right = lobeMiddle(ids, 'right');
-      const side = facing(left) >= facing(right) ? 'left' : 'right';
-      const middle = side === 'left' ? left : right;
-      quaternion = orientationFacing(middle.normalize(), frame(), convertAxis([0, 1, 0]), convertAxis([0, 0, 1]));
-      arrived = `Turned my ${side} ${lobe} toward you and lit all of it.`;
-    }
+    const { quaternion, arrived } = lobePose(lobe);
 
-    adapter.setHighlight(ids);
+    light(ids);
     const outcome = await move(bookmark ?? { command: 'faceLobe', lobe }, quaternion);
     if (outcome.completed) {
       startShowcase(quaternion);
@@ -421,7 +475,7 @@ export function createSceneCommands(
 
   // Clear the lights, colours on, the whole brain in view: how a tour begins and ends.
   async function showWholeBrain(bookmark) {
-    adapter.setHighlight(null);
+    light(null);
     adapter.setColourRegions(true);
     return move(bookmark, orientationForView(OVERVIEW_VIEW, frame(), convertAxis));
   }
@@ -433,16 +487,17 @@ export function createSceneCommands(
     return { ...ok(did), done: true };
   }
 
-  async function startTour() {
+  async function startTour(length) {
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
-    tour = { index: -1 };
+    tour = { index: -1, length: normalizeTourLength(length) };
     onTourEvent?.({ type: 'start' });
     await showWholeBrain({ command: 'startTour' });
     return {
       ...ok('Started the tour: colours on and my whole left side toward you.'),
       stops: TOUR_ORDER,
+      length: tour.length,
       instruction: 'Give a one-sentence welcome, then call next_tour_stop.',
     };
   }
@@ -453,7 +508,7 @@ export function createSceneCommands(
     const index = tour.index + 1;
     if (index >= TOUR_ORDER.length) return finishTour('That was the whole tour; my colours are back on.');
     tour.index = index;
-    const stop = tourStop(index);
+    const stop = tourStop(index, { length: tour.length });
     const result = await faceLobe(stop.lobe, { bookmark: { command: 'tourStop', stop: stop.stop, lobe: stop.lobe } });
     onTourEvent?.({ type: 'stop', stop: stop.stop, of: stop.of });
     return { ...stop, ok: result.ok, did: result.did, reason: result.reason };
@@ -464,17 +519,85 @@ export function createSceneCommands(
     return finishTour('Ended the tour; my colours are back on.');
   }
 
+  /** How squarely a region faces the viewer: its nearer centroid against the camera (1 is head-on). */
+  function regionFacingScore(id) {
+    const geometry = regionGeometry.regions[String(id)];
+    const { toCamera } = frame();
+    return Math.max(
+      ...[geometry.centroidLeft, geometry.centroidRight]
+        .filter(Boolean)
+        .map((point) => facingDirection(point).applyQuaternion(controls.orientGroup.quaternion).dot(toCamera))
+    );
+  }
+
+  const nearPose = (quaternion) => controls.orientGroup.quaternion.angleTo(quaternion) < SHOWN_POSE_RADIANS;
+
+  // Medial regions face the midline and the brain stem hangs below, so a
+  // centroid says little about them: they count as shown in their own pose.
+  function inView(target) {
+    if (target.kind === 'region') {
+      const medialView = MEDIAL_REGION_VIEWS[target.id];
+      if (medialView) return currentView().view === medialView;
+      if (target.id === BRAIN_STEM_ID) return nearPose(brainStemPose());
+      return regionFacingScore(target.id) >= FOLLOW_VISIBLE_SCORE;
+    }
+    if (target.lobe === 'Limbic Lobe') return currentView().view === MEDIAL_REGION_VIEWS[16];
+    return lobeFacing(lobeRegionIds(target.lobe)).score >= FOLLOW_VISIBLE_SCORE;
+  }
+
+  const sameLight = (ids, focus) => {
+    const lit = adapter.getHighlight();
+    const key = (value) => JSON.stringify(value === null || value === undefined ? [] : [].concat(value));
+    return key(lit) === key(ids) && key(litFocus) === key(focus);
+  };
+
+  const mayTurnForWords = () =>
+    !moveRefusal() && !currentMove && !showcaseToken && loaded() && now() - lastFollowTurnAt >= FOLLOW_TURN_MIN_INTERVAL_MS;
+
+  /**
+   * Follow the words: the guide named a region or lobe, so light it, and turn
+   * to it if it is out of view and the brain is free. During a tour stop only
+   * the current lobe's regions count: the lobe stays lit and the named region
+   * stands out on top. Returns { did: 'lit' | 'turned' | 'skipped' }.
+   */
+  async function followName(target) {
+    const skipped = { did: 'skipped' };
+    if (!inStudy() || !target) return skipped;
+    let ids;
+    let focus = null;
+    if (tour && tour.index >= 0) {
+      const lobeIds = lobeRegionIds(TOUR_ORDER[tour.index]);
+      if (target.kind !== 'region' || !lobeIds.includes(target.id)) return skipped;
+      ids = lobeIds;
+      focus = [target.id];
+    } else if (target.kind === 'region' && REGION_BY_ID.has(target.id)) {
+      ids = target.id;
+    } else if (target.kind === 'lobe' && LOBE_NAMES.includes(target.lobe)) {
+      ids = lobeRegionIds(target.lobe);
+    } else {
+      return skipped;
+    }
+    if (sameLight(ids, focus)) return skipped;
+
+    light(ids, focus);
+    if (inView(target) || !mayTurnForWords()) return { did: 'lit' };
+    lastFollowTurnAt = now();
+    const { quaternion } = target.kind === 'region' ? regionPose(target.id) : lobePose(target.lobe);
+    const outcome = await move(null, quaternion);
+    return { did: outcome.completed ? 'turned' : 'lit' };
+  }
+
   function highlightRegion(regionId) {
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
-    adapter.setHighlight(id);
+    light(id);
     return ok(`Highlighted my ${REGION_BY_ID.get(id).name}.`);
   }
 
   function clearHighlight() {
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
-    adapter.setHighlight(null);
+    light(null);
     return ok('Cleared the highlight.');
   }
 
@@ -571,7 +694,8 @@ export function createSceneCommands(
     listRegions,
     getSceneState,
   };
-  // Kept off the enumerable keys: the agent contract is exactly nine commands.
+  // Kept off the enumerable keys: the agent contract is exactly thirteen commands.
+  Object.defineProperty(commands, 'followName', { value: followName, enumerable: false });
   Object.defineProperty(commands, 'dispose', {
     value: () => {
       unsubscribe();

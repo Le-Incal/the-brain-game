@@ -50,17 +50,26 @@ const TIMED_OUT = { ok: false, did: '', reason: 'The turn took too long, so I st
 
 /**
  * `tourPacer` (optional) holds next_tour_stop until the guide has spoken about
- * the current stop. `onToolCall(name, ok, detail)` hears every call, for the
+ * the current stop. `onToolStart(name)` hears each call before it runs, so
+ * following the guide's words can step aside. `onToolCall(name, ok, detail)` hears every call, for the
  * session summary; a gate refusal adds `{ refused: true, spokenMs }`.
  */
 export function createClientTools(
   commands,
-  { cancelMoves = () => {}, tourPacer = null, onToolCall = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}
+  {
+    cancelMoves = () => {},
+    tourPacer = null,
+    onToolStart = () => {},
+    onToolCall = () => {},
+    setTimeoutImpl = setTimeout,
+    clearTimeoutImpl = clearTimeout,
+  } = {}
 ) {
   const run = (name, call, { timed = false } = {}) => async (raw) => {
     const params = normalizeToolParams(raw);
     let timer = null;
     try {
+      onToolStart(name);
       const work = Promise.resolve().then(() => call(params));
       const result = timed
         ? await Promise.race([
@@ -85,9 +94,9 @@ export function createClientTools(
     }
   };
 
-  async function startTour() {
-    const result = await commands.startTour();
-    if (result?.ok) tourPacer?.tourStarted();
+  async function startTour(length) {
+    const result = await (length === undefined ? commands.startTour() : commands.startTour(length));
+    if (result?.ok) tourPacer?.tourStarted({ length: result.length });
     return result;
   }
 
@@ -119,7 +128,7 @@ export function createClientTools(
     list_regions: run('list_regions', () => commands.listRegions()),
     get_scene_state: run('get_scene_state', () => commands.getSceneState()),
     face_lobe: run('face_lobe', (p) => commands.faceLobe(p.lobe), { timed: true }),
-    start_tour: run('start_tour', startTour, { timed: true }),
+    start_tour: run('start_tour', (p) => startTour(p.length), { timed: true }),
     next_tour_stop: run('next_tour_stop', nextTourStop, { timed: true }),
     end_tour: run('end_tour', endTour, { timed: true }),
   };

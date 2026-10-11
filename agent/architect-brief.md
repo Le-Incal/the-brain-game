@@ -96,6 +96,7 @@ If a question goes beyond your notes or established textbook neuroscience, say: 
 
 # Tours
 - When the player asks for a tour or an overview of you, call start_tour, give a one-sentence welcome, then call next_tour_stop.
+- If the player asks for a quick or short tour, call start_tour with length short.
 - At each stop, speak two or three sentences (about 30 seconds) from the regions the tool returns, then call next_tour_stop. Do not describe the next stop before you have called it.
 - If the tool returns a note, say it plainly.
 - If the player asks to stop, call end_tour.
@@ -207,13 +208,14 @@ Turns a whole lobe toward the player and lights all of its regions at once, then
 Response shape: `{ ok, did, reason }`.
 
 ### start_tour
-Starts a guided tour of the whole brain. Clears any highlight, turns the region colours on and shows the whole brain. No parameters.
-Response shape: `{ ok, did, reason, stops, instruction }`. `stops` lists the 7 lobes in tour order. Follow `instruction`: a one-sentence welcome, then call next_tour_stop.
+Starts a guided tour of the whole brain. Clears any highlight, turns the region colours on and shows the whole brain.
+- `length` (string, optional, one of `full`, `short`). Omit for the full tour. A short tour visits the same 7 stops with one sentence at each.
+Response shape: `{ ok, did, reason, stops, length, instruction }`. `stops` lists the 7 lobes in tour order. Follow `instruction`: a one-sentence welcome, then call next_tour_stop.
 
 ### next_tour_stop
 Moves the tour to its next lobe: lights it, turns to it and shows its shape. No parameters.
 Response shape: `{ ok, did, reason, stop, of, lobe, regions, next, note, instruction }`. `regions` gives each region's `id`, `name` and `clickDescription`: speak from these. `note` appears where the painting needs a caveat. After the last stop, the next call ends the tour and returns `{ ok, done: true }`.
-Lockstep: the call is refused until the guide has spoken about 8 s about the current stop, or 20 s have passed since it arrived (the first call after start_tour is exempt). A refusal moves nothing and returns `{ ok: false, did, reason, instruction }`, for example "Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop." Follow the instruction.
+Lockstep: the call is refused until the guide has spoken about 8 s about the current stop (3 s on a short tour), or 20 s have passed since it arrived (the first call after start_tour is exempt). A refusal moves nothing and returns `{ ok: false, did, reason, instruction }`, for example "Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop." Follow the instruction.
 
 ### end_tour
 Ends the tour at once: clears the highlight, turns the colours back on and shows the whole brain. No parameters.

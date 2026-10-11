@@ -13,6 +13,8 @@
 import { TOUR_ORDER } from './lobes.js';
 
 export const TOUR_STOP_MIN_SPEECH_MS = 8000;
+// A short tour asks for one sentence a stop.
+export const TOUR_STOP_MIN_SPEECH_MS_SHORT = 3000;
 export const TOUR_STOP_PASS_AFTER_MS = 20000;
 
 // The speech measured when a call was refused, for the session summary. A
@@ -34,8 +36,8 @@ export function createTourPacer({ now = Date.now } = {}) {
 
   const spokenMs = () => tour.spokenMs + (speakingSince === null ? 0 : now() - Math.max(speakingSince, tour.arrivedAt));
 
-  function atStop(index) {
-    tour = { index, arrivedAt: now(), spokenMs: 0, inFlight: false };
+  function atStop(index, length = tour?.length ?? 'full') {
+    tour = { index, length, arrivedAt: now(), spokenMs: 0, inFlight: false };
   }
 
   return {
@@ -48,8 +50,8 @@ export function createTourPacer({ now = Date.now } = {}) {
       speakingSince = null;
     },
 
-    tourStarted() {
-      atStop(-1);
+    tourStarted({ length = 'full' } = {}) {
+      atStop(-1, length === 'short' ? 'short' : 'full');
     },
 
     tourEnded() {
@@ -70,11 +72,12 @@ export function createTourPacer({ now = Date.now } = {}) {
       const welcome = tour.index < 0;
       const waited = now() - tour.arrivedAt >= TOUR_STOP_PASS_AFTER_MS;
       const spoken = spokenMs();
-      if (!welcome && !waited && spoken < TOUR_STOP_MIN_SPEECH_MS) {
+      const short = tour.length === 'short';
+      if (!welcome && !waited && spoken < (short ? TOUR_STOP_MIN_SPEECH_MS_SHORT : TOUR_STOP_MIN_SPEECH_MS)) {
         const lobe = TOUR_ORDER[tour.index];
         return refusal(
           `The tour waits until I have spoken about my ${lobe}.`,
-          `Describe the ${lobe} first (two or three sentences), then call next_tour_stop.`,
+          `Describe the ${lobe} first (${short ? 'one sentence' : 'two or three sentences'}), then call next_tour_stop.`,
           spoken
         );
       }
