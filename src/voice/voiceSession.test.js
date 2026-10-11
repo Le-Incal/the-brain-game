@@ -344,7 +344,7 @@ describe('M4: during and after a conversation', () => {
     expect(conversation.calls.at(-1)).toEqual(['sendContextualUpdate', '[player] idle 25s']);
   });
 
-  it('ending clears the cutoff and returns to idle; a disconnect from the agent does too', async () => {
+  it('ending clears the cutoff and returns to idle; a disconnect from the agent rests quietly', async () => {
     const { session, conversation, timers } = setup();
     await session.start({ guide: 'rollo' });
     await session.handleConnect({ conversationId: 'c' });
@@ -356,7 +356,8 @@ describe('M4: during and after a conversation', () => {
     await session.start({ guide: 'rollo' });
     await session.handleConnect({ conversationId: 'd' });
     session.handleDisconnect({ reason: 'agent' });
-    expect(session.getState().phase).toBe('idle');
+    // Kyle, 2026-10-11: no visible end until the visitor leaves; the next word wakes it.
+    expect(session.getState().phase).toBe('resting');
   });
 
   it('a guide change while talking applies to the next conversation', async () => {
