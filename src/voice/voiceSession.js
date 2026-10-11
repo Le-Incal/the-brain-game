@@ -103,6 +103,8 @@ export function createVoiceSession({
   let sessionTag = null;
   let connectedAt = null;
   let toolCalls = [];
+  // What following the guide's words did: names lit, names turned to.
+  let follow = null;
 
   function conversationOver(reason) {
     lastConversationEndedAt = now();
@@ -117,15 +119,18 @@ export function createVoiceSession({
    */
   function sendSummary(reason, { beacon = false } = {}) {
     if (connectedAt === null) return;
-    const body = JSON.stringify({
+    const summary = {
       type: 'session_summary',
       session: sessionTag ?? 'none',
       reason,
       durationSecs: Math.round((now() - connectedAt) / 1000),
       tools: toolCalls,
-    });
+    };
+    if (follow && follow.lit + follow.turned > 0) summary.follow = follow;
+    const body = JSON.stringify(summary);
     connectedAt = null;
     toolCalls = [];
+    follow = null;
     let beaconSent = false;
     if (beacon) {
       try {
@@ -309,6 +314,7 @@ export function createVoiceSession({
       set({ phase: 'connected', conversationId });
       connectedAt = now();
       toolCalls = [];
+      follow = null;
       clearCutoff();
       // The server reserved this many seconds; end on time rather than overrun,
       // and tell the guide 30 s before so it can say goodbye.
@@ -341,6 +347,15 @@ export function createVoiceSession({
       if (detail?.refused) Object.assign(call, { ok: false, refused: true, spokenMs: detail.spokenMs });
       toolCalls.push(call);
       if (toolCalls.length > SUMMARY_TOOL_LIMIT) toolCalls.shift();
+    },
+
+    /** A spoken name the brain followed: `did` is 'lit', 'turned' or 'skipped'. */
+    recordFollow(did, timing) {
+      if (state.phase !== 'connected' || connectedAt === null) return;
+      follow ??= { lit: 0, turned: 0, timing: 'estimate' };
+      if (did === 'lit') follow.lit += 1;
+      if (did === 'turned') follow.turned += 1;
+      if (timing === 'alignment' || timing === 'estimate') follow.timing = timing;
     },
 
     /** The tab is closing: the most common real ending. */

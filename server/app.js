@@ -32,6 +32,22 @@ export const EVENT_RATE_LIMIT = { max: 30, windowMs: 60 * 60 * 1000 };
 export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown']);
 export const SESSION_SUMMARY_TOOL_LIMIT = 200;
 const SESSION_SUMMARY_KEYS = ['durationSecs', 'reason', 'session', 'tools', 'type'];
+// Optional: what following the guide's words did, and how it was timed.
+const FOLLOW_KEYS = ['lit', 'timing', 'turned'];
+const FOLLOW_TIMINGS = new Set(['alignment', 'estimate']);
+const isCount = (value) => Number.isInteger(value) && value >= 0 && value <= 100_000;
+
+function isFollow(follow) {
+  return (
+    follow !== null &&
+    typeof follow === 'object' &&
+    !Array.isArray(follow) &&
+    hasExactKeys(follow, FOLLOW_KEYS) &&
+    isCount(follow.lit) &&
+    isCount(follow.turned) &&
+    FOLLOW_TIMINGS.has(follow.timing)
+  );
+}
 const TOOL_CALL_KEYS = ['msSinceStart', 'name', 'ok'];
 // A tour gate refusal adds the speech the gate measured at the stop.
 const REFUSED_CALL_KEYS = [...TOOL_CALL_KEYS, 'refused', 'spokenMs'];
@@ -57,7 +73,8 @@ function isToolCall(call) {
 export function isSessionSummary(body) {
   return (
     body.type === 'session_summary' &&
-    hasExactKeys(body, SESSION_SUMMARY_KEYS) &&
+    (hasExactKeys(body, SESSION_SUMMARY_KEYS) ||
+      (hasExactKeys(body, [...SESSION_SUMMARY_KEYS, 'follow']) && isFollow(body.follow))) &&
     typeof body.session === 'string' &&
     /^[A-Za-z0-9_-]{1,8}$/.test(body.session) &&
     SESSION_END_REASONS.has(body.reason) &&
@@ -73,14 +90,17 @@ export function isSessionSummary(body) {
 
 const seconds = (ms) => `${(Math.round(ms / 100) / 10).toFixed(1)}s`;
 
-export function formatSessionSummary({ session, reason, durationSecs, tools }) {
+export function formatSessionSummary({ session, reason, durationSecs, tools, follow }) {
   const calls = tools.map(({ name, ok, msSinceStart, refused, spokenMs }) =>
     refused
       ? `${name} refused ${seconds(msSinceStart)} (spoke ${seconds(spokenMs)})`
       : `${name} ${ok ? 'ok' : 'failed'} ${seconds(msSinceStart)}`
   );
   const head = `[voice] session ${session} ended (${reason}) after ${Math.round(durationSecs)} s; ${tools.length} tool calls`;
-  return calls.length ? `${head}: ${calls.join(', ')}` : head;
+  const line = calls.length ? `${head}: ${calls.join(', ')}` : head;
+  if (!follow) return line;
+  const turns = `${follow.turned} turn${follow.turned === 1 ? '' : 's'}`;
+  return `${line}; followed ${follow.lit + follow.turned} names (${turns}, ${follow.timing} timing)`;
 }
 
 // A tab-close beacon arrives as text/plain; everything else as JSON.
