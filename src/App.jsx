@@ -15,6 +15,8 @@ import {
   getBarButtons,
   getStudyCaption,
   initialGuide,
+  initialMotion,
+  shouldMountGuide,
   leaveStudy,
   playAction,
   sceneModeForPhase,
@@ -61,6 +63,14 @@ export function getControlIndicator({ control, guide }) {
   if (control !== 'guide_moving' || !id) return null;
   const { name } = GUIDES.find((entry) => entry.id === id);
   return { text: `${name} is turning…`, cursor: 'grab' };
+}
+
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
 }
 
 function browserStorage() {
@@ -328,6 +338,8 @@ export default function App() {
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Kyle, 2026-10-11: a Motion switch stops the brain turning.
+  const [motionOn, setMotionOn] = useState(() => initialMotion(prefersReducedMotion()));
   // Sylvi greets every visitor, unless Rollo was chosen before.
   const [guide, setGuide] = useState(() => initialGuide(readSavedGuide(browserStorage())));
   const studyReturnToRef = useRef('ready');
@@ -338,7 +350,7 @@ export default function App() {
   const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
-  liveStateRef.current = { gamePhase, colorMode };
+  liveStateRef.current = { gamePhase, colorMode, motionOn };
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -465,13 +477,8 @@ export default function App() {
             onTourEvent: (event) => voiceEventsRef.current?.tourEvent?.(event),
             // Each arrival shows the shape of what was lit, once.
             showcase: true,
-            reducedMotion: () => {
-              try {
-                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              } catch {
-                return false;
-              }
-            },
+            motionAllowed: () => liveStateRef.current.motionOn,
+            reducedMotion: prefersReducedMotion,
           });
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
         }
@@ -531,6 +538,13 @@ export default function App() {
       sceneRef.current.setColorMode(colorMode);
     }
   }, [colorMode]);
+
+  // Motion off: the specimen's own slow turn stops too, and any move in flight.
+  useEffect(() => {
+    if (motionOn || !brainReady || !sceneRef.current) return;
+    sceneRef.current.controls.stopAutoRotate();
+    sceneRef.current.controls.cancelMove?.('stopped');
+  }, [motionOn, brainReady]);
 
 
   useEffect(() => {
@@ -824,15 +838,15 @@ export default function App() {
         </div>
       )}
 
-      {VOICE_ENABLED && brainReady && gamePhase === 'study' && sceneCommandsRef.current && (
+      {shouldMountGuide({ voiceEnabled: VOICE_ENABLED, brainReady, commandsReady: Boolean(sceneCommandsRef.current) }) && (
         <Suspense fallback={null}>
           <VoicePanel
             guide={guide}
-            onGuideChange={changeGuide}
             commands={sceneCommandsRef.current}
             scene={sceneRef.current}
             voiceEventsRef={voiceEventsRef}
             control={control}
+            motion={{ on: motionOn, onChange: setMotionOn }}
           />
         </Suspense>
       )}

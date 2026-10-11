@@ -67,6 +67,10 @@ export function createWordFollower({
   let silentSince = -Infinity;
   let lastOnsetAt = -Infinity;
   let lastTimelineEndedAt = -Infinity;
+  // Each reply (an aligned timeline, or a span of estimated speech) gets an id,
+  // so the transcript never times one line by another reply's clock.
+  let serial = 0;
+  let spanId = null;
 
   function cancelPending() {
     for (const timer of timers) clearTimeoutImpl(timer);
@@ -170,7 +174,8 @@ export function createWordFollower({
       const arrivedAt = now();
       if (timeline && timelineOver(arrivedAt)) endTimeline();
       if (!timeline) {
-        timeline = { anchor: null, fallback: null, endMs: 0, text: '', offsets: [], names: [], known: new Set() };
+        serial += 1;
+        timeline = { id: serial, anchor: null, fallback: null, endMs: 0, text: '', offsets: [], names: [], known: new Set() };
         // Audio already heard for this reply (its chunk came late): count from then.
         if (audible && lastOnsetAt > lastTimelineEndedAt) {
           anchorTimeline(lastOnsetAt);
@@ -215,6 +220,8 @@ export function createWordFollower({
       if (speaking) {
         if (speakingSince !== null) return;
         speakingSince = now();
+        serial += 1;
+        spanId = serial;
         // The reply's text came first: count from the start of speech.
         if (reply && !usingAlignment && speakingSince - reply.textAt <= SPEECH_START_WINDOW_MS) timeReply(speakingSince);
         return;
@@ -243,6 +250,33 @@ export function createWordFollower({
       cancelPending();
       reply = null;
       endTimeline();
+    },
+
+    /**
+     * How much of the current reply has been heard: `{ id, playedChars, done }`.
+     * `playedChars` is null until its audio is heard (or, without alignment,
+     * until the guide starts speaking).
+     */
+    playback() {
+      const at = now();
+      if (timeline) {
+        if (timeline.anchor === null) return { id: timeline.id, playedChars: null, done: false };
+        if (timelineOver(at)) return { id: timeline.id, playedChars: timeline.text.length, done: true };
+        const elapsed = at - timeline.anchor;
+        // Offsets ascend: count those at or before `elapsed`.
+        let lo = 0;
+        let hi = timeline.offsets.length;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (timeline.offsets[mid] <= elapsed) lo = mid + 1;
+          else hi = mid;
+        }
+        return { id: timeline.id, playedChars: lo, done: false };
+      }
+      if (!usingAlignment && speakingSince !== null) {
+        return { id: spanId, playedChars: Math.floor(((at - speakingSince) * charsPerSecond) / 1000), done: false };
+      }
+      return { id: null, playedChars: null, done: false };
     },
 
     timing: () => (usingAlignment ? 'alignment' : 'estimate'),

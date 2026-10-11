@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const columnModule = await import('./GuideColumn.jsx').catch(() => ({}));
-const { GuideColumnView, Switch, NOTICE_GAP_PX, SWITCH_SIZE } = columnModule;
+const { GuideColumnView, Switch, NOTICE_GAP_PX, SWITCH_SIZE, noticeFor } = columnModule;
 const layoutModule = await import('./voicePanelLayout.js').catch(() => ({}));
 const { GUIDE_COLUMN_STYLE } = layoutModule;
 
@@ -157,5 +157,26 @@ describe('The sound notice', () => {
     expect(consent).toBeGreaterThan(markup.indexOf('>Motion<'));
     expect(markup).toContain('>I agree<');
     expect(markup).toContain('>Not now<');
+  });
+});
+
+describe('What the notice says', () => {
+  it('invites the visitor to turn on sound while the voice is off', () => {
+    expect(noticeFor('idle', null, 'Sylvi')).toEqual({
+      text: 'Turn on sound and allow the microphone to speak with Sylvi.',
+      invite: true,
+    });
+  });
+
+  it('says the guide is waking while the conversation starts', () => {
+    expect(noticeFor('requesting', null, 'Rollo')).toEqual({ text: 'Waking Rollo…' });
+    expect(noticeFor('connecting', 'One moment, Rollo is getting ready…', 'Rollo')).toEqual({
+      text: 'One moment, Rollo is getting ready…',
+    });
+  });
+
+  it('explains plainly when the voice could not start, and says nothing once connected', () => {
+    expect(noticeFor('unavailable', 'Your microphone is blocked.', 'Sylvi')).toEqual({ text: 'Your microphone is blocked.' });
+    expect(noticeFor('connected', null, 'Sylvi')).toBeNull();
   });
 });

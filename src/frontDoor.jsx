@@ -86,6 +86,16 @@ export function arrivalOptions(guideName) {
   ];
 }
 
+/** The guide is there from arrival, in every phase, in the voice build. */
+export function shouldMountGuide({ voiceEnabled, brainReady, commandsReady }) {
+  return Boolean(voiceEnabled && brainReady && commandsReady);
+}
+
+/** Motion starts on, unless the visitor's system asks for reduced motion. */
+export function initialMotion(reducedMotion) {
+  return !reducedMotion;
+}
+
 export function shouldShowArrival({ gamePhase, brainReady, selectedRegion }) {
   return gamePhase === 'ready' && Boolean(brainReady) && !selectedRegion;
 }

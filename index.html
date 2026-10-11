@@ -85,6 +85,37 @@
         border-radius: 50%;
         background: #000;
       }
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .guide-quill svg {
+        display: block;
+        height: 100%;
+        width: auto;
+      }
+      .guide-quill { opacity: 0.82; transition: opacity 0.2s ease; }
+      .guide-write:focus-within { border-bottom-color: #1a1814 !important; }
+      .guide-write:focus-within .guide-quill { opacity: 1; }
+      .guide-write input::placeholder {
+        color: rgba(26, 24, 20, 0.62);
+        font-style: italic;
+      }
+      .guide-transcript::-webkit-scrollbar { width: 3px; }
+      .guide-transcript::-webkit-scrollbar-thumb { background: rgba(26, 24, 20, 0.35); border-radius: 2px; }
+      .guide-transcript::-webkit-scrollbar-track { background: transparent; }
+      .guide-transcript:focus-visible { outline: 1px dotted rgba(26, 24, 20, 0.5) !important; outline-offset: 4px; }
+      .guide-switch:focus-visible, .guide-notice:focus-visible, .guide-latest:focus-visible {
+        outline: 1px dotted #1a1814;
+        outline-offset: 3px;
+      }
       @media (max-width: 960px) {
         .description-panel {
           top: auto !important;
@@ -149,12 +180,17 @@
           padding: 3px 7px !important;
           letter-spacing: 0.06em !important;
         }
-        .voice-panel {
+        .guide-column {
           top: auto !important;
-          right: 50% !important;
           bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;
-          transform: translateX(50%) !important;
-          width: min(340px, calc(100vw - 32px)) !important;
+          left: 16px !important;
+          right: 16px !important;
+          width: auto !important;
+          max-height: 40vh;
+        }
+        .guide-line, .visitor-line {
+          font-size: 14px !important;
+          margin-bottom: 8px !important;
         }
         .speed-control { gap: 3px !important; }
         .speed-label {

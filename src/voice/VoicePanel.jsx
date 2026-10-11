@@ -1,54 +1,29 @@
 /**
- * The voice guide in Study mode: consent, talk and end, guide choice, and the
- * transcript. Loaded lazily, only when VITE_VOICE_ENABLED is on, so the
- * ElevenLabs SDK never reaches the production bundle until launch.
+ * The voice guide, present from arrival (Kyle, 2026-10-11): the conversation
+ * streams as text in the column on the right, the visitor can speak or write,
+ * and two small switches turn the voice and the brain's motion on or off.
+ * Loaded lazily, only when VITE_VOICE_ENABLED is on, so the ElevenLabs SDK
+ * never reaches the production bundle until launch.
  *
  * The logic lives in tested modules (voiceSession, clientTools,
- * contextUpdates, transcript, guideSettings); this file only wires them to
- * the SDK and to the scene.
+ * contextUpdates, transcriptStream, followWords, GuideColumn); this file only
+ * wires them to the SDK and to the scene.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { CONSENT_TEXT, createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter } from './contextUpdates.js';
-import { appendMessage, messageFromSdk } from './transcript.js';
-import { planGuideChange, SWITCH_NOW_WARNING } from './guideSettings.js';
-import { TRANSCRIPT_STYLE, VOICE_PANEL_STYLE, visibleTranscript } from './voicePanelLayout.js';
+import { stripExpressiveTags } from './spokenNames.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
 import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
+import { createTranscriptStream } from './transcriptStream.js';
+import { isAtBottom } from './transcriptScroll.js';
+import { GuideColumnView, noticeFor } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
-
-const INK = '#1a1814';
-const STYLES = {
-  panel: VOICE_PANEL_STYLE,
-  row: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  button: (active) => ({
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 10,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    padding: '4px 10px',
-    background: active ? INK : 'transparent',
-    color: active ? '#f5f0e8' : INK,
-    border: `1px solid ${INK}`,
-    cursor: 'pointer',
-  }),
-  note: { fontStyle: 'italic', fontSize: 13, lineHeight: 1.4, color: '#5a4030', margin: '6px 0' },
-  transcript: TRANSCRIPT_STYLE,
-  input: {
-    flex: 1,
-    minWidth: 0,
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 14,
-    padding: '3px 6px',
-    border: `1px solid rgba(26, 24, 20, 0.4)`,
-    background: 'transparent',
-  },
-};
 
 function browserStorage() {
   try {
@@ -66,19 +41,33 @@ function prefersReducedMotion() {
   }
 }
 
-function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef, control }) {
+const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
+
+function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion }) {
   const controlRef = useRef(control);
   controlRef.current = control;
+  const motionRef = useRef(motion.on);
+  motionRef.current = motion.on;
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
-  const [transcript, setTranscript] = useState([]);
-  const [typed, setTyped] = useState('');
-  const [guideNote, setGuideNote] = useState(null);
+  const [entries, setEntries] = useState([]);
+  const [draft, setDraft] = useState('');
+  const [following, setFollowing] = useState(true);
+  const transcriptRef = useRef(null);
   const sessionRef = useRef(null);
   const sdkRef = useRef(null);
   const stallGuardRef = useRef(null);
+  // Words written before the conversation connected, sent once it does.
+  const queuedRef = useRef([]);
+  const lineIdRef = useRef(0);
+  const nextLineId = (prefix) => {
+    lineIdRef.current += 1;
+    return `${prefix}-${lineIdRef.current}`;
+  };
   // The tour moves on only after the guide has spoken about the current stop.
   const tourPacer = useMemo(() => createTourPacer(), []);
   const guideSpeakingRef = useRef(false);
+  const stream = useMemo(() => createTranscriptStream(), []);
+  const refreshEntries = () => setEntries(stream.entries());
   // Follow the words: the brain lights what the guide names, as it names it.
   const follower = useMemo(() => {
     const instance = createWordFollower({
@@ -94,7 +83,13 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   useEffect(() => () => follower.dispose(), [follower]);
 
   const sdk = useConversation({
-    onConnect: ({ conversationId }) => sessionRef.current?.handleConnect({ conversationId }),
+    onConnect: ({ conversationId }) => {
+      sessionRef.current?.handleConnect({ conversationId });
+      // Words written while the guide was waking go now, in order.
+      const queued = queuedRef.current;
+      queuedRef.current = [];
+      for (const text of queued) sdkRef.current?.sendUserMessage(text);
+    },
     onDisconnect: (details) => sessionRef.current?.handleDisconnect(details),
     // The stall guard listens for the guide falling quiet at a stop; the
     // pacer counts how long it has spoken there.
@@ -104,18 +99,29 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       stallGuardRef.current?.guideSpeaking(speaking);
       tourPacer.guideSpeaking(speaking);
       follower.guideSpeaking(speaking);
+      if (!speaking) {
+        stream.guideStopped();
+        refreshEntries();
+      }
     },
     // Exact timing for following the words, when ElevenLabs sends it.
     onAudioAlignment: (alignment) => follower.alignment(alignment),
-    onInterruption: () => follower.interrupted(),
+    onInterruption: () => {
+      follower.interrupted();
+      stream.interrupted();
+      refreshEntries();
+    },
     onMessage: (payload) => {
+      const raw = typeof payload?.message === 'string' ? payload.message : '';
       if (payload?.role === 'user') {
         stallGuardRef.current?.playerActivity();
         follower.interrupted();
+        stream.addVisitor({ id: payload.event_id ? `u-${payload.event_id}` : nextLineId('u'), text: raw });
+      } else if (payload?.role === 'agent') {
+        follower.guideText(raw);
+        stream.addGuide({ id: payload.event_id ? `g-${payload.event_id}` : nextLineId('g'), text: stripExpressiveTags(raw) });
       }
-      if (payload?.role === 'agent' && typeof payload.message === 'string') follower.guideText(payload.message);
-      const line = messageFromSdk(payload, GUIDES.find((g) => g.id === sessionRef.current?.getState().guide)?.name ?? 'Guide');
-      if (line) setTranscript((list) => appendMessage(list, line));
+      refreshEntries();
     },
     onError: (message) => console.warn('[voice]', message),
   });
@@ -142,12 +148,15 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       // The guide lets go of the brain when the conversation is over.
       onConversationEnd: () => {
         follower.interrupted();
+        stream.guideStopped();
+        refreshEntries();
         commands.clearHighlight();
       },
       // A new conversation never inherits a region lit by the last one.
       onConversationStart: () => commands.clearHighlight(),
     });
-  }, [commands, scene, tourPacer, follower]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands, scene, tourPacer, follower, stream]);
   sessionRef.current = session;
 
   // Scene events reach the guide only while a conversation is connected.
@@ -187,7 +196,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   // The hatching answers the guide's voice, and the brain gestures gently
   // while it speaks, unless anything else is directing attention. Once its
   // moves settle it floats: a drift while something is lit, a slow turn when
-  // nothing is and the guide is quiet.
+  // nothing is and the guide is quiet. Motion off stills all of it. Each
+  // frame also streams the transcript to what has been heard.
   useEffect(() => {
     let frame;
     let last = performance.now();
@@ -201,14 +211,16 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       scene.setVoiceLevel(level);
       // The level rising is the guide's audio being heard: the playback clock's start.
       follower.outputLevel(level);
+      if (stream.tick(follower.playback())) setEntries(stream.entries());
+      const still = reducedMotion || !motionRef.current;
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
-      const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion });
+      const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion: still });
       const mode = floatMode({
         connected: session.getState().phase === 'connected',
         control: controlRef.current,
         lit,
         guideSpeaking: guideSpeakingRef.current,
-        reducedMotion,
+        reducedMotion: still,
       });
       const sway = stepGesture(gesture, { dtSeconds, level, strength });
       const float = stepDrift(drift, { dtSeconds, active: mode === 'drift' });
@@ -224,119 +236,92 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       scene.setGesture({ yaw: 0, pitch: 0 });
       scene.controls.setIdleTurn(0);
     };
-  }, [session, scene, follower]);
-
-  // Leaving Study mode ends the conversation.
-  useEffect(() => () => session.end(), [session]);
+  }, [session, scene, follower, stream]);
 
   // Closing the tab is how most conversations really end; it still gets its summary.
   useEffect(() => {
     const onPageHide = () => session.pageClosing();
     window.addEventListener('pagehide', onPageHide);
-    return () => window.removeEventListener('pagehide', onPageHide);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      session.end();
+    };
   }, [session]);
 
+  // The guide is chosen in Settings: a change takes effect at once, in a new conversation.
+  const guideRef = useRef(guide);
+  useEffect(() => {
+    if (guideRef.current === guide) return;
+    guideRef.current = guide;
+    if (ACTIVE_PHASES.has(session.getState().phase)) session.switchGuideNow(guide);
+    else session.changeGuide(guide);
+  }, [guide, session]);
+
+  // New lines keep the column at the bottom only while the reader is there.
+  useLayoutEffect(() => {
+    const element = transcriptRef.current;
+    if (element && following) element.scrollTop = element.scrollHeight;
+  }, [entries, following]);
+
   const name = GUIDES.find((g) => g.id === guide)?.name ?? 'your guide';
-  const active = state.phase === 'connected' || state.phase === 'connecting' || state.phase === 'requesting';
+  const active = ACTIVE_PHASES.has(state.phase);
 
-  const chooseGuide = (next) => {
-    const plan = planGuideChange({ current: guide, next, connected: active });
-    if (plan.kind === 'none') return;
-    session.changeGuide(next);
-    onGuideChange(next);
-    setGuideNote(plan.kind === 'next-conversation' ? { note: plan.note, next } : null);
+  const turnVoice = (on) => {
+    if (on) {
+      if (!active) session.start({ guide });
+    } else {
+      stream.setVoice(false);
+      session.end();
+    }
+    if (on) stream.setVoice(true);
   };
 
-  const sendTyped = (event) => {
-    event.preventDefault();
-    const text = typed.trim();
-    if (!text || state.phase !== 'connected') return;
-    sdkRef.current.sendUserMessage(text);
-    setTranscript((list) => appendMessage(list, { id: `typed-${Date.now()}`, speaker: 'You', fromGuide: false, text }));
-    setTyped('');
+  const send = () => {
+    const text = draft.trim();
+    if (!text) return;
+    setDraft('');
+    stream.addVisitor({ id: nextLineId('typed'), text });
+    refreshEntries();
+    if (state.phase === 'connected') {
+      sdkRef.current.sendUserMessage(text);
+      return;
+    }
+    queuedRef.current.push(text);
+    if (!active) session.start({ guide });
   };
 
+  const notice = noticeFor(state.phase, state.message, name);
   return (
-    <div className="voice-panel" style={STYLES.panel} aria-label="Voice guide">
-      {state.phase === 'needs-consent' ? (
-        <div role="dialog" aria-label="Before you talk">
-          <div style={STYLES.note}>{CONSENT_TEXT}</div>
-          <div style={STYLES.row}>
-            <button type="button" style={STYLES.button(true)} onClick={() => session.acceptConsent()}>
-              I agree
-            </button>
-            <button type="button" style={STYLES.button(false)} onClick={() => session.declineConsent()}>
-              Not now
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div style={STYLES.row}>
-            {active ? (
-              <button type="button" style={STYLES.button(true)} onClick={() => session.end()}>
-                End conversation
-              </button>
-            ) : (
-              <button type="button" style={STYLES.button(true)} onClick={() => session.start({ guide })}>
-                Talk with {name}
-              </button>
-            )}
-            <span style={{ fontSize: 12, fontStyle: 'italic' }}>Guide:</span>
-            {GUIDES.map((g) => (
-              <button key={g.id} type="button" style={STYLES.button(g.id === guide)} onClick={() => chooseGuide(g.id)}>
-                {g.name}
-              </button>
-            ))}
-          </div>
-          {(state.phase === 'requesting' || state.phase === 'connecting') && !state.message ? (
-            <div style={STYLES.note}>Waking {name}…</div>
-          ) : null}
-          {state.message ? <div style={STYLES.note}>{state.message}</div> : null}
-          {guideNote ? (
-            <div style={STYLES.note}>
-              {guideNote.note}{' '}
-              <button
-                type="button"
-                style={STYLES.button(false)}
-                title={SWITCH_NOW_WARNING}
-                onClick={() => {
-                  if (window.confirm(SWITCH_NOW_WARNING)) {
-                    setGuideNote(null);
-                    session.switchGuideNow(guideNote.next);
-                  }
-                }}
-              >
-                Switch now
-              </button>
-            </div>
-          ) : null}
-          {transcript.length > 0 && (
-            <div style={STYLES.transcript} aria-live="polite">
-              {visibleTranscript(transcript).map((line) => (
-                <div key={line.id}>
-                  <strong style={{ fontWeight: line.fromGuide ? 600 : 400 }}>{line.speaker}:</strong> {line.text}
-                </div>
-              ))}
-            </div>
-          )}
-          {state.phase === 'connected' && (
-            <form onSubmit={sendTyped} style={{ ...STYLES.row, marginTop: 6 }}>
-              <input
-                style={STYLES.input}
-                value={typed}
-                onChange={(event) => setTyped(event.target.value)}
-                placeholder={`Type to ${name}`}
-                aria-label={`Type a message to ${name}`}
-              />
-              <button type="submit" style={STYLES.button(false)}>
-                Send
-              </button>
-            </form>
-          )}
-        </>
-      )}
-    </div>
+    <GuideColumnView
+      guideName={name}
+      entries={entries}
+      following={following}
+      onLatest={() => {
+        setFollowing(true);
+        const element = transcriptRef.current;
+        if (element) element.scrollTop = element.scrollHeight;
+      }}
+      transcriptRef={transcriptRef}
+      onTranscriptScroll={(event) => setFollowing(isAtBottom(event.currentTarget))}
+      draft={draft}
+      onDraft={setDraft}
+      onSend={send}
+      voice={{ on: active, onChange: turnVoice }}
+      motion={motion}
+      notice={notice ? { text: notice.text, onActivate: notice.invite ? () => turnVoice(true) : undefined } : null}
+      consent={
+        state.phase === 'needs-consent'
+          ? {
+              text: CONSENT_TEXT,
+              onAgree: () => session.acceptConsent(),
+              onDecline: () => {
+                queuedRef.current = [];
+                session.declineConsent();
+              },
+            }
+          : null
+      }
+    />
   );
 }
 

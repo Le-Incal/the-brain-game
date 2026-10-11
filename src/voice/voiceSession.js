@@ -21,7 +21,7 @@ const SUMMARY_TOOL_LIMIT = 200;
 const DISCONNECT_REASONS = new Set(['agent', 'error', 'user']);
 
 export const CONSENT_TEXT =
-  "Talking with your guide sends your voice to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
+  "Talking or writing to your guide sends your voice or words to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
 
 export const CONSENT_STORAGE_KEY = 'brain-game.voice-consent';
 

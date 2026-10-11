@@ -76,6 +76,9 @@ function stoppedReason(reason) {
   return STOPPED_REASON;
 }
 const NOT_LOADED_REASON = 'I have not loaded yet, so I cannot turn.';
+// Kyle, 2026-10-11: a Motion switch stops the brain turning; light still works.
+export const MOTION_OFF_REASON =
+  'The player has switched motion off, so I light regions without turning. Point them out in words instead.';
 
 // Medial regions face the midline, so no exterior view shows them squarely.
 // Each turns to the standard view whose generated labels include it.
@@ -153,6 +156,7 @@ export function createSceneCommands(
     showcase = false,
     now = () => performance.now(),
     reducedMotion = () => false,
+    motionAllowed = () => true,
     setTimeoutImpl = setTimeout,
     clearTimeoutImpl = clearTimeout,
   } = {}
@@ -288,7 +292,7 @@ export function createSceneCommands(
    * cancels it, the next move replaces it, and reduced motion skips it.
    */
   function startShowcase(best) {
-    if (!showcase || reducedMotion()) return;
+    if (!showcase || reducedMotion() || !motionAllowed()) return;
     const token = {};
     showcaseToken = token;
     const { toCamera, screenUp } = frame();
@@ -316,6 +320,7 @@ export function createSceneCommands(
 
   /** Why the guide may not move the brain right now, or null if it may. */
   function moveRefusal() {
+    if (!motionAllowed()) return MOTION_OFF_REASON;
     if (userHolding) return HOLDING_REASON;
     if (quietTimer !== null) return EXPLORING_REASON;
     return null;
@@ -384,6 +389,10 @@ export function createSceneCommands(
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
+    if (!motionAllowed()) {
+      light(id);
+      return fail(MOTION_OFF_REASON, `Highlighted my ${REGION_BY_ID.get(id).name} without turning it toward you.`);
+    }
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
@@ -461,6 +470,10 @@ export function createSceneCommands(
     if (!inStudy()) return fail(STUDY_ONLY_REASON);
     const lobe = normalizeLobe(lobeName);
     if (!lobe) return fail(`Unknown lobe "${lobeName}". Valid lobes: ${LOBE_NAMES.join(', ')}.`);
+    if (!motionAllowed()) {
+      light(lobeRegionIds(lobe));
+      return fail(MOTION_OFF_REASON, `Lit my ${lobe} without turning it toward you.`);
+    }
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
 
@@ -514,7 +527,9 @@ export function createSceneCommands(
     const stop = tourStop(index, { length: tour.length });
     const result = await faceLobe(stop.lobe, { bookmark: { command: 'tourStop', stop: stop.stop, lobe: stop.lobe } });
     onTourEvent?.({ type: 'stop', stop: stop.stop, of: stop.of });
-    return { ...stop, ok: result.ok, did: result.did, reason: result.reason };
+    // With motion off the stop is still shown, lit in place.
+    const shown = result.ok || result.reason === MOTION_OFF_REASON;
+    return { ...stop, ok: shown, did: result.did, reason: result.reason };
   }
 
   async function endTour() {
