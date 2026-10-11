@@ -19,6 +19,8 @@ import { TRANSCRIPT_STYLE, VOICE_PANEL_STYLE, visibleTranscript } from './voiceP
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
 import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
+import { createWordFollower } from './followWords.js';
+import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
 
 const INK = '#1a1814';
 const STYLES = {
@@ -76,6 +78,20 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   const stallGuardRef = useRef(null);
   // The tour moves on only after the guide has spoken about the current stop.
   const tourPacer = useMemo(() => createTourPacer(), []);
+  const guideSpeakingRef = useRef(false);
+  // Follow the words: the brain lights what the guide names, as it names it.
+  const follower = useMemo(() => {
+    const instance = createWordFollower({
+      act: (target) => {
+        if (sessionRef.current?.getState().phase !== 'connected') return;
+        Promise.resolve(commands.followName(target))
+          .then((result) => sessionRef.current?.recordFollow(result?.did, instance.timing()))
+          .catch((error) => console.warn('[voice] follow', error));
+      },
+    });
+    return instance;
+  }, [commands]);
+  useEffect(() => () => follower.dispose(), [follower]);
 
   const sdk = useConversation({
     onConnect: ({ conversationId }) => sessionRef.current?.handleConnect({ conversationId }),
@@ -83,11 +99,21 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     // The stall guard listens for the guide falling quiet at a stop; the
     // pacer counts how long it has spoken there.
     onModeChange: ({ mode }) => {
-      stallGuardRef.current?.guideSpeaking(mode === 'speaking');
-      tourPacer.guideSpeaking(mode === 'speaking');
+      const speaking = mode === 'speaking';
+      guideSpeakingRef.current = speaking;
+      stallGuardRef.current?.guideSpeaking(speaking);
+      tourPacer.guideSpeaking(speaking);
+      follower.guideSpeaking(speaking);
     },
+    // Exact timing for following the words, when ElevenLabs sends it.
+    onAudioAlignment: (alignment) => follower.alignment(alignment),
+    onInterruption: () => follower.interrupted(),
     onMessage: (payload) => {
-      if (payload?.role === 'user') stallGuardRef.current?.playerActivity();
+      if (payload?.role === 'user') {
+        stallGuardRef.current?.playerActivity();
+        follower.interrupted();
+      }
+      if (payload?.role === 'agent' && typeof payload.message === 'string') follower.guideText(payload.message);
       const line = messageFromSdk(payload, GUIDES.find((g) => g.id === sessionRef.current?.getState().guide)?.name ?? 'Guide');
       if (line) setTranscript((list) => appendMessage(list, line));
     },
@@ -99,6 +125,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
     const clientTools = createClientTools(commands, {
       cancelMoves: (reason) => scene.controls.cancelMove(reason),
       tourPacer,
+      // An explicit scene tool wins over following the words.
+      onToolStart: (name) => follower.toolCalled(name),
       onToolCall: (name, ok, detail) => sessionRef.current?.recordToolCall(name, ok, detail),
     });
     return createVoiceSession({
@@ -112,11 +140,14 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       clientTools,
       onChange: setState,
       // The guide lets go of the brain when the conversation is over.
-      onConversationEnd: () => commands.clearHighlight(),
+      onConversationEnd: () => {
+        follower.interrupted();
+        commands.clearHighlight();
+      },
       // A new conversation never inherits a region lit by the last one.
       onConversationStart: () => commands.clearHighlight(),
     });
-  }, [commands, scene, tourPacer]);
+  }, [commands, scene, tourPacer, follower]);
   sessionRef.current = session;
 
   // Scene events reach the guide only while a conversation is connected.
@@ -154,21 +185,33 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
   }, [state.phase, voiceEventsRef]);
 
   // The hatching answers the guide's voice, and the brain gestures gently
-  // while it speaks, unless anything else is directing attention.
+  // while it speaks, unless anything else is directing attention. Once its
+  // moves settle it floats: a drift while something is lit, a slow turn when
+  // nothing is and the guide is quiet.
   useEffect(() => {
     let frame;
     let last = performance.now();
     const gesture = createGesture();
+    const drift = createDrift();
     const reducedMotion = prefersReducedMotion();
+    const idleTurnRate = (IDLE_TURN_DEGREES_PER_SECOND * Math.PI) / 180;
     const tick = (now) => {
+      const dtSeconds = (now - last) / 1000;
       const level = session.outputLevel();
       scene.setVoiceLevel(level);
-      const strength = gestureStrength({
+      const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
+      const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion });
+      const mode = floatMode({
+        connected: session.getState().phase === 'connected',
         control: controlRef.current,
-        highlighted: scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0,
+        lit,
+        guideSpeaking: guideSpeakingRef.current,
         reducedMotion,
       });
-      scene.setGesture(stepGesture(gesture, { dtSeconds: (now - last) / 1000, level, strength }));
+      const sway = stepGesture(gesture, { dtSeconds, level, strength });
+      const float = stepDrift(drift, { dtSeconds, active: mode === 'drift' });
+      scene.setGesture({ yaw: sway.yaw + float.yaw, pitch: sway.pitch + float.pitch });
+      scene.controls.setIdleTurn(mode === 'turn' ? idleTurnRate : 0);
       last = now;
       frame = requestAnimationFrame(tick);
     };
@@ -177,6 +220,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       cancelAnimationFrame(frame);
       scene.setVoiceLevel(0);
       scene.setGesture({ yaw: 0, pitch: 0 });
+      scene.controls.setIdleTurn(0);
     };
   }, [session, scene]);
 
