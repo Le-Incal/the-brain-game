@@ -3,9 +3,12 @@
  * light, so the brain shows what is said as it is said, whether or not the
  * model remembered to call a tool.
  *
- * Timing comes from the audio's character alignment when ElevenLabs sends it
- * (exact), otherwise from the reply text and the guide's speaking pace,
- * learned reply by reply (within about a second). Each highlight holds at
+ * Timing comes from the audio's character alignment when ElevenLabs sends it,
+ * otherwise from the reply text and the guide's speaking pace, learned reply
+ * by reply (within about a second). Alignment chunks arrive in bursts ahead
+ * of playback, so each reply keeps a playback clock: its first chunk starts
+ * when the audio is heard (the output level rising), each later chunk where
+ * the one before it ends. Each highlight holds at
  * least 1.2 s; when names come faster, only the latest waiting one goes
  * through. A scene tool call in the same reply wins, and the player speaking
  * cancels whatever is waiting. `act(target)` does the lighting.
@@ -20,16 +23,22 @@ const SPEECH_START_WINDOW_MS = 2000;
 const MIN_CHARS_PER_SECOND = 10;
 const MAX_CHARS_PER_SECOND = 22;
 const MIN_CALIBRATION_SPAN_MS = 1500;
-// Alignment text kept for matching names split across chunks.
-const STREAM_KEEP_CHARS = 1000;
+// The guide's output level above which the audio counts as heard, and the
+// silence before a rise counts as the start of a reply's audio.
+export const AUDIBLE_LEVEL = 0.02;
+const ONSET_AFTER_SILENCE_MS = 250;
+// A reply whose audio is never heard is timed from its first chunk.
+const HEARD_FALLBACK_MS = 2000;
+// A chunk this long after the reply's audio should have ended starts a new reply.
+const REPLY_END_GRACE_MS = 300;
 
-// Calls that move or light the brain themselves; following steps aside.
+// Calls that light the brain themselves; following steps aside for the rest
+// of the reply. rotate_to_view only turns, so the words are still followed.
 const SCENE_TOOLS = new Set([
   'face_region',
   'face_lobe',
   'highlight_region',
   'clear_highlight',
-  'rotate_to_view',
   'start_tour',
   'next_tour_stop',
   'end_tour',
@@ -52,8 +61,12 @@ export function createWordFollower({
   const timers = new Set();
   // Estimate path: the latest reply's names, re-timed if speech starts late.
   let reply = null;
-  // Alignment path: the spoken characters with their play times.
-  const stream = { text: '', times: [], base: 0, scheduled: new Set() };
+  // Alignment path: the reply being spoken, on its own playback clock.
+  let timeline = null;
+  let audible = false;
+  let silentSince = -Infinity;
+  let lastOnsetAt = -Infinity;
+  let lastTimelineEndedAt = -Infinity;
 
   function cancelPending() {
     for (const timer of timers) clearTimeoutImpl(timer);
@@ -100,14 +113,36 @@ export function createWordFollower({
     }
   }
 
-  function followStream() {
-    const names = findSpokenNames(stream.text);
-    for (const name of names) {
-      const absolute = stream.base + name.start;
+  function endTimeline() {
+    if (!timeline) return;
+    if (timeline.fallback !== null) clearTimeoutImpl(timeline.fallback);
+    timeline = null;
+    lastTimelineEndedAt = now();
+  }
+
+  function timelineOver(at) {
+    return timeline.anchor !== null && at > timeline.anchor + timeline.endMs + REPLY_END_GRACE_MS;
+  }
+
+  function scheduleTimelineName(name) {
+    if (suppressed || timeline.anchor === null) return;
+    schedule(name.target, timeline.anchor + timeline.offsets[name.start]);
+  }
+
+  function anchorTimeline(at) {
+    if (timeline.fallback !== null) clearTimeoutImpl(timeline.fallback);
+    timeline.fallback = null;
+    timeline.anchor = at;
+    timeline.names.forEach(scheduleTimelineName);
+  }
+
+  function followTimeline() {
+    for (const name of findSpokenNames(timeline.text)) {
       // A name at the very end may still be growing ("my cerebel|lum").
-      if (name.end >= stream.text.length || stream.scheduled.has(absolute)) continue;
-      stream.scheduled.add(absolute);
-      if (!suppressed) schedule(name.target, stream.times[name.start]);
+      if (name.end >= timeline.text.length || timeline.known.has(name.start)) continue;
+      timeline.known.add(name.start);
+      timeline.names.push(name);
+      scheduleTimelineName(name);
     }
   }
 
@@ -126,24 +161,54 @@ export function createWordFollower({
       timeReply(speechIsThisReply ? speakingSince : textAt);
     },
 
-    alignment({ chars = [], char_start_times_ms: starts = [] } = {}) {
+    alignment({ chars = [], char_start_times_ms: starts = [], char_durations_ms: durations = [] } = {}) {
       if (!usingAlignment) {
         usingAlignment = true;
         cancelPending();
         reply = null;
       }
       const arrivedAt = now();
-      chars.forEach((char, i) => {
-        stream.text += char;
-        stream.times.push(arrivedAt + (starts[i] ?? 0));
-      });
-      if (stream.text.length > STREAM_KEEP_CHARS * 2) {
-        const drop = stream.text.length - STREAM_KEEP_CHARS;
-        stream.text = stream.text.slice(drop);
-        stream.times = stream.times.slice(drop);
-        stream.base += drop;
+      if (timeline && timelineOver(arrivedAt)) endTimeline();
+      if (!timeline) {
+        timeline = { anchor: null, fallback: null, endMs: 0, text: '', offsets: [], names: [], known: new Set() };
+        // Audio already heard for this reply (its chunk came late): count from then.
+        if (audible && lastOnsetAt > lastTimelineEndedAt) {
+          anchorTimeline(lastOnsetAt);
+        } else {
+          const startedAt = arrivedAt;
+          timeline.fallback = setTimeoutImpl(() => {
+            timeline.fallback = null;
+            anchorTimeline(startedAt);
+          }, HEARD_FALLBACK_MS);
+        }
       }
-      followStream();
+      // Chunks play back to back: this one starts where the last one ended.
+      const chunkStart = timeline.endMs;
+      chars.forEach((char, i) => {
+        timeline.text += char;
+        timeline.offsets.push(chunkStart + (starts[i] ?? 0));
+      });
+      if (chars.length > 0) {
+        const last = chars.length - 1;
+        timeline.endMs = chunkStart + (starts[last] ?? 0) + (durations[last] ?? 0);
+      }
+      followTimeline();
+    },
+
+    /** The guide's output level each frame: a rise after silence is its audio being heard. */
+    outputLevel(level) {
+      const at = now();
+      const loud = Number(level) >= AUDIBLE_LEVEL;
+      if (loud && !audible) {
+        audible = true;
+        if (at - silentSince >= ONSET_AFTER_SILENCE_MS) {
+          lastOnsetAt = at;
+          if (timeline && timeline.anchor === null) anchorTimeline(at);
+        }
+      } else if (!loud && audible) {
+        audible = false;
+        silentSince = at;
+      }
     },
 
     guideSpeaking(speaking) {
@@ -177,10 +242,14 @@ export function createWordFollower({
     interrupted() {
       cancelPending();
       reply = null;
+      endTimeline();
     },
 
     timing: () => (usingAlignment ? 'alignment' : 'estimate'),
     charsPerSecond: () => charsPerSecond,
-    dispose: cancelPending,
+    dispose() {
+      cancelPending();
+      endTimeline();
+    },
   };
 }

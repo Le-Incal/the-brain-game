@@ -199,6 +199,8 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       const dtSeconds = (now - last) / 1000;
       const level = session.outputLevel();
       scene.setVoiceLevel(level);
+      // The level rising is the guide's audio being heard: the playback clock's start.
+      follower.outputLevel(level);
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
       const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion });
       const mode = floatMode({
@@ -222,7 +224,7 @@ function VoicePanelInner({ guide, onGuideChange, commands, scene, voiceEventsRef
       scene.setGesture({ yaw: 0, pitch: 0 });
       scene.controls.setIdleTurn(0);
     };
-  }, [session, scene]);
+  }, [session, scene, follower]);
 
   // Leaving Study mode ends the conversation.
   useEffect(() => () => session.end(), [session]);
