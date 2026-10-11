@@ -4,16 +4,14 @@ import { guideFocusEntry } from './guideFocus.js';
  * Connects the M1 scene commands to the real BrainScene and App.
  *
  * The scene supplies motion, the guide's highlight and the frame conversion.
- * Colour and labels go through App state, never straight to the scene, so the
- * on-screen toggles always show what the guide changed.
+ * Colour goes through App state, never straight to the scene, so the
+ * on-screen toggle always shows what the guide changed.
  */
 export function createBrainSceneAdapter({
   scene,
   getMode,
   getColourRegions,
   setColourRegions,
-  getAnnotations,
-  setAnnotations,
   // The left panel's entry for what the guide is showing, or null.
   onGuideFocus = () => {},
 }) {
@@ -40,8 +38,6 @@ export function createBrainSceneAdapter({
     getHighlight: () => scene.getVoiceHighlight(),
     setColourRegions,
     getColourRegions,
-    setAnnotations,
-    getAnnotations,
     getMode,
     /** Leaving Study mode: the game never inherits the guide's highlight. */
     resetForGame: () => {

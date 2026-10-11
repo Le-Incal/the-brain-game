@@ -3,24 +3,20 @@
  *
  * Sets up the Three.js scene, camera, renderer, and manages the
  * render loop. Handles shader material creation, region highlighting,
- * raycasting for hover detection, colour mode, and CSS2D annotations.
+ * raycasting for hover detection and colour mode.
  */
 
 import * as THREE from 'three';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { vertexShader, fragmentShader } from '../shaders';
 import {
   REGIONS,
   REGION_IDS,
-  VIEW_LABEL_IDS,
   getRegionById,
 } from '../data/regions';
 import { BrainOrbitControls } from './orbitControls';
 import {
   applyVertexRegionAttributes,
-  computeAtlasAnnotationAnchors,
   computeCerebrumPivot,
-  createAtlasAnnotationDefinitions,
 } from './brainLoader';
 import { createSpecimenSpace } from './specimenSpace';
 import { mockVoiceLevel, smoothVoiceLevel } from '../voice/voiceLevel';
@@ -31,7 +27,6 @@ const BRAIN_BASE_VERTICAL_OFFSET = -0.5;
 // Negative moves the specimen down the page. 48 CSS pixels is half an inch.
 const BRAIN_VERTICAL_SHIFT_CSS_PX = -48;
 const BRAIN_SCALE = 1.278;
-const LABEL_GUTTER_PX = 40;
 
 function configureMap(texture, anisotropy, colorSpace) {
   texture.colorSpace = colorSpace;
@@ -176,21 +171,6 @@ export function sampleRegionIdPixelsAtUv(pixels, width, height, uv) {
   return getRegionById(regionId) ? regionId : null;
 }
 
-export function getAtlasViewForDirection(direction) {
-  const absolute = {
-    x: Math.abs(direction.x),
-    y: Math.abs(direction.y),
-    z: Math.abs(direction.z),
-  };
-  if (absolute.x >= absolute.y && absolute.x >= absolute.z) {
-    return direction.x >= 0 ? 'left_lateral' : 'right_lateral';
-  }
-  if (absolute.y >= absolute.z) {
-    return direction.y >= 0 ? 'superior' : 'inferior';
-  }
-  return direction.z >= 0 ? 'anterior' : 'posterior';
-}
-
 export function getResponsiveSpecimenScale(viewportWidth) {
   if (viewportWidth <= 480) return 0.73;
   if (viewportWidth <= 640) return 0.8;
@@ -210,22 +190,6 @@ export function getResponsiveSpecimenVerticalOffset(viewportWidth) {
 export function getCompositionVerticalShiftCssPx(viewportWidth) {
   if (viewportWidth <= 480) return 0;
   return BRAIN_VERTICAL_SHIFT_CSS_PX;
-}
-
-export function computeLabelLeaderWidth(
-  side,
-  anchorX,
-  leftEdge,
-  rightEdge,
-  brainRadiusPx
-) {
-  const widthToEdge =
-    side === 'left' ? anchorX - leftEdge : rightEdge - anchorX;
-  return THREE.MathUtils.clamp(
-    widthToEdge + LABEL_GUTTER_PX,
-    28,
-    brainRadiusPx + 56
-  );
 }
 
 /**
@@ -334,17 +298,6 @@ export class BrainScene {
     this._vertexRegionBuffer = null;
     this._loadVertexRegionAttributes();
 
-    // CSS2D overlay for annotations
-    this.labelRenderer = new CSS2DRenderer();
-    this.labelRenderer.setSize(this.width, this.height);
-    Object.assign(this.labelRenderer.domElement.style, {
-      position: 'absolute',
-      inset: '0',
-      pointerEvents: 'none',
-      overflow: 'hidden',
-    });
-    container.appendChild(this.labelRenderer.domElement);
-
     // THREE.Color converts authored sRGB hex values to the linear working
     // colour space expected by shader uniforms.
     const { regionColors, regionIds } = createRegionPaletteUniforms();
@@ -428,23 +381,6 @@ export class BrainScene {
     this._useMockVoiceLevel = false;
     this._lastVoiceFrameAt = performance.now();
     this._specimenSpace = null;
-    this.labelObjects = [];
-    this._labelWorldPosition = new THREE.Vector3();
-    this._labelCenterWorld = new THREE.Vector3();
-    this._labelWorldNormal = new THREE.Vector3();
-    this._labelSurfaceDirection = new THREE.Vector3();
-    this._labelViewDirection = new THREE.Vector3();
-    this._labelCameraDirection = new THREE.Vector3();
-    this._atlasViewDirection = new THREE.Vector3();
-    this._labelWorldInverse = new THREE.Matrix4();
-    this._labelProjected = new THREE.Vector3();
-    this._labelCenterProjected = new THREE.Vector3();
-    this._brainBoundsProjected = new THREE.Vector3();
-    this._brainBoundingSphere = new THREE.Sphere();
-    this.labelsVisible = false;
-    this.labelGroup = new THREE.Group();
-    this.labelGroup.visible = false;
-    this.specimenOrientGroup.add(this.labelGroup);
 
     this._resizeHandler = this._onResize.bind(this);
     window.addEventListener('resize', this._resizeHandler);
@@ -493,10 +429,6 @@ export class BrainScene {
     ).data;
     this._regionMaskWidth = image.width;
     this._regionMaskHeight = image.height;
-    if (this.brainGroup) {
-      this._refreshRegionLabelAnchors();
-      this._buildLabels();
-    }
   }
 
   _getMaskRegionIdAtUv(uv) {
@@ -547,232 +479,9 @@ export class BrainScene {
     }
     const pivotOffset = pivot.clone().multiplyScalar(-BRAIN_SCALE);
     brainGroup.position.copy(pivotOffset);
-    this.labelGroup.position.copy(pivotOffset);
-    this._refreshRegionLabelAnchors();
     brainGroup.updateMatrixWorld(true);
-    new THREE.Box3()
-      .setFromObject(brainGroup)
-      .getBoundingSphere(this._brainBoundingSphere);
-    this.brainBoundingRadius = this._brainBoundingSphere.radius;
 
-    this._buildLabels();
     this._positionSpecimen();
-  }
-
-  _refreshRegionLabelAnchors() {
-    this.regionLabelAnchors = computeAtlasAnnotationAnchors({
-      meshes: this.brainMeshes,
-      regions: REGIONS,
-      normalization: this.brainNormalization,
-      root: this.brainGroup,
-      sampleRegionIdAtUv: this._regionMaskPixels
-        ? (uv) => this._getMaskRegionIdAtUv(uv)
-        : null,
-    });
-  }
-
-  _buildLabels() {
-    this.labelObjects.forEach((obj) => this.labelGroup.remove(obj));
-    this.labelObjects = [];
-
-    createAtlasAnnotationDefinitions(
-      REGIONS,
-      this.regionLabelAnchors
-    ).forEach(({ region, anchor }) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'brain-annotation';
-      const leader = document.createElement('span');
-      leader.className = 'brain-annotation__leader';
-      const text = document.createElement('span');
-      text.className = 'brain-annotation__text';
-      // The authored annotation names the region and what it does; it carries
-      // punctuation, so it is set as text rather than markup.
-      text.textContent = region.annotationLabel ?? region.name;
-      wrap.append(leader, text);
-
-      const label = new CSS2DObject(wrap);
-      label.position.copy(anchor).multiplyScalar(BRAIN_SCALE);
-      label.userData.screenSide = null;
-      label.userData.regionId = region.id;
-      label.userData.regionCenter = anchor.clone().multiplyScalar(BRAIN_SCALE);
-      label.userData.candidates = (anchor.candidates || [anchor])
-        .filter(Boolean)
-        .map((candidate) => ({
-          position: candidate.clone().multiplyScalar(BRAIN_SCALE),
-          normal: candidate.surfaceNormal
-            ? candidate.surfaceNormal.clone()
-            : candidate.clone().normalize(),
-        }));
-      label.userData.leader = wrap.querySelector('.brain-annotation__leader');
-      this.labelGroup.add(label);
-      this.labelObjects.push(label);
-    });
-  }
-
-  _updateLabelLayout() {
-    if (!this.labelsVisible) return;
-
-    this.specimenGroup.updateMatrixWorld(true);
-    this.specimenOrientGroup.getWorldPosition(this._labelCenterWorld);
-    this._labelCenterProjected
-      .copy(this._labelCenterWorld)
-      .project(this.camera);
-
-    const centerX =
-      (this._labelCenterProjected.x * 0.5 + 0.5) * this.width;
-    const distance = this.camera.position.distanceTo(this._labelCenterWorld);
-    const viewportWorldHeight =
-      2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    const brainRadiusPx =
-      (this.brainBoundingRadius / viewportWorldHeight) * this.height;
-    let leftEdge = centerX - brainRadiusPx;
-    let rightEdge = centerX + brainRadiusPx;
-    let anchorCloudLeft = Infinity;
-    let anchorCloudRight = -Infinity;
-    this.labelObjects.forEach((label) => {
-      label.userData.candidates.forEach((candidate) => {
-        this._brainBoundsProjected
-          .copy(candidate.position)
-          .applyMatrix4(this.labelGroup.matrixWorld)
-          .project(this.camera);
-        const screenX =
-          (this._brainBoundsProjected.x * 0.5 + 0.5) * this.width;
-        anchorCloudLeft = Math.min(anchorCloudLeft, screenX);
-        anchorCloudRight = Math.max(anchorCloudRight, screenX);
-      });
-    });
-    if (
-      Number.isFinite(anchorCloudLeft) &&
-      Number.isFinite(anchorCloudRight)
-    ) {
-      const cloudWidth = anchorCloudRight - anchorCloudLeft;
-      const silhouettePadding = Math.max(24, cloudWidth * 0.1);
-      leftEdge = anchorCloudLeft - silhouettePadding;
-      rightEdge = anchorCloudRight + silhouettePadding;
-    }
-    const projectedBrainRadiusPx = Math.max(
-      centerX - leftEdge,
-      rightEdge - centerX
-    );
-    const candidates = [];
-    this._labelCameraDirection
-      .subVectors(this.camera.position, this._labelCenterWorld)
-      .normalize();
-    this._labelWorldInverse.copy(this.labelGroup.matrixWorld).invert();
-    this._atlasViewDirection
-      .copy(this._labelCameraDirection)
-      .transformDirection(this._labelWorldInverse);
-    const atlasView = getAtlasViewForDirection(this._atlasViewDirection);
-    const visibleAtlasIds = new Set(VIEW_LABEL_IDS[atlasView]);
-
-    this.labelObjects.forEach((label) => {
-      label.visible = false;
-      if (!visibleAtlasIds.has(label.userData.regionId)) return;
-      this._labelWorldPosition
-        .copy(label.userData.regionCenter)
-        .applyMatrix4(this.labelGroup.matrixWorld);
-      this._labelSurfaceDirection
-        .subVectors(this._labelWorldPosition, this._labelCenterWorld)
-        .normalize();
-      const regionHemisphere =
-        this._labelSurfaceDirection.dot(this._labelCameraDirection);
-      if (regionHemisphere <= 0.02) return;
-
-      let bestCandidate = null;
-      let bestFacing = -Infinity;
-
-      label.userData.candidates.forEach((candidate) => {
-        this._labelWorldPosition
-          .copy(candidate.position)
-          .applyMatrix4(this.labelGroup.matrixWorld);
-        this._labelWorldNormal
-          .copy(candidate.normal)
-          .transformDirection(this.labelGroup.matrixWorld);
-        this._labelViewDirection
-          .subVectors(this.camera.position, this._labelWorldPosition)
-          .normalize();
-        this._labelSurfaceDirection
-          .subVectors(this._labelWorldPosition, this._labelCenterWorld)
-          .normalize();
-        const facing = this._labelWorldNormal.dot(this._labelViewDirection);
-        const hemisphere =
-          this._labelSurfaceDirection.dot(this._labelCameraDirection);
-        if (hemisphere <= 0.02) return;
-        const visibilityScore = facing + hemisphere * 0.35;
-        if (visibilityScore > bestFacing) {
-          bestFacing = visibilityScore;
-          bestCandidate = candidate;
-        }
-      });
-
-      if (!bestCandidate || bestFacing <= 0.12) return;
-
-      label.position.copy(bestCandidate.position);
-      this._labelWorldPosition
-        .copy(bestCandidate.position)
-        .applyMatrix4(this.labelGroup.matrixWorld);
-
-      this._labelProjected
-        .copy(this._labelWorldPosition)
-        .project(this.camera);
-      const anchorX = (this._labelProjected.x * 0.5 + 0.5) * this.width;
-      const anchorY = (-this._labelProjected.y * 0.5 + 0.5) * this.height;
-      const side = anchorX < centerX ? 'left' : 'right';
-
-      if (label.userData.screenSide !== side) {
-        label.userData.screenSide = side;
-        label.center.set(side === 'left' ? 1 : 0, 0.5);
-        label.element.style.flexDirection =
-          side === 'left' ? 'row-reverse' : 'row';
-        label.element.style.textAlign = side === 'left' ? 'right' : 'left';
-      }
-
-      const leaderWidth = computeLabelLeaderWidth(
-        side,
-        anchorX,
-        leftEdge,
-        rightEdge,
-        projectedBrainRadiusPx
-      );
-      label.userData.leader.style.width = `${leaderWidth}px`;
-
-      const region = getRegionById(label.userData.regionId);
-      if (!region) return;
-      const textWidth = Math.max(70, region.name.length * 6.4);
-      const textLeft = side === 'left'
-        ? anchorX - leaderWidth - textWidth
-        : anchorX + leaderWidth;
-
-      candidates.push({
-        label,
-        box: {
-          left: textLeft,
-          right: textLeft + textWidth,
-          top: anchorY - 10,
-          bottom: anchorY + 10,
-        },
-        priority: label.userData.regionId === this.selectedRegionId ? 1 : 0,
-      });
-    });
-
-    candidates.sort((a, b) => b.priority - a.priority);
-    const accepted = [];
-    candidates.forEach((candidate) => {
-      const overlaps = accepted.some((box) =>
-        candidate.box.left < box.right + 6 &&
-        candidate.box.right > box.left - 6 &&
-        candidate.box.top < box.bottom + 6 &&
-        candidate.box.bottom > box.top - 6
-      );
-      if (overlaps) return;
-      candidate.label.visible = true;
-      accepted.push(candidate.box);
-    });
-  }
-
-  setLabelsVisible(visible) {
-    this.labelsVisible = !!visible;
-    this.labelGroup.visible = this.labelsVisible;
   }
 
   setColorMode(enabled) {
@@ -979,7 +688,6 @@ export class BrainScene {
     this.camera.updateProjectionMatrix();
     this._positionSpecimen();
     this.renderer.setSize(this.width, this.height);
-    this.labelRenderer.setSize(this.width, this.height);
   }
 
   _positionSpecimen() {
@@ -1038,10 +746,8 @@ export class BrainScene {
     this._updateHighlightFeedback();
     this._updateVoiceLevel();
     this._updateRaycast();
-    this._updateLabelLayout();
 
     this.renderer.render(this.scene, this.camera);
-    this.labelRenderer.render(this.scene, this.camera);
   }
 
   dispose() {
@@ -1052,9 +758,6 @@ export class BrainScene {
     this.renderer.dispose();
     if (this.renderer.domElement.parentNode) {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
-    }
-    if (this.labelRenderer.domElement.parentNode) {
-      this.labelRenderer.domElement.parentNode.removeChild(this.labelRenderer.domElement);
     }
   }
 }

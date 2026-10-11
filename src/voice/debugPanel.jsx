@@ -39,8 +39,6 @@ export function buildDebugActions() {
     { group: 'Highlight', label: 'Clear highlight', command: 'clearHighlight', args: [] },
     { group: 'Scene', label: 'Colour on', command: 'setColourRegions', args: [true] },
     { group: 'Scene', label: 'Colour off', command: 'setColourRegions', args: [false] },
-    { group: 'Scene', label: 'Labels on', command: 'setAnnotations', args: [true] },
-    { group: 'Scene', label: 'Labels off', command: 'setAnnotations', args: [false] },
   ];
   return [...face, ...views, ...highlights, ...toggles];
 }

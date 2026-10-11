@@ -1,5 +1,5 @@
 /**
- * The nine client tools the ElevenLabs agent calls, mapped onto the scene
+ * The twelve client tools the ElevenLabs agent calls, mapped onto the scene
  * commands. Names and parameters match agent/architect-brief.md section 4
  * exactly (a drift test checks it). The SDK passes only a string or a number
  * back to the agent, so every result goes back as JSON text.
@@ -14,7 +14,6 @@ export const AGENT_TOOL_NAMES = [
   'highlight_region',
   'clear_highlight',
   'set_colour_regions',
-  'set_annotations',
   'lookup_region',
   'list_regions',
   'get_scene_state',
@@ -123,7 +122,6 @@ export function createClientTools(
     highlight_region: run('highlight_region', (p) => commands.highlightRegion(p.region_id)),
     clear_highlight: run('clear_highlight', () => commands.clearHighlight()),
     set_colour_regions: run('set_colour_regions', (p) => commands.setColourRegions(p.enabled)),
-    set_annotations: run('set_annotations', (p) => commands.setAnnotations(p.enabled)),
     lookup_region: run('lookup_region', (p) => commands.lookupRegion({ regionId: p.region_id, name: p.name })),
     list_regions: run('list_regions', () => commands.listRegions()),
     get_scene_state: run('get_scene_state', () => commands.getSceneState()),
