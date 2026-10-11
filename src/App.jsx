@@ -4,12 +4,25 @@ import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
 import { VOICE_ENABLED } from './voice/flags';
-import { GUIDES, normalizeGuide, readSavedGuide, saveGuide, studyEntryStep } from './voice/guides';
+import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guides';
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
+import {
+  ArrivalOptions,
+  SettingsPanel,
+  ToggleButton,
+  getBarButtons,
+  getStudyCaption,
+  initialGuide,
+  leaveStudy,
+  playAction,
+  sceneModeForPhase,
+  shouldShowArrival,
+  studyAction,
+} from './frontDoor.jsx';
 
-// The ElevenLabs SDK loads only when Study mode opens with the voice flag on.
+// The ElevenLabs SDK loads only in the voice build.
 const VoicePanel = lazy(() => import('./voice/VoicePanel.jsx'));
 
 /** Viewport-height fraction/sec at 1.0× — half the former 0.08 base. */
@@ -21,43 +34,6 @@ export function shouldShowHeader(gamePhase) {
     gamePhase === 'countdown' ||
     gamePhase === 'paused'
   );
-}
-
-/** Begin, at the foot of the left panel. The panel ignores the pointer; the button does not. */
-export function BeginButton({ onBegin }) {
-  return (
-    <button type="button" className="start-button" onClick={onBegin} style={STYLES.beginButton}>
-      Begin
-    </button>
-  );
-}
-
-/** The landing instructions, with Begin under them once a game can start. */
-export function HowToPlay({ onBegin = null }) {
-  return (
-    <div>
-      <div style={STYLES.instructionTitle}>How to Play</div>
-      <div className="instruction-body" style={STYLES.instructionBody}>
-        <p style={{ marginBottom: 10 }}>
-          Welcome to the Brain Game, a study in anatomy and cognition.
-        </p>
-        <p style={{ marginBottom: 10 }}>
-          Rotate the brain to guide each falling word to its rightful
-          region. A correct catch illuminates the area; a wrong one
-          shatters into the void below.
-        </p>
-        <p>
-          Toggle Colour Regions to reveal each area&apos;s hue. Pause
-          at any time to explore the brain freely, region by region.
-        </p>
-      </div>
-      {onBegin && <BeginButton onBegin={onBegin} />}
-    </div>
-  );
-}
-
-export function shouldShowInstructions(gamePhase, selectedRegion = null) {
-  return gamePhase === 'ready' && !selectedRegion;
 }
 
 /** Hover/click region copy yields while the specimen is being gripped to orbit. */
@@ -78,75 +54,6 @@ export function getDescribedText({ isNavigating = false, selectedRegion = null, 
   return (selectedRegion || guideFocus)?.description ?? null;
 }
 
-export function getPrimaryControl(gamePhase, brainReady) {
-  if (gamePhase === 'ready') {
-    return brainReady
-      ? { label: 'Begin', active: true, action: 'start' }
-      : null;
-  }
-  if (gamePhase === 'playing' || gamePhase === 'paused') {
-    return {
-      label: gamePhase === 'paused' ? 'Resume' : 'Pause',
-      active: gamePhase === 'paused',
-      mobileActive: true,
-      action: 'pause',
-    };
-  }
-  return null;
-}
-
-/** Begin lives under How to Play, so it shows only when a game can start. */
-export function shouldShowBegin(gamePhase, brainReady) {
-  return gamePhase === 'ready' && Boolean(brainReady);
-}
-
-/** The bottom bar keeps Pause and Resume; Begin sits under How to Play. */
-export function getBarControl(gamePhase, brainReady) {
-  const control = getPrimaryControl(gamePhase, brainReady);
-  return control && control.action !== 'start' ? control : null;
-}
-
-// Study mode is where the voice guide works. It opens only from the ready
-// screen or a paused game, so no word is ever mid-fall when the guide speaks.
-const STUDY_ENTRY_PHASES = new Set(['ready', 'paused']);
-
-export function enterStudy(gamePhase, { voiceEnabled = false } = {}) {
-  if (!voiceEnabled || !STUDY_ENTRY_PHASES.has(gamePhase)) return null;
-  return { phase: 'study', returnTo: gamePhase };
-}
-
-// Leaving returns where the player came from, but never restarts falling
-// words by itself: a game that was running comes back paused.
-export function leaveStudy(returnTo) {
-  if (returnTo === 'playing' || returnTo === 'paused') return 'paused';
-  return 'ready';
-}
-
-export function getStudyControl(gamePhase, brainReady, { voiceEnabled = false } = {}) {
-  if (!voiceEnabled || !brainReady) return null;
-  if (gamePhase === 'study') {
-    return { label: 'Leave Study', action: 'leave-study', active: true };
-  }
-  if (STUDY_ENTRY_PHASES.has(gamePhase)) {
-    return { label: 'Study', action: 'enter-study', active: false };
-  }
-  return null;
-}
-
-export const GUIDE_PICKER_NOTE =
-  'Both are this same brain; only the voice differs. You can switch guides later in the voice panel.';
-
-// Points the player to the voice panel (right on desktop, bottom on phones).
-export function getStudyCaption(guide) {
-  const id = normalizeGuide(guide);
-  if (!id) return null;
-  const { name } = GUIDES.find((entry) => entry.id === id);
-  return {
-    title: `Studying with ${name}`,
-    note: `Talk with ${name} in the voice panel, or turn the brain freely and click a region to read about it.`,
-  };
-}
-
 // Like a browser agent's cursor: while the guide turns the brain, say so, and
 // keep the open hand so the player knows they can take hold at any time.
 export function getControlIndicator({ control, guide }) {
@@ -154,10 +61,6 @@ export function getControlIndicator({ control, guide }) {
   if (control !== 'guide_moving' || !id) return null;
   const { name } = GUIDES.find((entry) => entry.id === id);
   return { text: `${name} is turning…`, cursor: 'grab' };
-}
-
-export function sceneModeForPhase(gamePhase) {
-  return gamePhase === 'study' ? 'study' : 'game';
 }
 
 function browserStorage() {
@@ -273,30 +176,6 @@ export const STYLES = {
     maxWidth: '96vw',
     padding: '0 8px',
   },
-  speedControl: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 5,
-  },
-  speedLabel: {
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 10,
-    letterSpacing: '0.1em',
-    color: '#2a2820',
-    textTransform: 'uppercase',
-  },
-  speedSlider: {
-    width: 'clamp(54px, 6vw, 76px)',
-    margin: 0,
-    cursor: 'pointer',
-  },
-  speedValue: {
-    minWidth: 27,
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 10,
-    color: '#2a2820',
-    textAlign: 'right',
-  },
   descriptionPanel: {
     position: 'absolute',
     top: '50%',
@@ -306,22 +185,6 @@ export const STYLES = {
     zIndex: 11,
     pointerEvents: 'none',
     textAlign: 'left',
-  },
-  instructionTitle: {
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 16,
-    fontWeight: 600,
-    letterSpacing: '0.08em',
-    color: '#1a1814',
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  instructionBody: {
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 16,
-    lineHeight: 1.55,
-    letterSpacing: '0.03em',
-    color: '#3d3932',
   },
   hoverLabel: {
     fontFamily: "'EB Garamond', Georgia, serif",
@@ -345,56 +208,6 @@ export const STYLES = {
     position: 'absolute',
     bottom: 'clamp(18px, 3vh, 28px)',
     right: 'clamp(24px, 5vw, 64px)',
-  },
-  rightControls: {
-    position: 'absolute',
-    bottom: 'clamp(18px, 3vh, 28px)',
-    right: 'calc(clamp(24px, 5vw, 64px) + 92px)',
-    zIndex: 10,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 16,
-  },
-  mobileSettingsToggle: {
-    display: 'none',
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    zIndex: 14,
-    width: 40,
-    height: 40,
-    padding: '12px 11px',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    boxShadow: 'none',
-  },
-  mobileSettingsLine: {
-    display: 'block',
-    width: '100%',
-    height: 1,
-    background: 'rgba(26, 24, 20, 0.62)',
-  },
-  settingsPanel: {
-    display: 'contents',
-  },
-  difficulty: {
-    position: 'absolute',
-    bottom: 'clamp(18px, 3vh, 28px)',
-    left: 'clamp(24px, 5vw, 64px)',
-    zIndex: 10,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-  difficultyLabel: {
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontSize: 12,
-    letterSpacing: '0.1em',
-    color: '#4a4640',
-    textTransform: 'uppercase',
   },
   loading: {
     position: 'absolute',
@@ -436,22 +249,6 @@ export const STYLES = {
     zIndex: 12,
     textAlign: 'center',
   },
-  beginButton: {
-    display: 'block',
-    marginTop: 16,
-    pointerEvents: 'auto',
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 'clamp(13px, 2vw, 16px)',
-    fontWeight: 700,
-    letterSpacing: '0.16em',
-    textTransform: 'uppercase',
-    padding: '12px 24px',
-    background: '#1a1814',
-    color: '#f5f0e8',
-    border: '1px solid #1a1814',
-    cursor: 'pointer',
-    boxShadow: '3px 3px 0 rgba(26, 24, 20, 0.2)',
-  },
   studyCaption: {
     position: 'absolute',
     top: 'clamp(16px, 3vh, 28px)',
@@ -485,55 +282,6 @@ export const STYLES = {
     color: '#5a4030',
     marginTop: 4,
   },
-  mobileStudyControls: {
-    display: 'none',
-  },
-  guidePicker: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 20,
-    width: 'min(340px, calc(100vw - 32px))',
-    padding: '20px 22px',
-    textAlign: 'center',
-    background: 'rgba(247, 240, 220, 0.97)',
-    border: '1px solid #1a1814',
-    boxShadow:
-      'inset 0 0 0 3px #f7f0dc, inset 0 0 0 4px rgba(26, 24, 20, 0.24), 3px 3px 0 rgba(26, 24, 20, 0.18)',
-  },
-  guidePickerTitle: {
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 16,
-    fontWeight: 700,
-    letterSpacing: '0.16em',
-    textTransform: 'uppercase',
-    color: '#1a1814',
-  },
-  guidePickerNote: {
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontStyle: 'italic',
-    fontSize: 14,
-    lineHeight: 1.45,
-    color: '#5a4030',
-    margin: '10px 0 16px',
-  },
-  guidePickerChoices: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  guidePickerCancel: {
-    marginTop: 14,
-    background: 'transparent',
-    border: 'none',
-    fontFamily: "'EB Garamond', Georgia, serif",
-    fontStyle: 'italic',
-    fontSize: 13,
-    color: '#5a4030',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-  },
   countdown: {
     fontFamily: "'Playfair Display', Georgia, serif",
     fontSize: 'clamp(52px, 10vw, 92px)',
@@ -543,39 +291,6 @@ export const STYLES = {
     textShadow: '0 0 16px #fff, 0 0 32px #fff',
   },
 };
-
-function ToggleButton({
-  label,
-  active,
-  onClick,
-  compact = false,
-  mini = false,
-  className,
-}) {
-  return (
-    <button
-      type="button"
-      className={className}
-      aria-pressed={active}
-      onClick={onClick}
-      style={{
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: mini ? 8 : compact ? 10 : 11,
-        fontWeight: 400,
-        letterSpacing: mini ? '0.06em' : '0.1em',
-        textTransform: 'uppercase',
-        padding: mini ? '2px 7px' : compact ? '4px 10px' : '6px 14px',
-        background: active ? '#1a1814' : 'transparent',
-        color: active ? '#f5f0e8' : '#1a1814',
-        border: '1px solid #1a1814',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-      }}
-    >
-      {label}
-    </button>
-  );
-}
 
 // Easy already names the lobe when a catch lands in the right neighbourhood, so
 // the palette belongs on screen to teach it. Hard asks the player to find the
@@ -598,7 +313,7 @@ export default function App() {
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
-  // What the voice guide is showing, for the left panel (Study mode only).
+  // What the voice guide is showing, for the left panel.
   const [guideFocus, setGuideFocus] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -612,9 +327,9 @@ export default function App() {
   const [shatter, setShatter] = useState(null);
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
-  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
-  const [guide, setGuide] = useState(() => readSavedGuide(browserStorage()));
-  const [guidePickerOpen, setGuidePickerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Sylvi greets every visitor, unless Rollo was chosen before.
+  const [guide, setGuide] = useState(() => initialGuide(readSavedGuide(browserStorage())));
   const studyReturnToRef = useRef('ready');
   const sceneCommandsRef = useRef(null);
   const sceneAdapterRef = useRef(null);
@@ -830,9 +545,8 @@ export default function App() {
     }
   }, [speedMultiplier, brainReady]);
 
-  const startGame = () => {
-    if (!gameRef.current || gamePhase !== 'ready') return;
-
+  const runCountdown = () => {
+    if (!gameRef.current) return;
     setGamePhase('countdown');
     setCountdown(3);
     countdownTimerRef.current = window.setTimeout(() => {
@@ -861,44 +575,62 @@ export default function App() {
     }
   };
 
-  const beginStudy = () => {
-    const transition = enterStudy(gamePhase, { voiceEnabled: VOICE_ENABLED });
-    if (!transition) return;
-    studyReturnToRef.current = transition.returnTo;
+  const enterStudy = (returnTo) => {
+    studyReturnToRef.current = returnTo;
     sceneRef.current?.enterStudyMode();
-    setGamePhase(transition.phase);
+    setSelectedRegion(null);
+    setGamePhase('study');
   };
 
-  const handleStudyControl = (action) => {
-    if (action === 'enter-study') {
-      if (studyEntryStep(guide) === 'pick-guide') {
-        setGuidePickerOpen(true);
-        return;
-      }
-      beginStudy();
-    } else if (action === 'leave-study') {
+  const handlePlay = () => {
+    if (!brainReady) return;
+    setSettingsOpen(false);
+    const action = playAction(gamePhase, studyReturnToRef.current);
+    if (action === 'start') runCountdown();
+    else if (action === 'pause' || action === 'resume') togglePause();
+    else if (action === 'leave-study-and-start') {
+      // The game never inherits the guide's highlight.
       sceneAdapterRef.current?.resetForGame();
-      setGamePhase(leaveStudy(studyReturnToRef.current));
+      runCountdown();
+    } else if (action === 'leave-study-and-resume') {
+      sceneAdapterRef.current?.resetForGame();
+      gameRef.current?.resume();
+      setGamePhase('playing');
     }
-    setMobileSettingsOpen(false);
   };
 
-  const chooseGuide = (guideId) => {
-    saveGuide(browserStorage(), guideId);
-    setGuide(guideId);
-    setGuidePickerOpen(false);
-    beginStudy();
+  const handleStudy = () => {
+    if (!brainReady) return;
+    setSettingsOpen(false);
+    const action = studyAction(gamePhase);
+    if (action === 'enter') enterStudy(gamePhase);
+    else if (action === 'pause-and-enter') {
+      gameRef.current?.pause();
+      enterStudy('paused');
+    } else if (action === 'leave') {
+      const next = leaveStudy(studyReturnToRef.current);
+      if (next === 'paused') sceneAdapterRef.current?.resetForGame();
+      setGamePhase(next);
+    }
   };
 
-  const studyControl = getStudyControl(gamePhase, brainReady, {
-    voiceEnabled: VOICE_ENABLED,
-  });
-  const studyCaption = gamePhase === 'study' ? getStudyCaption(guide) : null;
-  const controlIndicator = gamePhase === 'study' ? getControlIndicator({ control, guide }) : null;
   const changeGuide = (guideId) => {
     saveGuide(browserStorage(), guideId);
     setGuide(guideId);
   };
+
+  // Settings closes with Escape, like any disclosure.
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setSettingsOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [settingsOpen]);
+
+  const studyCaption = gamePhase === 'study' ? getStudyCaption(VOICE_ENABLED ? guide : null) : null;
+  const controlIndicator = getControlIndicator({ control, guide });
   const showVoiceDebug = shouldShowVoiceDebugPanel({
     voiceEnabled: VOICE_ENABLED,
     search: typeof window === 'undefined' ? undefined : window.location.search,
@@ -911,9 +643,15 @@ export default function App() {
     hoveredRegion,
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
-  const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
-  const barControl = getBarControl(gamePhase, brainReady);
-  const showBegin = shouldShowBegin(gamePhase, brainReady);
+  const showArrival = shouldShowArrival({ gamePhase, brainReady, selectedRegion });
+  const barButtons = getBarButtons({ gamePhase, brainReady, colorMode, settingsOpen });
+  const barActions = {
+    colour: () => setColorMode(!colorMode),
+    play: handlePlay,
+    study: handleStudy,
+    settings: () => setSettingsOpen((open) => !open),
+  };
+  const guideName = VOICE_ENABLED ? GUIDES.find((entry) => entry.id === guide)?.name ?? null : null;
 
   return (
     <div style={STYLES.container}>
@@ -956,77 +694,13 @@ export default function App() {
             A Study in Cognition
           </div>
           <div style={STYLES.rule} />
+          {controlIndicator && gamePhase === 'ready' && (
+            <div className="control-indicator" style={STYLES.controlIndicator}>
+              {controlIndicator.text}
+            </div>
+          )}
         </div>
       )}
-
-      <button
-        type="button"
-        className="mobile-settings-toggle"
-        aria-label={`${mobileSettingsOpen ? 'Close' : 'Open'} game settings`}
-        aria-expanded={mobileSettingsOpen}
-        aria-controls="mobile-settings-panel"
-        onClick={() => setMobileSettingsOpen((open) => !open)}
-        style={STYLES.mobileSettingsToggle}
-      >
-        {[0, 1, 2].map((line) => (
-          <span key={line} aria-hidden="true" style={STYLES.mobileSettingsLine} />
-        ))}
-      </button>
-
-      <div
-        id="mobile-settings-panel"
-        className={`mobile-settings-panel${mobileSettingsOpen ? ' is-open' : ''}`}
-        style={STYLES.settingsPanel}
-      >
-        <div className="difficulty-controls" style={STYLES.difficulty}>
-          <span style={STYLES.difficultyLabel}>Difficulty</span>
-          {['easy', 'hard'].map((mode) => (
-            <ToggleButton
-              key={mode}
-              label={mode === 'easy' ? 'Easy' : 'Hard'}
-              active={difficulty === mode}
-              onClick={() => chooseDifficulty(mode)}
-              mini
-            />
-          ))}
-        </div>
-
-        <div className="right-controls" style={STYLES.rightControls}>
-          <label className="speed-control" style={STYLES.speedControl}>
-            <span className="speed-label" style={STYLES.speedLabel}>Speed</span>
-            <input
-              className="speed-slider"
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value={speedMultiplier}
-              onChange={(event) =>
-                setSpeedMultiplier(Number(event.target.value))
-              }
-              aria-label="Falling word speed"
-              aria-valuetext={`${speedMultiplier.toFixed(1)} times`}
-              style={STYLES.speedSlider}
-            />
-            <span className="speed-value" style={STYLES.speedValue}>
-              {speedMultiplier.toFixed(1)}×
-            </span>
-          </label>
-        </div>
-        {studyControl && (
-          <div className="mobile-study-controls" style={STYLES.mobileStudyControls}>
-            <ToggleButton
-              label={studyControl.label}
-              active={studyControl.active}
-              onClick={() => handleStudyControl(studyControl.action)}
-              mini
-            />
-          </div>
-        )}
-      </div>
-      <div className="score-display" style={{ ...STYLES.score, ...STYLES.scorePosition }}>
-        Score: {score}
-      </div>
 
       {loading && <div style={STYLES.loading}>Preparing the specimen...</div>}
       {error && (
@@ -1049,13 +723,15 @@ export default function App() {
         </div>
       )}
 
-      {(showInstructions ||
+      {(showArrival ||
         describedRegion ||
         factoid ||
         correction) && (
         <div className="description-panel" style={STYLES.descriptionPanel}>
-          {showInstructions && <HowToPlay onBegin={showBegin ? startGame : null} />}
-          {!showInstructions && describedRegion && (
+          {showArrival && !describedRegion && (
+            <ArrivalOptions guideName={guideName} onStudy={handleStudy} onPlay={handlePlay} />
+          )}
+          {describedRegion && (
             <div className="region-description" style={STYLES.hoverLabel}>
               <span
                 style={{
@@ -1088,42 +764,46 @@ export default function App() {
               )}
             </div>
           )}
-          {!showInstructions && showBegin && <BeginButton onBegin={startGame} />}
-          {!showInstructions && factoid && (
+          {!showArrival && factoid && (
             <div className="region-description" style={STYLES.factoid}>{factoid}</div>
           )}
-          {!showInstructions && !factoid && correction && (
+          {!showArrival && !factoid && correction && (
             <div className="region-description" style={STYLES.correction}>{correction}</div>
           )}
         </div>
       )}
 
       <div className="game-controls" style={STYLES.controls}>
-        {barControl && (
+        {barButtons.map((button) => (
           <ToggleButton
-            className="primary-game-control"
-            label={barControl.label}
-            active={barControl.active}
-            onClick={togglePause}
+            key={button.id}
+            className={`bar-${button.id}`}
+            label={button.label}
+            active={button.id === 'settings' ? button.expanded : button.pressed}
+            disabled={button.disabled}
+            onClick={barActions[button.id]}
+            {...(button.id === 'settings'
+              ? { 'aria-expanded': button.expanded, 'aria-controls': 'settings-panel' }
+              : {})}
             compact
           />
-        )}
-        <ToggleButton
-          label="Colour Regions"
-          active={colorMode}
-          onClick={() => setColorMode(!colorMode)}
-          compact
-        />
-        {studyControl && (
-          <ToggleButton
-            className="study-control"
-            label={studyControl.label}
-            active={studyControl.active}
-            onClick={() => handleStudyControl(studyControl.action)}
-            compact
-          />
-        )}
+        ))}
       </div>
+      <div className="score-display" style={{ ...STYLES.score, ...STYLES.scorePosition }}>
+        Score: {score}
+      </div>
+
+      {settingsOpen && (
+        <SettingsPanel
+          voiceEnabled={VOICE_ENABLED}
+          guide={guide}
+          onGuide={changeGuide}
+          difficulty={difficulty}
+          onDifficulty={chooseDifficulty}
+          speed={speedMultiplier}
+          onSpeed={setSpeedMultiplier}
+        />
+      )}
 
       {showVoiceDebug && (
         <VoiceDebugPanel
@@ -1157,39 +837,6 @@ export default function App() {
         </Suspense>
       )}
 
-      {guidePickerOpen && (
-        <div
-          className="guide-picker"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="guide-picker-title"
-          style={STYLES.guidePicker}
-        >
-          <div id="guide-picker-title" style={STYLES.guidePickerTitle}>
-            Choose your guide
-          </div>
-          <div style={STYLES.guidePickerNote}>
-            {GUIDE_PICKER_NOTE}
-          </div>
-          <div style={STYLES.guidePickerChoices}>
-            {GUIDES.map(({ id, name }) => (
-              <ToggleButton
-                key={id}
-                label={name}
-                active={false}
-                onClick={() => chooseGuide(id)}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => setGuidePickerOpen(false)}
-            style={STYLES.guidePickerCancel}
-          >
-            Not now
-          </button>
-        </div>
-      )}
     </div>
   );
 }

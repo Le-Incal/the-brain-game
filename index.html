@@ -94,30 +94,6 @@
         }
       }
       @media (max-width: 640px) {
-        .mobile-settings-toggle {
-          display: flex !important;
-          top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
-        }
-        .mobile-settings-panel {
-          display: none !important;
-          position: absolute;
-          top: calc(env(safe-area-inset-top, 0px) + 58px);
-          right: 14px;
-          z-index: 13;
-          width: 216px;
-          padding: 10px;
-          flex-direction: column;
-          gap: 10px;
-          background: rgba(247, 240, 220, 0.97);
-          border: 1px solid #1a1814;
-          box-shadow:
-            inset 0 0 0 3px #f7f0dc,
-            inset 0 0 0 4px rgba(26, 24, 20, 0.24),
-            3px 3px 0 rgba(26, 24, 20, 0.18);
-        }
-        .mobile-settings-panel.is-open {
-          display: flex !important;
-        }
         .app-title {
           font-size: 27px !important;
           letter-spacing: 0.13em !important;
@@ -138,9 +114,17 @@
           border-top: 1px solid rgba(26, 24, 20, 0.24);
           border-bottom: 1px solid rgba(26, 24, 20, 0.24);
         }
-        .instruction-body {
-          font-size: 12px !important;
-          line-height: 1.3 !important;
+        .arrival-options {
+          gap: 12px !important;
+        }
+        .arrival-text {
+          font-size: 12.5px !important;
+          margin-top: 4px !important;
+        }
+        .settings-panel {
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;
+          min-width: 0 !important;
+          width: calc(100vw - 32px);
         }
         .region-description {
           font-size: 11.5px !important;
@@ -153,43 +137,17 @@
           left: 10px !important;
           right: 62px;
           width: auto;
+          overflow-x: auto;
           max-width: none !important;
           transform: none !important;
           padding: 0 !important;
           flex-wrap: nowrap !important;
           justify-content: flex-start !important;
         }
-        .game-controls .primary-game-control {
-          background: #1a1814 !important;
-          color: #f5f0e8 !important;
-        }
         .game-controls button {
           font-size: 8px !important;
           padding: 3px 7px !important;
           letter-spacing: 0.06em !important;
-        }
-        .mobile-settings-panel .difficulty-controls {
-          position: static !important;
-          gap: 4px !important;
-          justify-content: space-between;
-        }
-        .difficulty-controls > span {
-          font-size: 10px !important;
-          letter-spacing: 0.06em !important;
-        }
-        .difficulty-controls button {
-          padding: 2px 5px !important;
-          font-size: 7px !important;
-        }
-        .mobile-settings-panel .right-controls {
-          position: static !important;
-          gap: 7px !important;
-        }
-        .game-controls .study-control {
-          display: none !important;
-        }
-        .mobile-settings-panel .mobile-study-controls {
-          display: flex !important;
         }
         .voice-panel {
           top: auto !important;
