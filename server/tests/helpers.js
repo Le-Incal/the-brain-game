@@ -51,12 +51,12 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true, ttsOk = true } = {}) {
   let pages = initialPages;
   const requests = [];
   // `details` maps conversation id -> { status, call_duration_secs }; ids not
   // listed answer 404 (the token was never used).
-  const state = { listFailures, minted: 0, details };
+  const state = { listFailures, minted: 0, details, ttsOk };
   const reply = (status, body) => ({
     ok: status >= 200 && status < 300,
     status,
@@ -66,6 +66,20 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
   const fetchImpl = async (url, init = {}) => {
     const href = String(url);
     requests.push({ url: href, init });
+    // Text to speech with timestamps: three letters, 100 ms each, and a few bytes of "audio".
+    if (href.includes('/v1/text-to-speech/')) {
+      if (!state.ttsOk) return reply(500, { detail: 'tts failure' });
+      const text = JSON.parse(init.body ?? '{}').text ?? '';
+      const characters = [...text];
+      return reply(200, {
+        audio_base64: Buffer.from(`mp3:${text.length}`).toString('base64'),
+        alignment: {
+          characters,
+          character_start_times_seconds: characters.map((_, i) => i * 0.1),
+          character_end_times_seconds: characters.map((_, i) => (i + 1) * 0.1),
+        },
+      });
+    }
     if (href.includes('/v1/convai/conversation/token')) {
       if (!ok) return reply(500, { detail: 'upstream failure' });
       state.minted += 1;
@@ -107,6 +121,7 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
       pages = next;
     },
     tokenRequests: () => requests.filter(({ url }) => url.includes('/conversation/token')),
+    ttsRequests: () => requests.filter(({ url }) => url.includes('/v1/text-to-speech/')),
     historyRequests: () => requests.filter(({ url }) => /\/convai\/conversations(\?|$)/.test(url)),
     detailRequests: () => requests.filter(({ url }) => /\/convai\/conversations\/[^/?]+/.test(url)),
   };

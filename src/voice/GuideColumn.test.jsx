@@ -180,3 +180,19 @@ describe('What the notice says', () => {
     expect(noticeFor('connected', null, 'Sylvi')).toBeNull();
   });
 });
+
+describe('What the notice says while the welcome plays', () => {
+  it('asks for sound and the microphone while the welcome flows silently', () => {
+    expect(noticeFor('idle', null, 'Sylvi', { welcome: 'silent' })).toEqual({
+      text: 'Turn on sound and allow the microphone to speak with Sylvi.',
+      invite: true,
+    });
+  });
+
+  it('asks only for the microphone once the welcome is heard', () => {
+    expect(noticeFor('idle', null, 'Sylvi', { welcome: 'audible' })).toEqual({
+      text: 'Allow the microphone to speak with Sylvi.',
+      invite: true,
+    });
+  });
+});

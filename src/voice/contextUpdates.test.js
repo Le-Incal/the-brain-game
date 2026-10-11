@@ -11,6 +11,7 @@ const {
   formatIdle,
   formatMode,
   formatMiss,
+  formatWelcomePlayed,
   formatTimeWarning,
   formatTourWaiting,
   createContextReporter,
@@ -27,6 +28,7 @@ describe('M4: every contextual update, worded in one place', () => {
       idle: '[player] idle {seconds}s',
       mode: '[app] mode: {mode}',
       missed: '[app] missed: "{word}" belongs to {region}',
+      welcomePlayed: '[app] the welcome has played',
       timeWarning: '[app] about 30 seconds of our conversation remain',
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
     });
@@ -71,6 +73,10 @@ describe('M4: every contextual update, worded in one place', () => {
   });
 
   // Kyle, 2026-10-11: the guide is present in every mode, and is told which.
+  it('tells a new conversation that the recorded welcome has already played', () => {
+    expect(formatWelcomePlayed()).toBe('[app] the welcome has played');
+  });
+
   it('names the mode: explore, study or game', () => {
     expect(formatMode('explore')).toBe('[app] mode: explore');
     expect(formatMode('study')).toBe('[app] mode: study');

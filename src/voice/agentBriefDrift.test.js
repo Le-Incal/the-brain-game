@@ -111,3 +111,25 @@ describe('The brief tells the guide about the three modes', () => {
     expect(prompt).not.toContain('[player] entered Study mode');
   });
 });
+
+// Kyle, 2026-10-11: the app plays a recorded welcome before any conversation.
+describe('The brief tells the guide the welcome has already played', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+
+  it('quotes the welcome and the line that says it played', () => {
+    expect(prompt).toContain('# Arrival');
+    expect(prompt).toContain(
+      '"Welcome. I am {{guide_name}}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions."'
+    );
+    expect(prompt).toContain('  [app] the welcome has played');
+  });
+
+  it('never repeats it', () => {
+    expect(prompt).toMatch(/^- Never repeat the welcome or introduce yourself again\./m);
+  });
+
+  it('says the first message in ElevenLabs is empty', () => {
+    expect(brief).toMatch(/\*\*First message:\*\* \(empty\)/);
+  });
+});
