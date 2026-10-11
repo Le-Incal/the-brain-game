@@ -143,9 +143,17 @@ describe('The brief and the dashboard agree on execution mode', () => {
 
   // next_tour_stop runs after the guide's audio for the turn has finished, so
   // the lobe lights as the guide starts on it, not a stop ahead of the voice.
-  it('says next_tour_stop runs post_tool_speech and the other twelve run immediate', () => {
+  // Kyle, 2026-10-10: face_region, face_lobe and highlight_region too, so a
+  // call made mid-reply lands between sentences, not early.
+  const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop'];
+
+  it('names exactly the four post_tool_speech tools; the other nine run immediate', () => {
     expect(settings).toMatch(/`execution_mode: immediate`/);
-    expect(settings).toMatch(/next_tour_stop[^.]*`execution_mode: post_tool_speech`/);
+    const clause = settings.match(/except ([a-z_, ]+?),? which use `execution_mode: post_tool_speech`/);
+    expect(clause).not.toBeNull();
+    const named = clause[1].split(/,\s*|\s+and\s+/).map((name) => name.trim()).filter(Boolean);
+    expect([...named].sort()).toEqual(POST_TOOL_SPEECH);
+    for (const name of named) expect(AGENT_TOOL_NAMES).toContain(name);
   });
 
   it("documents next_tour_stop's refusal and its instruction", () => {
