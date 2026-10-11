@@ -105,7 +105,7 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
 describe('M4: consent before the mic first opens', () => {
   it('shows the agreed notice, word for word', () => {
     expect(CONSENT_TEXT).toBe(
-      "Talking with your guide sends your voice to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details."
+      "Talking or writing to your guide sends your voice or words to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details."
     );
   });
 
