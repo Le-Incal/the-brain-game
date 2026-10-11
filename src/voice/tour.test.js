@@ -242,3 +242,37 @@ describe('Showcase: after arriving, the brain shows the shape of what it lit', (
     expect(commands.getSceneState().control).toBe('guide_free');
   });
 });
+
+// Kyle: a shorter tour when the player asks for one. Same seven stops, one
+// sentence each.
+describe('A short tour on request', () => {
+  it('start_tour takes a length: short when asked, full by default', async () => {
+    const { commands, settle } = setup();
+    expect(await settle(commands.startTour())).toMatchObject({ ok: true, length: 'full' });
+    expect(await settle(commands.startTour('short'))).toMatchObject({ ok: true, length: 'short' });
+    expect(await settle(commands.startTour('a quick one'))).toMatchObject({ length: 'short' });
+    expect(await settle(commands.startTour('brief'))).toMatchObject({ length: 'short' });
+    expect(await settle(commands.startTour('nonsense'))).toMatchObject({ length: 'full' });
+  });
+
+  it('a short tour visits the same seven stops and asks for one sentence at each', async () => {
+    const { commands, settle } = setup();
+    await settle(commands.startTour('short'));
+    const lobes = [];
+    let stop;
+    for (let i = 0; i < 7; i += 1) {
+      stop = await settle(commands.nextTourStop());
+      lobes.push(stop.lobe);
+      expect(stop.instruction).toMatch(/^In one sentence, /);
+      expect(stop.instruction).not.toMatch(/two or three/);
+    }
+    expect(lobes).toEqual(TOUR_ORDER);
+    expect(stop.instruction).toMatch(/finish the tour/);
+  });
+
+  it('a full tour still asks for two or three sentences', async () => {
+    const { commands, settle } = setup();
+    await settle(commands.startTour());
+    expect((await settle(commands.nextTourStop())).instruction).toMatch(/two or three sentences/);
+  });
+});

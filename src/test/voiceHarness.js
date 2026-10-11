@@ -124,7 +124,7 @@ export function directionFromPivot(point, pivot = geometryPivot()) {
 /** In-memory scene adapter: what BrainScene will expose to the command layer. */
 export function createFakeSceneAdapter(controlOptions = {}) {
   const harness = createControls(controlOptions);
-  const state = { highlight: null, colourRegions: false, annotations: false, mode: 'study' };
+  const state = { highlight: null, focus: null, colourRegions: false, annotations: false, mode: 'study' };
   const pivot = geometryPivot();
   return {
     ...harness,
@@ -137,8 +137,10 @@ export function createFakeSceneAdapter(controlOptions = {}) {
       toSpecimenSpace: (point) =>
         new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]),
       toSpecimenDirection: (direction) => new THREE.Vector3(...direction).normalize(),
-      setHighlight(regionId) {
+      // `focus`: regions given full emphasis over a lit lobe (a tour stop).
+      setHighlight(regionId, { focus = null } = {}) {
         state.highlight = regionId;
+        state.focus = focus;
       },
       getHighlight: () => state.highlight,
       setColourRegions(enabled) {

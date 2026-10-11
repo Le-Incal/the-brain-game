@@ -55,3 +55,18 @@ describe('M2 decision: guide highlight in the shader', () => {
     );
   });
 });
+
+describe('Two-level guide light in the shader', () => {
+  // A tour stop keeps its lobe lit while the named region stands out: the
+  // rest of the lobe takes a paler wash of its own colour, linework unchanged.
+  it('reads a wash level from the mask and pales the tint by it under full linework', () => {
+    expect(fragmentShader).toContain('float voiceWashLevel(int regionId)');
+    expect(fragmentShader).toMatch(
+      /else if \(!feedbackMode && voiceWash > 0\.0\) \{\s*finalColor = mix\(mix\(shadedPaper, tintedRegionColor, voiceWash\), uInkColor, totalInk\);/
+    );
+  });
+
+  it('keeps full emphasis for a mask level of 1 only', () => {
+    expect(fragmentShader).toMatch(/uVoiceMask\[i\] > 0\.99/);
+  });
+});

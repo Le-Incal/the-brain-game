@@ -4,6 +4,7 @@ import {
   default as App,
   colorModeForDifficulty,
   getDescribedRegion,
+  getDescribedText,
   getPrimaryControl,
   shouldShowHeader,
   shouldShowInstructions,
@@ -159,5 +160,30 @@ describe('difficulty and the region palette', () => {
 
     expect(toggleState(markup, 'Hard')).toBe(false);
     expect(toggleState(markup, 'Annotations')).toBe(false);
+  });
+});
+
+// Kyle: when the guide shows something, its text appears on the left, as it
+// does for a click. A click still wins; a resting cursor does not hide it.
+describe('The left panel follows the guide', () => {
+  const selected = { id: 6, name: "Broca's Area", subtitle: 'The Articulate Engine', description: 'Clicked text.' };
+  const hovered = { id: 11, name: 'Primary Auditory Cortex', subtitle: 'The Listening Chamber', description: 'Hover text.' };
+  const guideFocus = { kind: 'lobe', lobe: 'Frontal Lobe', name: 'Frontal Lobe', subtitle: 'The Province of Will', description: 'Lobe text.' };
+
+  it('shows the guide focus over a hover, and a click over both', () => {
+    expect(getDescribedRegion({ guideFocus, hoveredRegion: hovered })).toEqual(guideFocus);
+    expect(getDescribedRegion({ selectedRegion: selected, guideFocus, hoveredRegion: hovered })).toEqual(selected);
+    expect(getDescribedRegion({ hoveredRegion: hovered })).toEqual(hovered);
+  });
+
+  it("shows the full text for a click or the guide's focus, never for a hover", () => {
+    expect(getDescribedText({ selectedRegion: selected, guideFocus })).toBe('Clicked text.');
+    expect(getDescribedText({ guideFocus, hoveredRegion: hovered })).toBe('Lobe text.');
+    expect(getDescribedText({ hoveredRegion: hovered })).toBeNull();
+  });
+
+  it('hides everything while the player grips the brain', () => {
+    expect(getDescribedRegion({ isNavigating: true, guideFocus })).toBeNull();
+    expect(getDescribedText({ isNavigating: true, guideFocus })).toBeNull();
   });
 });

@@ -654,6 +654,28 @@ describe('Session summary: one report per conversation', () => {
     ]);
   });
 
+  it('counts what following the words did, and how it was timed', async () => {
+    const { session, server } = await connected();
+    session.recordFollow('lit', 'estimate');
+    session.recordFollow('turned', 'estimate');
+    session.recordFollow('skipped', 'estimate');
+    session.recordFollow('lit', 'alignment');
+    session.end();
+    await flush();
+    expect(summariesIn(server)[0].body.follow).toEqual({ lit: 2, turned: 1, timing: 'alignment' });
+  });
+
+  it('leaves follow out when no name was followed, and starts fresh each conversation', async () => {
+    const { session, server } = await connected();
+    session.recordFollow('skipped', 'estimate');
+    session.end();
+    await session.start({ guide: 'rollo' });
+    await session.handleConnect({ conversationId: 'conv_456' });
+    session.end();
+    await flush();
+    expect(summariesIn(server).map(({ body }) => 'follow' in body)).toEqual([false, false]);
+  });
+
   describe('closing the tab, the most common real ending', () => {
     function beacon() {
       const sent = [];

@@ -290,6 +290,26 @@ describe('Session summary: POST /api/voice/event', () => {
     expect(lines.length).toBe(before);
   });
 
+  it('writes how many names the brain followed, and how they were timed', async () => {
+    const { lines, app } = await setup();
+    expect((await post(app, { ...SUMMARY, tools: [], follow: { lit: 5, turned: 2, timing: 'alignment' } })).status).toBe(204);
+    expect(lines.at(-1)).toBe('[voice] session AbCd-_12 ended (agent) after 55 s; 0 tool calls; followed 7 names (2 turns, alignment timing)');
+  });
+
+  it.each([
+    ['an unknown timing', { lit: 1, turned: 0, timing: 'guess' }],
+    ['a fractional count', { lit: 1.5, turned: 0, timing: 'estimate' }],
+    ['a negative count', { lit: -1, turned: 0, timing: 'estimate' }],
+    ['an extra field', { lit: 1, turned: 0, timing: 'estimate', names: ['pons'] }],
+    ['a missing count', { lit: 1, timing: 'estimate' }],
+    ['a list', [1, 0]],
+  ])('rejects follow with %s', async (_label, follow) => {
+    const { lines, app } = await setup();
+    const before = lines.length;
+    expect((await post(app, { ...SUMMARY, follow })).status).toBe(400);
+    expect(lines.length).toBe(before);
+  });
+
   it('rejects plain text that is not JSON', async () => {
     const { lines, app } = await setup();
     const before = lines.length;

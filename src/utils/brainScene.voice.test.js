@@ -3,7 +3,7 @@ import { computeHighlightPulse } from './brainScene.js';
 import { REGION_IDS } from '../data/regions.js';
 
 const brainSceneModule = await import('./brainScene.js');
-const { resolveHighlight, createVoiceUniforms, VOICE_HIGHLIGHT_PULSE, toHighlightUniforms } = brainSceneModule;
+const { resolveHighlight, createVoiceUniforms, VOICE_HIGHLIGHT_PULSE, toHighlightUniforms, VOICE_WASH_LEVEL } = brainSceneModule;
 
 describe('M2: the guide highlight persists', () => {
   it('holds a voice highlight steadily until it is cleared', () => {
@@ -81,5 +81,32 @@ describe('M2 decision: the guide highlight is a steady Colour Regions tint', () 
     expect(toHighlightUniforms({ now: 0, feedback: null, voiceRegionIds: [11, 12, 13, 14, 15] }).uVoiceMask).toEqual(
       maskOf([11, 12, 13, 14, 15])
     );
+  });
+});
+
+// During a tour stop the lobe stays lit while the region the guide names
+// gets full emphasis on top: a two-level mask, wash and focus.
+describe('Two-level guide light: lobe wash plus focus', () => {
+  const REGION_ORDER = Array.from({ length: 20 }, (_, i) => i + 1);
+
+  it('lights the focus fully and washes the rest of the lit regions', () => {
+    expect(VOICE_WASH_LEVEL).toBeGreaterThan(0.2);
+    expect(VOICE_WASH_LEVEL).toBeLessThan(0.6);
+    const { uVoiceMask, uVoiceActive } = toHighlightUniforms({
+      now: 0,
+      feedback: null,
+      voiceRegionIds: [1, 2, 3, 4, 5, 6],
+      voiceFocusIds: [6],
+    });
+    expect(uVoiceActive).toBe(1);
+    const levelOf = (id) => uVoiceMask[REGION_ORDER.indexOf(id)];
+    expect(levelOf(6)).toBe(1);
+    for (const id of [1, 2, 3, 4, 5]) expect(levelOf(id)).toBe(VOICE_WASH_LEVEL);
+    expect(levelOf(17)).toBe(0);
+  });
+
+  it('without a focus, every lit region is at full strength as before', () => {
+    const { uVoiceMask } = toHighlightUniforms({ now: 0, feedback: null, voiceRegionIds: [1, 2], voiceFocusIds: null });
+    expect(uVoiceMask.filter((level) => level === 1)).toHaveLength(2);
   });
 });

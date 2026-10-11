@@ -221,3 +221,52 @@ describe('One focus at a time (after the first live run)', () => {
   });
 });
 
+
+describe('The guide focus reaches the left panel and the two-level light', () => {
+  function adapterWithFocus() {
+    const calls = [];
+    const focus = [];
+    const scene = {
+      controls: {},
+      clearSelection: () => calls.push(['clearSelection']),
+      setVoiceHighlight: (ids, options) => calls.push(['setVoiceHighlight', ids, options]),
+      getVoiceHighlight: () => null,
+      toSpecimenSpace: () => null,
+      toSpecimenDirection: () => null,
+    };
+    const adapter = createBrainSceneAdapter({
+      scene,
+      getMode: () => 'study',
+      getColourRegions: () => true,
+      setColourRegions: () => {},
+      getAnnotations: () => false,
+      setAnnotations: () => {},
+      onGuideFocus: (entry) => focus.push(entry),
+    });
+    return { adapter, calls, focus };
+  }
+
+  it('passes the focus to the scene, so a lobe washes and the named region stands out', () => {
+    const { adapter, calls } = adapterWithFocus();
+    adapter.setHighlight([1, 2, 3, 4, 5, 6], { focus: [6] });
+    expect(calls).toContainEqual(['setVoiceHighlight', [1, 2, 3, 4, 5, 6], { focus: [6] }]);
+  });
+
+  it('tells the panel what the guide is showing, and clears it with the light', () => {
+    const { adapter, focus } = adapterWithFocus();
+    adapter.setHighlight(6);
+    adapter.setHighlight([1, 2, 3, 4, 5, 6]);
+    adapter.setHighlight([1, 2, 3, 4, 5, 6], { focus: [5] });
+    adapter.setHighlight(null);
+    expect(focus.map((entry) => entry && (entry.kind === 'lobe' ? entry.lobe : entry.id))).toEqual([6, 'Frontal Lobe', 5, null]);
+  });
+
+  it('a player click clears the guide focus (one focus at a time), and so does leaving Study', () => {
+    const { adapter, focus } = adapterWithFocus();
+    adapter.setHighlight(6);
+    adapter.playerSelected(11);
+    adapter.setHighlight(6);
+    adapter.resetForGame();
+    expect(focus).toEqual([expect.objectContaining({ id: 6 }), null, expect.objectContaining({ id: 6 }), null]);
+  });
+});

@@ -276,3 +276,62 @@ describe('A gate refusal is reported as refused, with the speech it measured', (
     expect(Object.keys(answer).sort()).toEqual(['did', 'instruction', 'ok', 'reason']);
   });
 });
+
+describe('start_tour takes a length', () => {
+  it('passes the length to the scene', async () => {
+    const { commands, calls } = recordingCommands();
+    await createClientTools(commands).start_tour({ length: 'short' });
+    expect(calls).toEqual([['startTour', 'short']]);
+  });
+
+  it('a short tour gates each stop at 3 s of speech', async () => {
+    const clock = { now: 0 };
+    const pacer = pacerModule.createTourPacer({ now: () => clock.now });
+    let stop = 0;
+    const { commands } = recordingCommands({
+      startTour: (length) => ({ ok: true, did: 'Started.', reason: '', stops: [], length: length === 'short' ? 'short' : 'full' }),
+      nextTourStop: () => {
+        stop += 1;
+        return { ok: true, did: 'Turned.', reason: '', stop, of: 7, lobe: ['Frontal Lobe', 'Parietal Lobe'][stop - 1] };
+      },
+    });
+    const tools = createClientTools(commands, { tourPacer: pacer });
+    await tools.start_tour({ length: 'short' });
+    await tools.next_tour_stop({});
+    pacer.guideSpeaking(true);
+    clock.now += 3000;
+    pacer.guideSpeaking(false);
+    expect(JSON.parse(await tools.next_tour_stop({}))).toMatchObject({ ok: true, stop: 2 });
+  });
+});
+
+describe('Tools announce themselves before they run, so the words step aside', () => {
+  it('calls onToolStart with the name before the command runs', async () => {
+    const order = [];
+    const { commands } = recordingCommands({ faceRegion: () => order.push('command') && { ok: true, did: '', reason: '' } });
+    const tools = createClientTools(commands, { onToolStart: (name) => order.push(`start:${name}`) });
+    await tools.face_region({ region_id: 6 });
+    expect(order).toEqual(['start:face_region', 'command']);
+  });
+});
+
+describe('The brief documents the short tour', () => {
+  const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
+  const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+
+  it('start_tour lists its optional length parameter', () => {
+    const tool = section.slice(section.indexOf('### start_tour'), section.indexOf('### next_tour_stop'));
+    expect(tool).toMatch(/- `length` \(string, optional, one of `full`, `short`\)/);
+    expect(tool).not.toMatch(/No parameters/);
+  });
+
+  it('the Tours prompt says when to ask for the short tour', () => {
+    const tours = brief.slice(brief.indexOf('# Tours'), brief.indexOf('# When time is nearly up'));
+    expect(tours).toContain('- If the player asks for a quick or short tour, call start_tour with length short.');
+  });
+
+  it("next_tour_stop's lockstep note gives the short tour's 3 s", () => {
+    const tool = section.slice(section.indexOf('### next_tour_stop'), section.indexOf('### end_tour'));
+    expect(tool).toMatch(/3 s/);
+  });
+});

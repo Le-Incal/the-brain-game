@@ -218,3 +218,29 @@ describe('A refusal carries the speech it measured, for the logs only', () => {
     expect(Object.keys(sent).sort()).toEqual(['did', 'instruction', 'ok', 'reason']);
   });
 });
+
+describe('A short tour needs less speech per stop', () => {
+  it('needs 3 s at each stop of a short tour', () => {
+    expect(pacerModule.TOUR_STOP_MIN_SPEECH_MS_SHORT).toBe(3000);
+    const { pacer, arrive, speak } = setup();
+    pacer.tourStarted({ length: 'short' });
+    pacer.request();
+    arrive(1, 'Frontal Lobe');
+    speak(2900);
+    const refusal = pacer.request();
+    expect(refusal.instruction).toBe('Describe the Frontal Lobe first (one sentence), then call next_tour_stop.');
+    speak(100);
+    expect(pacer.request()).toBeNull();
+  });
+
+  it('a full tour, or one with no length, still needs 8 s', () => {
+    for (const options of [{ length: 'full' }, undefined]) {
+      const { pacer, arrive, speak } = setup();
+      pacer.tourStarted(options);
+      pacer.request();
+      arrive(1, 'Frontal Lobe');
+      speak(7900);
+      expect(pacer.request()).not.toBeNull();
+    }
+  });
+});

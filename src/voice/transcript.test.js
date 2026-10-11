@@ -36,3 +36,20 @@ describe('M4: transcript', () => {
     expect(list).toEqual([{ id: 1, text: 'Observe' }]);
   });
 });
+
+describe('Expressive tags never show on screen', () => {
+  // Live run: Sylvi's reply began "[warm]", a cue for the voice engine.
+  it("strips tags like [warm] from the guide's lines", () => {
+    expect(messageFromSdk({ message: '[warm] Ah, my prefrontal cortex.', role: 'agent', event_id: 7 }, 'Sylvi')).toMatchObject({
+      text: 'Ah, my prefrontal cortex.',
+    });
+  });
+
+  it('drops a line that was only a tag', () => {
+    expect(messageFromSdk({ message: '[laughs]', role: 'agent', event_id: 8 }, 'Sylvi')).toBeNull();
+  });
+
+  it("leaves the player's own words exactly as typed", () => {
+    expect(messageFromSdk({ message: '[test] hello', role: 'user', event_id: 9 }, 'Sylvi')).toMatchObject({ text: '[test] hello' });
+  });
+});
