@@ -15,6 +15,7 @@ import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
 import { randomId, signDevice, signReservation, verifyDevice, verifyReservation } from './signing.js';
 import { verifyElevenLabsSignature } from './webhook.js';
 import { fetchConversation, fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
+import { DEFAULT_WELCOME_MODEL, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
 // A reservation still open this long (token window, plus the 8-minute session
@@ -27,6 +28,9 @@ export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
 // whether "Type instead" is worth building.
 export const CLIENT_EVENT_TYPES = new Set(['mic_blocked', 'mic_unsupported']);
 export const EVENT_RATE_LIMIT = { max: 30, windowMs: 60 * 60 * 1000 };
+// The welcome is served from memory; this only stops a script from looping on it.
+export const WELCOME_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
+const WELCOME_CACHE_SECONDS = 600;
 // One per conversation: how it ended, how long it ran, every client tool call.
 // Checked field by field so nothing but these values can reach the logs.
 export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown']);
@@ -177,6 +181,19 @@ export function createApp({
   const releaseLimiterByDevice = createRateLimiter({ ...RELEASE_LIMIT_PER_DEVICE, now });
   const releaseLimiterByAddress = createRateLimiter({ ...RELEASE_LIMIT_PER_ADDRESS, now });
   const eventLimiter = createRateLimiter({ ...EVENT_RATE_LIMIT, now });
+  const welcomeLimiter = createRateLimiter({ ...WELCOME_RATE_LIMIT, now });
+  const welcomeModel = env.WELCOME_TTS_MODEL?.trim() || DEFAULT_WELCOME_MODEL;
+  const welcomes = createWelcomeCache({
+    now,
+    record: (guide) =>
+      fetchWelcomeRecording({
+        fetchImpl,
+        apiKey: config.apiKey,
+        voiceId: config.voices[guide],
+        text: welcomeText(GUIDE_NAMES[guide]),
+        modelId: welcomeModel,
+      }),
+  });
   const shortId = (reservationId) => String(reservationId).slice(0, 8);
   const chargedSeconds = (durationSecs) =>
     Math.min(config.sessionMaxSeconds, Math.max(0, Math.round(Number(durationSecs) || 0)));
@@ -334,6 +351,51 @@ export function createApp({
     const refusal = capRefusal(deviceId);
     if (refusal) return res.json(refusal.body);
     return res.json({ available: true, remainingSeconds: ledger.deviceRemaining(deviceId) });
+  });
+
+  // The recorded welcome: text, audio and letter timings, recorded once per guide.
+  async function welcomeFor(req, res) {
+    if (!voiceGate(req, res, { onRefuse: 403 })) return null;
+    const guide = String(req.params.guide ?? '').toLowerCase();
+    if (!GUIDE_NAMES[guide]) {
+      res.status(400).json({ error: 'unknown_guide' });
+      return null;
+    }
+    const limit = welcomeLimiter.take(clientAddress(req));
+    if (!limit.allowed) {
+      res.set('Retry-After', String(limit.retryAfterSeconds));
+      res.status(429).json({ available: false, reason: 'rate_limited' });
+      return null;
+    }
+    try {
+      return { guide, recording: await welcomes.get(guide) };
+    } catch (error) {
+      logger.warn(`[voice] welcome unavailable for ${guide}: ${error.message}`);
+      res.status(502).json({ available: false, reason: 'upstream' });
+      return null;
+    }
+  }
+
+  app.get('/api/voice/welcome/:guide', async (req, res) => {
+    const found = await welcomeFor(req, res);
+    if (!found) return;
+    const { guide, recording } = found;
+    const guideName = GUIDE_NAMES[guide];
+    res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
+    res.json({
+      guideName,
+      text: welcomeText(guideName),
+      audioUrl: `/api/voice/welcome/${guide}/audio`,
+      alignment: { chars: recording.chars, startsMs: recording.startsMs },
+    });
+  });
+
+  app.get('/api/voice/welcome/:guide/audio', async (req, res) => {
+    const found = await welcomeFor(req, res);
+    if (!found) return;
+    res.set('Content-Type', 'audio/mpeg');
+    res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
+    res.send(found.recording.audio);
   });
 
   app.post('/api/voice/token', express.json({ limit: '2kb' }), async (req, res) => {

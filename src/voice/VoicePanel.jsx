@@ -21,6 +21,7 @@ import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
 import { createTranscriptStream } from './transcriptStream.js';
+import { createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
@@ -46,6 +47,7 @@ const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
 function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore' }) {
   const controlRef = useRef(control);
   controlRef.current = control;
+  const guideRef = useRef(guide);
   const motionRef = useRef(motion.on);
   motionRef.current = motion.on;
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
@@ -68,6 +70,16 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const guideSpeakingRef = useRef(false);
   const stream = useMemo(() => createTranscriptStream(), []);
   const refreshEntries = () => setEntries(stream.entries());
+  // The recorded welcome on arrival: 'none' until it loads, then 'silent' or
+  // 'audible' while it plays, then 'done'.
+  const welcome = useMemo(() => {
+    const instance = createWelcome();
+    if (import.meta.env.DEV) window.__welcome = instance;
+    return instance;
+  }, []);
+  const [welcomeState, setWelcomeState] = useState('none');
+  const welcomeStateRef = useRef('none');
+  const welcomeStreamingRef = useRef(false);
   // Follow the words: the brain lights what the guide names, as it names it.
   const follower = useMemo(() => {
     const instance = createWordFollower({
@@ -114,6 +126,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     onMessage: (payload) => {
       const raw = typeof payload?.message === 'string' ? payload.message : '';
       if (payload?.role === 'user') {
+        welcome.stop();
         stallGuardRef.current?.playerActivity();
         follower.interrupted();
         stream.addVisitor({ id: payload.event_id ? `u-${payload.event_id}` : nextLineId('u'), text: raw });
@@ -194,6 +207,11 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     if (state.phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
   }, [state.phase, mode, voiceEventsRef]);
 
+  // A new conversation never repeats the welcome the visitor already heard or read.
+  useEffect(() => {
+    if (state.phase === 'connected' && welcomeStateRef.current !== 'none') voiceEventsRef.current?.welcomePlayed();
+  }, [state.phase, voiceEventsRef]);
+
   // The hatching answers the guide's voice, and the brain gestures gently
   // while it speaks, unless anything else is directing attention. Once its
   // moves settle it floats: a drift while something is lit, a slow turn when
@@ -209,10 +227,20 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     const tick = (now) => {
       const dtSeconds = (now - last) / 1000;
       const level = session.outputLevel();
-      scene.setVoiceLevel(level);
+      scene.setVoiceLevel(Math.max(level, welcome.level()));
       // The level rising is the guide's audio being heard: the playback clock's start.
       follower.outputLevel(level);
-      if (stream.tick(follower.playback())) setEntries(stream.entries());
+      // The welcome streams on its own clock until it is done; then the follower's.
+      const playback = welcomeStreamingRef.current ? welcome.playback() : follower.playback();
+      if (welcomeStreamingRef.current && playback.done) welcomeStreamingRef.current = false;
+      if (stream.tick(playback)) setEntries(stream.entries());
+      if (welcomeStateRef.current !== 'none') {
+        const next = welcome.active() ? (welcome.audible() ? 'audible' : 'silent') : 'done';
+        if (next !== welcomeStateRef.current) {
+          welcomeStateRef.current = next;
+          setWelcomeState(next);
+        }
+      }
       const still = reducedMotion || !motionRef.current;
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
       const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion: still });
@@ -237,7 +265,29 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       scene.setGesture({ yaw: 0, pitch: 0 });
       scene.controls.setIdleTurn(0);
     };
-  }, [session, scene, follower, stream]);
+  }, [session, scene, follower, stream, welcome]);
+
+  // Within seconds of arrival the brain welcomes the visitor, aloud where the
+  // browser allows it, otherwise as flowing text until the first tap.
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      if (!(await welcome.load(guideRef.current)) || cancelled) return;
+      stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
+      welcomeStreamingRef.current = true;
+      setEntries(stream.entries());
+      const heard = await welcome.start();
+      if (cancelled) return;
+      welcomeStateRef.current = heard ? 'audible' : 'silent';
+      setWelcomeState(welcomeStateRef.current);
+    }, WELCOME_DELAY_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      welcome.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [welcome, stream]);
 
   // Closing the tab is how most conversations really end; it still gets its summary.
   useEffect(() => {
@@ -250,13 +300,13 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   }, [session]);
 
   // The guide is chosen in Settings: a change takes effect at once, in a new conversation.
-  const guideRef = useRef(guide);
   useEffect(() => {
     if (guideRef.current === guide) return;
     guideRef.current = guide;
+    welcome.stop();
     if (ACTIVE_PHASES.has(session.getState().phase)) session.switchGuideNow(guide);
     else session.changeGuide(guide);
-  }, [guide, session]);
+  }, [guide, session, welcome]);
 
   // New lines keep the column at the bottom only while the reader is there.
   useLayoutEffect(() => {
@@ -267,20 +317,26 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const name = GUIDES.find((g) => g.id === guide)?.name ?? 'your guide';
   const active = ACTIVE_PHASES.has(state.phase);
 
-  const turnVoice = (on) => {
+  const turnVoice = async (on) => {
     if (on) {
-      if (!active) session.start({ guide });
-    } else {
+      stream.setVoice(true);
+      // The first tap: the welcome's voice joins at the word its text has reached.
+      if (welcome.active() && !welcome.audible()) await welcome.unlock();
+      if (!ACTIVE_PHASES.has(session.getState().phase)) session.start({ guide });
+      return;
+    }
+    welcome.mute();
+    if (active) {
       stream.setVoice(false);
       session.end();
     }
-    if (on) stream.setVoice(true);
   };
 
   const send = () => {
     const text = draft.trim();
     if (!text) return;
     setDraft('');
+    welcome.stop();
     stream.addVisitor({ id: nextLineId('typed'), text });
     refreshEntries();
     if (state.phase === 'connected') {
@@ -291,7 +347,9 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     if (!active) session.start({ guide });
   };
 
-  const notice = noticeFor(state.phase, state.message, name);
+  const notice = noticeFor(state.phase, state.message, name, {
+    welcome: welcomeState === 'audible' || welcomeState === 'silent' ? welcomeState : null,
+  });
   return (
     <GuideColumnView
       guideName={name}
@@ -307,7 +365,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       draft={draft}
       onDraft={setDraft}
       onSend={send}
-      voice={{ on: active, onChange: turnVoice }}
+      voice={{ on: active || welcomeState === 'audible', onChange: turnVoice }}
       motion={motion}
       notice={notice ? { text: notice.text, onActivate: notice.invite ? () => turnVoice(true) : undefined } : null}
       consent={

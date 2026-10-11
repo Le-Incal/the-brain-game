@@ -132,10 +132,14 @@ const STYLES = {
  * What to say under the switches, if anything: an invitation while the voice
  * is off, progress while it wakes, or why it could not.
  */
-export function noticeFor(phase, message, name) {
+export function noticeFor(phase, message, name, { welcome = null } = {}) {
   if (phase === 'unavailable' && message) return { text: message };
   if (phase === 'requesting' || phase === 'connecting') return { text: message ?? `Waking ${name}…` };
-  if (phase === 'idle') return { text: `Turn on sound and allow the microphone to speak with ${name}.`, invite: true };
+  if (phase === 'idle') {
+    // Once the welcome is heard, sound is already on: only the microphone remains.
+    if (welcome === 'audible') return { text: `Allow the microphone to speak with ${name}.`, invite: true };
+    return { text: `Turn on sound and allow the microphone to speak with ${name}.`, invite: true };
+  }
   return null;
 }
 

@@ -125,7 +125,8 @@ describe('The welcome', () => {
     expect(audio.paused).toBe(true);
     expect(welcome.audible()).toBe(false);
     clock.now = 700;
-    expect(welcome.playback().playedChars).toBe(7);
+    // Letters start every 100 ms from 0: by 700 ms, eight have begun.
+    expect(welcome.playback().playedChars).toBe(8);
   });
 
   it('gives the hatching a voice level only while a letter is heard', async () => {
