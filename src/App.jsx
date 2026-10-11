@@ -23,6 +23,39 @@ export function shouldShowHeader(gamePhase) {
   );
 }
 
+/** Begin, at the foot of the left panel. The panel ignores the pointer; the button does not. */
+export function BeginButton({ onBegin }) {
+  return (
+    <button type="button" className="start-button" onClick={onBegin} style={STYLES.beginButton}>
+      Begin
+    </button>
+  );
+}
+
+/** The landing instructions, with Begin under them once a game can start. */
+export function HowToPlay({ onBegin = null }) {
+  return (
+    <div>
+      <div style={STYLES.instructionTitle}>How to Play</div>
+      <div className="instruction-body" style={STYLES.instructionBody}>
+        <p style={{ marginBottom: 10 }}>
+          Welcome to the Brain Game, a study in anatomy and cognition.
+        </p>
+        <p style={{ marginBottom: 10 }}>
+          Rotate the brain to guide each falling word to its rightful
+          region. A correct catch illuminates the area; a wrong one
+          shatters into the void below.
+        </p>
+        <p>
+          Toggle Colour Regions to reveal each area&apos;s hue. Pause
+          at any time to explore the brain freely, region by region.
+        </p>
+      </div>
+      {onBegin && <BeginButton onBegin={onBegin} />}
+    </div>
+  );
+}
+
 export function shouldShowInstructions(gamePhase, selectedRegion = null) {
   return gamePhase === 'ready' && !selectedRegion;
 }
@@ -60,6 +93,17 @@ export function getPrimaryControl(gamePhase, brainReady) {
     };
   }
   return null;
+}
+
+/** Begin lives under How to Play, so it shows only when a game can start. */
+export function shouldShowBegin(gamePhase, brainReady) {
+  return gamePhase === 'ready' && Boolean(brainReady);
+}
+
+/** The bottom bar keeps Pause and Resume; Begin sits under How to Play. */
+export function getBarControl(gamePhase, brainReady) {
+  const control = getPrimaryControl(gamePhase, brainReady);
+  return control && control.action !== 'start' ? control : null;
 }
 
 // Study mode is where the voice guide works. It opens only from the ready
@@ -392,7 +436,10 @@ export const STYLES = {
     zIndex: 12,
     textAlign: 'center',
   },
-  startButton: {
+  beginButton: {
+    display: 'block',
+    marginTop: 16,
+    pointerEvents: 'auto',
     fontFamily: "'Playfair Display', Georgia, serif",
     fontSize: 'clamp(13px, 2vw, 16px)',
     fontWeight: 700,
@@ -548,7 +595,6 @@ export default function App() {
   const [colorMode, setColorMode] = useState(() =>
     colorModeForDifficulty('easy')
   );
-  const [showLabels, setShowLabels] = useState(false);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -577,7 +623,7 @@ export default function App() {
   const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
-  liveStateRef.current = { gamePhase, colorMode, showLabels };
+  liveStateRef.current = { gamePhase, colorMode };
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -695,8 +741,6 @@ export default function App() {
             getMode: () => sceneModeForPhase(liveStateRef.current.gamePhase),
             getColourRegions: () => liveStateRef.current.colorMode,
             setColourRegions: (value) => setColorMode(value),
-            getAnnotations: () => liveStateRef.current.showLabels,
-            setAnnotations: (value) => setShowLabels(value),
             onGuideFocus: setGuideFocus,
           });
           sceneAdapterRef.current = adapter;
@@ -773,11 +817,6 @@ export default function App() {
     }
   }, [colorMode]);
 
-  useEffect(() => {
-    if (sceneRef.current) {
-      sceneRef.current.setLabelsVisible(showLabels);
-    }
-  }, [showLabels, brainReady]);
 
   useEffect(() => {
     if (gameRef.current) {
@@ -873,7 +912,8 @@ export default function App() {
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
   const showInstructions = shouldShowInstructions(gamePhase, selectedRegion);
-  const primaryControl = getPrimaryControl(gamePhase, brainReady);
+  const barControl = getBarControl(gamePhase, brainReady);
+  const showBegin = shouldShowBegin(gamePhase, brainReady);
 
   return (
     <div style={STYLES.container}>
@@ -1003,18 +1043,6 @@ export default function App() {
         </div>
       )}
 
-      {brainReady && gamePhase === 'ready' && (
-        <div className="game-prompt ready-prompt" style={STYLES.gamePrompt}>
-          <button
-            type="button"
-            className="start-button"
-            onClick={startGame}
-            style={STYLES.startButton}
-          >
-            Begin
-          </button>
-        </div>
-      )}
       {gamePhase === 'countdown' && (
         <div className="game-prompt" style={STYLES.gamePrompt} aria-live="assertive">
           <div style={STYLES.countdown}>{countdown}</div>
@@ -1026,25 +1054,7 @@ export default function App() {
         factoid ||
         correction) && (
         <div className="description-panel" style={STYLES.descriptionPanel}>
-          {showInstructions && (
-            <div>
-              <div style={STYLES.instructionTitle}>How to Play</div>
-              <div className="instruction-body" style={STYLES.instructionBody}>
-                <p style={{ marginBottom: 10 }}>
-                  Welcome to the Brain Game, a study in anatomy and cognition.
-                </p>
-                <p style={{ marginBottom: 10 }}>
-                  Rotate the brain to guide each falling word to its rightful
-                  region. A correct catch illuminates the area; a wrong one
-                  shatters into the void below.
-                </p>
-                <p>
-                  Toggle Colour Regions to reveal each area&apos;s hue. Pause
-                  at any time to explore the brain freely, region by region.
-                </p>
-              </div>
-            </div>
-          )}
+          {showInstructions && <HowToPlay onBegin={showBegin ? startGame : null} />}
           {!showInstructions && describedRegion && (
             <div className="region-description" style={STYLES.hoverLabel}>
               <span
@@ -1078,6 +1088,7 @@ export default function App() {
               )}
             </div>
           )}
+          {!showInstructions && showBegin && <BeginButton onBegin={startGame} />}
           {!showInstructions && factoid && (
             <div className="region-description" style={STYLES.factoid}>{factoid}</div>
           )}
@@ -1088,18 +1099,12 @@ export default function App() {
       )}
 
       <div className="game-controls" style={STYLES.controls}>
-        {primaryControl && (
+        {barControl && (
           <ToggleButton
-            className={
-              primaryControl.action === 'start'
-                ? 'primary-game-control mobile-primary-control'
-                : 'primary-game-control'
-            }
-            label={primaryControl.label}
-            active={primaryControl.active}
-            onClick={
-              primaryControl.action === 'start' ? startGame : togglePause
-            }
+            className="primary-game-control"
+            label={barControl.label}
+            active={barControl.active}
+            onClick={togglePause}
             compact
           />
         )}
@@ -1107,12 +1112,6 @@ export default function App() {
           label="Colour Regions"
           active={colorMode}
           onClick={() => setColorMode(!colorMode)}
-          compact
-        />
-        <ToggleButton
-          label="Annotations"
-          active={showLabels}
-          onClick={() => setShowLabels(!showLabels)}
           compact
         />
         {studyControl && (
