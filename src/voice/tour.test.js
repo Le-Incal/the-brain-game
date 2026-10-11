@@ -73,10 +73,10 @@ describe('face_lobe lights a whole lobe and turns to it', () => {
     expect(result.did).toMatch(/cingulate/i);
   });
 
-  it('acts only in Study mode', async () => {
+  it('never acts during a game', async () => {
     const { commands, state, settle } = setup();
     state.mode = 'game';
-    expect((await settle(commands.faceLobe('Frontal Lobe'))).reason).toMatch(/study/i);
+    expect((await settle(commands.faceLobe('Frontal Lobe'))).reason).toMatch(/game/i);
   });
 });
 

@@ -43,7 +43,7 @@ function prefersReducedMotion() {
 
 const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
 
-function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion }) {
+function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore' }) {
   const controlRef = useRef(control);
   controlRef.current = control;
   const motionRef = useRef(motion.on);
@@ -189,9 +189,10 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
   }, [session, scene, voiceEventsRef]);
 
+  // The guide is told the mode on connecting and whenever it changes.
   useEffect(() => {
-    if (state.phase === 'connected') voiceEventsRef.current?.studyEntered();
-  }, [state.phase, voiceEventsRef]);
+    if (state.phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
+  }, [state.phase, mode, voiceEventsRef]);
 
   // The hatching answers the guide's voice, and the brain gestures gently
   // while it speaks, unless anything else is directing attention. Once its

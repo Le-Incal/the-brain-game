@@ -14,6 +14,7 @@ import {
   ToggleButton,
   getBarButtons,
   getStudyCaption,
+  guideModeForPhase,
   initialGuide,
   initialMotion,
   shouldMountGuide,
@@ -436,6 +437,8 @@ export default function App() {
           },
           onIncorrect: ({ word, correctRegion }) => {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2500);
+            // The guide teaches the miss in one sentence.
+            if (correctRegion) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
             setCorrection(
               correctRegion
                 ? `Rather: ${correctRegion.name}${correctRegion.subtitle ? ` — ${correctRegion.subtitle}` : ''}`
@@ -451,8 +454,9 @@ export default function App() {
             });
             window.setTimeout(() => setCorrection(null), 3000);
           },
-          onMiss: ({ correctRegion }) => {
+          onMiss: ({ word, correctRegion }) => {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2000);
+            if (correctRegion && word) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
             setCorrection(
               correctRegion
                 ? `It sought ${correctRegion.name}`
@@ -847,6 +851,7 @@ export default function App() {
             voiceEventsRef={voiceEventsRef}
             control={control}
             motion={{ on: motionOn, onChange: setMotionOn }}
+            mode={guideModeForPhase(gamePhase)}
           />
         </Suspense>
       )}

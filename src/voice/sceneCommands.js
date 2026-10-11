@@ -56,7 +56,8 @@ const REGION_BY_ID = new Map(brainRegions.regions.map((region) => [region.id, re
 const MIN_REGION_ID = Math.min(...REGION_BY_ID.keys());
 const MAX_REGION_ID = Math.max(...REGION_BY_ID.keys());
 const REGION_RANGE_REASON = `region_id must be a whole number from ${MIN_REGION_ID} to ${MAX_REGION_ID}.`;
-const STUDY_ONLY_REASON = 'I can only change the scene in Study mode.';
+// Kyle, 2026-10-11: showing a region mid-game would give the answer away.
+export const GAME_REASON = 'A game is in progress, so I cannot change the scene; it might give an answer away.';
 const HOLDING_REASON = 'The user is holding me; I will not move while they do.';
 const USER_GRAB_REASON = 'The user took hold of me mid-turn, so I stopped where they grabbed me.';
 const REPLACED_REASON = 'This turn was replaced by a later move before it finished.';
@@ -386,7 +387,7 @@ export function createSceneCommands(
   }
 
   async function faceRegion(regionId, { hemisphere } = {}) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
     if (!motionAllowed()) {
@@ -411,7 +412,7 @@ export function createSceneCommands(
   }
 
   async function rotateTo(view) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     if (!VIEWS.includes(view)) {
       return fail(`Unknown view "${view}". Valid views: ${VIEWS.join(', ')}.`);
     }
@@ -467,7 +468,7 @@ export function createSceneCommands(
   }
 
   async function faceLobe(lobeName, { bookmark } = {}) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     const lobe = normalizeLobe(lobeName);
     if (!lobe) return fail(`Unknown lobe "${lobeName}". Valid lobes: ${LOBE_NAMES.join(', ')}.`);
     if (!motionAllowed()) {
@@ -504,7 +505,7 @@ export function createSceneCommands(
   }
 
   async function startTour(length) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
     tour = { index: -1, length: normalizeTourLength(length) };
@@ -519,7 +520,7 @@ export function createSceneCommands(
   }
 
   async function nextTourStop() {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     if (!tour) return fail('No tour is running. Call start_tour first.');
     const index = tour.index + 1;
     if (index >= TOUR_ORDER.length) return finishTour('That was the whole tour; my colours are back on.');
@@ -533,7 +534,7 @@ export function createSceneCommands(
   }
 
   async function endTour() {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     return finishTour('Ended the tour; my colours are back on.');
   }
 
@@ -606,7 +607,7 @@ export function createSceneCommands(
   }
 
   function highlightRegion(regionId) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
     light(id);
@@ -614,13 +615,13 @@ export function createSceneCommands(
   }
 
   function clearHighlight() {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     light(null);
     return ok('Cleared the highlight.');
   }
 
   function setFlag(value, apply, label) {
-    if (!inStudy()) return fail(STUDY_ONLY_REASON);
+    if (!inStudy()) return fail(GAME_REASON);
     const enabled = coerceBooleanLike(value);
     if (enabled === undefined) return fail('enabled must be true or false.');
     apply(enabled);

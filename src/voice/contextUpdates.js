@@ -9,7 +9,8 @@ export const CONTEXT_MESSAGES = {
   tookHoldInterrupted: '[player] took hold of me; interrupted: {move}',
   handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
   idle: '[player] idle {seconds}s',
-  studyEntered: '[player] entered Study mode',
+  mode: '[app] mode: {mode}',
+  missed: '[app] missed: "{word}" belongs to {region}',
   timeWarning: '[app] about 30 seconds of our conversation remain',
   tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
 };
@@ -37,7 +38,9 @@ export const formatHandoff = ({ view, viewExact }) =>
 
 export const formatIdle = (seconds) => fill(CONTEXT_MESSAGES.idle, { seconds });
 
-export const formatStudyEntered = () => CONTEXT_MESSAGES.studyEntered;
+export const formatMode = (mode) => fill(CONTEXT_MESSAGES.mode, { mode });
+
+export const formatMiss = ({ word, region }) => fill(CONTEXT_MESSAGES.missed, { word, region });
 
 export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
 
@@ -58,9 +61,11 @@ export function createContextReporter({ send, now = Date.now, idleAfterMs = IDLE
 
   return {
     activity,
-    studyEntered() {
-      activity();
-      send(formatStudyEntered());
+    modeChanged(mode) {
+      send(formatMode(mode));
+    },
+    gameMiss(miss) {
+      send(formatMiss(miss));
     },
     regionClicked(region) {
       activity();

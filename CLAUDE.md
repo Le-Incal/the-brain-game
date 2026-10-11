@@ -35,11 +35,11 @@ npm run kb -- compile           # approved only -> src/data/brainGraph.json
 
 - **Research, then Plan, then Execute.** Get Kyle's explicit confirmation before writing code.
 - **TDD:** write tests, run them and confirm they fail, commit the tests, then implement until they pass.
-- **Existing user controls never change.** New behaviour is additive and opt-in; the voice guide acts only in Study mode, when the player engages it.
+- **Existing user controls never change** unless Kyle asks. Since 2026-10-11 the voice guide is the front door: present from arrival in Explore and Study, and never able to move or light the brain during a game (it would give answers away).
 - **Every claim gets a number.** Self-check renders and outputs before presenting them.
 - **Stay in scope.** Edit only what the task names. No global smoothing or cleanup passes: they break work that was already correct.
 - **Neuroscience integrity:** region names are tissue nouns, never functions. No left-brain/right-brain myth. The cerebellum is not just balance. Functions are tagged primary or contributing. Sources are Kandel, Purves, Nolte or peer-reviewed work, never pop-science, Wikipedia or news. No text may copy 8 or more consecutive words from a source (a test enforces this in `knowledge/`).
-- **Medical:** the guides never give medical advice. They say plainly that they are sorry but cannot, then offer to explain the anatomy.
+- **Medical:** questions about how the body works are anatomy and get a direct answer. Only questions about someone's own symptoms, diagnosis, scan, medication or treatment get one short line ("I can't give medical advice; a doctor is the right person to ask."), then the anatomy.
 - **Writing:** no em dashes in prose. Collaborative "we/our" with Kyle.
 
 ## Hard-won lessons
