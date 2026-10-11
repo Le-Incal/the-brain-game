@@ -132,8 +132,10 @@ const STYLES = {
  * What to say under the switches, if anything: an invitation while the voice
  * is off, progress while it wakes, or why it could not.
  */
-export function noticeFor(phase, message, name, { welcome = null } = {}) {
+export function noticeFor(phase, message, name, { welcome = null, micRefused = false } = {}) {
   if (phase === 'unavailable' && message) return { text: message };
+  // Without the microphone the guide carries on in writing.
+  if (micRefused && (phase === 'connected' || phase === 'resting')) return { text: `Microphone off. Write to ${name} below.` };
   if (phase === 'requesting' || phase === 'connecting') return { text: message ?? `Waking ${name}…` };
   if (phase === 'idle') {
     // Once the welcome is heard, sound is already on: only the microphone remains.

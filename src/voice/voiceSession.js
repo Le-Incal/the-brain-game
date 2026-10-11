@@ -5,6 +5,10 @@
  *
  *   idle -> needs-consent -> requesting -> connecting -> connected -> idle
  *                                     \-> unavailable (with a plain message)
+ *   connected -> resting (rest, time limit) -> requesting (wake) -> ...
+ *
+ * A conversation is 'voice' or 'text' (text only: no microphone, no audio).
+ * 'auto' asks for the microphone and carries on in text if it is refused.
  */
 import { GUIDES, normalizeGuide } from './guides.js';
 import { describeVoiceUnavailable } from './voiceAvailability.js';
@@ -90,7 +94,9 @@ export function createVoiceSession({
   onConversationStart = () => {},
   sendBeacon = (url, data) => globalThis.navigator?.sendBeacon?.(url, data) ?? false,
 }) {
-  let state = { phase: 'idle', guide: null, message: null, conversationId: null };
+  let state = { phase: 'idle', guide: null, message: null, conversationId: null, mode: 'voice', micRefused: false };
+  // The mode asked for ('voice', 'text' or 'auto'), kept for waking from rest.
+  let requestedMode = 'voice';
   let consentGiven = readConsent();
   let pendingGuide = null;
   let cutoffTimer = null;
@@ -109,8 +115,30 @@ export function createVoiceSession({
   function conversationOver(reason) {
     lastConversationEndedAt = now();
     sendSummary(reason);
+    reportEnded();
     onConversationEnd();
   }
+
+  // The slot frees at once; the minutes wait for ElevenLabs' report.
+  let connectedReservation = null;
+  // A keepalive fetch outlives the page, so a closing tab reports too.
+  function reportEnded() {
+    const reservation = connectedReservation;
+    connectedReservation = null;
+    if (!reservation) return;
+    Promise.resolve()
+      .then(() =>
+        fetchImpl('/api/voice/ended', {
+          method: 'POST',
+          credentials: 'same-origin',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reservation }),
+        })
+      )
+      .catch(() => {});
+  }
+
 
   /**
    * One line in our logs per conversation: how it ended, how long it ran and
@@ -213,13 +241,25 @@ export function createVoiceSession({
     onConversationStart();
     clearRetry();
     busyRetries = 0;
+    if (requestedMode === 'text') {
+      set({ mode: 'text' });
+      await requestToken();
+      return;
+    }
     const microphone = await requestMicrophone();
     if (microphone !== 'granted') {
       // Counted, once per page, so we know how often this happens ("Type instead").
       reportMicEvent(microphone === 'denied' ? 'mic_blocked' : 'mic_unsupported');
+      if (requestedMode === 'auto') {
+        // Kyle, 2026-10-11: without the microphone the guide carries on in text.
+        set({ mode: 'text', micRefused: true });
+        await requestToken();
+        return;
+      }
       set({ phase: 'unavailable', message: microphone === 'denied' ? MIC_BLOCKED_MESSAGE : MIC_UNAVAILABLE_MESSAGE });
       return;
     }
+    set({ mode: 'voice', micRefused: false });
     await requestToken();
   }
 
@@ -251,11 +291,14 @@ export function createVoiceSession({
       pendingReservation = body.dynamicVariables?.reservation ?? null;
       sessionTag = pendingReservation ? String(pendingReservation).split('.')[0].slice(0, 8) : null;
       set({ phase: 'connecting', message: null });
+      const textOnly = state.mode === 'text';
       conversation.startSession({
         conversationToken: body.conversationToken,
         connectionType: 'webrtc',
         dynamicVariables: body.dynamicVariables,
-        overrides: { tts: { voiceId: body.voiceId } },
+        // Text only needs no microphone and makes no audio.
+        ...(textOnly ? { textOnly: true } : {}),
+        overrides: textOnly ? { conversation: { textOnly: true } } : { tts: { voiceId: body.voiceId } },
         clientTools,
       });
     } catch {
@@ -263,10 +306,11 @@ export function createVoiceSession({
     }
   }
 
-  async function start({ guide } = {}) {
+  async function start({ guide, mode } = {}) {
     // One conversation at a time: a second Talk while one is starting or
     // running does nothing.
     if (starting() || state.phase === 'connected') return;
+    if (mode === 'voice' || mode === 'text' || mode === 'auto') requestedMode = mode;
     const chosen = normalizeGuide(guide) ?? pendingGuide ?? state.guide;
     pendingGuide = null;
     if (!chosen) {
@@ -281,19 +325,32 @@ export function createVoiceSession({
     await requestAndStart();
   }
 
+  // Resting and the time limit end the conversation quietly; the next
+  // activity wakes a new one that carries on.
+  const RESTING_REASONS = new Set(['rest', 'time_limit']);
+
   function end(reason = 'user') {
     clearCutoff();
     clearRetry();
+    const wasConnected = state.phase === 'connected';
     if (state.phase === 'connecting') releasePending();
     if (state.phase === 'connecting' || state.phase === 'connected') conversation.endSession();
-    if (state.phase === 'connected') conversationOver(reason);
-    set({ phase: 'idle', conversationId: null });
+    if (wasConnected) conversationOver(reason);
+    const resting = wasConnected && RESTING_REASONS.has(reason);
+    set({ phase: resting ? 'resting' : 'idle', conversationId: null });
   }
 
   return {
     getState: () => ({ ...state }),
     start,
     end: () => end('user'),
+    /** Quiet: the conversation ends, and the next activity wakes another. */
+    rest: () => end('rest'),
+    /** Wakes from rest in the mode it rested in. */
+    async wake() {
+      if (state.phase !== 'resting') return;
+      await start({ guide: state.guide, mode: state.mode === 'text' ? 'text' : requestedMode });
+    },
 
     async acceptConsent() {
       consentGiven = true;
@@ -310,6 +367,7 @@ export function createVoiceSession({
     },
 
     async handleConnect({ conversationId }) {
+      connectedReservation = pendingReservation;
       pendingReservation = null;
       set({ phase: 'connected', conversationId });
       connectedAt = now();
@@ -336,8 +394,11 @@ export function createVoiceSession({
       }
       if (state.phase === 'connected') {
         conversationOver(DISCONNECT_REASONS.has(details?.reason) ? details.reason : 'unknown');
+        // No visible end: the next word or tap wakes another conversation.
+        set({ phase: 'resting', conversationId: null });
+        return;
       }
-      if (state.phase !== 'unavailable') set({ phase: 'idle', conversationId: null });
+      if (state.phase !== 'unavailable' && state.phase !== 'resting') set({ phase: 'idle', conversationId: null });
     },
 
     /** `detail` is `{ refused: true, spokenMs }` when the tour gate refused the call. */
@@ -360,7 +421,10 @@ export function createVoiceSession({
 
     /** The tab is closing: the most common real ending. */
     pageClosing() {
-      if (state.phase === 'connected') sendSummary('page_closed', { beacon: true });
+      if (state.phase === 'connected') {
+        sendSummary('page_closed', { beacon: true });
+        reportEnded();
+      }
     },
 
     outputLevel() {

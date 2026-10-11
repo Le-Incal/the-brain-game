@@ -12,6 +12,7 @@ export const CONTEXT_MESSAGES = {
   mode: '[app] mode: {mode}',
   missed: '[app] missed: "{word}" belongs to {region}',
   welcomePlayed: '[app] the welcome has played',
+  resumed: '[app] conversation so far: {lines}',
   timeWarning: '[app] about 30 seconds of our conversation remain',
   tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
 };
@@ -45,6 +46,19 @@ export const formatMiss = ({ word, region }) => fill(CONTEXT_MESSAGES.missed, { 
 
 export const formatWelcomePlayed = () => CONTEXT_MESSAGES.welcomePlayed;
 
+// A conversation woken from rest carries the last few lines, kept short.
+const RESUME_LINES = 10;
+const RESUME_LINE_CHARS = 200;
+
+export function formatResume(entries, guideName) {
+  const lines = entries.slice(-RESUME_LINES).map((entry) => {
+    const text = String(entry.text ?? '').replace(/\s+/g, ' ').trim();
+    const short = text.length > RESUME_LINE_CHARS ? `${text.slice(0, RESUME_LINE_CHARS - 1)}…` : text;
+    return `${entry.fromGuide ? guideName : 'Visitor'}: ${short}`;
+  });
+  return fill(CONTEXT_MESSAGES.resumed, { lines: lines.join(' | ') });
+}
+
 export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
 
 export const formatTourWaiting = ({ stop, of }) => fill(CONTEXT_MESSAGES.tourWaiting, { stop, of });
@@ -72,6 +86,9 @@ export function createContextReporter({ send, now = Date.now, idleAfterMs = IDLE
     },
     welcomePlayed() {
       send(formatWelcomePlayed());
+    },
+    resumed(entries, guideName) {
+      send(formatResume(entries, guideName));
     },
     regionClicked(region) {
       activity();

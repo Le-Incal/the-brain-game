@@ -33,7 +33,7 @@ export const WELCOME_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
 const WELCOME_CACHE_SECONDS = 600;
 // One per conversation: how it ended, how long it ran, every client tool call.
 // Checked field by field so nothing but these values can reach the logs.
-export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown']);
+export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown', 'rest']);
 export const SESSION_SUMMARY_TOOL_LIMIT = 200;
 const SESSION_SUMMARY_KEYS = ['durationSecs', 'reason', 'session', 'tools', 'type'];
 // Optional: what following the guide's words did, and how it was timed.
@@ -123,6 +123,8 @@ const MAX_OPEN_PER_ADDRESS = 2;
 // therefore scarce; the IP limit is looser because schools share addresses.
 export const RELEASE_LIMIT_PER_DEVICE = { max: 3, windowMs: 60 * 60 * 1000 };
 export const RELEASE_LIMIT_PER_ADDRESS = { max: 10, windowMs: 60 * 60 * 1000 };
+// Resting and waking ends many short conversations; this only stops a loop.
+export const ENDED_LIMIT_PER_DEVICE = { max: 240, windowMs: 60 * 60 * 1000 };
 
 const DEVICE_COOKIE = 'bg_device';
 const DEVICE_COOKIE_MAX_AGE_SECS = 365 * 24 * 60 * 60;
@@ -182,6 +184,7 @@ export function createApp({
   const releaseLimiterByAddress = createRateLimiter({ ...RELEASE_LIMIT_PER_ADDRESS, now });
   const eventLimiter = createRateLimiter({ ...EVENT_RATE_LIMIT, now });
   const welcomeLimiter = createRateLimiter({ ...WELCOME_RATE_LIMIT, now });
+  const endedLimiter = createRateLimiter({ ...ENDED_LIMIT_PER_DEVICE, now });
   const welcomeModel = env.WELCOME_TTS_MODEL?.trim() || DEFAULT_WELCOME_MODEL;
   const welcomes = createWelcomeCache({
     now,
@@ -458,6 +461,26 @@ export function createApp({
   // A conversation that failed to start: refund now rather than at the sweep,
   // but only once ElevenLabs confirms it never started. A late conversation
   // is still charged (the reservation expires rather than closing).
+  // The page says its conversation has ended (it rested, or ElevenLabs closed
+  // it): the device's slot frees now; the minutes wait for ElevenLabs' report.
+  app.post('/api/voice/ended', express.json({ limit: '2kb' }), (req, res) => {
+    if (!voiceGate(req, res, { onRefuse: 403 })) return;
+    const reservationId = verifyReservation(req.body?.reservation, config.sessionSecret);
+    if (!reservationId) return res.status(400).json({ error: 'invalid_reservation' });
+    const info = ledger.reservationInfo(reservationId);
+    if (!info) return res.status(404).json({ error: 'unknown_reservation' });
+    const deviceId = verifyDevice(readCookie(req, DEVICE_COOKIE), config.sessionSecret, requestHost(req));
+    if (!deviceId || deviceId !== info.deviceId) return res.status(403).json({ error: 'not_your_reservation' });
+    const limit = endedLimiter.take(deviceId);
+    if (!limit.allowed) {
+      res.set('Retry-After', String(limit.retryAfterSeconds));
+      return res.status(429).json({ error: 'rate_limited' });
+    }
+    const status = ledger.markClosing(reservationId);
+    if (status === 'closing') logger.info(`[voice] ${shortId(reservationId)} ended by the page: slot free, minutes held until ElevenLabs reports`);
+    return res.status(200).json({ status });
+  });
+
   app.post('/api/voice/release', express.json({ limit: '2kb' }), async (req, res) => {
     if (!voiceGate(req, res, { onRefuse: 403 })) return;
     const reservationId = verifyReservation(req.body?.reservation, config.sessionSecret);

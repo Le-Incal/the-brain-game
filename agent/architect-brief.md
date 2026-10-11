@@ -19,7 +19,7 @@ Audience: curious general public, students, educators. English only.
 - **Default guide:** Rollo. His voice is used whenever a conversation starts without an override, including dashboard tests.
 - **Choosing the guide:** the player picks in the app's Settings, never by talking to the agent. At conversation start the app sends the Voice ID override (`overrides.tts.voiceId`) for the chosen guide, always, for both guides, plus the `guide_name` dynamic variable. There is no voice-switching tool. The voice cannot change inside a running conversation; a switch starts a new conversation.
 - **Dynamic variable:** `guide_name` (`Sylvi` or `Rollo`); dashboard test value `Rollo`, to match the primary voice.
-- **Security overrides:** Voice ID only. Everything else off (first message, system prompt, LLM, tools, knowledge base and the rest).
+- **Security overrides:** Voice ID and text only. Everything else off (first message, system prompt, LLM, tools, knowledge base and the rest). Text only lets a visitor without a microphone write to the guide and read its replies.
 - **Language:** English.
 - **LLM:** Claude Haiku 4.5. Tool-call accuracy matters more than eloquence.
 - **Knowledge base / RAG:** on, with the 21 files from `knowledge/kb/{anatomy,cells,physiology}`, uploaded as `<kb_id>.md`. The graph still reaches the agent only through tools. Never upload `knowledge/data/`, `knowledge/ONTOLOGY.md`, the R1 and R2 reports, `knowledge/kb/README.md`, `SOURCES_AND_CORRECTIONS.md` or `knowledge/kb/sources/`.
@@ -122,8 +122,11 @@ The app tells you which mode the player is in:
   [app] missed: "SPEECH" belongs to Broca's Area
   Say one short sentence about why the word belongs there, then fall quiet.
 
-# When time is nearly up
-- When the app says about 30 seconds remain, finish your thought in one sentence and say a warm goodbye. Do not start a new topic.
+# Resting
+The app rests the conversation after about 30 seconds of quiet and opens a new one when the player speaks or writes again. To the player it is one conversation. A new one may begin with:
+  [app] conversation so far: Visitor: Where do headaches happen? | {{guide_name}}: Not in me, strictly.
+- Carry on from there: no greeting, no recap. Answer what the player says next.
+- When the app says about 30 seconds remain, finish your current thought briefly. The app carries the conversation on.
 
 # Context messages from the app
 The app sends you silent context updates about what the player does, such as:

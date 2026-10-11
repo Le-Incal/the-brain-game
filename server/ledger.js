@@ -17,6 +17,12 @@
 import { randomId } from './signing.js';
 
 export const MIN_RESERVATION_SECONDS = 30;
+// Conversations the page has reported ended but ElevenLabs has not yet
+// settled (about 20 s): they free their slot, and a device may hold one.
+export const MAX_CLOSING_PER_DEVICE = 1;
+// A conversation cannot run longer than since its token was minted; a few
+// seconds' slack covers clocks and the handshake.
+export const CLOSING_SLACK_SECONDS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Statuses of a conversation that may still be running: charge the full cap.
 const LIVE_STATUSES = new Set(['initiated', 'in-progress', 'processing']);
@@ -81,11 +87,16 @@ export function createMinuteLedger({
       const deviceLeft = deviceRemaining(deviceId);
       if (deviceLeft < MIN_RESERVATION_SECONDS) return { ok: false, reason: 'device_daily_cap' };
       const open = openReservations();
-      if (open.length >= maxOpenTotal) return { ok: false, reason: 'busy', cap: 'total' };
-      if (open.filter((r) => r.deviceId === deviceId).length >= maxOpenPerDevice) {
+      // A conversation the page reported ended no longer holds a slot; its minutes stay held.
+      const active = open.filter((r) => !r.closing);
+      if (active.length >= maxOpenTotal) return { ok: false, reason: 'busy', cap: 'total' };
+      if (active.filter((r) => r.deviceId === deviceId).length >= maxOpenPerDevice) {
         return { ok: false, reason: 'busy', cap: 'device' };
       }
-      if (address && open.filter((r) => r.address === address).length >= maxOpenPerAddress) {
+      if (open.filter((r) => r.closing && r.deviceId === deviceId).length > MAX_CLOSING_PER_DEVICE) {
+        return { ok: false, reason: 'busy', cap: 'device' };
+      }
+      if (address && active.filter((r) => r.address === address).length >= maxOpenPerAddress) {
         return { ok: false, reason: 'busy', cap: 'address' };
       }
       const seconds = Math.min(sessionMaxSeconds, deviceLeft, globalLeft);
@@ -99,6 +110,7 @@ export function createMinuteLedger({
         createdAt: now(),
         conversationId: null,
         state: 'open',
+        closing: false,
       });
       charge(key, deviceId, seconds);
       return { ok: true, reservationId, seconds };
@@ -131,6 +143,25 @@ export function createMinuteLedger({
           const reservationId = [...reservations.entries()].find(([, value]) => value === r)[0];
           return { reservationId, conversationId: r.conversationId };
         });
+    },
+
+    /**
+     * The page says the conversation has ended: free its slot now. Its minutes
+     * stay held until ElevenLabs settles it. Returns 'closing', or the state it is already in.
+     */
+    markClosing(reservationId) {
+      const reservation = reservations.get(reservationId);
+      if (!reservation) return 'unknown';
+      if (reservation.state !== 'open') return 'already_closed';
+      if (reservation.closing) return 'closing';
+      reservation.closing = true;
+      // Hold only what it can have used; the webhook charges the real length.
+      const upTo = Math.ceil((now() - reservation.createdAt) / 1000) + CLOSING_SLACK_SECONDS;
+      if (upTo < reservation.seconds) {
+        charge(reservation.day, reservation.deviceId, upTo - reservation.seconds);
+        reservation.seconds = upTo;
+      }
+      return 'closing';
     },
 
     /** The conversation never started (token minting failed): refund in full. */

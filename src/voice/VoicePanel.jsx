@@ -14,7 +14,7 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { CONSENT_TEXT, createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter } from './contextUpdates.js';
+import { createContextReporter, formatRegionClicked } from './contextUpdates.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
 import { createTourStallGuard } from './tourStallGuard.js';
@@ -22,6 +22,7 @@ import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
 import { createTranscriptStream } from './transcriptStream.js';
 import { createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
+import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
@@ -60,6 +61,18 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const stallGuardRef = useRef(null);
   // Words written before the conversation connected, sent once it does.
   const queuedRef = useRef([]);
+  // Context that should reach the next conversation (a click that woke it).
+  const pendingContextRef = useRef([]);
+  // Whether the visitor wants to hear the guide: on after the first tap or
+  // when the welcome is heard, off when they switch Voice off.
+  const voiceWantedRef = useRef(false);
+  // A conversation has connected before: the next one carries it on.
+  const connectedOnceRef = useRef(false);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  // One conversation on screen, many underneath: rest after 30 s of quiet.
+  const restTimer = useMemo(() => createRestTimer({ onRest: () => sessionRef.current?.rest() }), []);
+  useEffect(() => () => restTimer.dispose(), [restTimer]);
   const lineIdRef = useRef(0);
   const nextLineId = (prefix) => {
     lineIdRef.current += 1;
@@ -111,6 +124,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       stallGuardRef.current?.guideSpeaking(speaking);
       tourPacer.guideSpeaking(speaking);
       follower.guideSpeaking(speaking);
+      restTimer.guideSpeaking(speaking);
       if (!speaking) {
         stream.guideStopped();
         refreshEntries();
@@ -125,6 +139,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     },
     onMessage: (payload) => {
       const raw = typeof payload?.message === 'string' ? payload.message : '';
+      restTimer.activity();
       if (payload?.role === 'user') {
         welcome.stop();
         stallGuardRef.current?.playerActivity();
@@ -175,6 +190,17 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   // Scene events reach the guide only while a conversation is connected.
   useEffect(() => {
     const reporter = createContextReporter({ send: (text) => session.sendContext(text) });
+    const regionClicked = reporter.regionClicked;
+    // A click while the conversation rests wakes it, and the click goes with it.
+    reporter.regionClicked = (region) => {
+      restTimer.activity();
+      if (session.getState().phase === 'resting') {
+        pendingContextRef.current.push(formatRegionClicked(region));
+        session.wake();
+        return;
+      }
+      regionClicked(region);
+    };
     const stallGuard = createTourStallGuard({ send: (text) => session.sendContext(text) });
     stallGuardRef.current = stallGuard;
     voiceEventsRef.current = {
@@ -202,15 +228,76 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
   }, [session, scene, voiceEventsRef]);
 
-  // The guide is told the mode on connecting and whenever it changes.
+  // On connecting, the guide learns what came before: the welcome it need not
+  // repeat, the conversation so far if it woke from rest, the mode, and any
+  // click that woke it. Then it rests after 30 s of quiet.
   useEffect(() => {
-    if (state.phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
-  }, [state.phase, mode, voiceEventsRef]);
+    restTimer.connected(state.phase === 'connected');
+    if (state.phase !== 'connected') return;
+    const events = voiceEventsRef.current;
+    if (welcomeStateRef.current !== 'none') events?.welcomePlayed();
+    if (connectedOnceRef.current) events?.resumed(stream.entries(), GUIDES.find((g) => g.id === guideRef.current)?.name ?? 'Guide');
+    connectedOnceRef.current = true;
+    events?.modeChanged(modeRef.current);
+    const pending = pendingContextRef.current;
+    pendingContextRef.current = [];
+    for (const text of pending) session.sendContext(text);
+  }, [state.phase, voiceEventsRef, restTimer, stream, session]);
 
-  // A new conversation never repeats the welcome the visitor already heard or read.
+  // And whenever the mode changes while connected.
   useEffect(() => {
-    if (state.phase === 'connected' && welcomeStateRef.current !== 'none') voiceEventsRef.current?.welcomePlayed();
-  }, [state.phase, voiceEventsRef]);
+    if (sessionRef.current?.getState().phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
+  }, [mode, voiceEventsRef]);
+
+  // A hidden tab rests the conversation soon after.
+  useEffect(() => {
+    const onVisibility = () => restTimer.hidden(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [restTimer]);
+
+  // While a voice conversation rests, listen locally for the visitor to start
+  // speaking, and wake it. Only the level is read; nothing leaves the page.
+  useEffect(() => {
+    if (state.phase !== 'resting' || state.mode !== 'voice') return undefined;
+    let stopped = false;
+    let micStream = null;
+    let context = null;
+    let timer = null;
+    const onset = createSpeechOnset({
+      onOnset: () => {
+        if (stopped) return;
+        stopped = true;
+        session.wake();
+      },
+    });
+    (async () => {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (stopped) return;
+        context = new AudioContext();
+        await context.resume().catch(() => {});
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 512;
+        context.createMediaStreamSource(micStream).connect(analyser);
+        const samples = new Float32Array(analyser.fftSize);
+        timer = window.setInterval(() => {
+          analyser.getFloatTimeDomainData(samples);
+          let sum = 0;
+          for (const value of samples) sum += value * value;
+          onset.level(Math.sqrt(sum / samples.length) * 4);
+        }, 50);
+      } catch {
+        // No microphone now: writing still wakes the guide.
+      }
+    })();
+    return () => {
+      stopped = true;
+      if (timer !== null) window.clearInterval(timer);
+      micStream?.getTracks().forEach((track) => track.stop());
+      context?.close().catch(() => {});
+    };
+  }, [state.phase, state.mode, session]);
 
   // The hatching answers the guide's voice, and the brain gestures gently
   // while it speaks, unless anything else is directing attention. Once its
@@ -279,6 +366,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       const heard = await welcome.start();
       if (cancelled) return;
       welcomeStateRef.current = heard ? 'audible' : 'silent';
+      if (heard) voiceWantedRef.current = true;
       setWelcomeState(welcomeStateRef.current);
     }, WELCOME_DELAY_MS);
     return () => {
@@ -317,16 +405,24 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const name = GUIDES.find((g) => g.id === guide)?.name ?? 'your guide';
   const active = ACTIVE_PHASES.has(state.phase);
 
+  const voiceConversation = state.mode === 'voice' && (active || state.phase === 'resting');
+
   const turnVoice = async (on) => {
+    restTimer.activity();
     if (on) {
+      voiceWantedRef.current = true;
       stream.setVoice(true);
       // The first tap: the welcome's voice joins at the word its text has reached.
       if (welcome.active() && !welcome.audible()) await welcome.unlock();
-      if (!ACTIVE_PHASES.has(session.getState().phase)) session.start({ guide });
+      const current = session.getState();
+      // A conversation in writing becomes a spoken one.
+      if (current.phase === 'connected' && current.mode === 'text') session.end();
+      if (!ACTIVE_PHASES.has(session.getState().phase)) session.start({ guide, mode: 'auto' });
       return;
     }
+    voiceWantedRef.current = false;
     welcome.mute();
-    if (active) {
+    if (active || state.phase === 'resting') {
       stream.setVoice(false);
       session.end();
     }
@@ -337,18 +433,23 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     if (!text) return;
     setDraft('');
     welcome.stop();
+    restTimer.activity();
     stream.addVisitor({ id: nextLineId('typed'), text });
     refreshEntries();
-    if (state.phase === 'connected') {
+    const phase = session.getState().phase;
+    if (phase === 'connected') {
       sdkRef.current.sendUserMessage(text);
       return;
     }
     queuedRef.current.push(text);
-    if (!active) session.start({ guide });
+    if (phase === 'resting') session.wake();
+    // Written words wake the guide in writing unless the visitor asked to hear it.
+    else if (!ACTIVE_PHASES.has(phase)) session.start({ guide, mode: voiceWantedRef.current ? 'auto' : 'text' });
   };
 
   const notice = noticeFor(state.phase, state.message, name, {
     welcome: welcomeState === 'audible' || welcomeState === 'silent' ? welcomeState : null,
+    micRefused: Boolean(state.micRefused),
   });
   return (
     <GuideColumnView
@@ -365,7 +466,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       draft={draft}
       onDraft={setDraft}
       onSend={send}
-      voice={{ on: active || welcomeState === 'audible', onChange: turnVoice }}
+      voice={{ on: voiceConversation || welcomeState === 'audible', onChange: turnVoice }}
       motion={motion}
       notice={notice ? { text: notice.text, onActivate: notice.invite ? () => turnVoice(true) : undefined } : null}
       consent={
