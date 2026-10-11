@@ -77,3 +77,37 @@ describe('The medical rule answers anatomy and declines advice in one line', () 
     expect(examples).toContain(`"I can't give medical advice; a doctor is the right person to ask."`);
   });
 });
+
+// Kyle, 2026-10-11: the guide is present from arrival, in every mode.
+describe('The brief tells the guide about the three modes', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+
+  it('has a Modes section naming explore, study and game', () => {
+    expect(prompt).toContain('# Modes');
+    for (const line of ['  [app] mode: explore', '  [app] mode: study', '  [app] mode: game']) {
+      expect(prompt, line).toContain(line);
+    }
+  });
+
+  it('lets the player lead in explore and the guide lead in study', () => {
+    expect(prompt).toMatch(/^- Explore: the player leads\./m);
+    expect(prompt).toMatch(/^- Study: you lead\./m);
+  });
+
+  it('never gives away an answer during a game, and teaches a miss in one sentence', () => {
+    expect(prompt).toMatch(/^- Game: .*Never turn me, light a region, or say where a falling word belongs/m);
+    expect(prompt).toContain('[app] missed: "SPEECH" belongs to Broca\'s Area');
+    expect(prompt).toMatch(/one short sentence about why the word belongs there/);
+  });
+
+  it('says what to do when the player switches motion off', () => {
+    expect(prompt).toMatch(/motion is off/i);
+  });
+
+  it('points to Settings for the other guide, and no longer to a voice panel', () => {
+    expect(prompt).toMatch(/open Settings, under me, and choose the other name/);
+    expect(prompt).not.toMatch(/voice panel/);
+    expect(prompt).not.toContain('[player] entered Study mode');
+  });
+});

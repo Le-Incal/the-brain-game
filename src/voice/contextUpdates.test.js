@@ -9,7 +9,8 @@ const {
   formatGrab,
   formatHandoff,
   formatIdle,
-  formatStudyEntered,
+  formatMode,
+  formatMiss,
   formatTimeWarning,
   formatTourWaiting,
   createContextReporter,
@@ -24,7 +25,8 @@ describe('M4: every contextual update, worded in one place', () => {
       tookHoldInterrupted: '[player] took hold of me; interrupted: {move}',
       handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
       idle: '[player] idle {seconds}s',
-      studyEntered: '[player] entered Study mode',
+      mode: '[app] mode: {mode}',
+      missed: '[app] missed: "{word}" belongs to {region}',
       timeWarning: '[app] about 30 seconds of our conversation remain',
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
     });
@@ -64,9 +66,19 @@ describe('M4: every contextual update, worded in one place', () => {
     );
   });
 
-  it('reports idling and entering Study mode', () => {
+  it('reports idling', () => {
     expect(formatIdle(25)).toBe('[player] idle 25s');
-    expect(formatStudyEntered()).toBe('[player] entered Study mode');
+  });
+
+  // Kyle, 2026-10-11: the guide is present in every mode, and is told which.
+  it('names the mode: explore, study or game', () => {
+    expect(formatMode('explore')).toBe('[app] mode: explore');
+    expect(formatMode('study')).toBe('[app] mode: study');
+    expect(formatMode('game')).toBe('[app] mode: game');
+  });
+
+  it('tells the guide where a missed word belonged, so it can teach in one sentence', () => {
+    expect(formatMiss({ word: 'SPEECH', region: "Broca's Area" })).toBe('[app] missed: "SPEECH" belongs to Broca\'s Area');
   });
 
   it('matches every example line in the agent brief', () => {
@@ -122,5 +134,12 @@ describe('M4: the context reporter', () => {
     advance(25_000);
     reporter.tick();
     expect(sent.filter((line) => line.includes('idle'))).toHaveLength(2);
+  });
+
+  it('tells the guide the mode when it changes, and where a missed word belonged', () => {
+    const { sent, reporter } = setup();
+    reporter.modeChanged('game');
+    reporter.gameMiss({ word: 'VISION', region: 'Primary Visual Cortex' });
+    expect(sent).toEqual(['[app] mode: game', '[app] missed: "VISION" belongs to Primary Visual Cortex']);
   });
 });

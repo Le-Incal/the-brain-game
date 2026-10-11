@@ -15,7 +15,7 @@ import {
 
 // Imported defensively so each test fails on its own while the module is absent.
 const sceneCommandsModule = await import('./sceneCommands.js').catch(() => ({}));
-const { createSceneCommands, MEDIAL_REGION_VIEWS } = sceneCommandsModule;
+const { createSceneCommands, MEDIAL_REGION_VIEWS, GAME_REASON } = sceneCommandsModule;
 const orientation = await import('./orientation.js').catch(() => ({}));
 const { VIEWS, VIEW_AXES } = orientation;
 
@@ -474,7 +474,7 @@ describe('C18: faceRegion lights the region it faces', () => {
   });
 });
 
-describe('C19: scene commands act only in Study mode', () => {
+describe('C19: scene commands never act during a game', () => {
   const SCENE_CALLS = [
     ['faceRegion', (c) => c.faceRegion(6)],
     ['rotateTo', (c) => c.rotateTo('posterior')],
@@ -483,7 +483,7 @@ describe('C19: scene commands act only in Study mode', () => {
     ['setColourRegions', (c) => c.setColourRegions(true)],
   ];
 
-  it.each(SCENE_CALLS)('%s refuses outside Study mode and changes nothing', async (_name, call) => {
+  it.each(SCENE_CALLS)('%s refuses during a game and changes nothing', async (_name, call) => {
     const { commands, controls, state, settle } = setup();
     commands.highlightRegion(3);
     state.mode = 'game';
@@ -492,7 +492,9 @@ describe('C19: scene commands act only in Study mode', () => {
     const result = await settle(call(commands));
     expectResultShape(result);
     expect(result.ok).toBe(false);
-    expect(result.reason).toMatch(/study/i);
+    // Kyle, 2026-10-11: showing a region mid-game would give the answer away.
+    expect(result.reason).toBe(GAME_REASON);
+    expect(result.reason).toMatch(/game/i);
     expect(state).toMatchObject({ highlight: 3, colourRegions: false });
     expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
   });
