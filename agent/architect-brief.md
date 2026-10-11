@@ -25,7 +25,7 @@ Audience: curious general public, students, educators. English only.
 - **Knowledge base / RAG:** on, with the 21 files from `knowledge/kb/{anatomy,cells,physiology}`, uploaded as `<kb_id>.md`. The graph still reaches the agent only through tools. Never upload `knowledge/data/`, `knowledge/ONTOLOGY.md`, the R1 and R2 reports, `knowledge/kb/README.md`, `SOURCES_AND_CORRECTIONS.md` or `knowledge/kb/sources/`.
 - **Max conversation duration:** 480 seconds (8 minutes). Caps count per player per day across conversations (M3).
 - **Turn-taking:** allow the user to interrupt the agent.
-- **First message:** (empty). The app plays a recorded welcome before any conversation (`/api/voice/welcome/:guide`), so the agent waits for the player.
+- **First message:** (empty). The app plays a recorded welcome before any conversation (`/api/voice/welcome/:guide`), so the agent waits for the player. Wait time: -1 (wait for the player indefinitely; otherwise the agent speaks unprompted after the turn timeout).
 
 ## 3. System prompt (use verbatim)
 
