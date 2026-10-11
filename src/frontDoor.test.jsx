@@ -16,6 +16,8 @@ const {
   getStudyCaption,
   ArrivalOptions,
   SettingsPanel,
+  shouldMountGuide,
+  initialMotion,
 } = frontDoor;
 
 // Kyle, 2026-10-11: the brain is the front door. Sylvi greets every visitor,
@@ -215,5 +217,26 @@ describe('Settings', () => {
     const markup = renderToStaticMarkup(<SettingsPanel {...props} voiceEnabled={false} />);
     expect(markup).not.toContain('Sylvi');
     expect(markup).toContain('Difficulty');
+  });
+});
+
+describe('The guide is there from arrival', () => {
+  it('mounts in every phase once the brain is ready, in the voice build', () => {
+    for (const gamePhase of ['ready', 'study', 'countdown', 'playing', 'paused']) {
+      expect(shouldMountGuide({ voiceEnabled: true, brainReady: true, commandsReady: true, gamePhase }), gamePhase).toBe(true);
+    }
+  });
+
+  it('waits for the brain, and stays out of a build without voice', () => {
+    expect(shouldMountGuide({ voiceEnabled: true, brainReady: false, commandsReady: true, gamePhase: 'ready' })).toBe(false);
+    expect(shouldMountGuide({ voiceEnabled: true, brainReady: true, commandsReady: false, gamePhase: 'ready' })).toBe(false);
+    expect(shouldMountGuide({ voiceEnabled: false, brainReady: true, commandsReady: true, gamePhase: 'ready' })).toBe(false);
+  });
+});
+
+describe('Motion on arrival', () => {
+  it('is on, unless the visitor asks their system for reduced motion', () => {
+    expect(initialMotion(false)).toBe(true);
+    expect(initialMotion(true)).toBe(false);
   });
 });
