@@ -124,7 +124,7 @@ export function directionFromPivot(point, pivot = geometryPivot()) {
 /** In-memory scene adapter: what BrainScene will expose to the command layer. */
 export function createFakeSceneAdapter(controlOptions = {}) {
   const harness = createControls(controlOptions);
-  const state = { highlight: null, focus: null, colourRegions: false, annotations: false, mode: 'study' };
+  const state = { highlight: null, focus: null, colourRegions: false, mode: 'study' };
   const pivot = geometryPivot();
   return {
     ...harness,
@@ -147,10 +147,6 @@ export function createFakeSceneAdapter(controlOptions = {}) {
         state.colourRegions = enabled;
       },
       getColourRegions: () => state.colourRegions,
-      setAnnotations(enabled) {
-        state.annotations = enabled;
-      },
-      getAnnotations: () => state.annotations,
       getMode: () => state.mode,
     },
   };

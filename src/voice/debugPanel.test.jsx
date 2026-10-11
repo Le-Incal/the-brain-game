@@ -20,7 +20,6 @@ function recordingCommands() {
       highlightRegion: record('highlightRegion'),
       clearHighlight: record('clearHighlight'),
       setColourRegions: record('setColourRegions'),
-      setAnnotations: record('setAnnotations'),
     },
   };
 }
@@ -77,14 +76,13 @@ describe('dev command panel: what it offers', () => {
     ]);
   });
 
-  it('highlights each region, clears, and switches colour and labels both ways', () => {
+  it('highlights each region, clears, and switches colour both ways, with no labels', () => {
     expect(actions.filter((a) => a.command === 'highlightRegion').map((a) => a.args[0])).toEqual(
       brainRegions.regions.map(({ id }) => id)
     );
     expect(actions.filter((a) => a.command === 'clearHighlight')).toHaveLength(1);
-    for (const command of ['setColourRegions', 'setAnnotations']) {
-      expect(actions.filter((a) => a.command === command).map((a) => a.args[0])).toEqual([true, false]);
-    }
+    expect(actions.filter((a) => a.command === 'setColourRegions').map((a) => a.args[0])).toEqual([true, false]);
+    expect(actions.filter((a) => a.command === 'setAnnotations')).toEqual([]);
   });
 
   it('labels every action so it can be told apart', () => {

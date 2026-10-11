@@ -63,17 +63,15 @@ function realModelSpace() {
   });
 }
 
-// Colour and labels live in App state so the on-screen toggles stay in sync.
+// Colour lives in App state so the on-screen toggle stays in sync.
 function createAppState(mode = 'study') {
-  const app = { mode, colorMode: false, showLabels: false };
+  const app = { mode, colorMode: false };
   return {
     app,
     callbacks: {
       getMode: () => app.mode,
       getColourRegions: () => app.colorMode,
       setColourRegions: (value) => (app.colorMode = value),
-      getAnnotations: () => app.showLabels,
-      setAnnotations: (value) => (app.showLabels = value),
     },
   };
 }
@@ -92,17 +90,17 @@ describe('M2: BrainScene adapter', () => {
     expect(adapter.getHighlight()).toBeNull();
   });
 
-  it('routes colour and labels through App state, not around it', () => {
+  it('routes colour through App state, not around it, and has no annotations', () => {
     const scene = createStubScene();
     const { app, callbacks } = createAppState();
     const adapter = createBrainSceneAdapter({ scene, ...callbacks });
 
     adapter.setColourRegions(true);
-    adapter.setAnnotations(true);
-    expect(app).toMatchObject({ colorMode: true, showLabels: true });
+    expect(app).toMatchObject({ colorMode: true });
     app.colorMode = false;
     expect(adapter.getColourRegions()).toBe(false);
-    expect(adapter.getAnnotations()).toBe(true);
+    expect(adapter).not.toHaveProperty('setAnnotations');
+    expect(adapter).not.toHaveProperty('getAnnotations');
   });
 
   it('reports the mode App is in', () => {
@@ -239,8 +237,6 @@ describe('The guide focus reaches the left panel and the two-level light', () =>
       getMode: () => 'study',
       getColourRegions: () => true,
       setColourRegions: () => {},
-      getAnnotations: () => false,
-      setAnnotations: () => {},
       onGuideFocus: (entry) => focus.push(entry),
     });
     return { adapter, calls, focus };

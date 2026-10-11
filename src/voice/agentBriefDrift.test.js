@@ -43,3 +43,37 @@ describe('C16: the agent brief matches the atlas', () => {
     expect(leftOnly.sort((a, b) => a - b)).toEqual([...brainRegions.gameplayNotes.lateralized].sort((a, b) => a - b));
   });
 });
+
+// Live run: "Where do headaches happen?" got a long medical disclaimer before
+// the answer. How the body works is anatomy; only the player's own or
+// someone's symptoms, diagnoses, scans, medications or treatments get the
+// one-line decline (Kyle, 2026-10-11).
+describe('The medical rule answers anatomy and declines advice in one line', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+  const examples = brief.slice(brief.indexOf('## 6.'));
+
+  it('carries the three new lines in the system prompt, word for word', () => {
+    expect(prompt).toContain(
+      '- Questions about how the body works are anatomy, not medical advice: where pain or headaches come from, what happens in a stroke, why we feel dizzy. Answer them directly.'
+    );
+    expect(prompt).toContain(
+      `- Only when the player asks about their own or someone's symptoms, a diagnosis, a scan, a medication or a treatment, say once, in one short sentence: "I can't give medical advice; a doctor is the right person to ask." Then teach the related anatomy.`
+    );
+    expect(prompt).toContain('- Never open with a disclaimer the question did not call for.');
+  });
+
+  it('drops the old apology-first line', () => {
+    expect(brief).not.toContain("I'm sorry, but I can't give medical advice.");
+    expect(prompt).not.toMatch(/Never give medical advice, diagnose, or interpret/);
+  });
+
+  it('shows both cases in the acceptance conversations', () => {
+    expect(examples).toContain('"Where do headaches happen?"');
+    expect(examples).toMatch(/no pain receptors/);
+    expect(examples).toMatch(/meninges/);
+    expect(examples).toMatch(/trigeminal nerve/);
+    expect(examples).toContain('"I have a headache, what should I take?"');
+    expect(examples).toContain(`"I can't give medical advice; a doctor is the right person to ask."`);
+  });
+});

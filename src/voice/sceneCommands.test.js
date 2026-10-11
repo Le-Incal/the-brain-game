@@ -207,7 +207,7 @@ describe('C11: rotateTo', () => {
   });
 });
 
-describe('C12: highlight, colour and annotations', () => {
+describe('C12: highlight and colour', () => {
   it('highlights a region and clears it', () => {
     const { commands, state } = setup();
     const lit = commands.highlightRegion(3);
@@ -244,25 +244,11 @@ describe('C12: highlight, colour and annotations', () => {
     expect(state.colourRegions).toBe(expected);
   });
 
-  it.each([
-    [true, true],
-    [false, false],
-    ['true', true],
-    ['false', false],
-  ])('setAnnotations(%j) sets annotations to %s', (input, expected) => {
-    const { commands, state } = setup();
-    state.annotations = !expected;
-    const result = commands.setAnnotations(input);
-    expect(result.ok).toBe(true);
-    expect(state.annotations).toBe(expected);
-  });
-
   it('rejects a value it cannot read as a boolean, without changing anything', () => {
     const { commands, state } = setup();
     expect(commands.setColourRegions('maybe').ok).toBe(false);
-    expect(commands.setAnnotations(undefined).ok).toBe(false);
+    expect(commands.setColourRegions(undefined).ok).toBe(false);
     expect(state.colourRegions).toBe(false);
-    expect(state.annotations).toBe(false);
   });
 });
 
@@ -287,18 +273,17 @@ describe('C13: getSceneState', () => {
     for (const region of scene.visibleRegions) expect(typeof region.name).toBe('string');
   });
 
-  it('reports highlight, colour, annotations and mode as the scene holds them', () => {
+  it('reports highlight, colour and mode as the scene holds them, and no annotations', () => {
     const { commands, state } = setup();
     commands.highlightRegion(12);
     commands.setColourRegions(true);
-    commands.setAnnotations('true');
     expect(commands.getSceneState()).toMatchObject({
       ok: true,
       highlightedRegion: 12,
       colourRegions: true,
-      annotations: true,
       mode: 'study',
     });
+    expect(commands.getSceneState()).not.toHaveProperty('annotations');
     commands.clearHighlight();
     state.mode = 'game';
     expect(commands.getSceneState()).toMatchObject({ highlightedRegion: null, mode: 'game' });
@@ -496,7 +481,6 @@ describe('C19: scene commands act only in Study mode', () => {
     ['highlightRegion', (c) => c.highlightRegion(9)],
     ['clearHighlight', (c) => c.clearHighlight()],
     ['setColourRegions', (c) => c.setColourRegions(true)],
-    ['setAnnotations', (c) => c.setAnnotations(true)],
   ];
 
   it.each(SCENE_CALLS)('%s refuses outside Study mode and changes nothing', async (_name, call) => {
@@ -509,7 +493,7 @@ describe('C19: scene commands act only in Study mode', () => {
     expectResultShape(result);
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/study/i);
-    expect(state).toMatchObject({ highlight: 3, colourRegions: false, annotations: false });
+    expect(state).toMatchObject({ highlight: 3, colourRegions: false });
     expect(controls.orientGroup.quaternion.angleTo(before)).toBeLessThan(1e-6);
   });
 
@@ -748,7 +732,8 @@ describe('C23: the took-hold message waits 250 ms; the stop does not', () => {
 
 describe('C: every command reports truthfully', () => {
   // Tours (Kyle, 2026-10-06) add faceLobe, startTour, nextTourStop, endTour.
-  it('exposes exactly the thirteen contract commands', () => {
+  // Kyle, 2026-10-11: the annotations feature is gone, so twelve.
+  it('exposes exactly the twelve contract commands', () => {
     const { commands } = setup();
     expect(Object.keys(commands).sort()).toEqual(
       [
@@ -763,7 +748,6 @@ describe('C: every command reports truthfully', () => {
         'listRegions',
         'lookupRegion',
         'rotateTo',
-        'setAnnotations',
         'setColourRegions',
       ].sort()
     );

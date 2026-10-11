@@ -19,7 +19,6 @@ function recordingCommands(overrides = {}) {
       highlightRegion: command('highlightRegion'),
       clearHighlight: command('clearHighlight'),
       setColourRegions: command('setColourRegions'),
-      setAnnotations: command('setAnnotations'),
       lookupRegion: command('lookupRegion', { ok: true, region: { id: 6, name: "Broca's Area" } }),
       listRegions: command('listRegions', { ok: true, divisions: [] }),
       getSceneState: command('getSceneState', { ok: true, view: 'left_lateral' }),
@@ -38,7 +37,7 @@ describe('M4: the nine client tools', () => {
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
-    expect(AGENT_TOOL_NAMES).toHaveLength(13);
+    expect(AGENT_TOOL_NAMES).toHaveLength(12);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -53,7 +52,6 @@ describe('M4: the nine client tools', () => {
     ['highlight_region', { region_id: 9 }, ['highlightRegion', 9]],
     ['clear_highlight', {}, ['clearHighlight']],
     ['set_colour_regions', { enabled: true }, ['setColourRegions', true]],
-    ['set_annotations', { enabled: 'false' }, ['setAnnotations', 'false']],
     ['lookup_region', { name: "broca's area" }, ['lookupRegion', { regionId: undefined, name: "broca's area" }]],
     ['lookup_region', { region_id: 19 }, ['lookupRegion', { regionId: 19, name: undefined }]],
     ['list_regions', {}, ['listRegions']],
@@ -147,7 +145,7 @@ describe('The brief and the dashboard agree on execution mode', () => {
   // call made mid-reply lands between sentences, not early.
   const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop'];
 
-  it('names exactly the four post_tool_speech tools; the other nine run immediate', () => {
+  it('names exactly the four post_tool_speech tools; the other eight run immediate', () => {
     expect(settings).toMatch(/`execution_mode: immediate`/);
     const clause = settings.match(/except ([a-z_, ]+?),? which use `execution_mode: post_tool_speech`/);
     expect(clause).not.toBeNull();
@@ -341,5 +339,17 @@ describe('The brief documents the short tour', () => {
   it("next_tour_stop's lockstep note gives the short tour's 3 s", () => {
     const tool = section.slice(section.indexOf('### next_tour_stop'), section.indexOf('### end_tour'));
     expect(tool).toMatch(/3 s/);
+  });
+});
+
+// Kyle, 2026-10-11: the annotations feature is gone, so the guide's tool is too.
+describe('No annotations tool', () => {
+  it('drops set_annotations from the tools and the brief', () => {
+    expect(AGENT_TOOL_NAMES).not.toContain('set_annotations');
+    expect(createClientTools(recordingCommands().commands).set_annotations).toBeUndefined();
+    const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
+    expect(brief).not.toMatch(/set_annotations|annotations/);
+    const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+    expect(section).toMatch(/Settings on all twelve:/);
   });
 });

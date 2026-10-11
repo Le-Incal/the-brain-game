@@ -3,12 +3,8 @@ import * as THREE from 'three';
 import {
   applyVertexRegionAttributes,
   bakeAndNormalizeMesh,
-  computeAtlasAnnotationAnchors,
-  computeRegionLabelAnchors,
-  createAtlasAnnotationDefinitions,
   decodeAtlasVertexAttributes,
 } from './brainLoader.js';
-import { REGIONS, getRegionById } from '../data/regions.js';
 
 function buildAtlasIdentityBuffer(regionIds, candidates) {
   const buffer = new ArrayBuffer(
@@ -100,108 +96,6 @@ describe('applyVertexRegionAttributes', () => {
 
     expect(applied).toBe(0);
     expect(mesh.geometry.getAttribute('atlasRegionId')).toBeUndefined();
-  });
-});
-
-describe('computeRegionLabelAnchors', () => {
-  it('places each anchor on a vertex belonging to that rendered region', () => {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute([
-        -0.5, 0.1, 0,
-        -0.4, 0.2, 0.1,
-        -0.45, 0.15, -0.1,
-        0.4, -0.2, 0,
-        0.5, -0.1, 0.1,
-        0.45, -0.15, -0.1,
-      ], 3)
-    );
-    geometry.setAttribute('regionId', new THREE.Float32BufferAttribute([1, 1, 1, 19, 19, 19], 1));
-
-    const anchors = computeRegionLabelAnchors(
-      [new THREE.Mesh(geometry)],
-      [1, 19]
-    );
-
-    expect(anchors.get(1).x).toBeLessThan(0);
-    expect(anchors.get(19).x).toBeGreaterThan(0);
-    expect(anchors.get(1).distanceTo(anchors.get(19))).toBeGreaterThan(0.7);
-    expect(anchors.get(1).surfaceNormal.length()).toBeCloseTo(1);
-    expect(anchors.get(19).surfaceNormal.length()).toBeCloseTo(1);
-    expect(anchors.get(1).candidates.length).toBeGreaterThan(1);
-    expect(anchors.get(19).candidates.length).toBeGreaterThan(1);
-  });
-
-  it('creates annotations from UV mask IDs when COLOR_1 is zeroed', () => {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute([
-        -0.5, 0, 0,
-        -0.4, 0.1, 0,
-        -0.45, -0.1, 0,
-        0.4, 0, 0,
-        0.5, 0.1, 0,
-        0.45, -0.1, 0,
-      ], 3)
-    );
-    geometry.setAttribute(
-      'normal',
-      new THREE.Float32BufferAttribute([
-        -1, 0, 0, -1, 0, 0, -1, 0, 0,
-        1, 0, 0, 1, 0, 0, 1, 0, 0,
-      ], 3)
-    );
-    geometry.setAttribute(
-      'uv',
-      new THREE.Float32BufferAttribute([
-        0.1, 0.5, 0.2, 0.5, 0.3, 0.5,
-        0.7, 0.5, 0.8, 0.5, 0.9, 0.5,
-      ], 2)
-    );
-    geometry.setAttribute(
-      'color_1',
-      new THREE.Uint16BufferAttribute(
-        new Array(24).fill(0),
-        4,
-        true
-      )
-    );
-    const mesh = new THREE.Mesh(geometry);
-
-    expect(decodeAtlasVertexAttributes(geometry).valid).toBe(false);
-    const anchors = computeAtlasAnnotationAnchors({
-      meshes: [mesh],
-      regions: [getRegionById(1), getRegionById(19)],
-      normalization: { center: [0, 0, 0], maxDim: 10 },
-      sampleRegionIdAtUv: (uv) => (uv.x < 0.5 ? 1 : 19),
-    });
-
-    expect(anchors.size).toBe(2);
-    expect(anchors.get(1).candidates.length).toBeGreaterThan(1);
-    expect(anchors.get(19).candidates.length).toBeGreaterThan(1);
-    expect(
-      createAtlasAnnotationDefinitions(
-        [getRegionById(1), getRegionById(19)],
-        anchors
-      )
-    ).toHaveLength(2);
-    expect(geometry.getAttribute('regionId')).toBeUndefined();
-    expect(geometry.getAttribute('maskRegionId')).toBeDefined();
-  });
-
-  it('always supplies one usable anchor per canonical annotation', () => {
-    const anchors = computeAtlasAnnotationAnchors({
-      meshes: [],
-      regions: REGIONS,
-      normalization: { center: [0, 0, 0], maxDim: 10 },
-    });
-
-    expect(anchors.size).toBe(REGIONS.length);
-    REGIONS.forEach(({ id }) => {
-      expect(anchors.get(id)?.candidates.length).toBeGreaterThan(0);
-    });
   });
 });
 

@@ -4,8 +4,11 @@ import {
   default as App,
   colorModeForDifficulty,
   getDescribedRegion,
+  getBarControl,
   getDescribedText,
   getPrimaryControl,
+  HowToPlay,
+  shouldShowBegin,
   shouldShowHeader,
   shouldShowInstructions,
   STYLES,
@@ -159,7 +162,8 @@ describe('difficulty and the region palette', () => {
     const markup = renderToStaticMarkup(<App />);
 
     expect(toggleState(markup, 'Hard')).toBe(false);
-    expect(toggleState(markup, 'Annotations')).toBe(false);
+    // Kyle, 2026-10-11: the Annotations toggle is gone.
+    expect(toggleState(markup, 'Annotations')).toBeNull();
   });
 });
 
@@ -185,5 +189,38 @@ describe('The left panel follows the guide', () => {
   it('hides everything while the player grips the brain', () => {
     expect(getDescribedRegion({ isNavigating: true, guideFocus })).toBeNull();
     expect(getDescribedText({ isNavigating: true, guideFocus })).toBeNull();
+  });
+});
+
+// Kyle, 2026-10-11: Begin moves to the left, under the How to Play text, and
+// stays with the instructions on mobile.
+describe('Begin sits under How to Play', () => {
+  it('renders after the instructions, as a pressable button', () => {
+    const markup = renderToStaticMarkup(<HowToPlay onBegin={() => {}} />);
+    expect(markup.indexOf('How to Play')).toBeGreaterThanOrEqual(0);
+    expect(markup.indexOf('Begin')).toBeGreaterThan(markup.indexOf('region by region'));
+    expect(markup).toMatch(/<button[^>]*class="start-button"/);
+    expect(markup).toMatch(/pointer-events:auto/);
+  });
+
+  it('shows no Begin without a way to begin', () => {
+    expect(renderToStaticMarkup(<HowToPlay />)).not.toContain('Begin');
+  });
+
+  it('offers Begin only when the specimen is ready to play', () => {
+    expect(shouldShowBegin('ready', true)).toBe(true);
+    expect(shouldShowBegin('ready', false)).toBe(false);
+    for (const phase of ['countdown', 'playing', 'paused', 'study']) expect(shouldShowBegin(phase, true)).toBe(false);
+  });
+
+  it('leaves only Pause and Resume in the bottom bar', () => {
+    expect(getBarControl('ready', true)).toBeNull();
+    expect(getBarControl('playing', true)).toMatchObject({ label: 'Pause' });
+    expect(getBarControl('paused', true)).toMatchObject({ label: 'Resume' });
+    expect(getBarControl('study', true)).toBeNull();
+  });
+
+  it('no longer floats Begin in the middle of the screen', () => {
+    expect(renderToStaticMarkup(<App />)).not.toContain('ready-prompt');
   });
 });

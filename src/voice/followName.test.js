@@ -49,9 +49,9 @@ function facingScore({ adapter, controls }, id) {
 // Follow the words: when the guide names a region or lobe, the app lights it,
 // and turns to it if it cannot be seen and the brain is free.
 describe('Following a spoken name', () => {
-  it('keeps the agent contract at thirteen commands', () => {
+  it('keeps the agent contract at twelve commands', () => {
     const { commands } = setup();
-    expect(Object.keys(commands)).toHaveLength(13);
+    expect(Object.keys(commands)).toHaveLength(12);
     expect(typeof commands.followName).toBe('function');
   });
 
@@ -200,5 +200,77 @@ describe('The brain stem is shown from the front right, tilted up', () => {
     expect(stem).toBeGreaterThan(0);
     expect(stem).toBeGreaterThan(scores.anterior);
     expect(stem).toBeGreaterThan(scores.right_lateral);
+  });
+});
+
+// Kyle: a subregion Sylvi talked about flashed on and off. In the live run she
+// called rotate_to_view mid-answer, and its safety net cleared the light her
+// words had just set. A followed highlight now holds until the next followed
+// name, a tool that lights something else, or the player.
+describe('A followed highlight holds', () => {
+  function counting(harness) {
+    const calls = [];
+    const original = harness.adapter.setHighlight;
+    harness.adapter.setHighlight = (...args) => {
+      calls.push(args);
+      return original(...args);
+    };
+    return calls;
+  }
+
+  it('survives rotate_to_view', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.followName(region(11)));
+    expect((await settle(commands.rotateTo('posterior'))).ok).toBe(true);
+    expect(state.highlight).toBe(11);
+  });
+
+  it('a region a tool lit is still cleared by rotate_to_view, as before', async () => {
+    const { commands, state, settle } = setup();
+    commands.highlightRegion(11);
+    await settle(commands.rotateTo('posterior'));
+    expect(state.highlight).toBeNull();
+  });
+
+  it('never goes out on its own, through 20 s of showcase, drift and stillness', async () => {
+    const harness = setup();
+    const { commands, state, controls } = harness;
+    await harness.settle(commands.followName(region(17)));
+    await runFrames(controls, clock, 20_000);
+    expect(state.highlight).toBe(17);
+  });
+
+  it('naming the lit region again leaves the light alone', async () => {
+    const harness = setup();
+    const calls = counting(harness);
+    await harness.settle(harness.commands.followName(region(11)));
+    await harness.settle(harness.commands.followName(region(11)));
+    expect(calls).toHaveLength(1);
+  });
+
+  it('naming the focused region again during a tour stop leaves it alone', async () => {
+    const harness = setup();
+    await harness.settle(harness.commands.startTour());
+    await harness.settle(harness.commands.nextTourStop());
+    const calls = counting(harness);
+    await harness.settle(harness.commands.followName(region(6)));
+    await harness.settle(harness.commands.followName(region(6)));
+    expect(calls).toHaveLength(1);
+    expect(harness.state.focus).toEqual([6]);
+  });
+
+  it('naming a region a tool already lit leaves it alone', async () => {
+    const harness = setup();
+    await harness.settle(harness.commands.faceRegion(17));
+    const calls = counting(harness);
+    expect((await harness.settle(harness.commands.followName(region(17)))).did).toBe('skipped');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('the next followed name replaces it', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.followName(region(11)));
+    await settle(commands.followName(region(12)));
+    expect(state.highlight).toBe(12);
   });
 });

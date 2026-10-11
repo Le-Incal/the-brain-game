@@ -5,9 +5,7 @@ import {
   configureColorMap,
   configureRegionIdMap,
   computeHighlightPulse,
-  computeLabelLeaderWidth,
   createRegionPaletteUniforms,
-  getAtlasViewForDirection,
   getCompositionVerticalShiftCssPx,
   getResponsiveSpecimenScale,
   getResponsiveSpecimenVerticalOffset,
@@ -35,13 +33,6 @@ describe('computeHighlightPulse', () => {
     expect(Math.min(...samples)).toBeGreaterThanOrEqual(0.35);
     expect(Math.max(...samples)).toBeLessThanOrEqual(1);
     expect(new Set(samples.map((value) => value.toFixed(3))).size).toBeGreaterThan(1);
-  });
-});
-
-describe('computeLabelLeaderWidth', () => {
-  it('places annotation text beyond the brain with a generous gutter', () => {
-    expect(computeLabelLeaderWidth('left', 420, 360, 640, 180)).toBe(100);
-    expect(computeLabelLeaderWidth('right', 580, 360, 640, 180)).toBe(100);
   });
 });
 
@@ -265,13 +256,3 @@ describe('painted atlas integrity', () => {
   });
 });
 
-describe('atlas view labels', () => {
-  it('selects canonical views from model-space camera direction', () => {
-    expect(getAtlasViewForDirection(new THREE.Vector3(1, 0, 0))).toBe('left_lateral');
-    expect(getAtlasViewForDirection(new THREE.Vector3(-1, 0, 0))).toBe('right_lateral');
-    expect(getAtlasViewForDirection(new THREE.Vector3(0, 1, 0))).toBe('superior');
-    expect(getAtlasViewForDirection(new THREE.Vector3(0, -1, 0))).toBe('inferior');
-    expect(getAtlasViewForDirection(new THREE.Vector3(0, 0, 1))).toBe('anterior');
-    expect(getAtlasViewForDirection(new THREE.Vector3(0, 0, -1))).toBe('posterior');
-  });
-});

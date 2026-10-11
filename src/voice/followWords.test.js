@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const followModule = await import('./followWords.js').catch(() => ({}));
-const { createWordFollower, DEFAULT_CHARS_PER_SECOND, FOLLOW_MIN_HIGHLIGHT_MS } = followModule;
+const { createWordFollower, DEFAULT_CHARS_PER_SECOND, FOLLOW_MIN_HIGHLIGHT_MS, AUDIBLE_LEVEL } = followModule;
 
 // A fake clock with timers that fire in order as time advances.
 function setup() {
@@ -140,6 +140,7 @@ describe('Follow the words: exact timing from audio alignment', () => {
     const { follower, acts, advance } = setup();
     advance(1000);
     follower.alignment(alignmentFor('and my pons is'));
+    follower.outputLevel(0.3);
     advance(5000);
     expect(acts).toEqual([{ at: 1000 + 'and my '.length * 50, target: region(20) }]);
     expect(follower.timing()).toBe('alignment');
@@ -149,6 +150,7 @@ describe('Follow the words: exact timing from audio alignment', () => {
     const { follower, acts, advance } = setup();
     advance(1000);
     follower.alignment(alignmentFor('my cerebel'));
+    follower.outputLevel(0.3);
     advance(200);
     expect(acts).toEqual([]);
     follower.alignment(alignmentFor('lum is busy'));
@@ -204,5 +206,132 @@ describe('Follow the words: the guide and the player come first', () => {
     follower.guideText('my pons and my cerebellum');
     follower.dispose();
     expect(pending()).toBe(0);
+  });
+});
+
+// Live run: "followed 14 names (4 turns, alignment timing)", yet the frontal
+// subregions flashed through early and landed on Broca's while Sylvi was
+// still describing the others. Chunks arrive in bursts ahead of playback, so
+// each was timed from its arrival. Now each reply has a playback clock: the
+// first chunk starts when the audio is heard, each later chunk where the one
+// before it ends.
+describe('Follow the words: a playback clock for alignment', () => {
+  // `seconds` of speech in `count` characters, a name at `at` characters in.
+  const chunk = (name, { seconds = 5, count = 100, at: index = 20 } = {}) => {
+    const filler = 'x'.repeat(count);
+    const text = filler.slice(0, index) + ` ${name} ` + filler.slice(index + name.length + 2);
+    const ms = (seconds * 1000) / text.length;
+    return {
+      chars: [...text],
+      char_start_times_ms: [...text].map((_, i) => i * ms),
+      char_durations_ms: [...text].map(() => ms),
+    };
+  };
+
+  it('treats a level above about 0.02 as audible', () => {
+    expect(AUDIBLE_LEVEL).toBe(0.02);
+  });
+
+  it('spreads names from chunks that arrive at once across the 15 s they take to say', () => {
+    const { follower, acts, advance } = setup();
+    follower.outputLevel(0);
+    follower.alignment(chunk('pons'));
+    follower.alignment(chunk('cerebellum'));
+    follower.alignment(chunk('precuneus'));
+    advance(400);
+    expect(acts).toEqual([]);
+    follower.outputLevel(0.3);
+    advance(20_000);
+    expect(acts.map(({ target }) => target)).toEqual([region(20), region(19), region(10)]);
+    const [first, second, third] = acts.map(({ at: time }) => time);
+    expect(first).toBeGreaterThanOrEqual(400 + 900);
+    expect(first).toBeLessThan(400 + 1300);
+    expect(second - first).toBeGreaterThan(4500);
+    expect(third - second).toBeGreaterThan(4500);
+    expect(third).toBeGreaterThan(10_400);
+  });
+
+  it('never lights a name before the reply is heard', () => {
+    const { follower, acts, advance } = setup();
+    follower.outputLevel(0);
+    follower.alignment(chunk('pons', { at: 0 }));
+    advance(1500);
+    expect(acts).toEqual([]);
+    follower.outputLevel(0.3);
+    advance(500);
+    expect(acts.map(({ at: time }) => time)).toEqual([expect.closeTo(1550, 0)]);
+  });
+
+  it('falls back to the first chunk arrival if no audio is heard within 2 s', () => {
+    const { follower, acts, advance } = setup();
+    follower.alignment(chunk('pons', { at: 59, seconds: 5 }));
+    advance(10_000);
+    expect(acts).toHaveLength(1);
+    expect(acts[0].at).toBeCloseTo(3000, -2);
+  });
+
+  it('a chunk arriving while the reply still plays continues where the last one ends', () => {
+    const { follower, acts, advance } = setup();
+    follower.alignment(chunk('nothing named', { seconds: 5 }));
+    follower.outputLevel(0.3);
+    advance(3000);
+    follower.alignment(chunk('pons', { at: 0, seconds: 5 }));
+    advance(10_000);
+    expect(acts.map(({ at: time }) => time)).toEqual([expect.closeTo(5050, -2)]);
+  });
+
+  it('a new reply after the last one has finished starts its own clock at its own audio', () => {
+    const { follower, acts, advance } = setup();
+    follower.alignment(chunk('nothing named', { seconds: 1 }));
+    follower.outputLevel(0.3);
+    advance(1000);
+    follower.outputLevel(0);
+    advance(4000);
+    follower.alignment(chunk('pons', { at: 0, seconds: 5 }));
+    advance(600);
+    follower.outputLevel(0.3);
+    advance(5000);
+    expect(acts.map(({ at: time }) => time)).toEqual([expect.closeTo(5650, -2)]);
+  });
+
+  it('an interruption ends the reply; the next one starts its own clock', () => {
+    const { follower, acts, advance } = setup();
+    follower.alignment(chunk('cerebellum', { at: 80, seconds: 10 }));
+    follower.outputLevel(0.3);
+    advance(2000);
+    follower.interrupted();
+    follower.outputLevel(0);
+    advance(500);
+    follower.alignment(chunk('pons', { at: 0, seconds: 5 }));
+    advance(200);
+    follower.outputLevel(0.3);
+    advance(5000);
+    expect(acts.map(({ target }) => target)).toEqual([region(20)]);
+    expect(acts[0].at).toBeCloseTo(2750, -2);
+  });
+
+  it('a pause between sentences does not restart the clock', () => {
+    const { follower, acts, advance } = setup();
+    follower.alignment(chunk('pons', { at: 79, seconds: 5 }));
+    follower.outputLevel(0.3);
+    advance(1500);
+    follower.outputLevel(0);
+    advance(400);
+    follower.outputLevel(0.3);
+    advance(10_000);
+    expect(acts.map(({ at: time }) => time)).toEqual([expect.closeTo(4000, -2)]);
+  });
+});
+
+// Kyle: a subregion Sylvi talks about flashed on and off. rotate_to_view is a
+// turn, not a light: it no longer stops the words being followed.
+describe('Follow the words: a turn does not silence the words', () => {
+  it('keeps following through rotate_to_view', () => {
+    const { follower, acts, advance } = setup();
+    follower.guideSpeaking(true);
+    follower.guideText('my pons');
+    follower.toolCalled('rotate_to_view');
+    advance(5000);
+    expect(acts.map(({ target }) => target)).toEqual([region(20)]);
   });
 });
