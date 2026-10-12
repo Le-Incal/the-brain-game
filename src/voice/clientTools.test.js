@@ -27,6 +27,9 @@ function recordingCommands(overrides = {}) {
       nextTourStop: command('nextTourStop', { ok: true, did: 'Turned.', reason: '', stop: 1, of: 7 }),
       endTour: command('endTour', { ok: true, did: 'Ended the tour.', reason: '', done: true }),
       showSection: command('showSection', { ok: true, did: 'Opened my section.', reason: '' }),
+      setGameSpeed: command('setGameSpeed', { ok: true, did: 'Words now fall faster.', reason: '', speed: 1.25, level: 'Hard 1' }),
+      setDifficulty: command('setDifficulty'),
+      switchMode: command('switchMode'),
       ...overrides,
     },
   };
@@ -38,7 +41,9 @@ describe('M4: the nine client tools', () => {
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
-    expect(AGENT_TOOL_NAMES).toHaveLength(13);
+    // Kyle, 2026-10-11: the guide also sets the game's speed and difficulty and switches modes.
+    expect(AGENT_TOOL_NAMES).toHaveLength(16);
+    expect(AGENT_TOOL_NAMES.slice(13)).toEqual(['set_game_speed', 'set_difficulty', 'switch_mode']);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -61,6 +66,9 @@ describe('M4: the nine client tools', () => {
     ['start_tour', {}, ['startTour']],
     ['next_tour_stop', {}, ['nextTourStop']],
     ['end_tour', {}, ['endTour']],
+    ['set_game_speed', { change: 'faster' }, ['setGameSpeed', 'faster']],
+    ['set_difficulty', { difficulty: 'hard' }, ['setDifficulty', 'hard']],
+    ['switch_mode', { mode: 'study' }, ['switchMode', 'study']],
   ])('%s %j calls the scene command', async (name, params, expected) => {
     const { commands, calls } = recordingCommands();
     await createClientTools(commands)[name](params);
@@ -147,7 +155,7 @@ describe('The brief and the dashboard agree on execution mode', () => {
   // Kyle, 2026-10-11: show_section too, so the section opens after the sentence that announces it.
   const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop', 'show_section'];
 
-  it('names exactly the five post_tool_speech tools; the other eight run immediate', () => {
+  it('names exactly the five post_tool_speech tools; the rest run immediate', () => {
     expect(settings).toMatch(/`execution_mode: immediate`/);
     const clause = settings.match(/except ([a-z_, ]+?),? which use `execution_mode: post_tool_speech`/);
     expect(clause).not.toBeNull();

@@ -480,8 +480,19 @@ describe('C19: scene commands never act during a game', () => {
     ['rotateTo', (c) => c.rotateTo('posterior')],
     ['highlightRegion', (c) => c.highlightRegion(9)],
     ['clearHighlight', (c) => c.clearHighlight()],
-    ['setColourRegions', (c) => c.setColourRegions(true)],
   ];
+
+  // Kyle, 2026-10-11: the guide may ask "colours off?" mid-game. Colour is the
+  // player's aid, not an answer, so it works in every mode.
+  it('setColourRegions works during a game', () => {
+    const { commands, state } = setup();
+    state.mode = 'game';
+    const off = commands.setColourRegions(false);
+    expect(off.ok).toBe(true);
+    expect(state.colourRegions).toBe(false);
+    expect(commands.setColourRegions(true).ok).toBe(true);
+    expect(state.colourRegions).toBe(true);
+  });
 
   it.each(SCENE_CALLS)('%s refuses during a game and changes nothing', async (_name, call) => {
     const { commands, controls, state, settle } = setup();
