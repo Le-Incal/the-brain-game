@@ -18,6 +18,7 @@ const {
   formatTourWaiting,
   formatCoachSignal,
   isAppPrompt,
+  formatFirstPlay,
   createContextReporter,
 } = contextModule;
 
@@ -39,6 +40,7 @@ describe('M4: every contextual update, worded in one place', () => {
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
       streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
       struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
+      firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
     });
   });
 
@@ -139,6 +141,10 @@ describe('M4: every contextual update, worded in one place', () => {
     expect(
       formatCoachSignal({ kind: 'struggling', missed: 4, of: 6, level: 'Easy', settings: { speed: 0.5, colour: true, exact: false }, offers: [] })
     ).toBe('[app] struggling: 4 of the last 6 missed at Easy (lobe counts, colour on, 0.5×); offer: nothing easier');
+  });
+
+  it('asks the guide to offer an example on the first Play', () => {
+    expect(formatFirstPlay()).toBe('[app] the player pressed Play for the first time; offer: a quick example first');
   });
 
   it('knows an app prompt from something the player said, so the transcript never shows one', () => {

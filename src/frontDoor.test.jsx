@@ -19,6 +19,7 @@ const {
   shouldMountGuide,
   initialMotion,
   ScoreDisplay,
+  shouldOfferExample,
 } = frontDoor;
 
 // Kyle, 2026-10-11: the brain is the front door. Sylvi greets every visitor,
@@ -293,5 +294,33 @@ describe('The score shows the level during a game', () => {
       expect(markup).toContain('Score: 40');
       expect(markup).not.toContain('level-display');
     }
+  });
+});
+
+// Kyle, 2026-10-11: on the first Play the guide offers an example; silence or
+// "no" lets the player play. The phase in between is 'offer'.
+describe('The first Play waits for the guide\'s offer', () => {
+  it('is part of the game for the guide and the scene', () => {
+    expect(guideModeForPhase('offer')).toBe('game');
+    expect(sceneModeForPhase('offer')).toBe('game');
+  });
+
+  it('starts at once if the player presses Play again', () => {
+    expect(playAction('offer')).toBe('start-now');
+  });
+
+  it('opens Study if asked, leaving the offer behind', () => {
+    expect(studyAction('offer')).toBe('enter');
+  });
+
+  it('keeps Play the Game pressable', () => {
+    const play = getBarButtons({ gamePhase: 'offer', brainReady: true }).find((button) => button.id === 'play');
+    expect(play).toMatchObject({ label: 'Play the Game', disabled: false });
+  });
+
+  it('happens on the first Play of a visit, only with a conversation to make it', () => {
+    expect(shouldOfferExample({ firstPlay: true, conversation: true })).toBe(true);
+    expect(shouldOfferExample({ firstPlay: false, conversation: true })).toBe(false);
+    expect(shouldOfferExample({ firstPlay: true, conversation: false })).toBe(false);
   });
 });

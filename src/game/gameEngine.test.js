@@ -296,3 +296,52 @@ describe('The falling word, for hints', () => {
     expect(engine.fallingWord()).toBeNull();
   });
 });
+
+// Kyle, 2026-10-11: the guide plays an example word. It is unscored.
+describe('An example word', () => {
+  const VISION = { word: 'VISION', targetRegion: 17, tier: 1, factoid: 'f' };
+
+  it('falls fast, lands, and scores nothing', async () => {
+    const engine = new GameEngine(mockScene(17), { onScoreChange: vi.fn() });
+    const landed = engine.playDemo(VISION, { fallSpeed: 0.12 });
+    expect(engine.isPlaying).toBe(true);
+    expect(engine.currentWord).toBe(VISION);
+    expect(engine.fallSpeed).toBe(0.12);
+    engine.update(1);
+    await expect(landed).resolves.toEqual({ outcome: 'correct', regionId: 17 });
+    expect(engine.score).toBe(0);
+    expect(engine.onScoreChange).not.toHaveBeenCalled();
+    expect(engine.usedWords.size).toBe(0);
+  });
+
+  it('shows the same feedback as a real catch, marked as an example', async () => {
+    const onCorrect = vi.fn();
+    const engine = new GameEngine(mockScene(17), { onCorrect });
+    const landed = engine.playDemo(VISION);
+    engine.update(1);
+    await landed;
+    expect(onCorrect).toHaveBeenCalledWith(expect.objectContaining({ demo: true }));
+  });
+
+  it('stops afterwards, with the speed and the game as they were', async () => {
+    const engine = new GameEngine(mockScene(17));
+    engine.setFallSpeed(0.05);
+    const landed = engine.playDemo(VISION, { fallSpeed: 0.12 });
+    engine.update(1);
+    await landed;
+    expect(engine.isPlaying).toBe(false);
+    expect(engine.fallSpeed).toBe(0.05);
+    expect(engine.fallingWord()).toBeNull();
+    expect(engine.dropCount).toBe(0);
+  });
+
+  it('reports a miss plainly, and drops no further word', async () => {
+    const onMiss = vi.fn();
+    const engine = new GameEngine(mockScene(null), { onMiss });
+    const landed = engine.playDemo(VISION);
+    for (let i = 0; i < 40; i++) engine.update(0.1);
+    await expect(landed).resolves.toEqual({ outcome: 'miss', regionId: null });
+    expect(onMiss).toHaveBeenCalledWith(expect.objectContaining({ demo: true }));
+    expect(engine.isPlaying).toBe(false);
+  });
+});

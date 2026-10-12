@@ -30,6 +30,7 @@ function recordingCommands(overrides = {}) {
       setGameSpeed: command('setGameSpeed', { ok: true, did: 'Words now fall faster.', reason: '', speed: 1.25, level: 'Hard 1' }),
       setDifficulty: command('setDifficulty'),
       switchMode: command('switchMode'),
+      playExample: command('playExample', { ok: true, did: 'Caught "VISION".', reason: '' }),
       giveHint: command('giveHint', { ok: true, did: 'For "SPEECH": look on my left side, toward the front.', reason: '', word: 'SPEECH', hint: 1, final: false }),
       ...overrides,
     },
@@ -43,8 +44,8 @@ describe('M4: the nine client tools', () => {
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
     // Kyle, 2026-10-11: the guide also sets the game's speed and difficulty and switches modes.
-    expect(AGENT_TOOL_NAMES).toHaveLength(17);
-    expect(AGENT_TOOL_NAMES.slice(13)).toEqual(['set_game_speed', 'set_difficulty', 'switch_mode', 'give_hint']);
+    expect(AGENT_TOOL_NAMES).toHaveLength(18);
+    expect(AGENT_TOOL_NAMES.slice(13)).toEqual(['set_game_speed', 'set_difficulty', 'switch_mode', 'give_hint', 'play_example']);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -71,6 +72,7 @@ describe('M4: the nine client tools', () => {
     ['set_difficulty', { difficulty: 'hard' }, ['setDifficulty', 'hard']],
     ['switch_mode', { mode: 'study' }, ['switchMode', 'study']],
     ['give_hint', {}, ['giveHint']],
+    ['play_example', {}, ['playExample']],
   ])('%s %j calls the scene command', async (name, params, expected) => {
     const { commands, calls } = recordingCommands();
     await createClientTools(commands)[name](params);
@@ -155,9 +157,10 @@ describe('The brief and the dashboard agree on execution mode', () => {
   // Kyle, 2026-10-10: face_region, face_lobe and highlight_region too, so a
   // call made mid-reply lands between sentences, not early.
   // Kyle, 2026-10-11: show_section too, so the section opens after the sentence that announces it.
-  const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop', 'show_section'];
+  // Kyle, 2026-10-11: play_example too, so the example starts after "Watch."
+  const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop', 'play_example', 'show_section'];
 
-  it('names exactly the five post_tool_speech tools; the rest run immediate', () => {
+  it('names exactly the six post_tool_speech tools; the rest run immediate', () => {
     expect(settings).toMatch(/`execution_mode: immediate`/);
     const clause = settings.match(/except ([a-z_, ]+?),? which use `execution_mode: post_tool_speech`/);
     expect(clause).not.toBeNull();

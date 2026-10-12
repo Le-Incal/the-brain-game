@@ -8,7 +8,7 @@ const { createGameCommands, switchModeAction } = gameModule;
 // Study. It still never moves or lights the brain while a word is in play.
 
 function setup({ phase = 'playing', speed = 1, colour = true, exact = false, returnTo = 'ready', falling = { word: { word: 'SPEECH', targetRegion: 6 }, drop: 1 } } = {}) {
-  const state = { phase, speed, colour, exact, returnTo, falling };
+  const state = { phase, speed, colour, exact, returnTo, falling, motion: true, demo: { ok: true, word: 'VISION', region: 'Primary Visual Cortex', outcome: 'correct' } };
   const performed = [];
   const commands = createGameCommands({
     getPhase: () => state.phase,
@@ -18,6 +18,11 @@ function setup({ phase = 'playing', speed = 1, colour = true, exact = false, ret
     setExact: (value) => (state.exact = value),
     perform: (action) => performed.push(action),
     getFallingWord: () => state.falling,
+    motionAllowed: () => state.motion,
+    playDemo: async () => {
+      performed.push('demo');
+      return state.demo;
+    },
   });
   return { state, performed, commands };
 }
@@ -121,6 +126,10 @@ describe('Switching modes', () => {
     ['study', 'explore', 'ready', 'leave'],
     ['ready', 'explore', 'ready', 'already'],
     ['playing', 'explore', 'ready', null],
+    // The first Play waits a moment while the guide offers an example.
+    ['offer', 'game', 'ready', 'start-now'],
+    ['offer', 'study', 'ready', 'enter'],
+    ['offer', 'explore', 'ready', 'cancel-offer'],
   ])('from %s, %s (came from %s) is %s', (phase, target, returnTo, expected) => {
     expect(switchModeAction(phase, target, returnTo)).toBe(expected);
   });
@@ -215,5 +224,54 @@ describe('giveHint', () => {
       expect(result.ok, phase).toBe(false);
       expect(result.reason, phase).toMatch(/game/i);
     }
+  });
+});
+
+// Kyle, 2026-10-11: the guide plays an example word, unscored, before the
+// countdown. During a scored word it still never moves or lights the brain.
+describe('playExample', () => {
+  it('plays an example while the first Play waits, and says what happened', async () => {
+    const { commands, performed } = setup({ phase: 'offer' });
+    const result = await commands.playExample();
+    expectResultShape(result);
+    expect(result.ok).toBe(true);
+    expect(performed).toEqual(['demo']);
+    expect(result.did).toMatch(/VISION/);
+    expect(result.did).toMatch(/Primary Visual Cortex/);
+    expect(result.did).toMatch(/no points/i);
+  });
+
+  it('plays while exploring or in Study too', async () => {
+    for (const phase of ['ready', 'study']) {
+      const { commands } = setup({ phase });
+      expect((await commands.playExample()).ok, phase).toBe(true);
+    }
+  });
+
+  it('never plays during a game: that word is the player\'s', async () => {
+    for (const phase of ['countdown', 'playing', 'paused']) {
+      const { commands, performed } = setup({ phase });
+      const result = await commands.playExample();
+      expect(result.ok, phase).toBe(false);
+      expect(result.reason, phase).toMatch(/game/i);
+      expect(performed, phase).toEqual([]);
+    }
+  });
+
+  it('explains in words when motion is off', async () => {
+    const { commands, state, performed } = setup({ phase: 'offer' });
+    state.motion = false;
+    const result = await commands.playExample();
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/motion/i);
+    expect(performed).toEqual([]);
+  });
+
+  it('passes on a demo that could not finish', async () => {
+    const { commands, state } = setup({ phase: 'offer' });
+    state.demo = { ok: false, reason: 'The player took hold of me, so I stopped the example.' };
+    const result = await commands.playExample();
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/took hold/);
   });
 });

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createFakeSceneAdapter, installFakeClock, runFrames } from '../test/voiceHarness.js';
+import * as THREE from 'three';
+import regionGeometry from '../data/regionGeometry.json';
+import { createFakeSceneAdapter, installFakeClock, runFrames, screenUpDirection, toCameraDirection } from '../test/voiceHarness.js';
 import { createSceneCommands } from './sceneCommands.js';
 
 let clock;
@@ -120,5 +122,42 @@ describe('show_section', () => {
     const result = await settle(commands.followName({ kind: 'region', id: 19 }));
     expect(result.did).toBe('skipped');
     expect(state.highlight).toBeNull();
+  });
+});
+
+// Kyle, 2026-10-11: the guide plays an example. Words fall down the centre and
+// land on the first surface they meet, so the region turns to the top of the
+// brain, tilted a little toward the player.
+describe('Turning a region up for an example', () => {
+  it("is not one of the guide's tools", () => {
+    const { commands } = setup();
+    expect(typeof commands.turnRegionUp).toBe('function');
+    expect(Object.keys(commands)).not.toContain('turnRegionUp');
+  });
+
+  it('points the region up, tilted toward the player by the given angle', async () => {
+    const { commands, adapter, controls, settle } = setup();
+    const result = await settle(commands.turnRegionUp(17, { tiltDegrees: 12 }));
+    expect(result.ok).toBe(true);
+    const up = screenUpDirection(controls);
+    const toward = toCameraDirection(controls);
+    const tilt = THREE.MathUtils.degToRad(12);
+    const target = up.clone().multiplyScalar(Math.cos(tilt)).add(toward.clone().multiplyScalar(Math.sin(tilt)));
+    const centroid = regionGeometry.regions['17'].centroidLeft;
+    const region = adapter.toSpecimenSpace(centroid).normalize().applyQuaternion(controls.orientGroup.quaternion);
+    expect(region.dot(target)).toBeGreaterThan(0.999);
+  });
+
+  it('turns from any game phase: the page decides when an example may play', async () => {
+    const { commands, state, settle } = setup();
+    state.mode = 'game';
+    expect((await settle(commands.turnRegionUp(6, { tiltDegrees: 12 }))).ok).toBe(true);
+  });
+
+  it('refuses with motion off, so the guide explains in words instead', async () => {
+    const { commands, settle } = setup({ motion: false });
+    const result = await settle(commands.turnRegionUp(17, { tiltDegrees: 12 }), 50);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/motion/i);
   });
 });
