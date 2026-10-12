@@ -7,8 +7,8 @@ const { createGameCommands, switchModeAction } = gameModule;
 // falling words and the difficulty, and switch the player between Game and
 // Study. It still never moves or lights the brain while a word is in play.
 
-function setup({ phase = 'playing', speed = 1, colour = true, exact = false, returnTo = 'ready' } = {}) {
-  const state = { phase, speed, colour, exact, returnTo };
+function setup({ phase = 'playing', speed = 1, colour = true, exact = false, returnTo = 'ready', falling = { word: { word: 'SPEECH', targetRegion: 6 }, drop: 1 } } = {}) {
+  const state = { phase, speed, colour, exact, returnTo, falling };
   const performed = [];
   const commands = createGameCommands({
     getPhase: () => state.phase,
@@ -17,6 +17,7 @@ function setup({ phase = 'playing', speed = 1, colour = true, exact = false, ret
     setSpeed: (value) => (state.speed = value),
     setExact: (value) => (state.exact = value),
     perform: (action) => performed.push(action),
+    getFallingWord: () => state.falling,
   });
   return { state, performed, commands };
 }
@@ -162,5 +163,57 @@ describe('Switching modes', () => {
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/game.*study.*explore/);
     expect(performed).toEqual([]);
+  });
+});
+
+// Kyle, 2026-10-11: hints during the game; the word keeps falling.
+describe('giveHint', () => {
+  it('climbs the ladder for the same word: where to look, the lobe, the region', () => {
+    const { commands } = setup();
+    const first = commands.giveHint();
+    expectResultShape(first);
+    expect(first).toMatchObject({ ok: true, word: 'SPEECH', hint: 1, final: false });
+    expect(first.did).toBe('For "SPEECH": look on my left side, toward the front.');
+    expect(commands.giveHint()).toMatchObject({ hint: 2, did: 'For "SPEECH": it lies in my Frontal Lobe.' });
+    expect(commands.giveHint()).toMatchObject({ hint: 3, final: true });
+    expect(commands.giveHint()).toMatchObject({ hint: 3, final: true });
+  });
+
+  it('starts again at the bottom for the next word', () => {
+    const { commands, state } = setup();
+    commands.giveHint();
+    commands.giveHint();
+    state.falling = { word: { word: 'VISION', targetRegion: 17 }, drop: 2 };
+    expect(commands.giveHint()).toMatchObject({ word: 'VISION', hint: 1 });
+  });
+
+  it('says on Easy when the lobe alone will score', () => {
+    const easy = setup({ exact: false });
+    easy.commands.giveHint();
+    expect(easy.commands.giveHint().did).toMatch(/On Easy, the lobe is enough to score\.$/);
+    const hard = setup({ exact: true });
+    hard.commands.giveHint();
+    expect(hard.commands.giveHint().did).not.toMatch(/enough to score/);
+  });
+
+  it('works while the game is paused', () => {
+    const { commands } = setup({ phase: 'paused' });
+    expect(commands.giveHint().ok).toBe(true);
+  });
+
+  it('waits for the next word when none is in the air', () => {
+    const { commands } = setup({ falling: null });
+    const result = commands.giveHint();
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/next word/);
+  });
+
+  it('is for the game only', () => {
+    for (const phase of ['ready', 'study', 'countdown']) {
+      const { commands } = setup({ phase });
+      const result = commands.giveHint();
+      expect(result.ok, phase).toBe(false);
+      expect(result.reason, phase).toMatch(/game/i);
+    }
   });
 });

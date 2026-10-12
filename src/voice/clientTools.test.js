@@ -30,6 +30,7 @@ function recordingCommands(overrides = {}) {
       setGameSpeed: command('setGameSpeed', { ok: true, did: 'Words now fall faster.', reason: '', speed: 1.25, level: 'Hard 1' }),
       setDifficulty: command('setDifficulty'),
       switchMode: command('switchMode'),
+      giveHint: command('giveHint', { ok: true, did: 'For "SPEECH": look on my left side, toward the front.', reason: '', word: 'SPEECH', hint: 1, final: false }),
       ...overrides,
     },
   };
@@ -42,8 +43,8 @@ describe('M4: the nine client tools', () => {
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
     // Kyle, 2026-10-11: the guide also sets the game's speed and difficulty and switches modes.
-    expect(AGENT_TOOL_NAMES).toHaveLength(16);
-    expect(AGENT_TOOL_NAMES.slice(13)).toEqual(['set_game_speed', 'set_difficulty', 'switch_mode']);
+    expect(AGENT_TOOL_NAMES).toHaveLength(17);
+    expect(AGENT_TOOL_NAMES.slice(13)).toEqual(['set_game_speed', 'set_difficulty', 'switch_mode', 'give_hint']);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -69,6 +70,7 @@ describe('M4: the nine client tools', () => {
     ['set_game_speed', { change: 'faster' }, ['setGameSpeed', 'faster']],
     ['set_difficulty', { difficulty: 'hard' }, ['setDifficulty', 'hard']],
     ['switch_mode', { mode: 'study' }, ['switchMode', 'study']],
+    ['give_hint', {}, ['giveHint']],
   ])('%s %j calls the scene command', async (name, params, expected) => {
     const { commands, calls } = recordingCommands();
     await createClientTools(commands)[name](params);

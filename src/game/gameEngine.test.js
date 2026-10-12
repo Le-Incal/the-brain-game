@@ -264,3 +264,35 @@ describe('GameEngine', () => {
     vi.useRealTimers();
   });
 });
+
+// Kyle, 2026-10-11: the guide hints at the word in the air; the word keeps falling.
+describe('The falling word, for hints', () => {
+  it('is nothing before the game starts', () => {
+    const engine = new GameEngine(mockScene(null));
+    expect(engine.fallingWord()).toBeNull();
+  });
+
+  it('is the word in the air, numbered by its drop', () => {
+    const engine = new GameEngine(mockScene(null));
+    engine.start();
+    const first = engine.fallingWord();
+    expect(first.word).toBe(engine.currentWord);
+    expect(first.drop).toBe(1);
+    engine.dropNextWord();
+    expect(engine.fallingWord().drop).toBe(2);
+  });
+
+  it('still counts while the game is paused', () => {
+    const engine = new GameEngine(mockScene(null));
+    engine.start();
+    engine.pause();
+    expect(engine.fallingWord()).not.toBeNull();
+  });
+
+  it('is nothing once the word has landed', () => {
+    const engine = new GameEngine(mockScene(6));
+    engine.start();
+    engine.update(1);
+    expect(engine.fallingWord()).toBeNull();
+  });
+});
