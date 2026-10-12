@@ -16,6 +16,8 @@ const {
   formatSection,
   formatTimeWarning,
   formatTourWaiting,
+  formatCoachSignal,
+  isAppPrompt,
   createContextReporter,
 } = contextModule;
 
@@ -35,6 +37,8 @@ describe('M4: every contextual update, worded in one place', () => {
       section: '[app] the section is {state}',
       timeWarning: '[app] about 30 seconds of our conversation remain',
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
+      streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
+      struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
     });
   });
 
@@ -116,6 +120,32 @@ describe('M4: every contextual update, worded in one place', () => {
 
   it('tells the guide where a missed word belonged, so it can teach in one sentence', () => {
     expect(formatMiss({ word: 'SPEECH', region: "Broca's Area" })).toBe('[app] missed: "SPEECH" belongs to Broca\'s Area');
+  });
+
+  // Kyle, 2026-10-11: the guide offers the next step; the player picks it.
+  it('tells the guide of a streak and what it may offer', () => {
+    expect(
+      formatCoachSignal({ kind: 'streak', count: 5, level: 'Easy', settings: { speed: 1, colour: true, exact: false }, offers: ['faster', 'colours off'] })
+    ).toBe('[app] streak: 5 caught in a row at Easy (lobe counts, colour on, 1.0×); offer: faster or colours off');
+    expect(
+      formatCoachSignal({ kind: 'streak', count: 5, level: 'Hard 6', settings: { speed: 2, colour: false, exact: true }, offers: [] })
+    ).toBe('[app] streak: 5 caught in a row at Hard 6 (exact region, colour off, 2.0×); offer: nothing harder');
+  });
+
+  it('tells the guide the player is struggling and what it may offer', () => {
+    expect(
+      formatCoachSignal({ kind: 'struggling', inARow: 3, level: 'Hard 2', settings: { speed: 1.25, colour: false, exact: false }, offers: ['slower', 'colours back on'] })
+    ).toBe('[app] struggling: 3 missed in a row at Hard 2 (lobe counts, colour off, 1.25×); offer: slower or colours back on');
+    expect(
+      formatCoachSignal({ kind: 'struggling', missed: 4, of: 6, level: 'Easy', settings: { speed: 0.5, colour: true, exact: false }, offers: [] })
+    ).toBe('[app] struggling: 4 of the last 6 missed at Easy (lobe counts, colour on, 0.5×); offer: nothing easier');
+  });
+
+  it('knows an app prompt from something the player said, so the transcript never shows one', () => {
+    expect(isAppPrompt('[app] streak: 5 caught in a row')).toBe(true);
+    expect(isAppPrompt('  [app] struggling')).toBe(true);
+    expect(isAppPrompt('What does the [app] do?')).toBe(false);
+    expect(isAppPrompt('Faster please')).toBe(false);
   });
 
   it('matches every example line in the agent brief', () => {

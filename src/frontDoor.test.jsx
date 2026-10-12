@@ -18,6 +18,7 @@ const {
   SettingsPanel,
   shouldMountGuide,
   initialMotion,
+  ScoreDisplay,
 } = frontDoor;
 
 // Kyle, 2026-10-11: the brain is the front door. Sylvi greets every visitor,
@@ -273,5 +274,24 @@ describe('The section control', () => {
     const section = (open) => getBarButtons({ gamePhase: 'study', brainReady: true, sectionOpen: open }).find((b) => b.id === 'section');
     expect(section(false).pressed).toBe(false);
     expect(section(true).pressed).toBe(true);
+  });
+});
+
+// Kyle, 2026-10-11: the player sees the steps taken: Easy, Hard 1, Hard 2...
+describe('The score shows the level during a game', () => {
+  it('names the level under the score while a game is on', () => {
+    for (const gamePhase of ['countdown', 'playing', 'paused']) {
+      const markup = renderToStaticMarkup(<ScoreDisplay score={120} level="Hard 2" gamePhase={gamePhase} />);
+      expect(markup, gamePhase).toContain('Score: 120');
+      expect(markup, gamePhase).toMatch(/class="level-display"[^>]*>Hard 2</);
+    }
+  });
+
+  it('shows only the score outside a game', () => {
+    for (const gamePhase of ['ready', 'study']) {
+      const markup = renderToStaticMarkup(<ScoreDisplay score={40} level="Hard 1" gamePhase={gamePhase} />);
+      expect(markup).toContain('Score: 40');
+      expect(markup).not.toContain('level-display');
+    }
   });
 });
