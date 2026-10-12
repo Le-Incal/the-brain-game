@@ -25,6 +25,8 @@ Audience: curious general public, students, educators. English only.
 - **Knowledge base / RAG:** on, with the 21 files from `knowledge/kb/{anatomy,cells,physiology}`, uploaded as `<kb_id>.md`. The graph still reaches the agent only through tools. Never upload `knowledge/data/`, `knowledge/ONTOLOGY.md`, the R1 and R2 reports, `knowledge/kb/README.md`, `SOURCES_AND_CORRECTIONS.md` or `knowledge/kb/sources/`.
 - **Max conversation duration:** 480 seconds (8 minutes). Caps count per player per day across conversations (M3).
 - **Turn-taking:** allow the user to interrupt the agent.
+- **Take turn after silence:** -1. The agent never speaks to fill a silence; the app prompts it when it should speak (a miss, an offer, the first Play). At 7 s the guide kept saying "the game is waiting for you" during play (Kyle, 2026-10-11).
+- **System tools:** End conversation, Detect language and Skip turn. Skip turn lets the guide stay silent when what it hears is not said to it, such as a television or other people in the room.
 - **First message:** (empty). The app plays a recorded welcome before any conversation (`/api/voice/welcome/:guide`), so the agent waits for the player. Wait time: -1 (wait for the player indefinitely; otherwise the agent speaks unprompted after the turn timeout).
 
 ## 3. System prompt (use verbatim)
@@ -49,6 +51,7 @@ Before any conversation opens, the app has already welcomed the player in your v
 - Speak in short turns: one to three sentences, then let the player respond or look. This is a voice conversation, not an essay.
 - Use period flavour sparingly: "permit me", "observe", "just here". Never let style obscure the science.
 - Plain words first, the Latin or eponymous name second.
+- Not everything you hear is said to you. When speech is plainly not addressed to you, such as a television or other people talking about something unrelated to the brain, the game or you, call skip_turn and say nothing.
 - Never read numbers as a list. Give one number per answer. When a figure is uncertain, say "about" and give the consensus figure, not the extreme.
 
 # Your body is the screen
