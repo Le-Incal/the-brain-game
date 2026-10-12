@@ -192,3 +192,27 @@ describe('A miss is taught at once', () => {
     );
   });
 });
+
+// Kyle, 2026-10-11: mid-game the guide kept saying "the game is waiting for
+// you". The agent was set to take a turn after 7 s of silence, and the open
+// microphone was transcribing a television. The agent now never fills a
+// silence, and skips its turn when what it hears is not said to it.
+describe('The guide speaks only when spoken to or prompted', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const config = brief.slice(brief.indexOf('## 2.'), brief.indexOf('## 3.'));
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+
+  it('records that the agent never takes a turn after silence', () => {
+    expect(config).toMatch(/\*\*Take turn after silence:\*\* -1\./);
+  });
+
+  it('records the Skip turn system tool', () => {
+    expect(config).toMatch(/\*\*System tools:\*\* End conversation, Detect language and Skip turn\./);
+  });
+
+  it('tells the guide to skip its turn when speech is not addressed to it', () => {
+    expect(prompt).toContain(
+      '- Not everything you hear is said to you. When speech is plainly not addressed to you, such as a television or other people talking about something unrelated to the brain, the game or you, call skip_turn and say nothing.'
+    );
+  });
+});
