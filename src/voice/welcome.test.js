@@ -51,8 +51,9 @@ function setup({ autoplay = true, fetchOk = true } = {}) {
 }
 
 describe('The welcome', () => {
-  it('begins about 1.5 s after the brain is ready', () => {
-    expect(WELCOME_DELAY_MS).toBe(1500);
+  // Kyle, 2026-10-11: it started too quickly; a visitor needs a moment to land.
+  it('begins 4 s after the brain appears', () => {
+    expect(WELCOME_DELAY_MS).toBe(4000);
   });
 
   it("loads the guide's recording and its text", async () => {
