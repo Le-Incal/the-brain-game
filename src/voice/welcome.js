@@ -1,5 +1,5 @@
 /**
- * The recorded welcome on arrival (Kyle, 2026-10-11). It begins 4 s after the
+ * The recorded welcome on arrival (Kyle, 2026-10-11). It begins 2 s after the
  * brain appears, counting only time the visitor can see the page, so a
  * background tab keeps its welcome until it is looked at. Where the browser allows sound it plays aloud;
  * where it does not (most first visits), its text flows on its own clock and
@@ -9,7 +9,7 @@
  * transcript streams the welcome exactly as it streams any other reply.
  */
 
-export const WELCOME_DELAY_MS = 4000;
+export const WELCOME_DELAY_MS = 2000;
 export const WELCOME_ID = 'welcome';
 
 /**
