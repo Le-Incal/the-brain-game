@@ -95,10 +95,11 @@ describe('The brief tells the guide about the three modes', () => {
     expect(prompt).toMatch(/^- Study: you lead\./m);
   });
 
-  it('never gives away an answer during a game, and teaches a miss in one sentence', () => {
+  // Kyle, 2026-10-11: a miss stays quiet; it is taught in one sentence when the player asks.
+  it('never gives away an answer during a game, and teaches a miss in one sentence when asked', () => {
     expect(prompt).toMatch(/^- Game: .*Never turn me, light a region, or say where a falling word belongs/m);
     expect(prompt).toContain('[app] missed: "SPEECH" belongs to Broca\'s Area');
-    expect(prompt).toMatch(/one short sentence about why the word belongs there/);
+    expect(prompt).toMatch(/If the player asks about that word, say in one short sentence why it belongs there/);
   });
 
   it('says what to do when the player switches motion off', () => {
