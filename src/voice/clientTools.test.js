@@ -26,6 +26,7 @@ function recordingCommands(overrides = {}) {
       startTour: command('startTour', { ok: true, did: 'Started the tour.', reason: '', stops: [] }),
       nextTourStop: command('nextTourStop', { ok: true, did: 'Turned.', reason: '', stop: 1, of: 7 }),
       endTour: command('endTour', { ok: true, did: 'Ended the tour.', reason: '', done: true }),
+      showSection: command('showSection', { ok: true, did: 'Opened my section.', reason: '' }),
       ...overrides,
     },
   };
@@ -37,7 +38,7 @@ describe('M4: the nine client tools', () => {
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
     const headings = [...section.matchAll(/^### ([a-z_]+)$/gm)].map((match) => match[1]);
     expect(AGENT_TOOL_NAMES).toEqual(headings);
-    expect(AGENT_TOOL_NAMES).toHaveLength(12);
+    expect(AGENT_TOOL_NAMES).toHaveLength(13);
   });
 
   it('exposes every tool by its exact name', () => {
@@ -143,9 +144,10 @@ describe('The brief and the dashboard agree on execution mode', () => {
   // the lobe lights as the guide starts on it, not a stop ahead of the voice.
   // Kyle, 2026-10-10: face_region, face_lobe and highlight_region too, so a
   // call made mid-reply lands between sentences, not early.
-  const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop'];
+  // Kyle, 2026-10-11: show_section too, so the section opens after the sentence that announces it.
+  const POST_TOOL_SPEECH = ['face_lobe', 'face_region', 'highlight_region', 'next_tour_stop', 'show_section'];
 
-  it('names exactly the four post_tool_speech tools; the other eight run immediate', () => {
+  it('names exactly the five post_tool_speech tools; the other eight run immediate', () => {
     expect(settings).toMatch(/`execution_mode: immediate`/);
     const clause = settings.match(/except ([a-z_, ]+?),? which use `execution_mode: post_tool_speech`/);
     expect(clause).not.toBeNull();
@@ -350,6 +352,20 @@ describe('No annotations tool', () => {
     const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
     expect(brief).not.toMatch(/set_annotations|annotations/);
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
-    expect(section).toMatch(/Settings on all twelve:/);
+    expect(section).toMatch(/Settings on all thirteen:/);
+  });
+});
+
+// Kyle, 2026-10-11: the guide decides when to show the section.
+describe('show_section', () => {
+  it('opens and closes the section through the scene command', async () => {
+    const { commands, calls } = recordingCommands();
+    const tools = createClientTools(commands);
+    await tools.show_section({ open: true });
+    await tools.show_section({ open: 'false' });
+    expect(calls.filter(([name]) => name === 'showSection')).toEqual([
+      ['showSection', true],
+      ['showSection', 'false'],
+    ]);
   });
 });

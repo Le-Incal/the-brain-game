@@ -734,8 +734,8 @@ describe('C23: the took-hold message waits 250 ms; the stop does not', () => {
 
 describe('C: every command reports truthfully', () => {
   // Tours (Kyle, 2026-10-06) add faceLobe, startTour, nextTourStop, endTour.
-  // Kyle, 2026-10-11: the annotations feature is gone, so twelve.
-  it('exposes exactly the twelve contract commands', () => {
+  // Kyle, 2026-10-11: the annotations feature is gone, and the section arrives: thirteen.
+  it('exposes exactly the thirteen contract commands', () => {
     const { commands } = setup();
     expect(Object.keys(commands).sort()).toEqual(
       [
@@ -751,6 +751,7 @@ describe('C: every command reports truthfully', () => {
         'lookupRegion',
         'rotateTo',
         'setColourRegions',
+        'showSection',
       ].sort()
     );
     expect(VIEWS).toEqual(ALL_VIEWS);

@@ -49,9 +49,9 @@ function facingScore({ adapter, controls }, id) {
 // Follow the words: when the guide names a region or lobe, the app lights it,
 // and turns to it if it cannot be seen and the brain is free.
 describe('Following a spoken name', () => {
-  it('keeps the agent contract at twelve commands', () => {
+  it('keeps the agent contract at thirteen commands', () => {
     const { commands } = setup();
-    expect(Object.keys(commands)).toHaveLength(12);
+    expect(Object.keys(commands)).toHaveLength(13);
     expect(typeof commands.followName).toBe('function');
   });
 

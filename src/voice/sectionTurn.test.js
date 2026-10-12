@@ -10,10 +10,11 @@ afterEach(() => {
   clock.restore();
 });
 
-function setup({ motion = true } = {}) {
+function setup({ motion = true, section } = {}) {
   const harness = createFakeSceneAdapter();
   const commands = createSceneCommands(harness.adapter, {
     motionAllowed: () => motion,
+    section,
     setTimeoutImpl: () => 0,
     clearTimeoutImpl: () => {},
   });
@@ -28,7 +29,7 @@ function setup({ motion = true } = {}) {
 describe('Turning to the side for the section', () => {
   it('is not one of the guide\'s tools', () => {
     const { commands } = setup();
-    expect(Object.keys(commands)).toHaveLength(12);
+    expect(Object.keys(commands)).toHaveLength(13);
     expect(typeof commands.turnToSide).toBe('function');
   });
 
@@ -53,5 +54,71 @@ describe('Turning to the side for the section', () => {
     const { commands, state, settle } = setup();
     state.mode = 'game';
     expect((await settle(commands.turnToSide('left_lateral'))).ok).toBe(false);
+  });
+});
+
+// Kyle, 2026-10-11: the guide decides when to show the section, in
+// descriptions and tours. The page owns the plate; the command asks it.
+describe('show_section', () => {
+  function fakeSection({ openResult = { ok: true } } = {}) {
+    const calls = [];
+    let open = false;
+    return {
+      calls,
+      api: {
+        open: async () => {
+          calls.push('open');
+          if (openResult.ok) open = true;
+          return openResult;
+        },
+        close: () => {
+          calls.push('close');
+          open = false;
+        },
+        isOpen: () => open,
+      },
+    };
+  }
+
+  it('opens the section and says what the visitor now sees', async () => {
+    const section = fakeSection();
+    const { commands, settle } = setup({ section: section.api });
+    const result = await settle(commands.showSection(true));
+    expect(section.calls).toEqual(['open']);
+    expect(result.ok).toBe(true);
+    expect(result.did).toMatch(/divided along the midline/);
+  });
+
+  it('closes it again', async () => {
+    const section = fakeSection();
+    const { commands, settle } = setup({ section: section.api });
+    await settle(commands.showSection(true));
+    const result = await settle(commands.showSection('false'));
+    expect(section.calls).toEqual(['open', 'close']);
+    expect(result.ok).toBe(true);
+  });
+
+  it("passes on the page's reason when it will not open (only in Study)", async () => {
+    const section = fakeSection({ openResult: { ok: false, reason: 'The section opens only in Study mode.' } });
+    const { commands, settle } = setup({ section: section.api });
+    expect(await settle(commands.showSection(true))).toMatchObject({ ok: false, reason: 'The section opens only in Study mode.' });
+  });
+
+  it('never opens during a game, and asks for a true or false', async () => {
+    const section = fakeSection();
+    const { commands, state, settle } = setup({ section: section.api });
+    expect((await settle(commands.showSection('maybe'))).ok).toBe(false);
+    state.mode = 'game';
+    expect((await settle(commands.showSection(true))).ok).toBe(false);
+    expect(section.calls).toEqual([]);
+  });
+
+  it('keeps the plate up while the guide talks: named regions do not light or turn the brain', async () => {
+    const section = fakeSection();
+    const { commands, state, settle } = setup({ section: section.api });
+    await settle(commands.showSection(true));
+    const result = await settle(commands.followName({ kind: 'region', id: 19 }));
+    expect(result.did).toBe('skipped');
+    expect(state.highlight).toBeNull();
   });
 });

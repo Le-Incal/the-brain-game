@@ -13,6 +13,7 @@ const {
   formatMiss,
   formatWelcomePlayed,
   formatResume,
+  formatSection,
   formatTimeWarning,
   formatTourWaiting,
   createContextReporter,
@@ -31,6 +32,7 @@ describe('M4: every contextual update, worded in one place', () => {
       missed: '[app] missed: "{word}" belongs to {region}',
       welcomePlayed: '[app] the welcome has played',
       resumed: '[app] conversation so far: {lines}',
+      section: '[app] the section is {state}',
       timeWarning: '[app] about 30 seconds of our conversation remain',
       tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
     });
@@ -95,6 +97,11 @@ describe('M4: every contextual update, worded in one place', () => {
     for (const part of line.replace('[app] conversation so far: ', '').split(' | ')) {
       expect(part.length).toBeLessThanOrEqual(210);
     }
+  });
+
+  it('tells the guide when the section opens or closes, whoever opened it', () => {
+    expect(formatSection(true)).toBe('[app] the section is open');
+    expect(formatSection(false)).toBe('[app] the section is closed');
   });
 
   it('tells a new conversation that the recorded welcome has already played', () => {

@@ -153,3 +153,22 @@ describe('The brief tells the guide how it rests and wakes', () => {
     expect(brief).toMatch(/\*\*Security overrides:\*\* Voice ID and text only\./);
   });
 });
+
+// Kyle, 2026-10-11: the guide decides when to show the section, in descriptions and tours.
+describe('The brief teaches the section', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+  const tools = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+
+  it('defines show_section with its open parameter', () => {
+    expect(tools).toMatch(/^### show_section$/m);
+    expect(tools).toMatch(/- `open` \(boolean, required\)/);
+  });
+
+  it('tells the guide when to open it and what happens while it is open', () => {
+    expect(prompt).toContain('# The section');
+    expect(prompt).toMatch(/call show_section with open true/);
+    expect(prompt).toMatch(/only in Study/);
+    expect(prompt).toContain('  [app] the section is open');
+  });
+});
