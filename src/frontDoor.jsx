@@ -34,13 +34,19 @@ export function getBarButtons({
   settingsOpen = false,
   sectionOpen = false,
   sectionAvailable = true,
+  // Kyle, 2026-10-11: Play and Study join the bar once the visitor has picked one on arrival.
+  chosen = true,
 }) {
   const blocked = !brainReady || gamePhase === 'countdown';
   const playLabel = gamePhase === 'playing' ? 'Pause' : gamePhase === 'paused' ? 'Resume' : 'Play the Game';
   return [
     { id: 'colour', label: 'Colour Regions', pressed: Boolean(colorMode), disabled: false },
-    { id: 'play', label: playLabel, pressed: gamePhase === 'paused', disabled: blocked },
-    { id: 'study', label: 'Study the Brain', pressed: gamePhase === 'study', disabled: blocked },
+    ...(chosen
+      ? [
+          { id: 'play', label: playLabel, pressed: gamePhase === 'paused', disabled: blocked },
+          { id: 'study', label: 'Study the Brain', pressed: gamePhase === 'study', disabled: blocked },
+        ]
+      : []),
     // The midline section belongs to Study only.
     ...(gamePhase === 'study' && sectionAvailable
       ? [{ id: 'section', label: 'Section', pressed: Boolean(sectionOpen), disabled: !brainReady }]
@@ -121,8 +127,17 @@ export function guideStillness({ gamePhase, sectionOpen, exampleRunning }) {
   return Boolean(sectionOpen || exampleRunning || GAME_PHASES.has(gamePhase));
 }
 
-export function shouldShowArrival({ gamePhase, brainReady, selectedRegion }) {
-  return gamePhase === 'ready' && Boolean(brainReady) && !selectedRegion;
+export function shouldShowArrival({ gamePhase, brainReady, selectedRegion, chosen = false }) {
+  // Once a choice is made the bar holds both options, so the left never repeats them.
+  return gamePhase === 'ready' && Boolean(brainReady) && !selectedRegion && !chosen;
+}
+
+/** The visitor's first choice on arrival (Kyle, 2026-10-11). */
+export const NO_CHOICE = Object.freeze({ chosen: false, played: false });
+
+/** Any pick makes the choice; picking Play also shows the score, for the rest of the visit. */
+export function recordChoice(previous, pick) {
+  return { chosen: true, played: Boolean(previous.played || pick === 'play') };
 }
 
 export function getStudyCaption(guide) {

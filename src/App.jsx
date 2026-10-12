@@ -35,6 +35,8 @@ import {
   ScoreDisplay,
   guideStillness,
   shouldOfferExample,
+  NO_CHOICE,
+  recordChoice,
 } from './frontDoor.jsx';
 
 // The ElevenLabs SDK loads only in the voice build.
@@ -368,6 +370,8 @@ export default function App() {
   const liveStateRef = useRef({});
   // Kyle, 2026-10-11: the guide can play an unscored example word.
   const [exampleRunning, setExampleRunning] = useState(false);
+  // Kyle, 2026-10-11: Play and Study join the bar after the first choice; the score after the first Play.
+  const [choice, setChoice] = useState(NO_CHOICE);
   liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen, speedMultiplier, difficulty, exampleRunning };
   // On the first Play of a visit the guide offers an example; quiet starts the game.
   const firstPlayRef = useRef(true);
@@ -709,6 +713,7 @@ export default function App() {
   const handlePlay = (fromPlayer = true) => {
     if (!brainReady) return;
     setSettingsOpen(false);
+    setChoice((previous) => recordChoice(previous, 'play'));
     const action = playAction(gamePhase, studyReturnToRef.current);
     if (action === 'start') beginGame(fromPlayer);
     else if (action === 'start-now') {
@@ -729,6 +734,7 @@ export default function App() {
   const handleStudy = () => {
     if (!brainReady) return;
     setSettingsOpen(false);
+    setChoice((previous) => recordChoice(previous, 'study'));
     const action = studyAction(gamePhase);
     if (action === 'enter') {
       if (gamePhase === 'offer') offerRef.current.cancel();
@@ -874,7 +880,7 @@ export default function App() {
     hoveredRegion,
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
-  const showArrival = shouldShowArrival({ gamePhase, brainReady, selectedRegion });
+  const showArrival = shouldShowArrival({ gamePhase, brainReady, selectedRegion, chosen: choice.chosen });
   const barButtons = getBarButtons({
     gamePhase,
     brainReady,
@@ -882,6 +888,7 @@ export default function App() {
     settingsOpen,
     sectionOpen,
     sectionAvailable: VOICE_ENABLED,
+    chosen: choice.chosen,
   });
   const barActions = {
     colour: () => setColorMode(!colorMode),
@@ -1052,12 +1059,14 @@ export default function App() {
             compact
           />
         ))}
-        <ScoreDisplay
-          score={score}
-          level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
-          gamePhase={gamePhase}
-          style={STYLES.score}
-        />
+        {choice.played && (
+          <ScoreDisplay
+            score={score}
+            level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
+            gamePhase={gamePhase}
+            style={STYLES.score}
+          />
+        )}
       </div>
 
       {settingsOpen && (

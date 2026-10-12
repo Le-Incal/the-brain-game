@@ -121,7 +121,8 @@ describe('difficulty and the region palette', () => {
   it('reports the state of every toggle to assistive technology', () => {
     const markup = renderToStaticMarkup(<App />);
 
-    expect(toggleState(markup, 'Study the Brain')).toBe(false);
+    // Study joins the bar only after the first choice (Kyle, 2026-10-11); Colour Regions is there from arrival.
+    expect(toggleState(markup, 'Colour Regions')).toBe(true);
     // Kyle, 2026-10-11: the Annotations toggle is gone.
     expect(toggleState(markup, 'Annotations')).toBeNull();
   });
