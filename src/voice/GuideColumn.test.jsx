@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const columnModule = await import('./GuideColumn.jsx').catch(() => ({}));
-const { GuideColumnView, Switch, NOTICE_GAP_PX, SWITCH_SIZE, noticeFor } = columnModule;
+const { GuideColumnView, Switch, NOTICE_GAP_PX, SWITCH_SIZE, noticeFor, voiceSwitchOn } = columnModule;
 const layoutModule = await import('./voicePanelLayout.js').catch(() => ({}));
 const { GUIDE_COLUMN_STYLE } = layoutModule;
 
@@ -27,7 +27,6 @@ const baseProps = {
   voice: { on: false, onChange: () => {} },
   motion: { on: true, onChange: () => {} },
   notice: 'Turn on sound and allow the microphone to speak with Sylvi.',
-  consent: null,
 };
 
 const render = (props = {}) => renderToStaticMarkup(<GuideColumnView {...baseProps} {...props} />);
@@ -148,15 +147,14 @@ describe('The sound notice', () => {
     expect(render({ notice: null })).not.toContain('guide-notice');
   });
 
-  it('asks for consent in the same place before any voice or words go to ElevenLabs', () => {
-    const markup = render({
-      notice: null,
-      consent: { text: 'Talking with your guide sends your voice to ElevenLabs.', onAgree: () => {}, onDecline: () => {} },
-    });
-    const consent = markup.indexOf('Talking with your guide sends your voice to ElevenLabs.');
-    expect(consent).toBeGreaterThan(markup.indexOf('>Motion<'));
-    expect(markup).toContain('>I agree<');
-    expect(markup).toContain('>Not now<');
+  // Kyle, 2026-10-11: no consent box.
+  it('never asks for consent', () => {
+    const markup = render({ notice: null });
+    expect(markup).not.toContain('guide-consent');
+    expect(markup).not.toContain('I agree');
+    expect(markup).not.toContain('Not now');
+    const panel = readFileSync(fileURLToPath(new URL('./VoicePanel.jsx', import.meta.url)), 'utf8');
+    expect(panel).not.toMatch(/consent/i);
   });
 });
 
@@ -206,5 +204,25 @@ describe('What the notice says without a microphone', () => {
 
   it('says nothing while a conversation rests with the microphone on', () => {
     expect(noticeFor('resting', null, 'Sylvi')).toBeNull();
+  });
+});
+
+// Kyle, 2026-10-11: he pressed Voice to silence the brain after the welcome and
+// got a consent box. The switch had dropped to Off when the welcome finished,
+// so the press turned voice on. The switch follows the visitor's choice.
+describe('The Voice switch', () => {
+  it('stays On after the welcome has been heard, until the visitor turns it off', () => {
+    expect(voiceSwitchOn({ wanted: true, conversation: false, welcomeState: 'done' })).toBe(true);
+    expect(voiceSwitchOn({ wanted: true, conversation: false, welcomeState: 'audible' })).toBe(true);
+  });
+
+  it('is On while the guide speaks aloud in a conversation', () => {
+    expect(voiceSwitchOn({ wanted: false, conversation: true, welcomeState: 'none' })).toBe(true);
+  });
+
+  it('is Off when the visitor has not asked for sound, or turned it off', () => {
+    expect(voiceSwitchOn({ wanted: false, conversation: false, welcomeState: 'none' })).toBe(false);
+    expect(voiceSwitchOn({ wanted: false, conversation: false, welcomeState: 'silent' })).toBe(false);
+    expect(voiceSwitchOn({ wanted: false, conversation: false, welcomeState: 'done' })).toBe(false);
   });
 });

@@ -4,8 +4,6 @@ const sessionModule = await import('./voiceSession.js').catch(() => ({}));
 const {
   createVoiceSession,
   createMicEventReporter,
-  CONSENT_TEXT,
-  CONSENT_STORAGE_KEY,
   MIC_BLOCKED_MESSAGE,
   MIC_UNAVAILABLE_MESSAGE,
   requestMicrophoneAccess,
@@ -61,7 +59,7 @@ function memoryStorage() {
   return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => (data[k] = String(v)) };
 }
 
-function setup({ server = fakeServer(), storage = memoryStorage(), consented = true, mic = 'granted', micReporter, clock, beacon } = {}) {
+function setup({ server = fakeServer(), storage = memoryStorage(), mic = 'granted', micReporter, clock, beacon, onChange } = {}) {
   const ended = [];
   const started = [];
   const conversation = fakeConversation();
@@ -74,7 +72,6 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
       return server.fetchImpl(url, init);
     },
   };
-  if (consented) storage.setItem(CONSENT_STORAGE_KEY, '1');
   const clientTools = { face_region: () => '{}' };
   const session = createVoiceSession({
     fetchImpl: trackedServer.fetchImpl,
@@ -97,49 +94,38 @@ function setup({ server = fakeServer(), storage = memoryStorage(), consented = t
     now: clock ? () => clock.now : undefined,
     onConversationEnd: () => ended.push(true),
     onConversationStart: () => started.push(true),
+    ...(onChange ? { onChange } : {}),
     ...(beacon ? { sendBeacon: beacon } : {}),
   });
   return { session, conversation, server, storage, timers, clientTools, order, ended, started };
 }
 
-describe('M4: consent before the mic first opens', () => {
-  it('shows the agreed notice, word for word', () => {
-    expect(CONSENT_TEXT).toBe(
-      "Talking or writing to your guide sends your voice or words to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details."
-    );
-  });
-
-  it('asks for consent first, and only then requests a token', async () => {
-    const { session, server, storage } = setup({ consented: false });
+// Kyle, 2026-10-11: no consent box. Turning the voice on, speaking or writing
+// goes straight to the microphone (for voice) and the conversation.
+describe('No consent box', () => {
+  it('goes straight to the microphone and the token, with nothing stored', async () => {
+    const { session, server, order } = setup();
     await session.start({ guide: 'rollo' });
-    expect(session.getState().phase).toBe('needs-consent');
-    expect(server.requests).toHaveLength(0);
-
-    await session.acceptConsent();
-    expect(storage.data[CONSENT_STORAGE_KEY]).toBe('1');
+    expect(session.getState().phase).toBe('connecting');
+    expect(order).toEqual(['microphone', '/api/voice/token']);
     expect(server.requests.map(({ url }) => url)).toEqual(['/api/voice/token']);
-    expect(session.getState().phase).toBe('connecting');
   });
 
-  it('does not ask again once consent is saved', async () => {
-    const { session } = setup();
-    await session.start({ guide: 'rollo' });
-    expect(session.getState().phase).toBe('connecting');
-  });
-
-  it('asks every time when storage is blocked', async () => {
+  it('never enters a consent phase, even with storage blocked', async () => {
     const blocked = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
-    const { session } = setup({ storage: blocked, consented: false });
+    const phases = [];
+    const { session } = setup({ storage: blocked, onChange: (state) => phases.push(state.phase) });
     await session.start({ guide: 'rollo' });
-    expect(session.getState().phase).toBe('needs-consent');
+    expect(phases.length).toBeGreaterThan(0);
+    expect(session.getState().phase).toBe('connecting');
+    expect(phases).not.toContain('needs-consent');
   });
 
-  it('declining leaves voice off', async () => {
-    const { session, server } = setup({ consented: false });
-    await session.start({ guide: 'rollo' });
-    session.declineConsent();
-    expect(session.getState().phase).toBe('idle');
-    expect(server.requests).toHaveLength(0);
+  it('has no consent text or consent controls left', () => {
+    expect(sessionModule.CONSENT_TEXT).toBeUndefined();
+    const { session } = setup();
+    expect(session.acceptConsent).toBeUndefined();
+    expect(session.declineConsent).toBeUndefined();
   });
 });
 
@@ -148,7 +134,7 @@ describe('M4: a blocked microphone', () => {
   // for the microphone and disconnects if it is refused (checked in
   // @elevenlabs/client 1.26.0). So the app asks for the mic before the token,
   // and no minutes are reserved for a conversation that cannot happen.
-  it('asks for the microphone after consent and before the token', async () => {
+  it('asks for the microphone before the token', async () => {
     const { session, order } = setup();
     await session.start({ guide: 'rollo' });
     expect(order).toEqual(['microphone', '/api/voice/token']);
