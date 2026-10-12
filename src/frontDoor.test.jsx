@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const frontDoor = await import('./frontDoor.jsx').catch(() => ({}));
 const {
@@ -281,7 +283,7 @@ describe('The section control', () => {
 
 // Kyle, 2026-10-11: the player sees the steps taken: Easy, Hard 1, Hard 2...
 describe('The score shows the level during a game', () => {
-  it('names the level under the score while a game is on', () => {
+  it('names the level beside the score while a game is on', () => {
     for (const gamePhase of ['countdown', 'playing', 'paused']) {
       const markup = renderToStaticMarkup(<ScoreDisplay score={120} level="Hard 2" gamePhase={gamePhase} />);
       expect(markup, gamePhase).toContain('Score: 120');
@@ -343,6 +345,41 @@ describe('The brain holds still for the game', () => {
   it('floats freely otherwise', () => {
     for (const gamePhase of ['ready', 'study']) {
       expect(guideStillness({ gamePhase, sectionOpen: false, exampleRunning: false }), gamePhase).toBe(false);
+    }
+  });
+});
+
+// Kyle, 2026-10-11: "bring the score over next to the buttons below, maybe
+// next to settings". It sits in the bar after Settings, as text, not a button.
+describe('The score sits in the bottom bar', () => {
+  const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
+
+  it('is inline text in the bar, never floating on its own', () => {
+    const markup = renderToStaticMarkup(<ScoreDisplay score={120} level="Hard 2" gamePhase="playing" />);
+    expect(markup).toMatch(/^<span class="score-display"/);
+    expect(markup).not.toMatch(/position:absolute/);
+    expect(markup).not.toContain('<button');
+  });
+
+  it('comes right after Settings, inside the bar', () => {
+    const app = read('./App.jsx');
+    const bar = app.slice(app.indexOf('<div className="game-controls"'));
+    const close = bar.indexOf('\n      </div>');
+    expect(bar.indexOf('{barButtons.map(')).toBeGreaterThan(-1);
+    expect(bar.indexOf('<ScoreDisplay')).toBeGreaterThan(bar.indexOf('{barButtons.map('));
+    expect(bar.indexOf('<ScoreDisplay')).toBeLessThan(close);
+    expect(app).not.toContain('scorePosition');
+  });
+
+  it('gives the bar back the room it kept for the floating score on phones', () => {
+    const html = read('../index.html');
+    const mobile = html.slice(html.indexOf('@media (max-width: 640px)'));
+    const controls = mobile.slice(mobile.indexOf('.game-controls {'), mobile.indexOf('}', mobile.indexOf('.game-controls {')));
+    expect(controls).not.toMatch(/right: 62px/);
+    const score = mobile.indexOf('.score-display {');
+    if (score > -1) {
+      const rule = mobile.slice(score, mobile.indexOf('}', score));
+      expect(rule).not.toMatch(/bottom:|right:/);
     }
   });
 });
