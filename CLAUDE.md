@@ -35,7 +35,7 @@ npm run kb -- compile           # approved only -> src/data/brainGraph.json
 
 - **Research, then Plan, then Execute.** Get Kyle's explicit confirmation before writing code.
 - **TDD:** write tests, run them and confirm they fail, commit the tests, then implement until they pass.
-- **Existing user controls never change** unless Kyle asks. Since 2026-10-11 the voice guide is the front door: present from arrival in Explore and Study, and never able to move or light the brain during a game (it would give answers away).
+- **Existing user controls never change** unless Kyle asks. Since 2026-10-11 the voice guide is the front door: present from arrival in Explore and Study, and never able to move or light the brain while a scored word can be in the air (it would give answers away). It may play an unscored example before a game (play_example); in a game it may change speed, difficulty and colour, give hints when asked, and switch modes when the player asks or agrees.
 - **Every claim gets a number.** Self-check renders and outputs before presenting them.
 - **Stay in scope.** Edit only what the task names. No global smoothing or cleanup passes: they break work that was already correct.
 - **Neuroscience integrity:** region names are tissue nouns, never functions. No left-brain/right-brain myth. The cerebellum is not just balance. Functions are tagged primary or contributing. Sources are Kandel, Purves, Nolte or peer-reviewed work, never pop-science, Wikipedia or news. No text may copy 8 or more consecutive words from a source (a test enforces this in `knowledge/`).
