@@ -215,6 +215,15 @@ describe('Settings', () => {
     expect(markup).toMatch(/aria-pressed="false"[^>]*>Sylvi</);
   });
 
+  // The guide moves the speed in quarters; Settings shows the true value.
+  it('shows the speed the guide set, to the quarter', () => {
+    const quarter = renderToStaticMarkup(<SettingsPanel {...props} speed={1.25} />);
+    expect(quarter).toMatch(/class="speed-value"[^>]*>1\.25×</);
+    expect(quarter).toContain('aria-valuetext="1.25 times"');
+    const tenth = renderToStaticMarkup(<SettingsPanel {...props} speed={1} />);
+    expect(tenth).toMatch(/class="speed-value"[^>]*>1\.0×</);
+  });
+
   it('offers no guide choice in a build without voice', () => {
     const markup = renderToStaticMarkup(<SettingsPanel {...props} voiceEnabled={false} />);
     expect(markup).not.toContain('Sylvi');
