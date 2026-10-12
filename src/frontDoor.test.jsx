@@ -240,3 +240,27 @@ describe('Motion on arrival', () => {
     expect(initialMotion(true)).toBe(false);
   });
 });
+
+// Kyle, 2026-10-11: a midline section, only in Study, to test turning it on and off.
+describe('The section control', () => {
+  const labels = (state) => getBarButtons(state).map((button) => button.label);
+
+  it('appears in the bar only while studying, after Study the Brain', () => {
+    expect(labels({ gamePhase: 'study', brainReady: true })).toEqual([
+      'Colour Regions',
+      'Play the Game',
+      'Study the Brain',
+      'Section',
+      'Settings',
+    ]);
+    for (const gamePhase of ['ready', 'countdown', 'playing', 'paused']) {
+      expect(labels({ gamePhase, brainReady: true }), gamePhase).not.toContain('Section');
+    }
+  });
+
+  it('shows whether the section is open', () => {
+    const section = (open) => getBarButtons({ gamePhase: 'study', brainReady: true, sectionOpen: open }).find((b) => b.id === 'section');
+    expect(section(false).pressed).toBe(false);
+    expect(section(true).pressed).toBe(true);
+  });
+});
