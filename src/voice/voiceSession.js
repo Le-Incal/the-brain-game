@@ -1,9 +1,10 @@
 /**
- * One conversation with the guide, from the first mic consent to the end.
+ * One conversation with the guide, from the first microphone request to the end.
  * The SDK is injected (`conversation`: startSession, endSession,
  * sendContextualUpdate, getOutputVolume), so this runs without a browser.
  *
- *   idle -> needs-consent -> requesting -> connecting -> connected -> idle
+ *   idle -> requesting -> connecting -> connected -> idle
+ *   (Kyle, 2026-10-11: no consent box; turning the voice on, speaking or writing starts at once.)
  *                                     \-> unavailable (with a plain message)
  *   connected -> resting (rest, time limit) -> requesting (wake) -> ...
  *
@@ -23,11 +24,6 @@ const BUSY_RETRIES = 9; // 45 s
 // The session summary keeps the most recent calls; the end is what we debug.
 const SUMMARY_TOOL_LIMIT = 200;
 const DISCONNECT_REASONS = new Set(['agent', 'error', 'user']);
-
-export const CONSENT_TEXT =
-  "Talking or writing to your guide sends your voice or words to ElevenLabs, our voice provider. Audio isn't stored; transcripts are kept for 30 days to improve the guide. Please don't share personal details.";
-
-export const CONSENT_STORAGE_KEY = 'brain-game.voice-consent';
 
 export const MIC_BLOCKED_MESSAGE =
   "Your microphone is blocked, so we can't talk aloud. Allow the microphone for this site in your browser settings, then try again. On a school Chromebook, ask your teacher.";
@@ -97,7 +93,6 @@ export function createVoiceSession({
   let state = { phase: 'idle', guide: null, message: null, conversationId: null, mode: 'voice', micRefused: false };
   // The mode asked for ('voice', 'text' or 'auto'), kept for waking from rest.
   let requestedMode = 'voice';
-  let consentGiven = readConsent();
   let pendingGuide = null;
   let cutoffTimer = null;
   let warningTimer = null;
@@ -208,14 +203,6 @@ export function createVoiceSession({
       });
   }
 
-  function readConsent() {
-    try {
-      return storage?.getItem(CONSENT_STORAGE_KEY) === '1';
-    } catch {
-      return false;
-    }
-  }
-
   function set(patch) {
     state = { ...state, ...patch };
     onChange(state);
@@ -318,10 +305,6 @@ export function createVoiceSession({
       return;
     }
     set({ guide: chosen });
-    if (!consentGiven) {
-      set({ phase: 'needs-consent', message: null });
-      return;
-    }
     await requestAndStart();
   }
 
@@ -350,20 +333,6 @@ export function createVoiceSession({
     async wake() {
       if (state.phase !== 'resting') return;
       await start({ guide: state.guide, mode: state.mode === 'text' ? 'text' : requestedMode });
-    },
-
-    async acceptConsent() {
-      consentGiven = true;
-      try {
-        storage?.setItem(CONSENT_STORAGE_KEY, '1');
-      } catch {
-        // Blocked storage: consent holds for this page only and is asked again next visit.
-      }
-      await requestAndStart();
-    },
-
-    declineConsent() {
-      set({ phase: 'idle', message: null });
     },
 
     async handleConnect({ conversationId }) {

@@ -12,7 +12,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
-import { CONSENT_TEXT, createVoiceSession } from './voiceSession.js';
+import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCoachSignal, formatFirstPlay, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { createGuidePrompter } from './guidePrompter.js';
@@ -25,7 +25,7 @@ import { createTranscriptStream } from './transcriptStream.js';
 import { createArrivalClock, createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
 import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
-import { GuideColumnView, noticeFor } from './GuideColumn.jsx';
+import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
 
 function browserStorage() {
@@ -73,6 +73,12 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   // Whether the visitor wants to hear the guide: on after the first tap or
   // when the welcome is heard, off when they switch Voice off.
   const voiceWantedRef = useRef(false);
+  // The Voice switch shows this choice, so it reads On after the welcome is heard.
+  const [voiceWanted, setVoiceWanted] = useState(false);
+  const wantVoice = (value) => {
+    voiceWantedRef.current = value;
+    setVoiceWanted(value);
+  };
   // A conversation has connected before: the next one carries it on.
   const connectedOnceRef = useRef(false);
   const modeRef = useRef(mode);
@@ -402,7 +408,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         const heard = await welcome.start();
         if (cancelled) return;
         welcomeStateRef.current = heard ? 'audible' : 'silent';
-        if (heard) voiceWantedRef.current = true;
+        if (heard) wantVoice(true);
         setWelcomeState(welcomeStateRef.current);
       },
     });
@@ -450,7 +456,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const turnVoice = async (on) => {
     restTimer.activity();
     if (on) {
-      voiceWantedRef.current = true;
+      wantVoice(true);
       stream.setVoice(true);
       // The first tap: the welcome's voice joins at the word its text has reached.
       if (welcome.active() && !welcome.audible()) await welcome.unlock();
@@ -460,7 +466,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       if (!ACTIVE_PHASES.has(session.getState().phase)) session.start({ guide, mode: 'auto' });
       return;
     }
-    voiceWantedRef.current = false;
+    wantVoice(false);
     welcome.mute();
     if (active || state.phase === 'resting') {
       stream.setVoice(false);
@@ -507,21 +513,9 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       draft={draft}
       onDraft={setDraft}
       onSend={send}
-      voice={{ on: voiceConversation || welcomeState === 'audible', onChange: turnVoice }}
+      voice={{ on: voiceSwitchOn({ wanted: voiceWanted, conversation: voiceConversation, welcomeState }), onChange: turnVoice }}
       motion={motion}
       notice={notice ? { text: notice.text, onActivate: notice.invite ? () => turnVoice(true) : undefined } : null}
-      consent={
-        state.phase === 'needs-consent'
-          ? {
-              text: CONSENT_TEXT,
-              onAgree: () => session.acceptConsent(),
-              onDecline: () => {
-                queuedRef.current = [];
-                session.declineConsent();
-              },
-            }
-          : null
-      }
     />
   );
 }

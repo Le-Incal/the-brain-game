@@ -1,7 +1,7 @@
 /**
  * The guide's column (Kyle, 2026-10-11): the conversation as streaming text,
  * the quill marking where to write, two small switches for Voice and Motion,
- * and, under them, the sound notice or the consent question.
+ * and, under them, the sound notice.
  *
  * Presentational only: VoicePanel owns the state and the SDK.
  */
@@ -113,19 +113,6 @@ const STYLES = {
     padding: 0,
     pointerEvents: 'auto',
   },
-  consentButton: (primary) => ({
-    fontFamily: "'Playfair Display', Georgia, serif",
-    fontSize: 9,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    padding: '3px 9px',
-    marginRight: 8,
-    marginTop: 8,
-    background: primary ? INK : 'transparent',
-    color: primary ? '#f5f0e8' : INK,
-    border: `1px solid ${INK}`,
-    cursor: 'pointer',
-  }),
 };
 
 /**
@@ -143,6 +130,15 @@ export function noticeFor(phase, message, name, { welcome = null, micRefused = f
     return { text: `Turn on sound and allow the microphone to speak with ${name}.`, invite: true };
   }
   return null;
+}
+
+/**
+ * The Voice switch follows the visitor's choice (Kyle, 2026-10-11): once the
+ * welcome is heard it reads On and stays On until they turn it off, so a press
+ * to silence the brain never turns the voice on instead.
+ */
+export function voiceSwitchOn({ wanted, conversation, welcomeState }) {
+  return Boolean(wanted || conversation || welcomeState === 'audible');
 }
 
 /** A small switch, like Atlas's, in ink and paper. The label is part of the target. */
@@ -227,7 +223,6 @@ export function GuideColumnView({
   voice,
   motion,
   notice,
-  consent,
 }) {
   const noticeText = typeof notice === 'string' ? notice : notice?.text;
   const submit = (event) => {
@@ -275,17 +270,7 @@ export function GuideColumnView({
         <Switch label="Voice" checked={voice.on} onChange={voice.onChange} />
         <Switch label="Motion" checked={motion.on} onChange={motion.onChange} />
       </div>
-      {consent ? (
-        <div className="guide-consent" style={STYLES.notice}>
-          <div>{consent.text}</div>
-          <button type="button" style={STYLES.consentButton(true)} onClick={consent.onAgree}>
-            I agree
-          </button>
-          <button type="button" style={STYLES.consentButton(false)} onClick={consent.onDecline}>
-            Not now
-          </button>
-        </div>
-      ) : noticeText ? (
+      {noticeText ? (
         notice?.onActivate ? (
           <button type="button" className="guide-notice" style={{ ...STYLES.notice, cursor: 'pointer' }} onClick={notice.onActivate}>
             {noticeText}
