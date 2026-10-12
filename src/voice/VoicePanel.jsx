@@ -14,7 +14,7 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter, formatCoachSignal, formatFirstPlay, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
+import { createContextReporter, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
@@ -248,6 +248,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       // A streak or a struggle: the guide offers the next step. A resting
       // conversation wakes for it; with no conversation there is no one to ask.
       gameSignal: (signal) => promptGuide(formatCoachSignal(signal)),
+      // Kyle, 2026-10-11: a miss is taught at once (what, where, why), with any struggle it completes.
+      gameMiss: ({ signal, ...miss }) => promptGuide(formatMissPrompt(miss, signal)),
       // The first Play of a visit: the guide offers an example.
       firstPlay: () => promptGuide(formatFirstPlay()),
       canOffer: () => ['connected', 'resting'].includes(session.getState().phase),

@@ -10,7 +10,8 @@ export const CONTEXT_MESSAGES = {
   handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
   idle: '[player] idle {seconds}s',
   mode: '[app] mode: {mode}',
-  missed: '[app] missed: "{word}" belongs to {region}',
+  // Kyle, 2026-10-11: a miss is taught at once, so it goes as a prompt.
+  missed: '[app] missed: "{word}" belongs to {region}, {where}. Why: {why}',
   welcomePlayed: '[app] the welcome has played',
   resumed: '[app] conversation so far: {lines}',
   section: '[app] the section is {state}',
@@ -47,7 +48,7 @@ export const formatIdle = (seconds) => fill(CONTEXT_MESSAGES.idle, { seconds });
 
 export const formatMode = (mode) => fill(CONTEXT_MESSAGES.mode, { mode });
 
-export const formatMiss = ({ word, region }) => fill(CONTEXT_MESSAGES.missed, { word, region });
+export const formatMiss = ({ word, region, where, why }) => fill(CONTEXT_MESSAGES.missed, { word, region, where, why });
 
 export const formatWelcomePlayed = () => CONTEXT_MESSAGES.welcomePlayed;
 
@@ -93,6 +94,10 @@ export function formatCoachSignal(signal) {
 
 export const formatFirstPlay = () => CONTEXT_MESSAGES.firstPlay;
 
+/** A miss, and the struggle it may complete, in one prompt: the guide never gets two at once. */
+export const formatMissPrompt = (miss, signal = null) =>
+  signal ? `${formatMiss(miss)}\n${formatCoachSignal(signal)}` : formatMiss(miss);
+
 /** The app's prompts travel as user messages; the transcript never shows them. */
 export const isAppPrompt = (text) => /^\s*\[app\]/.test(String(text ?? ''));
 
@@ -113,9 +118,6 @@ export function createContextReporter({ send, now = Date.now, idleAfterMs = IDLE
     activity,
     modeChanged(mode) {
       send(formatMode(mode));
-    },
-    gameMiss(miss) {
-      send(formatMiss(miss));
     },
     welcomePlayed() {
       send(formatWelcomePlayed());

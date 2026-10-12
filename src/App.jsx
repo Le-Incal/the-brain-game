@@ -9,6 +9,7 @@ import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { createGameCommands } from './voice/gameCommands';
 import { createGameCoach } from './game/coach';
+import { missDetails, missGlowMs } from './game/missFeedback';
 import { gameLevel } from './game/levels';
 import { createTourOffer, DEMO_FALL_SPEED, DEMO_TILT_DEGREES, demoWord } from './game/demo';
 import { getRegionById } from './data/regions';
@@ -403,6 +404,15 @@ export default function App() {
     const signal = coachRef.current.result(outcome, gameSettings());
     if (signal) voiceEventsRef.current?.gameSignal?.(signal);
   };
+  // Kyle, 2026-10-11: the guide explains a miss at once (what, where, why);
+  // a struggle the miss completes rides in the same prompt.
+  const teachMiss = (word, outcome) => {
+    const signal = coachRef.current.result(outcome, gameSettings());
+    if (word?.targetRegion != null) voiceEventsRef.current?.gameMiss?.({ ...missDetails(word), signal });
+    else if (signal) voiceEventsRef.current?.gameSignal?.(signal);
+  };
+  // The right region glows long enough to still be lit while the guide explains it.
+  const missGlow = (outcome) => missGlowMs({ conversation: Boolean(voiceEventsRef.current?.canOffer?.()), outcome });
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -488,10 +498,9 @@ export default function App() {
             }, 500);
           },
           onIncorrect: ({ word, correctRegion, demo }) => {
-            brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2500);
-            // The guide teaches the miss in one sentence. An example is not the player's miss.
-            if (correctRegion && !demo) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
-            if (!demo) coachResult('wrong');
+            brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, demo ? 2500 : missGlow('wrong'));
+            // The guide teaches the miss. An example is not the player's miss.
+            if (!demo) teachMiss(word, 'wrong');
             setCorrection(
               correctRegion
                 ? `Rather: ${correctRegion.name}${correctRegion.subtitle ? ` — ${correctRegion.subtitle}` : ''}`
@@ -508,9 +517,8 @@ export default function App() {
             window.setTimeout(() => setCorrection(null), 3000);
           },
           onMiss: ({ word, correctRegion, demo }) => {
-            brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2000);
-            if (correctRegion && word && !demo) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
-            if (!demo) coachResult('miss');
+            brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, demo ? 2000 : missGlow('miss'));
+            if (!demo) teachMiss(word, 'miss');
             setCorrection(
               correctRegion
                 ? `It sought ${correctRegion.name}`
