@@ -13,7 +13,8 @@ export function initialGuide(saved) {
   return normalizeGuide(saved) ?? DEFAULT_GUIDE;
 }
 
-const GAME_PHASES = new Set(['countdown', 'playing', 'paused']);
+// 'offer': the first Play waits a moment while the guide offers an example.
+const GAME_PHASES = new Set(['offer', 'countdown', 'playing', 'paused']);
 
 /** The scene contract: 'study' while the guide may act, 'game' while it must not. */
 export function sceneModeForPhase(gamePhase) {
@@ -52,6 +53,8 @@ export function playAction(gamePhase, returnTo = 'ready') {
   switch (gamePhase) {
     case 'ready':
       return 'start';
+    case 'offer':
+      return 'start-now';
     case 'playing':
       return 'pause';
     case 'paused':
@@ -65,6 +68,7 @@ export function playAction(gamePhase, returnTo = 'ready') {
 
 export function studyAction(gamePhase) {
   switch (gamePhase) {
+    case 'offer':
     case 'ready':
     case 'paused':
       return 'enter';
@@ -105,6 +109,16 @@ export function shouldMountGuide({ voiceEnabled, brainReady, commandsReady }) {
 /** Motion starts on, unless the visitor's system asks for reduced motion. */
 export function initialMotion(reducedMotion) {
   return !reducedMotion;
+}
+
+/** The guide offers an example on the first Play of a visit, if there is a conversation to make it in. */
+export function shouldOfferExample({ firstPlay, conversation }) {
+  return Boolean(firstPlay && conversation);
+}
+
+/** The guide's float and gestures stop in games and while an example plays, as with the section. */
+export function guideStillness({ gamePhase, sectionOpen, exampleRunning }) {
+  return Boolean(sectionOpen || exampleRunning || GAME_PHASES.has(gamePhase));
 }
 
 export function shouldShowArrival({ gamePhase, brainReady, selectedRegion }) {

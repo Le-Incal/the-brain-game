@@ -45,6 +45,8 @@ export class GameEngine {
     this.usedWords = new Set();
     /** Each word dropped gets the next number, so a hint knows which word it is for. */
     this.dropCount = 0;
+    /** An example word the guide plays: unscored, and the game stops after it. */
+    this._demo = null;
     this.onScoreChange = options.onScoreChange ?? null;
     this.onWordDrop = options.onWordDrop ?? null;
     this.onCorrect = options.onCorrect ?? null;
@@ -79,6 +81,7 @@ export class GameEngine {
 
   start() {
     this._clearScheduledDrop();
+    if (this._demo) this._finishDemo('miss', null);
     this.isPlaying = true;
     this.score = 0;
     this.usedWords.clear();
@@ -152,6 +155,11 @@ export class GameEngine {
 
     const result = this.checkAnswer(regionId);
 
+    if (this._demo) {
+      this._finishDemo(result?.outcome ?? 'miss', regionId ?? null);
+      return;
+    }
+
     if (result?.outcome === 'miss') {
       this._missFalling = true;
       return;
@@ -195,6 +203,7 @@ export class GameEngine {
         this.onMiss({
           word: this.currentWord,
           correctRegion: getRegionById(targetId),
+          ...(this._demo ? { demo: true } : {}),
         });
       }
       return { ...base, outcome: 'miss', correct: false };
@@ -213,9 +222,12 @@ export class GameEngine {
     base.matchedBy = exact ? 'region' : 'division';
 
     if (correct) {
-      this.score += this.getPointValue();
-      this.usedWords.add(this.currentWord.word);
-      if (this.onScoreChange) this.onScoreChange(this.score);
+      // An example scores nothing and leaves the bank as it was.
+      if (!this._demo) {
+        this.score += this.getPointValue();
+        this.usedWords.add(this.currentWord.word);
+        if (this.onScoreChange) this.onScoreChange(this.score);
+      }
       if (this.onCorrect) {
         this.onCorrect({
           word: this.currentWord,
@@ -223,6 +235,7 @@ export class GameEngine {
           targetRegion: getRegionById(targetId),
           matchedBy: base.matchedBy,
           factoid: this.currentWord.factoid,
+          ...(this._demo ? { demo: true } : {}),
         });
       }
       return { ...base, outcome: 'correct', correct: true };
@@ -233,14 +246,47 @@ export class GameEngine {
         word: this.currentWord,
         landedRegion: getRegionById(regionId),
         correctRegion: getRegionById(targetId),
+        ...(this._demo ? { demo: true } : {}),
       });
     }
     return { ...base, outcome: 'wrong', correct: false };
   }
 
+  /**
+   * Plays one unscored example word (Kyle, 2026-10-11). It falls fast, lands
+   * with the usual feedback marked `demo: true`, and then the engine stops
+   * with its speed as it was. Resolves { outcome, regionId }.
+   */
+  playDemo(entry, { fallSpeed = 0.12 } = {}) {
+    this._clearScheduledDrop();
+    if (this._demo) this._finishDemo('miss', null);
+    return new Promise((resolve) => {
+      this._demo = { resolve, savedFallSpeed: this.fallSpeed };
+      this.fallSpeed = fallSpeed;
+      this.isPlaying = true;
+      this._missFalling = false;
+      this._awaitingShatter = false;
+      this._resolved = false;
+      this._collisionSampleElapsed = 0;
+      this.currentWord = entry;
+      this.wordPosition = { x: 0.5, y: 0 };
+      if (this.onWordDrop) this.onWordDrop(entry, { ...this.wordPosition }, { demo: true });
+    });
+  }
+
+  _finishDemo(outcome, regionId) {
+    const demo = this._demo;
+    if (!demo) return;
+    this._demo = null;
+    this.fallSpeed = demo.savedFallSpeed;
+    this.isPlaying = false;
+    this._resolved = true;
+    demo.resolve({ outcome, regionId });
+  }
+
   /** The word in the air and its drop number, or null once it has landed or before the game starts. */
   fallingWord() {
-    if (!this.currentWord || this._resolved) return null;
+    if (!this.currentWord || this._resolved || this._demo) return null;
     return { word: this.currentWord, drop: this.dropCount };
   }
 

@@ -165,7 +165,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all seventeen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all eighteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop, play_example and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -270,6 +270,10 @@ Response shape: `{ ok, did, reason }`. It never pauses a running game when asked
 ### give_hint
 A hint for the word in the air. The word keeps falling. Each call for the same word climbs one rung: where to look on me, then the lobe, then the region; after that it repeats the region. A new word starts again at the first rung. Game only. No parameters.
 Response shape: `{ ok, did, reason, word, hint, final }`. `did` is the hint, worded to say aloud. When no word is in the air it refuses with a reason.
+
+### play_example
+Plays one example word, unscored, to show how the game works: I turn the word's region to my top, the word falls onto it, and it lights as a catch would. Each call shows a new word (VISION, SPEECH, BALANCE, TOUCH, HEARING, MOVEMENT). Only before a game or outside one, never while a scored word is falling; refuses with motion off. No parameters.
+Response shape: `{ ok, did, reason, word, region }`.
 
 ## 5. Server tool (webhook)
 

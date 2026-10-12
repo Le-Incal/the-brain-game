@@ -26,6 +26,7 @@ export const AGENT_TOOL_NAMES = [
   'set_difficulty',
   'switch_mode',
   'give_hint',
+  'play_example',
 ];
 
 // Under the agent's 8 s response timeout, so the agent always hears the truth.
@@ -139,6 +140,7 @@ export function createClientTools(
     set_difficulty: run('set_difficulty', (p) => commands.setDifficulty(p.difficulty)),
     switch_mode: run('switch_mode', (p) => commands.switchMode(p.mode)),
     give_hint: run('give_hint', () => commands.giveHint()),
+    play_example: run('play_example', () => commands.playExample(), { timed: true }),
   };
 }
 

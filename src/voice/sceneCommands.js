@@ -747,6 +747,36 @@ export function createSceneCommands(
     return outcome.completed ? ok(`Turned to my ${viewLabel(view)} view.`) : fail(stoppedReason(outcome.reason));
   }
   Object.defineProperty(commands, 'turnToSide', { value: turnToSide, enumerable: false });
+
+  /**
+   * For the guide's example (Kyle, 2026-10-11): words fall down the centre and
+   * land on the first surface they meet, so the region turns to the top of the
+   * brain, tilted toward the player by `tiltDegrees`. Not a guide tool; the
+   * page decides when an example may play.
+   */
+  async function turnRegionUp(regionId, { tiltDegrees = 12 } = {}) {
+    const id = parseRegionId(regionId);
+    if (id === null) return fail(REGION_RANGE_REASON);
+    if (!motionAllowed()) return fail(MOTION_OFF_REASON);
+    if (userHolding) return fail(HOLDING_REASON);
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+    light(null);
+    showcaseToken = null;
+    const { toCamera, screenUp } = frame();
+    const tilt = THREE.MathUtils.degToRad(tiltDegrees);
+    // A frame whose "toward the viewer" is up and a little forward.
+    const up = screenUp.clone().multiplyScalar(Math.cos(tilt)).add(toCamera.clone().multiplyScalar(Math.sin(tilt))).normalize();
+    const away = toCamera.clone().multiplyScalar(-Math.cos(tilt)).add(screenUp.clone().multiplyScalar(Math.sin(tilt))).normalize();
+    const quaternion = orientationFacing(
+      facingDirection(regionGeometry.regions[String(id)].centroidLeft),
+      { toCamera: up, screenUp: away },
+      convertAxis([0, 1, 0]),
+      convertAxis([0, 0, 1])
+    );
+    const outcome = await move(null, quaternion);
+    return outcome.completed ? ok(`Turned my ${REGION_BY_ID.get(id).name} to the top.`) : fail(stoppedReason(outcome.reason));
+  }
+  Object.defineProperty(commands, 'turnRegionUp', { value: turnRegionUp, enumerable: false });
   Object.defineProperty(commands, 'dispose', {
     value: () => {
       unsubscribe();

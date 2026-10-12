@@ -10,6 +10,8 @@ import { createSceneCommands } from './voice/sceneCommands';
 import { createGameCommands } from './voice/gameCommands';
 import { createGameCoach } from './game/coach';
 import { gameLevel } from './game/levels';
+import { createTourOffer, DEMO_FALL_SPEED, DEMO_TILT_DEGREES, demoWord } from './game/demo';
+import { getRegionById } from './data/regions';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
 import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sectionPlate.js';
 
@@ -31,6 +33,8 @@ import {
   shouldShowArrival,
   studyAction,
   ScoreDisplay,
+  guideStillness,
+  shouldOfferExample,
 } from './frontDoor.jsx';
 
 // The ElevenLabs SDK loads only in the voice build.
@@ -42,6 +46,7 @@ const BASE_FALL_SPEED = 0.04;
 export function shouldShowHeader(gamePhase) {
   return (
     gamePhase === 'ready' ||
+    gamePhase === 'offer' ||
     gamePhase === 'countdown' ||
     gamePhase === 'paused'
   );
@@ -363,7 +368,25 @@ export default function App() {
   const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
-  liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen, speedMultiplier, difficulty };
+  // Kyle, 2026-10-11: the guide can play an unscored example word.
+  const [exampleRunning, setExampleRunning] = useState(false);
+  liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen, speedMultiplier, difficulty, exampleRunning };
+  // On the first Play of a visit the guide offers an example; quiet starts the game.
+  const firstPlayRef = useRef(true);
+  const demoIndexRef = useRef(0);
+  const runCountdownRef = useRef(null);
+  const offerRef = useRef(null);
+  if (!offerRef.current) {
+    offerRef.current = createTourOffer({
+      onStart: () => {
+        if (liveStateRef.current.gamePhase === 'offer') runCountdownRef.current?.();
+      },
+    });
+  }
+  const onGuideActivity = useCallback((event) => {
+    if (event.type === 'speaking') offerRef.current.guideSpeaking(event.value);
+    else if (event.type === 'visitor') offerRef.current.visitorSpoke();
+  }, []);
   // The guide presses the same Play and Study controls the player does.
   const modeApiRef = useRef(null);
   // Kyle, 2026-10-11: the coach notices streaks and struggles; the guide offers the next step.
@@ -438,8 +461,8 @@ export default function App() {
             setWordAnim(null);
             setCorrection(null);
           },
-          onCorrect: ({ factoid: text, region, targetRegion, matchedBy }) => {
-            coachResult('correct');
+          onCorrect: ({ factoid: text, region, targetRegion, matchedBy, demo }) => {
+            if (!demo) coachResult('correct');
             setFactoid(text);
             setWordAnim('absorb');
             // In easy mode the lobe is enough to score, so name the precise
@@ -462,11 +485,11 @@ export default function App() {
               setActiveWordLabel('');
             }, 500);
           },
-          onIncorrect: ({ word, correctRegion }) => {
+          onIncorrect: ({ word, correctRegion, demo }) => {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2500);
-            // The guide teaches the miss in one sentence.
-            if (correctRegion) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
-            coachResult('wrong');
+            // The guide teaches the miss in one sentence. An example is not the player's miss.
+            if (correctRegion && !demo) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
+            if (!demo) coachResult('wrong');
             setCorrection(
               correctRegion
                 ? `Rather: ${correctRegion.name}${correctRegion.subtitle ? ` — ${correctRegion.subtitle}` : ''}`
@@ -482,10 +505,10 @@ export default function App() {
             });
             window.setTimeout(() => setCorrection(null), 3000);
           },
-          onMiss: ({ word, correctRegion }) => {
+          onMiss: ({ word, correctRegion, demo }) => {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2000);
-            if (correctRegion && word) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
-            coachResult('miss');
+            if (correctRegion && word && !demo) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
+            if (!demo) coachResult('miss');
             setCorrection(
               correctRegion
                 ? `It sought ${correctRegion.name}`
@@ -498,7 +521,8 @@ export default function App() {
         if (VOICE_ENABLED && !disposed) {
           const adapter = createBrainSceneAdapter({
             scene: brainScene,
-            getMode: () => sceneModeForPhase(liveStateRef.current.gamePhase),
+            // While an example plays, nothing else may move or light the brain.
+            getMode: () => (liveStateRef.current.exampleRunning ? 'game' : sceneModeForPhase(liveStateRef.current.gamePhase)),
             getColourRegions: () => liveStateRef.current.colorMode,
             setColourRegions: (value) => setColorMode(value),
             onGuideFocus: setGuideFocus,
@@ -542,6 +566,8 @@ export default function App() {
               },
               perform: (action) => modeApiRef.current?.perform(action),
               getFallingWord: () => gameRef.current?.fallingWord() ?? null,
+              motionAllowed: () => liveStateRef.current.motionOn,
+              playDemo: () => playDemoRef.current?.() ?? { ok: false, reason: 'I have not loaded yet.' },
             })
           );
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
@@ -666,16 +692,35 @@ export default function App() {
     setGamePhase('study');
   };
 
-  const handlePlay = () => {
+  runCountdownRef.current = runCountdown;
+
+  // The first Play of a visit: the guide offers an example, and quiet starts the game.
+  const beginGame = (fromPlayer) => {
+    const offer = fromPlayer && shouldOfferExample({ firstPlay: firstPlayRef.current, conversation: Boolean(voiceEventsRef.current?.canOffer?.()) });
+    firstPlayRef.current = false;
+    if (!offer) {
+      runCountdown();
+      return;
+    }
+    liveStateRef.current.gamePhase = 'offer';
+    setGamePhase('offer');
+    offerRef.current.begin();
+    voiceEventsRef.current?.firstPlay?.();
+  };
+
+  const handlePlay = (fromPlayer = true) => {
     if (!brainReady) return;
     setSettingsOpen(false);
     const action = playAction(gamePhase, studyReturnToRef.current);
-    if (action === 'start') runCountdown();
-    else if (action === 'pause' || action === 'resume') togglePause();
+    if (action === 'start') beginGame(fromPlayer);
+    else if (action === 'start-now') {
+      offerRef.current.cancel();
+      runCountdown();
+    } else if (action === 'pause' || action === 'resume') togglePause();
     else if (action === 'leave-study-and-start') {
       // The game never inherits the guide's highlight.
       sceneAdapterRef.current?.resetForGame();
-      runCountdown();
+      beginGame(fromPlayer);
     } else if (action === 'leave-study-and-resume') {
       sceneAdapterRef.current?.resetForGame();
       gameRef.current?.resume();
@@ -687,7 +732,10 @@ export default function App() {
     if (!brainReady) return;
     setSettingsOpen(false);
     const action = studyAction(gamePhase);
-    if (action === 'enter') enterStudy(gamePhase);
+    if (action === 'enter') {
+      if (gamePhase === 'offer') offerRef.current.cancel();
+      enterStudy(gamePhase === 'offer' ? 'ready' : gamePhase);
+    }
     else if (action === 'pause-and-enter') {
       gameRef.current?.pause();
       enterStudy('paused');
@@ -698,11 +746,46 @@ export default function App() {
     }
   };
 
+  // The guide's switch_mode presses the same controls; a game it starts needs no offer.
   modeApiRef.current = {
     perform(action) {
-      if (['start', 'resume', 'leave-study-and-start', 'leave-study-and-resume'].includes(action)) handlePlay();
+      if (['start', 'start-now', 'resume', 'leave-study-and-start', 'leave-study-and-resume'].includes(action)) handlePlay(false);
       else if (['enter', 'pause-and-enter', 'leave'].includes(action)) handleStudy();
+      else if (action === 'cancel-offer') {
+        offerRef.current.cancel();
+        setGamePhase('ready');
+      }
     },
+  };
+
+  // The guide's example: turn the word's region up, drop the word, let it land. Unscored.
+  const playDemoRef = useRef(null);
+  playDemoRef.current = async () => {
+    const game = gameRef.current;
+    const commands = sceneCommandsRef.current;
+    if (!game || !commands?.turnRegionUp) return { ok: false, reason: 'I have not loaded yet.' };
+    if (liveStateRef.current.exampleRunning) return { ok: false, reason: 'An example is already playing.' };
+    const entry = demoWord(demoIndexRef.current);
+    demoIndexRef.current += 1;
+    liveStateRef.current.exampleRunning = true;
+    setExampleRunning(true);
+    offerRef.current.exampleStarted();
+    try {
+      const turned = await commands.turnRegionUp(entry.targetRegion, { tiltDegrees: DEMO_TILT_DEGREES });
+      if (!turned.ok) return { ok: false, reason: turned.reason };
+      const landed = await game.playDemo(entry, { fallSpeed: DEMO_FALL_SPEED });
+      return {
+        ok: true,
+        word: entry.word,
+        region: getRegionById(entry.targetRegion)?.name,
+        outcome: landed.outcome,
+        landed: landed.regionId != null ? getRegionById(landed.regionId)?.name ?? null : null,
+      };
+    } finally {
+      liveStateRef.current.exampleRunning = false;
+      setExampleRunning(false);
+      if (liveStateRef.current.gamePhase === 'offer') offerRef.current.exampleEnded();
+    }
   };
 
   const closeSection = () => {
@@ -804,7 +887,7 @@ export default function App() {
   });
   const barActions = {
     colour: () => setColorMode(!colorMode),
-    play: handlePlay,
+    play: () => handlePlay(true),
     study: handleStudy,
     section: handleSection,
     settings: () => setSettingsOpen((open) => !open),
@@ -912,7 +995,7 @@ export default function App() {
         correction) && (
         <div className="description-panel" style={STYLES.descriptionPanel}>
           {showArrival && !describedRegion && (
-            <ArrivalOptions guideName={guideName} onStudy={handleStudy} onPlay={handlePlay} />
+            <ArrivalOptions guideName={guideName} onStudy={handleStudy} onPlay={() => handlePlay(true)} />
           )}
           {describedRegion && (
             <div className="region-description" style={STYLES.hoverLabel}>
@@ -1019,7 +1102,8 @@ export default function App() {
             voiceEventsRef={voiceEventsRef}
             control={control}
             motion={{ on: motionOn, onChange: setMotionOn }}
-            stillness={sectionOpen}
+            stillness={guideStillness({ gamePhase, sectionOpen, exampleRunning })}
+            onGuideActivity={onGuideActivity}
             mode={guideModeForPhase(gamePhase)}
           />
         </Suspense>

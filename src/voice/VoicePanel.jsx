@@ -14,7 +14,7 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { CONSENT_TEXT, createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter, formatCoachSignal, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
+import { createContextReporter, formatCoachSignal, formatFirstPlay, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
@@ -46,7 +46,10 @@ function prefersReducedMotion() {
 
 const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
 
-function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore', stillness = false }) {
+function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore', stillness = false, onGuideActivity }) {
+  // The page hears when the guide talks and when the visitor answers (the first-Play offer waits for quiet).
+  const activityRef = useRef(onGuideActivity);
+  activityRef.current = onGuideActivity;
   const controlRef = useRef(control);
   controlRef.current = control;
   const guideRef = useRef(guide);
@@ -134,6 +137,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       follower.guideSpeaking(speaking);
       restTimer.guideSpeaking(speaking);
       prompter.guideSpeaking(speaking);
+      activityRef.current?.({ type: 'speaking', value: speaking });
       if (!speaking) {
         stream.guideStopped();
         refreshEntries();
@@ -151,6 +155,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       // The app's own prompts are not the visitor speaking.
       if (payload?.role === 'user' && isAppPrompt(raw)) return;
       restTimer.activity();
+      if (payload?.role === 'user') activityRef.current?.({ type: 'visitor' });
       if (payload?.role === 'user') {
         welcome.stop();
         stallGuardRef.current?.playerActivity();
@@ -214,6 +219,16 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
     const stallGuard = createTourStallGuard({ send: (text) => session.sendContext(text) });
     stallGuardRef.current = stallGuard;
+    // Prompts the guide answers now. A resting conversation wakes for one; with
+    // no conversation there is no one to ask.
+    const promptGuide = (text) => {
+      const phase = session.getState().phase;
+      if (phase === 'connected') prompter.prompt(text);
+      else if (phase === 'resting') {
+        queuedRef.current.push(text);
+        session.wake();
+      }
+    };
     voiceEventsRef.current = {
       ...reporter,
       userInteraction: (event) => {
@@ -226,15 +241,10 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       },
       // A streak or a struggle: the guide offers the next step. A resting
       // conversation wakes for it; with no conversation there is no one to ask.
-      gameSignal: (signal) => {
-        const text = formatCoachSignal(signal);
-        const phase = session.getState().phase;
-        if (phase === 'connected') prompter.prompt(text);
-        else if (phase === 'resting') {
-          queuedRef.current.push(text);
-          session.wake();
-        }
-      },
+      gameSignal: (signal) => promptGuide(formatCoachSignal(signal)),
+      // The first Play of a visit: the guide offers an example.
+      firstPlay: () => promptGuide(formatFirstPlay()),
+      canOffer: () => ['connected', 'resting'].includes(session.getState().phase),
     };
     const idle = window.setInterval(() => reporter.tick(), 1000);
     const stopWatching = cancelMovesWhenHidden({
@@ -248,7 +258,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       stallGuardRef.current = null;
       voiceEventsRef.current = null;
     };
-  }, [session, scene, voiceEventsRef]);
+  }, [session, scene, voiceEventsRef, prompter]);
 
   // On connecting, the guide learns what came before: the welcome it need not
   // repeat, the conversation so far if it woke from rest, the mode, and any
@@ -466,6 +476,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     restTimer.activity();
     stream.addVisitor({ id: nextLineId('typed'), text });
     refreshEntries();
+    activityRef.current?.({ type: 'visitor' });
     const phase = session.getState().phase;
     if (phase === 'connected') {
       sdkRef.current.sendUserMessage(text);

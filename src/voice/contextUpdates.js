@@ -19,6 +19,7 @@ export const CONTEXT_MESSAGES = {
   // Kyle, 2026-10-11: the coach's offers. These go as prompts the guide answers now.
   streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
   struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
+  firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
 };
 
 export const IDLE_AFTER_MS = 25_000;
@@ -89,6 +90,8 @@ export function formatCoachSignal(signal) {
   const offers = signal.offers.length ? signal.offers.join(' or ') : 'nothing easier';
   return fill(CONTEXT_MESSAGES.struggling, { pattern, level: signal.level, settings, offers });
 }
+
+export const formatFirstPlay = () => CONTEXT_MESSAGES.firstPlay;
 
 /** The app's prompts travel as user messages; the transcript never shows them. */
 export const isAppPrompt = (text) => /^\s*\[app\]/.test(String(text ?? ''));

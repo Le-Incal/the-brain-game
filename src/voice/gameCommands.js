@@ -10,12 +10,16 @@
  *   setSpeed(n), setExact(bool)
  *   perform(action)   presses the control the player would press
  *   getFallingWord()  { word, drop } for the word in the air, or null
+ *   motionAllowed()   false when the player has switched motion off
+ *   playDemo()        plays one example: { ok, word, region, outcome, landed } or { ok: false, reason }
  */
 
 import { gameLevel, stepSpeed } from '../game/levels.js';
 import { hintFor } from '../game/hints.js';
 
 const HINT_PHASES = new Set(['playing', 'paused']);
+// An example plays only when no scored word can be in the air.
+const EXAMPLE_PHASES = new Set(['ready', 'study', 'offer']);
 
 const ok = (did, extra = {}) => ({ ok: true, did, reason: '', ...extra });
 const fail = (reason) => ({ ok: false, did: '', reason });
@@ -25,6 +29,12 @@ const times = (speed) => `${Number(speed.toFixed(2))} times`;
 
 /** Which control a mode switch presses, 'already' if none is needed, or null if it cannot. */
 export function switchModeAction(phase, target, returnTo = 'ready') {
+  if (phase === 'offer') {
+    if (target === 'game') return 'start-now';
+    if (target === 'study') return 'enter';
+    if (target === 'explore') return 'cancel-offer';
+    return null;
+  }
   if (target === 'game') {
     if (phase === 'ready') return 'start';
     if (phase === 'paused') return 'resume';
@@ -51,7 +61,10 @@ const MODES = ['game', 'study', 'explore'];
 function didFor(action, { phase, returnTo, target }) {
   switch (action) {
     case 'start':
+    case 'start-now':
       return 'Started the game: a three-second countdown, then the words begin to fall.';
+    case 'cancel-offer':
+      return 'Put the game aside; the player is exploring on their own.';
     case 'resume':
       return 'Resumed the game where it was paused.';
     case 'leave-study-and-start':
@@ -128,5 +141,24 @@ export function createGameCommands(adapter) {
     return ok(`${text}${easyNote}`, { word: falling.word.word, hint: Math.min(level, 3), final });
   }
 
-  return { setGameSpeed, setDifficulty, switchMode, giveHint };
+  async function playExample() {
+    if (!EXAMPLE_PHASES.has(adapter.getPhase())) {
+      return fail("A game is in progress, and the falling word is the player's; I cannot play it for them.");
+    }
+    if (adapter.motionAllowed && !adapter.motionAllowed()) {
+      return fail('The player has switched motion off, so I cannot turn to show an example. Explain it in words instead.');
+    }
+    const demo = await adapter.playDemo();
+    if (!demo?.ok) return fail(demo?.reason ?? 'The example could not play.');
+    if (demo.outcome !== 'correct') {
+      const where = demo.landed ? `landed on my ${demo.landed}` : 'fell past me';
+      return fail(`The example word "${demo.word}" ${where}, so it did not show what I meant.`);
+    }
+    return ok(
+      `Caught "${demo.word}" on my ${demo.region}: I turned it to the top, so the falling word landed on it. It was an example, worth no points.`,
+      { word: demo.word, region: demo.region }
+    );
+  }
+
+  return { setGameSpeed, setDifficulty, switchMode, giveHint, playExample };
 }

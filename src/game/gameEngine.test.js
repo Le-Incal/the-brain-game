@@ -339,7 +339,8 @@ describe('An example word', () => {
     const onMiss = vi.fn();
     const engine = new GameEngine(mockScene(null), { onMiss });
     const landed = engine.playDemo(VISION);
-    for (let i = 0; i < 40; i++) engine.update(0.1);
+    // At 0.12 a second the word passes the miss line (0.9) after 7.5 s.
+    for (let i = 0; i < 80; i++) engine.update(0.1);
     await expect(landed).resolves.toEqual({ outcome: 'miss', regionId: null });
     expect(onMiss).toHaveBeenCalledWith(expect.objectContaining({ demo: true }));
     expect(engine.isPlaying).toBe(false);
