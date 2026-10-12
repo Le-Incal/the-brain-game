@@ -9,9 +9,13 @@
  *   getSettings()     { speed, colour, exact }
  *   setSpeed(n), setExact(bool)
  *   perform(action)   presses the control the player would press
+ *   getFallingWord()  { word, drop } for the word in the air, or null
  */
 
 import { gameLevel, stepSpeed } from '../game/levels.js';
+import { hintFor } from '../game/hints.js';
+
+const HINT_PHASES = new Set(['playing', 'paused']);
 
 const ok = (did, extra = {}) => ({ ok: true, did, reason: '', ...extra });
 const fail = (reason) => ({ ok: false, did: '', reason });
@@ -110,5 +114,19 @@ export function createGameCommands(adapter) {
     return ok(didFor(action, { phase, returnTo, target }));
   }
 
-  return { setGameSpeed, setDifficulty, switchMode };
+  // Each word climbs its own ladder: where to look, the lobe, the region.
+  let hinted = { drop: null, level: 0 };
+
+  function giveHint() {
+    if (!HINT_PHASES.has(adapter.getPhase())) return fail('Hints are for the game, while a word is falling.');
+    const falling = adapter.getFallingWord?.();
+    if (!falling) return fail('No word is in the air; ask again when the next word falls.');
+    const level = hinted.drop === falling.drop ? hinted.level + 1 : 1;
+    const { text, final } = hintFor(falling.word, level);
+    hinted = { drop: falling.drop, level: final ? level - 1 : level };
+    const easyNote = !final && level === 2 && !adapter.getSettings().exact ? ' On Easy, the lobe is enough to score.' : '';
+    return ok(`${text}${easyNote}`, { word: falling.word.word, hint: Math.min(level, 3), final });
+  }
+
+  return { setGameSpeed, setDifficulty, switchMode, giveHint };
 }

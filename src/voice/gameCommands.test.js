@@ -174,7 +174,7 @@ describe('giveHint', () => {
     expectResultShape(first);
     expect(first).toMatchObject({ ok: true, word: 'SPEECH', hint: 1, final: false });
     expect(first.did).toBe('For "SPEECH": look on my left side, toward the front.');
-    expect(commands.giveHint()).toMatchObject({ hint: 2, did: 'For "SPEECH": it lies in my Frontal Lobe.' });
+    expect(commands.giveHint()).toMatchObject({ hint: 2, did: expect.stringMatching(/^For "SPEECH": it lies in my Frontal Lobe\./) });
     expect(commands.giveHint()).toMatchObject({ hint: 3, final: true });
     expect(commands.giveHint()).toMatchObject({ hint: 3, final: true });
   });

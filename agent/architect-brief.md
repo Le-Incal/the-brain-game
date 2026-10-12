@@ -165,7 +165,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all sixteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all seventeen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -266,6 +266,10 @@ Response shape: `{ ok, did, reason, level }`.
 Moves the player between modes by pressing the same control they would. Use it only when the player asks or agrees.
 - `mode` (string, required): "game" starts the game, or resumes a paused one; "study" opens Study, pausing a running game; "explore" leaves Study.
 Response shape: `{ ok, did, reason }`. It never pauses a running game when asked for the game, and refuses "explore" during a game.
+
+### give_hint
+A hint for the word in the air. The word keeps falling. Each call for the same word climbs one rung: where to look on me, then the lobe, then the region; after that it repeats the region. A new word starts again at the first rung. Game only. No parameters.
+Response shape: `{ ok, did, reason, word, hint, final }`. `did` is the hint, worded to say aloud. When no word is in the air it refuses with a reason.
 
 ## 5. Server tool (webhook)
 

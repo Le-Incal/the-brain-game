@@ -541,6 +541,7 @@ export default function App() {
                 setDifficulty(exact ? 'hard' : 'easy');
               },
               perform: (action) => modeApiRef.current?.perform(action),
+              getFallingWord: () => gameRef.current?.fallingWord() ?? null,
             })
           );
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;

@@ -43,6 +43,8 @@ export class GameEngine {
      */
     this.difficulty = options.difficulty === 'hard' ? 'hard' : 'easy';
     this.usedWords = new Set();
+    /** Each word dropped gets the next number, so a hint knows which word it is for. */
+    this.dropCount = 0;
     this.onScoreChange = options.onScoreChange ?? null;
     this.onWordDrop = options.onWordDrop ?? null;
     this.onCorrect = options.onCorrect ?? null;
@@ -91,6 +93,7 @@ export class GameEngine {
     this._collisionSampleElapsed = 0;
     this.currentWord = this.getNextWord();
     if (!this.currentWord) return;
+    this.dropCount += 1;
 
     this.wordPosition = {
       x: 0.5,
@@ -233,6 +236,12 @@ export class GameEngine {
       });
     }
     return { ...base, outcome: 'wrong', correct: false };
+  }
+
+  /** The word in the air and its drop number, or null once it has landed or before the game starts. */
+  fallingWord() {
+    if (!this.currentWord || this._resolved) return null;
+    return { word: this.currentWord, drop: this.dropCount };
   }
 
   getPointValue() {
