@@ -172,3 +172,21 @@ describe('The brief teaches the section', () => {
     expect(prompt).toContain('  [app] the section is open');
   });
 });
+
+// Kyle, 2026-10-11: a miss stays quiet. The screen already shows where the word
+// belonged; the guide uses the miss when the player next speaks, and the coach
+// speaks up on a real struggle.
+describe('A miss stays quiet', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+
+  it('no longer asks the guide to speak after every miss', () => {
+    expect(prompt).not.toContain('Say one short sentence about why the word belongs there, then fall quiet.');
+  });
+
+  it('tells the guide to keep the miss for when the player asks', () => {
+    expect(prompt).toContain(
+      '  Do not answer it. If the player asks about that word, say in one short sentence why it belongs there.'
+    );
+  });
+});
