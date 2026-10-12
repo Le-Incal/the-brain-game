@@ -51,12 +51,12 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true, ttsOk = true } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true, ttsOk = true, rejectModels = [] } = {}) {
   let pages = initialPages;
   const requests = [];
   // `details` maps conversation id -> { status, call_duration_secs }; ids not
   // listed answer 404 (the token was never used).
-  const state = { listFailures, minted: 0, details, ttsOk };
+  const state = { listFailures, minted: 0, details, ttsOk, rejectModels };
   const reply = (status, body) => ({
     ok: status >= 200 && status < 300,
     status,
@@ -69,7 +69,10 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
     // Text to speech with timestamps: three letters, 100 ms each, and a few bytes of "audio".
     if (href.includes('/v1/text-to-speech/')) {
       if (!state.ttsOk) return reply(500, { detail: 'tts failure' });
-      const text = JSON.parse(init.body ?? '{}').text ?? '';
+      const ttsBody = JSON.parse(init.body ?? '{}');
+      // A model this account cannot use is refused, as ElevenLabs does.
+      if (state.rejectModels.includes(ttsBody.model_id)) return reply(422, { detail: 'model not available' });
+      const text = ttsBody.text ?? '';
       const characters = [...text];
       return reply(200, {
         audio_base64: Buffer.from(`mp3:${text.length}`).toString('base64'),

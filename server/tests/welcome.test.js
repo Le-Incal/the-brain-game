@@ -5,7 +5,7 @@ import { HOST, SECRETS, expectNoSecrets, fakeClock, startApp } from './helpers.j
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
 const welcomeModule = await import('../welcome.js').catch(() => ({}));
-const { welcomeText, WELCOME_RETRY_AFTER_MS, DEFAULT_WELCOME_MODEL } = welcomeModule;
+const { welcomeText, WELCOME_RETRY_AFTER_MS, DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL } = welcomeModule;
 
 const setup = (options = {}) => startApp({ ...options, createApp });
 const getWelcome = (app, guide = 'sylvi', host = HOST) => request(app).get(`/api/voice/welcome/${guide}`).set('Host', host);
@@ -33,6 +33,7 @@ describe('GET /api/voice/welcome/:guide', () => {
       guideName: 'Sylvi',
       text,
       audioUrl: '/api/voice/welcome/sylvi/audio',
+      model: DEFAULT_WELCOME_MODEL,
       alignment: {
         chars: [...text],
         startsMs: [...text].map((_, i) => Math.round(i * 100)),
@@ -52,6 +53,40 @@ describe('GET /api/voice/welcome/:guide', () => {
     expect(body).toMatchObject({ text: welcomeText('Rollo'), model_id: DEFAULT_WELCOME_MODEL });
     // The agent's voice settings, so the welcome sounds like the live voice.
     expect(body.voice_settings).toEqual({ stability: 0.5, similarity_boost: 0.75 });
+  });
+
+  // Kyle, 2026-10-11: the welcome sounded like "an early 2000s digital voice".
+  // It was recorded with Turbo v2.5 while the live agent speaks with V4 Turbo
+  // in expressive mode. The welcome now uses the agent's model.
+  it("records with the live agent's model, V4 Turbo, and keeps Turbo v2.5 only as a fallback", () => {
+    expect(DEFAULT_WELCOME_MODEL).toBe('eleven_v4_turbo');
+    expect(WELCOME_FALLBACK_MODEL).toBe('eleven_turbo_v2_5');
+  });
+
+  it('falls back to Turbo v2.5 when ElevenLabs refuses the model, and says which model it used', async () => {
+    const warnings = [];
+    const { app, upstream } = await setup({
+      elevenLabs: { rejectModels: ['eleven_v4_turbo'] },
+      logger: { info: () => {}, warn: (line) => warnings.push(line) },
+    });
+    const response = await getWelcome(app, 'sylvi');
+    expect(response.status).toBe(200);
+    expect(response.body.model).toBe('eleven_turbo_v2_5');
+    expect(upstream.ttsRequests().map(({ init }) => JSON.parse(init.body).model_id)).toEqual(['eleven_v4_turbo', 'eleven_turbo_v2_5']);
+    expect(warnings.join('\n')).toMatch(/eleven_v4_turbo.*eleven_turbo_v2_5/);
+  });
+
+  it('does not fall back on an outage: a 5xx fails and is tried again after a minute', async () => {
+    const { app, upstream } = await setup({ elevenLabs: { ttsOk: false } });
+    expect((await getWelcome(app)).status).toBe(502);
+    expect(upstream.ttsRequests()).toHaveLength(1);
+  });
+
+  it('logs which model recorded each guide, for the staging logs', async () => {
+    const lines = [];
+    const { app } = await setup({ logger: { info: (line) => lines.push(line), warn: (line) => lines.push(line) } });
+    await getWelcome(app, 'rollo');
+    expect(lines).toContain('[voice] welcome recorded for rollo with eleven_v4_turbo');
   });
 
   it('takes the model from WELCOME_TTS_MODEL when set', async () => {
