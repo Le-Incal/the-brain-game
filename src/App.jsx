@@ -219,19 +219,17 @@ export const STYLES = {
     textShadow: '0 0 8px #fff, 0 0 16px #fff',
     marginBottom: 14,
   },
+  // In the bottom bar, after Settings (Kyle, 2026-10-11).
   score: {
+    alignSelf: 'center',
+    marginLeft: 6,
     fontFamily: "'EB Garamond', Georgia, serif",
     fontSize: 14,
     letterSpacing: '0.1em',
     color: '#4a4640',
-    zIndex: 10,
     pointerEvents: 'none',
     textTransform: 'uppercase',
-  },
-  scorePosition: {
-    position: 'absolute',
-    bottom: 'clamp(18px, 3vh, 28px)',
-    right: 'clamp(24px, 5vw, 64px)',
+    whiteSpace: 'nowrap',
   },
   loading: {
     position: 'absolute',
@@ -1054,13 +1052,13 @@ export default function App() {
             compact
           />
         ))}
+        <ScoreDisplay
+          score={score}
+          level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
+          gamePhase={gamePhase}
+          style={STYLES.score}
+        />
       </div>
-      <ScoreDisplay
-        score={score}
-        level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
-        gamePhase={gamePhase}
-        style={{ ...STYLES.score, ...STYLES.scorePosition }}
-      />
 
       {settingsOpen && (
         <SettingsPanel

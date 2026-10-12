@@ -247,17 +247,20 @@ const SETTINGS_STYLES = {
 
 const LEVEL_PHASES = new Set(['countdown', 'playing', 'paused']);
 
-/** The score, and during a game the level: Easy, Hard 1, Hard 2... */
+/**
+ * The score, and during a game the level beside it: Easy, Hard 1, Hard 2...
+ * Kyle, 2026-10-11: it sits in the bottom bar after Settings, as text.
+ */
 export function ScoreDisplay({ score, level, gamePhase, style }) {
   return (
-    <div className="score-display" style={style}>
-      <div>Score: {score}</div>
+    <span className="score-display" style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, ...style }}>
+      <span>Score: {score}</span>
       {LEVEL_PHASES.has(gamePhase) && level ? (
-        <div className="level-display" style={{ marginTop: 2, fontSize: 11, letterSpacing: '0.14em', textAlign: 'right' }}>
+        <span className="level-display" style={{ fontSize: '0.8em', letterSpacing: '0.14em', opacity: 0.8 }}>
           {level}
-        </div>
+        </span>
       ) : null}
-    </div>
+    </span>
   );
 }
 

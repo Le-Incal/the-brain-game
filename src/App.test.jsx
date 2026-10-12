@@ -35,10 +35,14 @@ describe('mobile viewport layout', () => {
     expect(STYLES.container.height).toBe('100dvh');
   });
 
-  it('keeps the score apart from the bottom bar', () => {
+  // Kyle, 2026-10-11: the score moved into the bar, after Settings.
+  it('puts the score in the bottom bar, after Settings', () => {
     const markup = renderToStaticMarkup(<App />);
-    const barEnd = markup.indexOf('</div>', markup.indexOf('class="game-controls"'));
-    expect(markup.indexOf('Score:')).toBeGreaterThan(barEnd);
+    const barStart = markup.indexOf('class="game-controls"');
+    const barEnd = markup.indexOf('</div>', barStart);
+    const score = markup.indexOf('Score:');
+    expect(score).toBeGreaterThan(markup.indexOf('>Settings</button>', barStart));
+    expect(score).toBeLessThan(barEnd);
   });
 });
 
