@@ -165,7 +165,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all sixteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -212,7 +212,7 @@ Returns `{ ok, did, reason }`.
 Removes any highlight. No parameters.
 
 ### set_colour_regions
-Turns the hand-tinted colour wash on or off.
+Turns the hand-tinted colour wash on or off. Works in every mode, during a game too: colour is the player's aid, not an answer.
 - `enabled` (boolean, required): true shows the colour wash, false hides it.
 
 ### lookup_region
@@ -251,6 +251,21 @@ Response shape: `{ ok, did, reason, done }`.
 Opens or closes the section: a drawing of the brain divided along the midline, seen from its left, laid over the 3D brain once it has turned to its left side. Study mode only; elsewhere it refuses with a reason.
 - `open` (boolean, required): true opens the section, false closes it.
 Response shape: `{ ok, did, reason }`.
+
+### set_game_speed
+Makes the falling words a step faster or slower: a quarter of their usual speed per step, from half speed to twice it. Works in every mode; in a game the next word falls at the new speed.
+- `change` (string, required): "faster" or "slower".
+Response shape: `{ ok, did, reason, speed, level }`. `level` is what the player sees: Easy, Hard 1, Hard 2 and so on. At either end it refuses with a reason.
+
+### set_difficulty
+Sets what counts as a catch. Easy: any region in the right lobe scores. Hard: only the exact region. The colours stay as they are.
+- `difficulty` (string, required): "easy" or "hard".
+Response shape: `{ ok, did, reason, level }`.
+
+### switch_mode
+Moves the player between modes by pressing the same control they would. Use it only when the player asks or agrees.
+- `mode` (string, required): "game" starts the game, or resumes a paused one; "study" opens Study, pausing a running game; "explore" leaves Study.
+Response shape: `{ ok, did, reason }`. It never pauses a running game when asked for the game, and refuses "explore" during a game.
 
 ## 5. Server tool (webhook)
 

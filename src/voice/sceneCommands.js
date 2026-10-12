@@ -624,8 +624,9 @@ export function createSceneCommands(
     return ok('Cleared the highlight.');
   }
 
+  // Kyle, 2026-10-11: colour is the player's aid, not an answer, so the guide
+  // may turn it on or off in every mode, mid-game included.
   function setFlag(value, apply, label) {
-    if (!inStudy()) return fail(GAME_REASON);
     const enabled = coerceBooleanLike(value);
     if (enabled === undefined) return fail('enabled must be true or false.');
     apply(enabled);

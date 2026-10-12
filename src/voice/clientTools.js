@@ -1,5 +1,5 @@
 /**
- * The thirteen client tools the ElevenLabs agent calls, mapped onto the scene
+ * The client tools the ElevenLabs agent calls, mapped onto the scene and game
  * commands. Names and parameters match agent/architect-brief.md section 4
  * exactly (a drift test checks it). The SDK passes only a string or a number
  * back to the agent, so every result goes back as JSON text.
@@ -22,6 +22,9 @@ export const AGENT_TOOL_NAMES = [
   'next_tour_stop',
   'end_tour',
   'show_section',
+  'set_game_speed',
+  'set_difficulty',
+  'switch_mode',
 ];
 
 // Under the agent's 8 s response timeout, so the agent always hears the truth.
@@ -131,6 +134,9 @@ export function createClientTools(
     next_tour_stop: run('next_tour_stop', nextTourStop, { timed: true }),
     end_tour: run('end_tour', endTour, { timed: true }),
     show_section: run('show_section', (p) => commands.showSection(p.open), { timed: true }),
+    set_game_speed: run('set_game_speed', (p) => commands.setGameSpeed(p.change)),
+    set_difficulty: run('set_difficulty', (p) => commands.setDifficulty(p.difficulty)),
+    switch_mode: run('switch_mode', (p) => commands.switchMode(p.mode)),
   };
 }
 

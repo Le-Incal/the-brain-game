@@ -360,7 +360,9 @@ describe('No annotations tool', () => {
     const brief = readFileSync(fileURLToPath(new URL('../../agent/architect-brief.md', import.meta.url)), 'utf8');
     expect(brief).not.toMatch(/set_annotations|annotations/);
     const section = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
-    expect(section).toMatch(/Settings on all thirteen:/);
+    // The settings line counts every tool the client exposes.
+    const NUMBER_WORDS = { 16: 'sixteen', 17: 'seventeen', 18: 'eighteen' };
+    expect(section).toContain(`Settings on all ${NUMBER_WORDS[AGENT_TOOL_NAMES.length]}:`);
   });
 });
 

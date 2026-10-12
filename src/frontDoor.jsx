@@ -231,6 +231,12 @@ const SETTINGS_STYLES = {
   value: { minWidth: 27, fontFamily: "'EB Garamond', Georgia, serif", fontSize: 11, color: '#2a2820', textAlign: 'right' },
 };
 
+// Tenths as before; the quarters the guide steps by show in full (1.25, not 1.3).
+function speedText(speed) {
+  const value = Number(speed);
+  return Number.isInteger(Math.round(value * 1000) / 100) ? value.toFixed(1) : String(Number(value.toFixed(2)));
+}
+
 /** Guide, difficulty and the speed of falling words. */
 export function SettingsPanel({ voiceEnabled, guide, onGuide, difficulty, onDifficulty, speed, onSpeed }) {
   return (
@@ -271,11 +277,11 @@ export function SettingsPanel({ voiceEnabled, guide, onGuide, difficulty, onDiff
             value={speed}
             onChange={(event) => onSpeed(Number(event.target.value))}
             aria-label="Falling word speed"
-            aria-valuetext={`${Number(speed).toFixed(1)} times`}
+            aria-valuetext={`${speedText(speed)} times`}
             style={SETTINGS_STYLES.slider}
           />
           <span className="speed-value" style={SETTINGS_STYLES.value}>
-            {Number(speed).toFixed(1)}×
+            {speedText(speed)}×
           </span>
         </span>
       </label>

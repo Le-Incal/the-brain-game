@@ -7,6 +7,7 @@ import { VOICE_ENABLED } from './voice/flags';
 import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guides';
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
+import { createGameCommands } from './voice/gameCommands';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
 import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sectionPlate.js';
 
@@ -359,7 +360,9 @@ export default function App() {
   const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
-  liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen };
+  liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen, speedMultiplier, difficulty };
+  // The guide presses the same Play and Study controls the player does.
+  const modeApiRef = useRef(null);
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -498,6 +501,30 @@ export default function App() {
             },
             reducedMotion: prefersReducedMotion,
           });
+          // Kyle, 2026-10-11: the guide sets the game's speed and difficulty and
+          // switches modes. None of it moves or lights the brain.
+          Object.assign(
+            sceneCommandsRef.current,
+            createGameCommands({
+              getPhase: () => liveStateRef.current.gamePhase,
+              getReturnTo: () => studyReturnToRef.current,
+              getSettings: () => ({
+                speed: liveStateRef.current.speedMultiplier,
+                colour: liveStateRef.current.colorMode,
+                exact: liveStateRef.current.difficulty === 'hard',
+              }),
+              setSpeed: (value) => {
+                liveStateRef.current.speedMultiplier = value;
+                setSpeedMultiplier(value);
+              },
+              // Unlike the Settings choice, the guide's step leaves the colours alone.
+              setExact: (exact) => {
+                liveStateRef.current.difficulty = exact ? 'hard' : 'easy';
+                setDifficulty(exact ? 'hard' : 'easy');
+              },
+              perform: (action) => modeApiRef.current?.perform(action),
+            })
+          );
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
         }
         setBrainReady(true);
@@ -644,6 +671,13 @@ export default function App() {
       if (next === 'paused') sceneAdapterRef.current?.resetForGame();
       setGamePhase(next);
     }
+  };
+
+  modeApiRef.current = {
+    perform(action) {
+      if (['start', 'resume', 'leave-study-and-start', 'leave-study-and-resume'].includes(action)) handlePlay();
+      else if (['enter', 'pause-and-enter', 'leave'].includes(action)) handleStudy();
+    },
   };
 
   const closeSection = () => {
