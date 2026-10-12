@@ -19,6 +19,7 @@ const {
   formatCoachSignal,
   isAppPrompt,
   formatFirstPlay,
+  formatMissPrompt,
   createContextReporter,
 } = contextModule;
 
@@ -32,7 +33,7 @@ describe('M4: every contextual update, worded in one place', () => {
       handoff: '[player] let go; now viewing {view} ({exactness}); you may move me again',
       idle: '[player] idle {seconds}s',
       mode: '[app] mode: {mode}',
-      missed: '[app] missed: "{word}" belongs to {region}',
+      missed: '[app] missed: "{word}" belongs to {region}, {where}. Why: {why}',
       welcomePlayed: '[app] the welcome has played',
       resumed: '[app] conversation so far: {lines}',
       section: '[app] the section is {state}',
@@ -120,8 +121,24 @@ describe('M4: every contextual update, worded in one place', () => {
     expect(formatMode('game')).toBe('[app] mode: game');
   });
 
-  it('tells the guide where a missed word belonged, so it can teach in one sentence', () => {
-    expect(formatMiss({ word: 'SPEECH', region: "Broca's Area" })).toBe('[app] missed: "SPEECH" belongs to Broca\'s Area');
+  // Kyle, 2026-10-11: the guide explains a miss at once: what, where and why.
+  const SPEECH_MISS = {
+    word: 'SPEECH',
+    region: "Broca's Area",
+    where: 'in my Frontal Lobe, on my left side, toward the front',
+    why: "Broca's area participates in articulatory planning within a distributed language network.",
+  };
+
+  it('tells the guide where a missed word belonged, where that lies and why', () => {
+    expect(formatMiss(SPEECH_MISS)).toBe(
+      '[app] missed: "SPEECH" belongs to Broca\'s Area, in my Frontal Lobe, on my left side, toward the front. Why: Broca\'s area participates in articulatory planning within a distributed language network.'
+    );
+  });
+
+  it('carries a struggle in the same prompt, so the guide never gets two at once', () => {
+    expect(formatMissPrompt(SPEECH_MISS)).toBe(formatMiss(SPEECH_MISS));
+    const signal = { kind: 'struggling', inARow: 3, level: 'Easy', settings: { speed: 1, colour: true, exact: false }, offers: ['slower'] };
+    expect(formatMissPrompt(SPEECH_MISS, signal)).toBe(`${formatMiss(SPEECH_MISS)}\n${formatCoachSignal(signal)}`);
   });
 
   // Kyle, 2026-10-11: the guide offers the next step; the player picks it.
@@ -209,10 +226,15 @@ describe('M4: the context reporter', () => {
     expect(sent.filter((line) => line.includes('idle'))).toHaveLength(2);
   });
 
-  it('tells the guide the mode when it changes, and where a missed word belonged', () => {
+  it('tells the guide the mode when it changes', () => {
     const { sent, reporter } = setup();
     reporter.modeChanged('game');
-    reporter.gameMiss({ word: 'VISION', region: 'Primary Visual Cortex' });
-    expect(sent).toEqual(['[app] mode: game', '[app] missed: "VISION" belongs to Primary Visual Cortex']);
+    expect(sent).toEqual(['[app] mode: game']);
+  });
+
+  // A miss needs an answer now, so it travels as a prompt, not as background.
+  it('leaves misses to the prompter', () => {
+    const { reporter } = setup();
+    expect(reporter.gameMiss).toBeUndefined();
   });
 });

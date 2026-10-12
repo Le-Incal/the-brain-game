@@ -96,10 +96,9 @@ describe('The brief tells the guide about the three modes', () => {
   });
 
   // Kyle, 2026-10-11: a miss stays quiet; it is taught in one sentence when the player asks.
-  it('never gives away an answer during a game, and teaches a miss in one sentence when asked', () => {
+  it('never gives away an answer during a game', () => {
     expect(prompt).toMatch(/^- Game: .*Never turn me, light a region, or say where a falling word belongs/m);
     expect(prompt).toContain('[app] missed: "SPEECH" belongs to Broca\'s Area');
-    expect(prompt).toMatch(/If the player asks about that word, say in one short sentence why it belongs there/);
   });
 
   it('says what to do when the player switches motion off', () => {
@@ -174,20 +173,22 @@ describe('The brief teaches the section', () => {
   });
 });
 
-// Kyle, 2026-10-11: a miss stays quiet. The screen already shows where the word
-// belonged; the guide uses the miss when the player next speaks, and the coach
-// speaks up on a real struggle.
-describe('A miss stays quiet', () => {
+describe('A miss is taught at once', () => {
+  // Kyle, 2026-10-11 (later): the guide names the region the word belonged to,
+  // where it is and why it matters, while the region glows.
   const brief = readFileSync(briefPath, 'utf8');
   const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
 
-  it('no longer asks the guide to speak after every miss', () => {
-    expect(prompt).not.toContain('Say one short sentence about why the word belongs there, then fall quiet.');
+  it('no longer tells the guide to stay quiet after a miss', () => {
+    expect(prompt).not.toContain('Do not answer it.');
   });
 
-  it('tells the guide to keep the miss for when the player asks', () => {
+  it('asks for two short sentences from the facts the app gives: where, then why', () => {
     expect(prompt).toContain(
-      '  Do not answer it. If the player asks about that word, say in one short sentence why it belongs there.'
+      '  [app] missed: "SPEECH" belongs to Broca\'s Area, in my Frontal Lobe, on my left side, toward the front. Why: Broca\'s area participates in articulatory planning within a distributed language network.'
+    );
+    expect(prompt).toContain(
+      '  Answer at once, in two short sentences and about five seconds: name the region and where it lies on you, then why the word belongs there, from the Why. Add nothing else; the next word is already falling.'
     );
   });
 });
