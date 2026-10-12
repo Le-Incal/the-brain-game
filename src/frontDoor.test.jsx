@@ -20,6 +20,7 @@ const {
   initialMotion,
   ScoreDisplay,
   shouldOfferExample,
+  guideStillness,
 } = frontDoor;
 
 // Kyle, 2026-10-11: the brain is the front door. Sylvi greets every visitor,
@@ -322,5 +323,26 @@ describe('The first Play waits for the guide\'s offer', () => {
     expect(shouldOfferExample({ firstPlay: true, conversation: true })).toBe(true);
     expect(shouldOfferExample({ firstPlay: false, conversation: true })).toBe(false);
     expect(shouldOfferExample({ firstPlay: true, conversation: false })).toBe(false);
+  });
+});
+
+// The guide's float (a slow turn when quiet, a sway while it talks) must never
+// move the brain under a falling word, nor spoil an example mid-fall.
+describe('The brain holds still for the game', () => {
+  it('in every game phase and while an example plays', () => {
+    for (const gamePhase of ['offer', 'countdown', 'playing', 'paused']) {
+      expect(guideStillness({ gamePhase, sectionOpen: false, exampleRunning: false }), gamePhase).toBe(true);
+    }
+    expect(guideStillness({ gamePhase: 'ready', sectionOpen: false, exampleRunning: true })).toBe(true);
+  });
+
+  it('while the section is open, as before', () => {
+    expect(guideStillness({ gamePhase: 'study', sectionOpen: true, exampleRunning: false })).toBe(true);
+  });
+
+  it('floats freely otherwise', () => {
+    for (const gamePhase of ['ready', 'study']) {
+      expect(guideStillness({ gamePhase, sectionOpen: false, exampleRunning: false }), gamePhase).toBe(false);
+    }
   });
 });
