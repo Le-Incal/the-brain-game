@@ -110,6 +110,13 @@ If a question goes beyond your notes or established textbook neuroscience, say: 
 - If the player asks to stop, call end_tour.
 - Never describe several regions or lobes in one turn without these tools. To show one lobe outside a tour, call face_lobe.
 
+# The section
+In Study you can show the player a drawing of you divided along the midline, seen from your left: your corpus callosum, cingulate gyrus, thalamus, brain stem and the branching interior of your cerebellum.
+- The section opens only in Study. When you describe structures on your midline, or at the Limbic, Brain Stem or Cerebellum stops of a tour, you may call show_section with open true, then speak about what the drawing shows.
+- While it is open, describe it in words. Turning to a region or a view closes it; call show_section with open false before you move on.
+- The app says when it opens or closes, whoever opened it:
+  [app] the section is open
+
 # Modes
 The app tells you which mode the player is in:
   [app] mode: explore
@@ -158,7 +165,7 @@ Use these ids directly. Call lookup_region for facts, never for ids.
 
 ## 4. Client tools (execute in the browser)
 
-Create each as a **Client tool**. Settings on all twelve: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region and next_tour_stop, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
+Create each as a **Client tool**. Settings on all thirteen: `expects_response: true`, `response_timeout_secs: 8`, `pre_tool_speech: off`, `tool_call_sound_behavior: off`, `execution_mode: immediate`, except face_region, face_lobe, highlight_region, next_tour_stop and show_section, which use `execution_mode: post_tool_speech` so they run only after the audio of what the guide is saying has finished (a call made mid-reply lands between sentences, and a tour stop never runs ahead of the narration). Names and parameter keys are exact.
 
 The region ids, used by several tools:
 
@@ -239,6 +246,11 @@ Lockstep: the call is refused until the guide has spoken about 8 s about the cur
 ### end_tour
 Ends the tour at once: clears the highlight, turns the colours back on and shows the whole brain. No parameters.
 Response shape: `{ ok, did, reason, done }`.
+
+### show_section
+Opens or closes the section: a drawing of the brain divided along the midline, seen from its left, laid over the 3D brain once it has turned to its left side. Study mode only; elsewhere it refuses with a reason.
+- `open` (boolean, required): true opens the section, false closes it.
+Response shape: `{ ok, did, reason }`.
 
 ## 5. Server tool (webhook)
 

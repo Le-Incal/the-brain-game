@@ -13,6 +13,7 @@ export const CONTEXT_MESSAGES = {
   missed: '[app] missed: "{word}" belongs to {region}',
   welcomePlayed: '[app] the welcome has played',
   resumed: '[app] conversation so far: {lines}',
+  section: '[app] the section is {state}',
   timeWarning: '[app] about 30 seconds of our conversation remain',
   tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
 };
@@ -45,6 +46,8 @@ export const formatMode = (mode) => fill(CONTEXT_MESSAGES.mode, { mode });
 export const formatMiss = ({ word, region }) => fill(CONTEXT_MESSAGES.missed, { word, region });
 
 export const formatWelcomePlayed = () => CONTEXT_MESSAGES.welcomePlayed;
+
+export const formatSection = (open) => fill(CONTEXT_MESSAGES.section, { state: open ? 'open' : 'closed' });
 
 // A conversation woken from rest carries the last few lines, kept short.
 const RESUME_LINES = 10;
@@ -86,6 +89,9 @@ export function createContextReporter({ send, now = Date.now, idleAfterMs = IDLE
     },
     welcomePlayed() {
       send(formatWelcomePlayed());
+    },
+    sectionChanged(open) {
+      send(formatSection(open));
     },
     resumed(entries, guideName) {
       send(formatResume(entries, guideName));

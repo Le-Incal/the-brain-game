@@ -73,12 +73,14 @@ describe('The bottom bar', () => {
   });
 
   it('reports pressed and expanded states for assistive technology', () => {
-    const [colour, play, study, settings] = getBarButtons({
+    const buttons = getBarButtons({
       gamePhase: 'study',
       brainReady: true,
       colorMode: true,
       settingsOpen: true,
     });
+    const [colour, play, study] = buttons;
+    const settings = buttons.find((button) => button.id === 'settings');
     expect(colour.pressed).toBe(true);
     expect(play.pressed).toBe(false);
     expect(study.pressed).toBe(true);

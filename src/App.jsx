@@ -8,6 +8,10 @@ import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guide
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
+import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sectionPlate.js';
+
+const SECTION_STUDY_ONLY = 'The section opens only in Study mode. Invite the player to press Study the Brain.';
+const SECTION_FADE = 'opacity 600ms ease';
 import {
   ArrivalOptions,
   SettingsPanel,
@@ -341,6 +345,10 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Kyle, 2026-10-11: a Motion switch stops the brain turning.
   const [motionOn, setMotionOn] = useState(() => initialMotion(prefersReducedMotion()));
+  // The midline section: the brain turns to its side and the plate is laid over it.
+  const [sectionOpen, setSectionOpen] = useState(false);
+  const [sectionBox, setSectionBox] = useState(null);
+  const sectionApiRef = useRef(null);
   // Sylvi greets every visitor, unless Rollo was chosen before.
   const [guide, setGuide] = useState(() => initialGuide(readSavedGuide(browserStorage())));
   const studyReturnToRef = useRef('ready');
@@ -351,7 +359,7 @@ export default function App() {
   const [control, setControl] = useState('guide_free');
   // The guide's adapter reads App state from outside React's render cycle.
   const liveStateRef = useRef({});
-  liveStateRef.current = { gamePhase, colorMode, motionOn };
+  liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen };
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -482,6 +490,12 @@ export default function App() {
             // Each arrival shows the shape of what was lit, once.
             showcase: true,
             motionAllowed: () => liveStateRef.current.motionOn,
+            // The guide opens and closes the section through the page.
+            section: {
+              open: () => sectionApiRef.current?.open() ?? { ok: false, reason: SECTION_STUDY_ONLY },
+              close: () => sectionApiRef.current?.close(),
+              isOpen: () => Boolean(liveStateRef.current.sectionOpen),
+            },
             reducedMotion: prefersReducedMotion,
           });
           if (import.meta.env.DEV) window.__sceneCommands = sceneCommandsRef.current;
@@ -632,6 +646,65 @@ export default function App() {
     }
   };
 
+  const closeSection = () => {
+    liveStateRef.current.sectionOpen = false;
+    setSectionOpen(false);
+  };
+
+  const openSection = async () => {
+    if (liveStateRef.current.gamePhase !== 'study') return { ok: false, reason: SECTION_STUDY_ONLY };
+    const commands = sceneCommandsRef.current;
+    const scene = sceneRef.current;
+    if (!commands?.turnToSide || !scene) return { ok: false, reason: 'I have not loaded yet.' };
+    if (liveStateRef.current.sectionOpen) return { ok: true };
+    const turned = await commands.turnToSide(SECTION_PLATE.view);
+    if (!turned.ok) return turned;
+    const bounds = screenBounds(scene.projectedPoints());
+    if (!bounds) return { ok: false, reason: 'The section could not be placed.' };
+    setSectionBox(bounds);
+    liveStateRef.current.sectionOpen = true;
+    setSectionOpen(true);
+    return { ok: true };
+  };
+  sectionApiRef.current = { open: openSection, close: closeSection };
+
+  const handleSection = () => {
+    setSettingsOpen(false);
+    if (liveStateRef.current.sectionOpen) closeSection();
+    else openSection();
+  };
+
+  // The plate belongs to Study and to a still brain.
+  useEffect(() => {
+    if (sectionOpen && shouldCloseSection({ gamePhase, control })) closeSection();
+  }, [sectionOpen, gamePhase, control]);
+
+  // The guide hears when the section opens or closes, whoever opened it.
+  const sectionReportedRef = useRef(false);
+  useEffect(() => {
+    if (sectionReportedRef.current === sectionOpen) return;
+    sectionReportedRef.current = sectionOpen;
+    voiceEventsRef.current?.sectionChanged?.(sectionOpen);
+  }, [sectionOpen]);
+
+  // Escape closes it; a resized window re-lays it over the brain.
+  useEffect(() => {
+    if (!sectionOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') closeSection();
+    };
+    const onResize = () => {
+      const bounds = sceneRef.current && screenBounds(sceneRef.current.projectedPoints());
+      if (bounds) setSectionBox(bounds);
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [sectionOpen]);
+
   const changeGuide = (guideId) => {
     saveGuide(browserStorage(), guideId);
     setGuide(guideId);
@@ -662,11 +735,19 @@ export default function App() {
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
   const showArrival = shouldShowArrival({ gamePhase, brainReady, selectedRegion });
-  const barButtons = getBarButtons({ gamePhase, brainReady, colorMode, settingsOpen });
+  const barButtons = getBarButtons({
+    gamePhase,
+    brainReady,
+    colorMode,
+    settingsOpen,
+    sectionOpen,
+    sectionAvailable: VOICE_ENABLED,
+  });
   const barActions = {
     colour: () => setColorMode(!colorMode),
     play: handlePlay,
     study: handleStudy,
+    section: handleSection,
     settings: () => setSettingsOpen((open) => !open),
   };
   const guideName = VOICE_ENABLED ? GUIDES.find((entry) => entry.id === guide)?.name ?? null : null;
@@ -676,8 +757,33 @@ export default function App() {
       <div style={STYLES.stage}>
         <div
           ref={mountRef}
-          style={controlIndicator ? { ...STYLES.canvas, cursor: controlIndicator.cursor } : STYLES.canvas}
+          style={{
+            ...STYLES.canvas,
+            ...(controlIndicator ? { cursor: controlIndicator.cursor } : {}),
+            // The 3D brain gives way to the section plate.
+            opacity: sectionOpen ? 0 : 1,
+            transition: SECTION_FADE,
+          }}
         />
+        {VOICE_ENABLED && gamePhase === 'study' && (
+          <img
+            className="section-plate"
+            src={SECTION_PLATE.src}
+            alt={sectionOpen ? SECTION_PLATE.alt : ''}
+            aria-hidden={!sectionOpen}
+            draggable={false}
+            style={{
+              ...(sectionBox ? plateBox(sectionBox) : { position: 'absolute', display: 'none' }),
+              // Ink on the page: the drawing's white paper takes the parchment's tone.
+              mixBlendMode: 'multiply',
+              opacity: sectionOpen ? 1 : 0,
+              transition: SECTION_FADE,
+              pointerEvents: sectionOpen ? 'auto' : 'none',
+              userSelect: 'none',
+              zIndex: 4,
+            }}
+          />
+        )}
         <div style={STYLES.wordLayer}>
           {activeWordLabel && (
             <div
@@ -851,6 +957,7 @@ export default function App() {
             voiceEventsRef={voiceEventsRef}
             control={control}
             motion={{ on: motionOn, onChange: setMotionOn }}
+            stillness={sectionOpen}
             mode={guideModeForPhase(gamePhase)}
           />
         </Suspense>

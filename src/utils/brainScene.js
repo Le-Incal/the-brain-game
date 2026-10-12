@@ -590,6 +590,26 @@ export class BrainScene {
     return this._specimenSpace ? this._specimenSpace.toSpecimenDirection(direction) : null;
   }
 
+  /**
+   * Where the brain's surface falls on screen: a sample of its vertices,
+   * projected, in page pixels. The midline section plate is laid over it.
+   */
+  projectedPoints(step = 7) {
+    const mesh = this.brainMeshes[0];
+    if (!mesh) return [];
+    mesh.updateMatrixWorld(true);
+    this.camera.updateMatrixWorld();
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const position = mesh.geometry.attributes.position;
+    const point = new THREE.Vector3();
+    const points = [];
+    for (let i = 0; i < position.count; i += step) {
+      point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld).project(this.camera);
+      points.push({ x: rect.left + ((point.x + 1) / 2) * rect.width, y: rect.top + ((1 - point.y) / 2) * rect.height });
+    }
+    return points;
+  }
+
   /** Study mode keeps the specimen on what the guide shows. */
   enterStudyMode() {
     this.controls.stopAutoRotate();

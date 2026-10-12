@@ -45,12 +45,15 @@ function prefersReducedMotion() {
 
 const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
 
-function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore' }) {
+function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore', stillness = false }) {
   const controlRef = useRef(control);
   controlRef.current = control;
   const guideRef = useRef(guide);
   const motionRef = useRef(motion.on);
   motionRef.current = motion.on;
+  // The section holds the brain still under its plate.
+  const stillnessRef = useRef(stillness);
+  stillnessRef.current = stillness;
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
   const [entries, setEntries] = useState([]);
   const [draft, setDraft] = useState('');
@@ -328,7 +331,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
           setWelcomeState(next);
         }
       }
-      const still = reducedMotion || !motionRef.current;
+      const still = reducedMotion || !motionRef.current || stillnessRef.current;
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
       const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion: still });
       const mode = floatMode({

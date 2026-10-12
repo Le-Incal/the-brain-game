@@ -26,13 +26,24 @@ export function guideModeForPhase(gamePhase) {
   return gamePhase === 'study' ? 'study' : 'explore';
 }
 
-export function getBarButtons({ gamePhase, brainReady = false, colorMode = false, settingsOpen = false }) {
+export function getBarButtons({
+  gamePhase,
+  brainReady = false,
+  colorMode = false,
+  settingsOpen = false,
+  sectionOpen = false,
+  sectionAvailable = true,
+}) {
   const blocked = !brainReady || gamePhase === 'countdown';
   const playLabel = gamePhase === 'playing' ? 'Pause' : gamePhase === 'paused' ? 'Resume' : 'Play the Game';
   return [
     { id: 'colour', label: 'Colour Regions', pressed: Boolean(colorMode), disabled: false },
     { id: 'play', label: playLabel, pressed: gamePhase === 'paused', disabled: blocked },
     { id: 'study', label: 'Study the Brain', pressed: gamePhase === 'study', disabled: blocked },
+    // The midline section belongs to Study only.
+    ...(gamePhase === 'study' && sectionAvailable
+      ? [{ id: 'section', label: 'Section', pressed: Boolean(sectionOpen), disabled: !brainReady }]
+      : []),
     { id: 'settings', label: 'Settings', expanded: Boolean(settingsOpen), disabled: false },
   ];
 }

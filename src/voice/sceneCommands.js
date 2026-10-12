@@ -158,6 +158,8 @@ export function createSceneCommands(
     now = () => performance.now(),
     reducedMotion = () => false,
     motionAllowed = () => true,
+    // The page's midline section plate: { open() -> Promise<{ ok, reason }>, close(), isOpen() }.
+    section = null,
     setTimeoutImpl = setTimeout,
     clearTimeoutImpl = clearTimeout,
   } = {}
@@ -582,6 +584,8 @@ export function createSceneCommands(
   async function followName(target) {
     const skipped = { did: 'skipped' };
     if (!inStudy() || !target) return skipped;
+    // While the section is up, the drawing is the show: a turn would close it.
+    if (section?.isOpen?.()) return skipped;
     let ids;
     let focus = null;
     if (tour && tour.index >= 0) {
@@ -693,6 +697,23 @@ export function createSceneCommands(
     };
   }
 
+  /** The guide opens or closes the midline section (Kyle, 2026-10-11). */
+  async function showSection(open) {
+    if (!inStudy()) return fail(GAME_REASON);
+    const wanted = coerceBooleanLike(open);
+    if (wanted === undefined) return fail('open must be true or false.');
+    if (!section) return fail('The section is not available here.');
+    if (!wanted) {
+      section.close();
+      return ok('Closed the section; my whole outside is back.');
+    }
+    const result = await section.open();
+    if (!result?.ok) return fail(result?.reason ?? 'The section could not open.');
+    return ok(
+      'Opened my section: a drawing of me divided along the midline, seen from my left, with my corpus callosum, thalamus, brain stem and cerebellum. Speak about what it shows.'
+    );
+  }
+
   const commands = {
     faceRegion,
     faceLobe: (lobe) => faceLobe(lobe),
@@ -703,12 +724,28 @@ export function createSceneCommands(
     highlightRegion,
     clearHighlight,
     setColourRegions,
+    showSection,
     lookupRegion,
     listRegions,
     getSceneState,
   };
-  // Kept off the enumerable keys: the agent contract is exactly twelve commands.
+  // Kept off the enumerable keys: the agent contract is exactly thirteen commands.
   Object.defineProperty(commands, 'followName', { value: followName, enumerable: false });
+  /**
+   * The visitor opened the section: turn to the side it is drawn from. Not a
+   * guide tool. With motion off the turn is instant, since the visitor asked for it.
+   */
+  async function turnToSide(view) {
+    if (!inStudy()) return fail(GAME_REASON);
+    if (!VIEWS.includes(view)) return fail(`Unknown view "${view}".`);
+    if (userHolding) return fail(HOLDING_REASON);
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+    light(null);
+    const quaternion = orientationForView(view, frame(), convertAxis);
+    const outcome = await move({ command: 'rotateTo', view }, quaternion, motionAllowed() ? undefined : { durationMs: 1 });
+    return outcome.completed ? ok(`Turned to my ${viewLabel(view)} view.`) : fail(stoppedReason(outcome.reason));
+  }
+  Object.defineProperty(commands, 'turnToSide', { value: turnToSide, enumerable: false });
   Object.defineProperty(commands, 'dispose', {
     value: () => {
       unsubscribe();
