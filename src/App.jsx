@@ -8,6 +8,8 @@ import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guide
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { createGameCommands } from './voice/gameCommands';
+import { createGameCoach } from './game/coach';
+import { gameLevel } from './game/levels';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
 import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sectionPlate.js';
 
@@ -28,6 +30,7 @@ import {
   sceneModeForPhase,
   shouldShowArrival,
   studyAction,
+  ScoreDisplay,
 } from './frontDoor.jsx';
 
 // The ElevenLabs SDK loads only in the voice build.
@@ -363,6 +366,18 @@ export default function App() {
   liveStateRef.current = { gamePhase, colorMode, motionOn, sectionOpen, speedMultiplier, difficulty };
   // The guide presses the same Play and Study controls the player does.
   const modeApiRef = useRef(null);
+  // Kyle, 2026-10-11: the coach notices streaks and struggles; the guide offers the next step.
+  const coachRef = useRef(null);
+  if (!coachRef.current) coachRef.current = createGameCoach();
+  const gameSettings = () => ({
+    speed: liveStateRef.current.speedMultiplier,
+    colour: liveStateRef.current.colorMode,
+    exact: liveStateRef.current.difficulty === 'hard',
+  });
+  const coachResult = (outcome) => {
+    const signal = coachRef.current.result(outcome, gameSettings());
+    if (signal) voiceEventsRef.current?.gameSignal?.(signal);
+  };
 
   // Picking a difficulty resets the palette to that difficulty's default. The
   // Colour Regions toggle still overrides it afterwards, so a player who wants
@@ -424,6 +439,7 @@ export default function App() {
             setCorrection(null);
           },
           onCorrect: ({ factoid: text, region, targetRegion, matchedBy }) => {
+            coachResult('correct');
             setFactoid(text);
             setWordAnim('absorb');
             // In easy mode the lobe is enough to score, so name the precise
@@ -450,6 +466,7 @@ export default function App() {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2500);
             // The guide teaches the miss in one sentence.
             if (correctRegion) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
+            coachResult('wrong');
             setCorrection(
               correctRegion
                 ? `Rather: ${correctRegion.name}${correctRegion.subtitle ? ` — ${correctRegion.subtitle}` : ''}`
@@ -468,6 +485,7 @@ export default function App() {
           onMiss: ({ word, correctRegion }) => {
             brainScene.beginHighlightFeedback(correctRegion?.id ?? -1, 2000);
             if (correctRegion && word) voiceEventsRef.current?.gameMiss?.({ word: word.word, region: correctRegion.name });
+            coachResult('miss');
             setCorrection(
               correctRegion
                 ? `It sought ${correctRegion.name}`
@@ -604,8 +622,14 @@ export default function App() {
     }
   }, [speedMultiplier, brainReady]);
 
+  // A change of speed, difficulty or colour is a new level: the coach counts afresh.
+  useEffect(() => {
+    coachRef.current.settingsChanged();
+  }, [speedMultiplier, difficulty, colorMode]);
+
   const runCountdown = () => {
     if (!gameRef.current) return;
+    coachRef.current.reset();
     setGamePhase('countdown');
     setCountdown(3);
     countdownTimerRef.current = window.setTimeout(() => {
@@ -947,9 +971,12 @@ export default function App() {
           />
         ))}
       </div>
-      <div className="score-display" style={{ ...STYLES.score, ...STYLES.scorePosition }}>
-        Score: {score}
-      </div>
+      <ScoreDisplay
+        score={score}
+        level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
+        gamePhase={gamePhase}
+        style={{ ...STYLES.score, ...STYLES.scorePosition }}
+      />
 
       {settingsOpen && (
         <SettingsPanel

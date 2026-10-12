@@ -16,6 +16,9 @@ export const CONTEXT_MESSAGES = {
   section: '[app] the section is {state}',
   timeWarning: '[app] about 30 seconds of our conversation remain',
   tourWaiting: '[app] the tour is waiting at stop {stop} of {of}',
+  // Kyle, 2026-10-11: the coach's offers. These go as prompts the guide answers now.
+  streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
+  struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
 };
 
 export const IDLE_AFTER_MS = 25_000;
@@ -65,6 +68,30 @@ export function formatResume(entries, guideName) {
 export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
 
 export const formatTourWaiting = ({ stop, of }) => fill(CONTEXT_MESSAGES.tourWaiting, { stop, of });
+
+function speedText(speed) {
+  const value = Number(speed);
+  return Number.isInteger(Math.round(value * 1000) / 100) ? value.toFixed(1) : String(Number(value.toFixed(2)));
+}
+
+function describeSettings({ speed, colour, exact }) {
+  return `${exact ? 'exact region' : 'lobe counts'}, colour ${colour ? 'on' : 'off'}, ${speedText(speed)}×`;
+}
+
+/** The game coach's streak or struggle, worded for the guide. */
+export function formatCoachSignal(signal) {
+  const settings = describeSettings(signal.settings);
+  if (signal.kind === 'streak') {
+    const offers = signal.offers.length ? signal.offers.join(' or ') : 'nothing harder';
+    return fill(CONTEXT_MESSAGES.streak, { count: signal.count, level: signal.level, settings, offers });
+  }
+  const pattern = signal.inARow ? `${signal.inARow} missed in a row` : `${signal.missed} of the last ${signal.of} missed`;
+  const offers = signal.offers.length ? signal.offers.join(' or ') : 'nothing easier';
+  return fill(CONTEXT_MESSAGES.struggling, { pattern, level: signal.level, settings, offers });
+}
+
+/** The app's prompts travel as user messages; the transcript never shows them. */
+export const isAppPrompt = (text) => /^\s*\[app\]/.test(String(text ?? ''));
 
 /**
  * Turns scene events into updates. Idle is reported once after 25 s without

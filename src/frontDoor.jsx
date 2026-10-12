@@ -231,6 +231,22 @@ const SETTINGS_STYLES = {
   value: { minWidth: 27, fontFamily: "'EB Garamond', Georgia, serif", fontSize: 11, color: '#2a2820', textAlign: 'right' },
 };
 
+const LEVEL_PHASES = new Set(['countdown', 'playing', 'paused']);
+
+/** The score, and during a game the level: Easy, Hard 1, Hard 2... */
+export function ScoreDisplay({ score, level, gamePhase, style }) {
+  return (
+    <div className="score-display" style={style}>
+      <div>Score: {score}</div>
+      {LEVEL_PHASES.has(gamePhase) && level ? (
+        <div className="level-display" style={{ marginTop: 2, fontSize: 11, letterSpacing: '0.14em', textAlign: 'right' }}>
+          {level}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // Tenths as before; the quarters the guide steps by show in full (1.25, not 1.3).
 function speedText(speed) {
   const value = Number(speed);

@@ -14,7 +14,8 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { CONSENT_TEXT, createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter, formatRegionClicked } from './contextUpdates.js';
+import { createContextReporter, formatCoachSignal, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
+import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { createGesture, gestureStrength, stepGesture } from './gestures.js';
 import { createTourStallGuard } from './tourStallGuard.js';
@@ -110,6 +111,10 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   }, [commands]);
   useEffect(() => () => follower.dispose(), [follower]);
 
+  // The coach's offers need an answer now, so they go as prompts, never over the guide.
+  const prompter = useMemo(() => createGuidePrompter({ send: (text) => sdkRef.current?.sendUserMessage(text) }), []);
+  useEffect(() => () => prompter.dispose(), [prompter]);
+
   const sdk = useConversation({
     onConnect: ({ conversationId }) => {
       sessionRef.current?.handleConnect({ conversationId });
@@ -128,6 +133,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       tourPacer.guideSpeaking(speaking);
       follower.guideSpeaking(speaking);
       restTimer.guideSpeaking(speaking);
+      prompter.guideSpeaking(speaking);
       if (!speaking) {
         stream.guideStopped();
         refreshEntries();
@@ -142,6 +148,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     },
     onMessage: (payload) => {
       const raw = typeof payload?.message === 'string' ? payload.message : '';
+      // The app's own prompts are not the visitor speaking.
+      if (payload?.role === 'user' && isAppPrompt(raw)) return;
       restTimer.activity();
       if (payload?.role === 'user') {
         welcome.stop();
@@ -215,6 +223,17 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       tourEvent: (event) => {
         if (event.type === 'stop') stallGuard.stopShown(event);
         else if (event.type === 'end') stallGuard.tourEnded();
+      },
+      // A streak or a struggle: the guide offers the next step. A resting
+      // conversation wakes for it; with no conversation there is no one to ask.
+      gameSignal: (signal) => {
+        const text = formatCoachSignal(signal);
+        const phase = session.getState().phase;
+        if (phase === 'connected') prompter.prompt(text);
+        else if (phase === 'resting') {
+          queuedRef.current.push(text);
+          session.wake();
+        }
       },
     };
     const idle = window.setInterval(() => reporter.tick(), 1000);
