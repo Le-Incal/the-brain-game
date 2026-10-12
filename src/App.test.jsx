@@ -35,26 +35,27 @@ describe('mobile viewport layout', () => {
     expect(STYLES.container.height).toBe('100dvh');
   });
 
-  // Kyle, 2026-10-11: the score moved into the bar, after Settings.
-  it('puts the score in the bottom bar, after Settings', () => {
+  // Kyle, 2026-10-11: the score sits in the bar after Settings (checked in
+  // frontDoor.test.jsx), and shows only once the visitor picks Play.
+  it('shows no score on arrival', () => {
     const markup = renderToStaticMarkup(<App />);
-    const barStart = markup.indexOf('class="game-controls"');
-    const barEnd = markup.indexOf('</div>', barStart);
-    const score = markup.indexOf('Score:');
-    expect(score).toBeGreaterThan(markup.indexOf('>Settings</button>', barStart));
-    expect(score).toBeLessThan(barEnd);
+    expect(markup).not.toContain('Score:');
   });
 });
 
 // Kyle, 2026-10-11: four persistent buttons under the brain; How to Play,
 // Begin and the phone menu give way to them and to the Settings panel.
 describe('The front door', () => {
-  it('puts Colour Regions, Play the Game, Study the Brain and Settings in the bar, in order', () => {
+  // Kyle, 2026-10-11: Play the Game and Study the Brain join the bar only
+  // after the visitor picks one of the two options on arrival.
+  it('holds only Colour Regions and Settings in the bar on arrival', () => {
     const markup = renderToStaticMarkup(<App />);
-    const bar = markup.slice(markup.indexOf('class="game-controls"'));
-    const order = ['Colour Regions', 'Play the Game', 'Study the Brain', 'Settings'].map((label) => bar.indexOf(`>${label}</button>`));
-    for (const position of order) expect(position).toBeGreaterThan(-1);
-    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    const start = markup.indexOf('class="game-controls"');
+    const bar = markup.slice(start, markup.indexOf('</div>', start));
+    expect(bar).toContain('>Colour Regions</button>');
+    expect(bar).toContain('>Settings</button>');
+    expect(bar).not.toContain('>Play the Game</button>');
+    expect(bar).not.toContain('>Study the Brain</button>');
   });
 
   it('opens Settings as a disclosure', () => {

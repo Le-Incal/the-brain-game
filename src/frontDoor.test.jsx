@@ -23,6 +23,8 @@ const {
   ScoreDisplay,
   shouldOfferExample,
   guideStillness,
+  recordChoice,
+  NO_CHOICE,
 } = frontDoor;
 
 // Kyle, 2026-10-11: the brain is the front door. Sylvi greets every visitor,
@@ -381,5 +383,44 @@ describe('The score sits in the bottom bar', () => {
       const rule = mobile.slice(score, mobile.indexOf('}', score));
       expect(rule).not.toMatch(/bottom:|right:/);
     }
+  });
+});
+
+// Kyle, 2026-10-11: Play the Game and Study the Brain join the bar only after
+// the visitor picks one of the two options on arrival. The score shows only
+// once they pick Play.
+describe('The choice on arrival', () => {
+  const labels = (state) => getBarButtons(state).map((button) => button.label);
+
+  it('starts with no choice made and no game played', () => {
+    expect(NO_CHOICE).toEqual({ chosen: false, played: false });
+  });
+
+  it('leaves only Colour Regions and Settings in the bar until a choice is made', () => {
+    expect(labels({ gamePhase: 'ready', brainReady: true, chosen: false })).toEqual(['Colour Regions', 'Settings']);
+  });
+
+  it('adds Play the Game and Study the Brain once a choice is made', () => {
+    expect(labels({ gamePhase: 'ready', brainReady: true, chosen: true })).toEqual([
+      'Colour Regions',
+      'Play the Game',
+      'Study the Brain',
+      'Settings',
+    ]);
+  });
+
+  it('picking Study makes the choice; the score waits for Play', () => {
+    expect(recordChoice(NO_CHOICE, 'study')).toEqual({ chosen: true, played: false });
+  });
+
+  it('picking Play makes the choice and shows the score, which then stays for the visit', () => {
+    const played = recordChoice(NO_CHOICE, 'play');
+    expect(played).toEqual({ chosen: true, played: true });
+    expect(recordChoice(played, 'study')).toEqual({ chosen: true, played: true });
+  });
+
+  it('never offers the two options on the left again once the bar has them', () => {
+    expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: null, chosen: true })).toBe(false);
+    expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: null, chosen: false })).toBe(true);
   });
 });
