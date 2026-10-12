@@ -8,8 +8,14 @@
 const API = 'https://api.elevenlabs.io';
 // The voice settings the agent uses (ElevenLabs agent, Voice panel).
 const VOICE_SETTINGS = { stability: 0.5, similarity_boost: 0.75 };
-// The agent's "V4 Turbo" family; WELCOME_TTS_MODEL overrides it.
-export const DEFAULT_WELCOME_MODEL = 'eleven_turbo_v2_5';
+// The live agent speaks with V4 Turbo (ElevenLabs agent, Voice panel), so the
+// welcome does too. Kyle, 2026-10-11: recorded with Turbo v2.5 it sounded
+// "like an early 2000s digital voice". Turbo v2.5 stays only as a fallback for
+// an account that refuses the model. WELCOME_TTS_MODEL overrides the first choice.
+export const DEFAULT_WELCOME_MODEL = 'eleven_v4_turbo';
+export const WELCOME_FALLBACK_MODEL = 'eleven_turbo_v2_5';
+// ElevenLabs answers these when a model is unknown or not allowed; an outage (5xx) is not one.
+const MODEL_REFUSED = new Set([400, 403, 404, 422]);
 export const WELCOME_RETRY_AFTER_MS = 60_000;
 
 export function welcomeText(guideName) {
@@ -24,13 +30,19 @@ export async function fetchWelcomeRecording({ fetchImpl, apiKey, voiceId, text, 
     headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, model_id: modelId, voice_settings: VOICE_SETTINGS }),
   });
-  if (!response.ok) throw new Error(`ElevenLabs welcome recording failed (${response.status})`);
+  if (!response.ok) {
+    const error = new Error(`ElevenLabs welcome recording failed (${response.status})`);
+    error.status = response.status;
+    error.modelRefused = MODEL_REFUSED.has(response.status);
+    throw error;
+  }
   const body = await response.json();
   const alignment = body?.alignment ?? body?.normalized_alignment;
   if (typeof body?.audio_base64 !== 'string' || !Array.isArray(alignment?.characters)) {
     throw new Error('ElevenLabs welcome response was malformed');
   }
   return {
+    model: modelId,
     audio: Buffer.from(body.audio_base64, 'base64'),
     chars: alignment.characters,
     startsMs: alignment.character_start_times_seconds.map((seconds) => Math.round(seconds * 1000)),

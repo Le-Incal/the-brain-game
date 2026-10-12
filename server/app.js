@@ -15,7 +15,7 @@ import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
 import { randomId, signDevice, signReservation, verifyDevice, verifyReservation } from './signing.js';
 import { verifyElevenLabsSignature } from './webhook.js';
 import { fetchConversation, fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
-import { DEFAULT_WELCOME_MODEL, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
+import { DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
 // A reservation still open this long (token window, plus the 8-minute session
@@ -186,16 +186,30 @@ export function createApp({
   const welcomeLimiter = createRateLimiter({ ...WELCOME_RATE_LIMIT, now });
   const endedLimiter = createRateLimiter({ ...ENDED_LIMIT_PER_DEVICE, now });
   const welcomeModel = env.WELCOME_TTS_MODEL?.trim() || DEFAULT_WELCOME_MODEL;
+  const welcomeModels = [...new Set([welcomeModel, WELCOME_FALLBACK_MODEL])];
   const welcomes = createWelcomeCache({
     now,
-    record: (guide) =>
-      fetchWelcomeRecording({
-        fetchImpl,
-        apiKey: config.apiKey,
-        voiceId: config.voices[guide],
-        text: welcomeText(GUIDE_NAMES[guide]),
-        modelId: welcomeModel,
-      }),
+    // The agent's model first; the fallback only if ElevenLabs refuses that model.
+    record: async (guide) => {
+      for (const [index, modelId] of welcomeModels.entries()) {
+        try {
+          const recording = await fetchWelcomeRecording({
+            fetchImpl,
+            apiKey: config.apiKey,
+            voiceId: config.voices[guide],
+            text: welcomeText(GUIDE_NAMES[guide]),
+            modelId,
+          });
+          logger.info(`[voice] welcome recorded for ${guide} with ${modelId}`);
+          return recording;
+        } catch (error) {
+          const next = welcomeModels[index + 1];
+          if (!error.modelRefused || !next) throw error;
+          logger.warn(`[voice] welcome model ${modelId} refused (${error.status}); recording ${guide} with ${next}`);
+        }
+      }
+      throw new Error('no welcome model available');
+    },
   });
   const shortId = (reservationId) => String(reservationId).slice(0, 8);
   const chargedSeconds = (durationSecs) =>
@@ -389,6 +403,7 @@ export function createApp({
       guideName,
       text: welcomeText(guideName),
       audioUrl: `/api/voice/welcome/${guide}/audio`,
+      model: recording.model,
       alignment: { chars: recording.chars, startsMs: recording.startsMs },
     });
   });
