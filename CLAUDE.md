@@ -7,7 +7,7 @@ A 3D brain rendered as a Victorian woodblock engraving. Players rotate it to cat
 1. `docs/claude/CLAUDE_CODE_HANDOFF.md`: current state, next task, file map, decisions waiting on Kyle.
 2. `docs/claude/BRAIN_GAME_PROJECT_INSTRUCTIONS.md`: the full brief (vision, aesthetic, integrity standards). Its 14-zone table is outdated: the 20 regions in `src/data/brainRegions.json` are canon.
 3. `.cursorrules`
-4. `docs/claude/VOICE_CONFIG_UPDATE.md`: the live ElevenLabs agent (Sylvi and Rollo, one British voice each, Rollo the default) and the decisions behind it.
+4. `docs/claude/VOICE_CONFIG_UPDATE.md`: the decisions behind the ElevenLabs agent (Sylvi and Rollo, one British voice each). Since 2026-10-11 Sylvi is the default; the handoff has the live state.
 
 ## Stack and commands
 
@@ -57,7 +57,7 @@ npm run kb -- compile           # approved only -> src/data/brainGraph.json
 |---|---|
 | `src/` | The game: `App.jsx`, `utils/orbitControls.js`, `utils/brainScene.js`, `game/gameEngine.js`, shaders, data |
 | `knowledge/` | Ontology, data, KB narrative, sources (R1, R2), fixtures, competency questions, review sheets |
-| `agent/architect-brief.md` | ElevenLabs agent contract: persona prompt, 9 client tools, acceptance conversations |
+| `agent/architect-brief.md` | ElevenLabs agent contract: persona prompt, 18 client tools, acceptance conversations |
 | `docs/claude/` | Brief, PRD, voice plan, handoffs |
 | `docs/reference/atlas/` | Read-only copies of our shipped Atlas voice build, to port patterns from |
 | `docs/handoff/` | Painted model handoffs; `masks/` holds the six V2 mask PDFs (local only, git-excluded) |
