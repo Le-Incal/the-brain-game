@@ -21,7 +21,7 @@ import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
 import { createTranscriptStream } from './transcriptStream.js';
-import { createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
+import { createArrivalClock, createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
 import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor } from './GuideColumn.jsx';
@@ -357,24 +357,32 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
   }, [session, scene, follower, stream, welcome]);
 
-  // Within seconds of arrival the brain welcomes the visitor, aloud where the
-  // browser allows it, otherwise as flowing text until the first tap.
+  // A few seconds after the brain appears, and only once the page is seen, the
+  // brain welcomes the visitor: aloud where the browser allows it, otherwise as
+  // flowing text until the first tap.
   useEffect(() => {
     let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      if (!(await welcome.load(guideRef.current)) || cancelled) return;
-      stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
-      welcomeStreamingRef.current = true;
-      setEntries(stream.entries());
-      const heard = await welcome.start();
-      if (cancelled) return;
-      welcomeStateRef.current = heard ? 'audible' : 'silent';
-      if (heard) voiceWantedRef.current = true;
-      setWelcomeState(welcomeStateRef.current);
-    }, WELCOME_DELAY_MS);
+    const clock = createArrivalClock({
+      delayMs: WELCOME_DELAY_MS,
+      hidden: document.hidden,
+      onDue: async () => {
+        if (!(await welcome.load(guideRef.current)) || cancelled) return;
+        stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
+        welcomeStreamingRef.current = true;
+        setEntries(stream.entries());
+        const heard = await welcome.start();
+        if (cancelled) return;
+        welcomeStateRef.current = heard ? 'audible' : 'silent';
+        if (heard) voiceWantedRef.current = true;
+        setWelcomeState(welcomeStateRef.current);
+      },
+    });
+    const onVisibility = () => clock.visibility(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      clock.dispose();
+      document.removeEventListener('visibilitychange', onVisibility);
       welcome.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

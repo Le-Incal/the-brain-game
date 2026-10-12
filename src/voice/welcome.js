@@ -1,6 +1,7 @@
 /**
- * The recorded welcome on arrival (Kyle, 2026-10-11). It begins about 1.5 s
- * after the brain is ready. Where the browser allows sound it plays aloud;
+ * The recorded welcome on arrival (Kyle, 2026-10-11). It begins 4 s after the
+ * brain appears, counting only time the visitor can see the page, so a
+ * background tab keeps its welcome until it is looked at. Where the browser allows sound it plays aloud;
  * where it does not (most first visits), its text flows on its own clock and
  * the voice joins at the word the text has reached on the visitor's first tap.
  *
@@ -8,8 +9,59 @@
  * transcript streams the welcome exactly as it streams any other reply.
  */
 
-export const WELCOME_DELAY_MS = 1500;
+export const WELCOME_DELAY_MS = 4000;
 export const WELCOME_ID = 'welcome';
+
+/**
+ * Calls `onDue` once, after `delayMs` of time with the page visible. Feed it
+ * `visibility(document.hidden)` on every visibilitychange.
+ */
+export function createArrivalClock({
+  delayMs = WELCOME_DELAY_MS,
+  hidden = false,
+  onDue,
+  now = () => performance.now(),
+  setTimeoutImpl = setTimeout,
+  clearTimeoutImpl = clearTimeout,
+}) {
+  let remaining = delayMs;
+  let runningSince = null;
+  let timer = null;
+  let done = false;
+
+  function run() {
+    if (done || runningSince !== null) return;
+    runningSince = now();
+    timer = setTimeoutImpl(() => {
+      timer = null;
+      runningSince = null;
+      if (done) return;
+      done = true;
+      onDue();
+    }, remaining);
+  }
+
+  function hold() {
+    if (runningSince === null) return;
+    remaining = Math.max(0, remaining - (now() - runningSince));
+    runningSince = null;
+    if (timer !== null) clearTimeoutImpl(timer);
+    timer = null;
+  }
+
+  if (!hidden) run();
+
+  return {
+    visibility(isHidden) {
+      if (isHidden) hold();
+      else run();
+    },
+    dispose() {
+      done = true;
+      hold();
+    },
+  };
+}
 // The last letter's start plus a breath, before the welcome counts as done.
 const TAIL_MS = 600;
 // A gentle level for the hatching while a letter is heard.
