@@ -265,6 +265,11 @@ export class BrainOrbitControls {
     return this._move !== null;
   }
 
+  /** Whether the visitor has grabbed or zoomed yet. A guide move never counts. */
+  get hasInteracted() {
+    return this._hasInteracted;
+  }
+
   /**
    * Eases the specimen to `quaternion` over about 1.2 s. Resolves
    * { completed: true } on arrival, or { completed: false, reason } when a grab
@@ -279,6 +284,27 @@ export class BrainOrbitControls {
       this._move = {
         from: this.orientGroup.quaternion.clone(),
         to: quaternion.clone().normalize(),
+        startedAt: performance.now(),
+        durationMs: Math.max(1, durationMs),
+        resolve,
+      };
+    });
+  }
+
+  /**
+   * Follows a path: `poseAt(progress)` gives the orientation for progress 0
+   * to 1, over `durationMs` (the welcome spin, Kyle 2026-10-11). The path
+   * carries its own easing. It obeys the same rules as moveTo: a grab ends it
+   * where it is ('user'), a later move replaces it ('superseded'), and
+   * auto-rotate waits while it runs.
+   */
+  followPath(poseAt, { durationMs = DEFAULT_MOVE_DURATION_MS } = {}) {
+    this._endMove({ completed: false, reason: 'superseded' });
+    if (!this.orientGroup) return Promise.resolve({ completed: false, reason: 'no-specimen' });
+
+    return new Promise((resolve) => {
+      this._move = {
+        poseAt,
         startedAt: performance.now(),
         durationMs: Math.max(1, durationMs),
         resolve,
@@ -330,9 +356,8 @@ export class BrainOrbitControls {
   _stepMove(now) {
     const move = this._move;
     const progress = Math.min(1, (now - move.startedAt) / move.durationMs);
-    this.orientGroup.quaternion
-      .slerpQuaternions(move.from, move.to, easeInOutCubic(progress))
-      .normalize();
+    if (move.poseAt) this.orientGroup.quaternion.copy(move.poseAt(progress)).normalize();
+    else this.orientGroup.quaternion.slerpQuaternions(move.from, move.to, easeInOutCubic(progress)).normalize();
     this.targetQuaternion.copy(this.orientGroup.quaternion);
     if (progress >= 1) this._endMove({ completed: true });
   }

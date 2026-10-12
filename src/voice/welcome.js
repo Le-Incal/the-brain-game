@@ -66,6 +66,19 @@ export function createArrivalClock({
 const TAIL_MS = 600;
 // A gentle level for the hatching while a letter is heard.
 const SPEAKING_LEVEL = 0.28;
+// The brain's talking motion follows the syllables: full on a vowel, less on
+// a consonant, a little on a space, nothing at a stop (Kyle, 2026-10-11).
+const VOWEL = /[aeiouy]/i;
+const LETTER = /[a-z0-9]/i;
+const CONSONANT_LEVEL = 0.6;
+const SPACE_LEVEL = 0.2;
+
+function talkingLevelOf(char) {
+  if (!char) return 0;
+  if (VOWEL.test(char)) return 1;
+  if (LETTER.test(char)) return CONSONANT_LEVEL;
+  return /\s/.test(char) ? SPACE_LEVEL : 0;
+}
 
 export function createWelcome({
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -120,6 +133,18 @@ export function createWelcome({
     },
 
     text: () => recording?.text ?? '',
+
+    /** When `phrase` begins, in ms from the start of the welcome; null if it is not said. */
+    timeOf(phrase) {
+      const index = recording ? recording.text.indexOf(phrase) : -1;
+      return index < 0 ? null : recording.startsMs[index];
+    },
+
+    /** How long the welcome lasts: its last letter plus a breath; 0 before it loads. */
+    lengthMs: () => (recording ? endMs() : 0),
+
+    /** How far into the welcome we are, in ms; null before it starts. */
+    position: () => (startedAt === null ? null : elapsedMs()),
 
     /** Starts the welcome; resolves true if it is heard, false if it flows silently. */
     async start() {
@@ -179,6 +204,15 @@ export function createWelcome({
       const index = playedChars() - 1;
       const char = recording.text[index];
       return char && /\S/.test(char) ? SPEAKING_LEVEL : 0;
+    },
+
+    /**
+     * A level for the brain's talking motion: the syllable being spoken, heard
+     * or flowing silently, while the welcome plays; 0 otherwise.
+     */
+    talkingLevel() {
+      if (!recording || startedAt === null || finished()) return 0;
+      return talkingLevelOf(recording.text[playedChars() - 1]);
     },
   };
 }

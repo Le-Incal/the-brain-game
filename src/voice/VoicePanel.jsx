@@ -27,6 +27,7 @@ import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
+import { createSpinCue, gestureInput, welcomeSpinWindow } from './welcomeSpin.js';
 
 function browserStorage() {
   try {
@@ -58,6 +59,10 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   // The section holds the brain still under its plate.
   const stillnessRef = useRef(stillness);
   stillnessRef.current = stillness;
+  const commandsRef = useRef(commands);
+  commandsRef.current = commands;
+  // The welcome spin: when it runs within the welcome, and its cue (Kyle, 2026-10-11).
+  const spinRef = useRef(null);
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
   const [entries, setEntries] = useState([]);
   const [draft, setDraft] = useState('');
@@ -369,6 +374,21 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         }
       }
       const still = reducedMotion || !motionRef.current || stillnessRef.current;
+      // The welcome turns the brain all the way round, from its own clock.
+      const spin = spinRef.current;
+      if (spin) {
+        const action = spin.cue.tick({
+          elapsedMs: welcome.position(),
+          active: welcome.active(),
+          touched: scene.controls.hasInteracted,
+          still,
+        });
+        if (action === 'start') {
+          Promise.resolve(commandsRef.current.welcomeSpin({ durationMs: spin.durationMs })).finally(() => spin.cue.done());
+        } else if (action === 'home') {
+          commandsRef.current.endWelcomeSpin();
+        }
+      }
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
       const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion: still });
       const mode = floatMode({
@@ -378,7 +398,13 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         guideSpeaking: guideSpeakingRef.current,
         reducedMotion: still,
       });
-      const sway = stepGesture(gesture, { dtSeconds, level, strength });
+      // The brain talks with the welcome too, twice as large while it plays.
+      const talk = gestureInput({
+        conversationLevel: level,
+        welcomeActive: welcome.active(),
+        welcomeLevel: welcome.talkingLevel(),
+      });
+      const sway = stepGesture(gesture, { dtSeconds, level: talk.level, strength, scale: talk.scale });
       const float = stepDrift(drift, { dtSeconds, active: mode === 'drift' });
       scene.setGesture({ yaw: sway.yaw + float.yaw, pitch: sway.pitch + float.pitch });
       scene.controls.setIdleTurn(mode === 'turn' ? idleTurnRate : 0);
@@ -404,6 +430,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       hidden: document.hidden,
       onDue: async () => {
         if (!(await welcome.load(guideRef.current)) || cancelled) return;
+        const spinWindow = welcomeSpinWindow({ timeOf: (phrase) => welcome.timeOf(phrase), endMs: welcome.lengthMs() });
+        spinRef.current = { cue: createSpinCue({ startMs: spinWindow.startMs }), durationMs: spinWindow.durationMs };
         stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
         welcomeStreamingRef.current = true;
         setEntries(stream.entries());

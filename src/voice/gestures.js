@@ -9,6 +9,8 @@
  */
 
 export const GESTURE_MAX_RADIANS = (2 * Math.PI) / 180;
+// Twice as large while the brain welcomes the visitor (Kyle, 2026-10-11).
+export const WELCOME_GESTURE_SCALE = 2;
 
 const SWAY_SHARE = 0.85; // of the maximum, at full phrase level
 const NOD_SHARE = 0.6;
@@ -27,9 +29,10 @@ export function createGesture() {
 
 /**
  * Advances the gesture one frame and returns its { yaw, pitch } in radians.
- * `strength` (0 to 1) scales it; `suppressed` is strength 0.
+ * `strength` (0 to 1) scales it; `suppressed` is strength 0. `scale` enlarges
+ * it beyond the usual size (the welcome); the last smoothing eases any change.
  */
-export function stepGesture(state, { dtSeconds, level, suppressed = false, strength = 1 }) {
+export function stepGesture(state, { dtSeconds, level, suppressed = false, strength = 1, scale = 1 }) {
   const dt = Math.max(0, Math.min(dtSeconds, 0.1));
   const voice = clamp01(level);
   state.phrase = follow(state.phrase, voice, dt, PHRASE_SECONDS);
@@ -38,8 +41,9 @@ export function stepGesture(state, { dtSeconds, level, suppressed = false, stren
   state.weight = follow(state.weight, target, dt, ENVELOPE_SECONDS);
   state.phase = (state.phase + dt * 2 * Math.PI * SWAY_HZ) % (2 * Math.PI);
 
-  const sway = GESTURE_MAX_RADIANS * SWAY_SHARE * Math.min(1, state.phrase * 1.6) * Math.sin(state.phase);
-  const nod = -GESTURE_MAX_RADIANS * NOD_SHARE * Math.min(1, state.emphasis * 1.5);
+  const size = GESTURE_MAX_RADIANS * Math.max(0, Number.isFinite(scale) ? scale : 1);
+  const sway = size * SWAY_SHARE * Math.min(1, state.phrase * 1.6) * Math.sin(state.phase);
+  const nod = -size * NOD_SHARE * Math.min(1, state.emphasis * 1.5);
   state.yaw = follow(state.yaw, sway * state.weight, dt, OUTPUT_SECONDS);
   state.pitch = follow(state.pitch, nod * state.weight, dt, OUTPUT_SECONDS);
 

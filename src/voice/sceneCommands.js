@@ -30,6 +30,7 @@ import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
 import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, normalizeTourLength, tourStop } from './lobes.js';
+import { WELCOME_SPIN_MAX_MS, welcomeSpinPath } from './welcomeSpin.js';
 
 // The whole-brain view a tour starts and ends on.
 const OVERVIEW_VIEW = 'left_lateral';
@@ -77,6 +78,9 @@ function stoppedReason(reason) {
   return STOPPED_REASON;
 }
 const NOT_LOADED_REASON = 'I have not loaded yet, so I cannot turn.';
+const REDUCED_MOTION_REASON = 'The visitor prefers reduced motion, so I stay still.';
+const ALREADY_TURNED_REASON = 'The visitor has already turned me, so they know I turn.';
+const NO_SPIN_REASON = 'No welcome spin is running.';
 // Kyle, 2026-10-11: a Motion switch stops the brain turning; light still works.
 export const MOTION_OFF_REASON =
   'The player has switched motion off, so I light regions without turning. Point them out in words instead.';
@@ -777,6 +781,51 @@ export function createSceneCommands(
     return outcome.completed ? ok(`Turned my ${REGION_BY_ID.get(id).name} to the top.`) : fail(stoppedReason(outcome.reason));
   }
   Object.defineProperty(commands, 'turnRegionUp', { value: turnRegionUp, enumerable: false });
+
+  /**
+   * The welcome spin (Kyle, 2026-10-11): all the way round while the brain
+   * introduces itself, settling square on the left side, after which the
+   * brain stays still for "turn me around". Not a guide tool; the page starts
+   * it from the welcome's clock. It counts as the guide moving.
+   */
+  let spinToken = null;
+  async function welcomeSpin({ durationMs = WELCOME_SPIN_MAX_MS } = {}) {
+    if (reducedMotion()) return fail(REDUCED_MOTION_REASON);
+    if (!motionAllowed()) return fail(MOTION_OFF_REASON);
+    if (userHolding || controls.hasInteracted) return fail(ALREADY_TURNED_REASON);
+    if (!loaded()) return fail(NOT_LOADED_REASON);
+    const view = frame();
+    const home = orientationForView(OVERVIEW_VIEW, view, convertAxis);
+    const poseAt = welcomeSpinPath({
+      start: controls.orientGroup.quaternion.clone(),
+      home,
+      frame: view,
+      anterior: convertAxis([0, 0, 1]),
+    });
+    const token = { bookmark: null, home };
+    currentMove = token;
+    spinToken = token;
+    const settled = controls.followPath(poseAt, { durationMs });
+    notifyControl();
+    const outcome = await settled;
+    if (currentMove === token) currentMove = null;
+    if (spinToken === token) spinToken = null;
+    if (outcome.completed) controls.stopAutoRotate();
+    notifyControl();
+    return outcome.completed ? ok('Turned all the way round.') : fail(stoppedReason(outcome.reason));
+  }
+  Object.defineProperty(commands, 'welcomeSpin', { value: welcomeSpin, enumerable: false });
+
+  /** The welcome was cut short mid-spin: ease home, and stay still there. */
+  async function endWelcomeSpin() {
+    const spin = spinToken;
+    if (!spin || currentMove !== spin) return fail(NO_SPIN_REASON);
+    spinToken = null;
+    const outcome = await move(null, spin.home);
+    if (outcome.completed) controls.stopAutoRotate();
+    return outcome.completed ? ok('Settled on my left side.') : fail(stoppedReason(outcome.reason));
+  }
+  Object.defineProperty(commands, 'endWelcomeSpin', { value: endWelcomeSpin, enumerable: false });
   Object.defineProperty(commands, 'dispose', {
     value: () => {
       unsubscribe();
