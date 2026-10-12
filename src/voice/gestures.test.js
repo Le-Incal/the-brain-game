@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mockVoiceLevel } from './voiceLevel.js';
 
 const gestureModule = await import('./gestures.js').catch(() => ({}));
-const { GESTURE_MAX_RADIANS, createGesture, stepGesture, gestureStrength } = gestureModule;
+const { GESTURE_MAX_RADIANS, WELCOME_GESTURE_SCALE, createGesture, stepGesture, gestureStrength } = gestureModule;
 
 const FRAME = 1 / 60;
 
@@ -73,6 +73,50 @@ describe('Embodied gestures while the guide speaks', () => {
       expect(gestureStrength({ ...free, control, highlighted: true }), control).toBe(0);
     }
     expect(gestureStrength({ ...free, reducedMotion: true })).toBe(0);
+  });
+
+  // Kyle, 2026-10-11: the brain should move as if it is talking while it
+  // welcomes the visitor; stronger for the welcome only, the conversation unchanged.
+  describe('the welcome, twice as large', () => {
+    // A steady voice with a syllable beat about three times a second.
+    const speech = (t) => 0.7 + 0.3 * Math.sin(2 * Math.PI * 3 * t);
+    const runScaled = ({ seconds, scale, level = speech, gesture = createGesture() }) => {
+      const frames = [];
+      for (let i = 0; i < Math.round(seconds / FRAME); i += 1) {
+        frames.push(stepGesture(gesture, { dtSeconds: FRAME, level: level(i * FRAME), scale: scale(i * FRAME) }));
+      }
+      return frames;
+    };
+
+    it('is twice the size', () => {
+      expect(WELCOME_GESTURE_SCALE).toBe(2);
+    });
+
+    it('goes beyond the usual 2 degrees but stays within 4', () => {
+      const frames = runScaled({ seconds: 20, scale: () => WELCOME_GESTURE_SCALE });
+      const largest = Math.max(...frames.map(({ yaw, pitch }) => Math.max(Math.abs(yaw), Math.abs(pitch))));
+      expect(largest).toBeGreaterThan(GESTURE_MAX_RADIANS);
+      expect(largest).toBeLessThanOrEqual(GESTURE_MAX_RADIANS * WELCOME_GESTURE_SCALE);
+    });
+
+    it('leaves the usual size unchanged when no scale is given', () => {
+      const plain = createGesture();
+      const scaled = createGesture();
+      for (let i = 0; i < 600; i += 1) {
+        const level = speech(i * FRAME);
+        const a = stepGesture(plain, { dtSeconds: FRAME, level });
+        const b = stepGesture(scaled, { dtSeconds: FRAME, level, scale: 1 });
+        expect(a).toEqual(b);
+      }
+    });
+
+    it('changes size without a jump when the welcome ends', () => {
+      const frames = runScaled({ seconds: 12, scale: (t) => (t < 6 ? WELCOME_GESTURE_SCALE : 1) });
+      for (let i = 1; i < frames.length; i += 1) {
+        expect(Math.abs(frames[i].yaw - frames[i - 1].yaw)).toBeLessThan(GESTURE_MAX_RADIANS * 0.1);
+        expect(Math.abs(frames[i].pitch - frames[i - 1].pitch)).toBeLessThan(GESTURE_MAX_RADIANS * 0.1);
+      }
+    });
   });
 
   it('half strength stays within half the amplitude', () => {
