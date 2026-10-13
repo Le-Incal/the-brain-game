@@ -189,6 +189,39 @@ describe("The welcome's timings, for the spin", () => {
   });
 });
 
+// Kyle, 2026-10-13: the tour runs about 15 s and outlasts the welcome, so the
+// page needs to tell a welcome that was cut short from one that simply finished.
+describe('Whether the welcome was cut short', () => {
+  it('is not, before it starts or while it plays', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    expect(welcome.cutShort()).toBe(false);
+    await welcome.load('sylvi');
+    await welcome.start();
+    clock.now = 500;
+    expect(welcome.cutShort()).toBe(false);
+  });
+
+  it('is, once the visitor speaks or writes over it', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    await welcome.start();
+    clock.now = 500;
+    welcome.stop();
+    expect(welcome.cutShort()).toBe(true);
+  });
+
+  it('is not, when it simply finishes, even if stopped afterwards', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    await welcome.start();
+    clock.now = 10_000;
+    expect(welcome.active()).toBe(false);
+    expect(welcome.cutShort()).toBe(false);
+    welcome.stop();
+    expect(welcome.cutShort()).toBe(false);
+  });
+});
+
 describe("The welcome's talking level, for the brain's motion", () => {
   // "Welcome. I am Sylvi.": letter i starts at i * 100 ms.
   it('rises on vowels, less on consonants, little on spaces and not at all on stops', async () => {
