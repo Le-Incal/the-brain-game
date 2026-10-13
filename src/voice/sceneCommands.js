@@ -783,9 +783,9 @@ export function createSceneCommands(
   Object.defineProperty(commands, 'turnRegionUp', { value: turnRegionUp, enumerable: false });
 
   // A path move the guide owns: counts as the guide moving until it settles.
-  async function followPath(token, { poseAt, durationMs }) {
+  async function followPath(token, { poseAt, durationMs, onStep = null }) {
     currentMove = token;
-    const settled = controls.followPath(poseAt, { durationMs });
+    const settled = controls.followPath(poseAt, { durationMs, onStep });
     notifyControl();
     const outcome = await settled;
     if (currentMove === token) currentMove = null;
@@ -795,7 +795,8 @@ export function createSceneCommands(
   }
 
   /**
-   * The welcome tour (Kyle, 2026-10-13): the brain turns to face the visitor
+   * The welcome tour (Kyle, 2026-10-13), with its demonstration of selecting a
+   * region near the end (welcomeSpin.js). The brain turns to face the visitor
    * on "Welcome.", holds until `tourAtMs`, then shows each side and below view
    * by view and ends facing us, still. Not a guide tool; the page starts it
    * from the welcome's clock. It counts as the guide moving.
@@ -811,10 +812,35 @@ export function createSceneCommands(
     const start = controls.orientGroup.quaternion.clone();
     // It finishes facing us at the elevation it arrived with (Kyle, 2026-10-13).
     const face = uprightFacing({ start, anterior: convertAxis([0, 0, 1]), toCamera: view.toCamera });
-    const tour = welcomeTour({ start, viewPose, tourAtMs, endPose: face });
-    const token = { bookmark: null, face };
+    const tour = welcomeTour({ start, frame: view, viewPose, axis: convertAxis, tourAtMs, endPose: face });
+
+    // The demonstration (Kyle, 2026-10-13): the region is selected as a click
+    // would select it, at its moment in the tour, and let go of at its end,
+    // on a grab, or when the welcome is cut short.
+    const pending = [...tour.events];
+    let selected = false;
+    const letGo = () => {
+      if (!selected) return;
+      selected = false;
+      adapter.clearDemoSelect?.();
+    };
+    const onStep = (progress) => {
+      const atMs = progress * tour.durationMs;
+      while (pending.length > 0 && pending[0].atMs <= atMs + 1e-6) {
+        const event = pending.shift();
+        if (event.type === 'select') {
+          adapter.demoSelect?.(event.regionId);
+          selected = true;
+        } else {
+          letGo();
+        }
+      }
+    };
+
+    const token = { bookmark: null, face, letGo };
     tourToken = token;
-    const outcome = await followPath(token, tour);
+    const outcome = await followPath(token, { ...tour, onStep });
+    letGo();
     if (tourToken === token) tourToken = null;
     if (outcome.completed) controls.stopAutoRotate();
     return outcome.completed ? ok('Greeted the visitor and showed every side.') : fail(stoppedReason(outcome.reason));
@@ -826,6 +852,7 @@ export function createSceneCommands(
     const tour = tourToken;
     if (!tour || currentMove !== tour) return fail(NO_SPIN_REASON);
     tourToken = null;
+    tour.letGo();
     const turn = faceTurn({ start: controls.orientGroup.quaternion.clone(), face: tour.face });
     const outcome = await followPath({ bookmark: null }, turn);
     if (outcome.completed) controls.stopAutoRotate();

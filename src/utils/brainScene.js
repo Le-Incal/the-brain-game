@@ -570,11 +570,23 @@ export class BrainScene {
   }
 
   /** Clears the player's selection, as a click on the selected region would. */
-  clearSelection() {
+  clearSelection({ demo = false } = {}) {
     if (this.selectedRegionId < 0) return;
     this.selectedRegionId = -1;
     this.uniforms.uSelectedRegion.value = -1;
-    this.onRegionSelect?.(null);
+    this.onRegionSelect?.(null, { demo });
+  }
+
+  /**
+   * Selects a region exactly as a click on it would. `demo` marks the
+   * welcome's demonstration (Kyle, 2026-10-13), which is not the visitor's click.
+   */
+  selectRegion(regionId, { demo = false } = {}) {
+    const region = getRegionById(regionId);
+    if (!region) return;
+    this.selectedRegionId = region.id;
+    this.uniforms.uSelectedRegion.value = region.id;
+    this.onRegionSelect?.(region, { demo });
   }
 
   /**

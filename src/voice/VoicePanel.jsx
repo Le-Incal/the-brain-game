@@ -393,7 +393,9 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
           still,
         });
         if (action === 'start') {
-          Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs: spin.tourAtMs }))
+          // Timed from where the welcome has reached, so a late first frame never lags her words.
+          const { tourAtMs } = welcomeTourTiming({ timeOf: (phrase) => welcome.timeOf(phrase), startedAtMs: welcome.position() ?? 0 });
+          Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs }))
             .then((outcome) => {
               if (outcome?.ok) waitingRef.current = true;
             })
@@ -448,8 +450,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       hidden: document.hidden,
       onDue: async () => {
         if (!(await welcome.load(guideRef.current)) || cancelled) return;
-        const { tourAtMs } = welcomeTourTiming({ timeOf: (phrase) => welcome.timeOf(phrase) });
-        spinRef.current = { cue: createSpinCue({ startMs: 0 }), tourAtMs };
+        spinRef.current = { cue: createSpinCue({ startMs: 0 }) };
         stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
         welcomeStreamingRef.current = true;
         setEntries(stream.entries());

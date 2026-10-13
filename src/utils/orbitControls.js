@@ -296,15 +296,17 @@ export class BrainOrbitControls {
    * to 1, over `durationMs` (the welcome spin, Kyle 2026-10-11). The path
    * carries its own easing. It obeys the same rules as moveTo: a grab ends it
    * where it is ('user'), a later move replaces it ('superseded'), and
-   * auto-rotate waits while it runs.
+   * auto-rotate waits while it runs. `onStep(progress)` hears each frame of
+   * it (the welcome's demonstration selects a region at a moment in its tour).
    */
-  followPath(poseAt, { durationMs = DEFAULT_MOVE_DURATION_MS } = {}) {
+  followPath(poseAt, { durationMs = DEFAULT_MOVE_DURATION_MS, onStep = null } = {}) {
     this._endMove({ completed: false, reason: 'superseded' });
     if (!this.orientGroup) return Promise.resolve({ completed: false, reason: 'no-specimen' });
 
     return new Promise((resolve) => {
       this._move = {
         poseAt,
+        onStep,
         startedAt: performance.now(),
         durationMs: Math.max(1, durationMs),
         resolve,
@@ -356,8 +358,12 @@ export class BrainOrbitControls {
   _stepMove(now) {
     const move = this._move;
     const progress = Math.min(1, (now - move.startedAt) / move.durationMs);
-    if (move.poseAt) this.orientGroup.quaternion.copy(move.poseAt(progress)).normalize();
-    else this.orientGroup.quaternion.slerpQuaternions(move.from, move.to, easeInOutCubic(progress)).normalize();
+    if (move.poseAt) {
+      this.orientGroup.quaternion.copy(move.poseAt(progress)).normalize();
+      move.onStep?.(progress);
+    } else {
+      this.orientGroup.quaternion.slerpQuaternions(move.from, move.to, easeInOutCubic(progress)).normalize();
+    }
     this.targetQuaternion.copy(this.orientGroup.quaternion);
     if (progress >= 1) this._endMove({ completed: true });
   }

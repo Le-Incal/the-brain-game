@@ -127,6 +127,16 @@ export function guideStillness({ gamePhase, sectionOpen, exampleRunning }) {
   return Boolean(sectionOpen || exampleRunning || GAME_PHASES.has(gamePhase));
 }
 
+/**
+ * What a selection does on the page. A visitor's click is shown, reaches the
+ * scene's one-focus rule and is told to the guide. The welcome's
+ * demonstration (Kyle, 2026-10-13) is shown exactly the same way, but it is
+ * not the visitor's: the guide is not told, and the guide's light stays.
+ */
+export function regionSelection(region, { demo = false } = {}) {
+  return { selected: region ?? null, playerSelected: !demo, tellGuide: !demo && Boolean(region) };
+}
+
 export function shouldShowArrival({ gamePhase, brainReady, selectedRegion, chosen = false }) {
   // Once a choice is made the bar holds both options, so the left never repeats them.
   return gamePhase === 'ready' && Boolean(brainReady) && !selectedRegion && !chosen;

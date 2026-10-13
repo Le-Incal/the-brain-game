@@ -38,6 +38,7 @@ import {
   shouldOfferExample,
   NO_CHOICE,
   recordChoice,
+  regionSelection,
 } from './frontDoor.jsx';
 
 // The ElevenLabs SDK loads only in the voice build.
@@ -426,10 +427,12 @@ export default function App() {
     setHoveredRegion(region);
   }, []);
 
-  const handleRegionSelect = useCallback((region) => {
-    setSelectedRegion(region);
-    sceneAdapterRef.current?.playerSelected(region?.id ?? null);
-    if (region) voiceEventsRef.current?.regionClicked(region);
+  const handleRegionSelect = useCallback((region, meta) => {
+    // The welcome's demonstration is shown like a click, but is not the visitor's.
+    const effect = regionSelection(region, meta);
+    setSelectedRegion(effect.selected);
+    if (effect.playerSelected) sceneAdapterRef.current?.playerSelected(region?.id ?? null);
+    if (effect.tellGuide) voiceEventsRef.current?.regionClicked(region);
   }, []);
 
   const handleNavigatingChange = useCallback((navigating) => {

@@ -15,6 +15,7 @@ export function createBrainSceneAdapter({
   // The left panel's entry for what the guide is showing, or null.
   onGuideFocus = () => {},
 }) {
+  let demoRegionId = null;
   return {
     controls: scene.controls,
     toSpecimenSpace: (point) => scene.toSpecimenSpace(point),
@@ -36,6 +37,19 @@ export function createBrainSceneAdapter({
       }
     },
     getHighlight: () => scene.getVoiceHighlight(),
+    // The welcome's demonstration (Kyle, 2026-10-13): selects as a click
+    // would, marked so the page knows it is not the visitor's click, and lets
+    // go only of its own selection, never one the visitor has made since.
+    demoSelect: (regionId) => {
+      demoRegionId = regionId;
+      scene.selectRegion(regionId, { demo: true });
+    },
+    clearDemoSelect: () => {
+      if (demoRegionId === null) return;
+      const mine = scene.selectedRegionId === demoRegionId;
+      demoRegionId = null;
+      if (mine) scene.clearSelection({ demo: true });
+    },
     setColourRegions,
     getColourRegions,
     getMode,
