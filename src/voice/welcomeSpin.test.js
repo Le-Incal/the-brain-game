@@ -125,6 +125,14 @@ describe('When the tour moves on from the greeting', () => {
   it('at 3.5 s when a welcome does not say it', () => {
     expect(welcomeTourTiming({ timeOf: () => null })).toEqual({ tourAtMs: 3500 });
   });
+
+  // Measured in a slow browser, 2026-10-13: the tour's first frame came 450 ms
+  // after "Welcome.", and every move after it ran that much behind her words.
+  it('counts from where the welcome has reached when the tour starts, so a late first frame never leaves the brain behind her words', () => {
+    const timeOf = (phrase) => (phrase === 'You can study' ? 3480 : null);
+    expect(welcomeTourTiming({ timeOf, startedAtMs: 450 })).toEqual({ tourAtMs: 3030 });
+    expect(welcomeTourTiming({ timeOf, startedAtMs: 5000 })).toEqual({ tourAtMs: 0 });
+  });
 });
 
 // The arrival pose: upright, its left side toward us, carried a little way
