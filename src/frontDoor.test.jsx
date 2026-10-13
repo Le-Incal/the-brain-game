@@ -445,3 +445,13 @@ describe('What a selection does on the page', () => {
     expect(frontDoor.regionSelection(null, { demo: true })).toEqual({ selected: null, playerSelected: false, tellGuide: false });
   });
 });
+
+// Kyle, 2026-10-13: "remove the shadow beneath study the brain and play the game".
+describe('The arrival choices', () => {
+  it('sit flat on the page, with no shadow beneath them', () => {
+    const markup = renderToStaticMarkup(<ArrivalOptions guideName="Sylvi" onStudy={() => {}} onPlay={() => {}} />);
+    expect(markup).toContain('Study the Brain');
+    expect(markup).toContain('Play the Game');
+    expect(markup).not.toMatch(/shadow/i);
+  });
+});
