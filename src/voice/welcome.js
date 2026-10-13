@@ -9,6 +9,8 @@
  * transcript streams the welcome exactly as it streams any other reply.
  */
 
+import { analyseSpeech } from './speechCues.js';
+
 export const WELCOME_DELAY_MS = 2000;
 export const WELCOME_ID = 'welcome';
 
@@ -66,19 +68,6 @@ export function createArrivalClock({
 const TAIL_MS = 600;
 // A gentle level for the hatching while a letter is heard.
 const SPEAKING_LEVEL = 0.28;
-// The brain's talking motion follows the syllables: full on a vowel, less on
-// a consonant, a little on a space, nothing at a stop (Kyle, 2026-10-11).
-const VOWEL = /[aeiouy]/i;
-const LETTER = /[a-z0-9]/i;
-const CONSONANT_LEVEL = 0.6;
-const SPACE_LEVEL = 0.2;
-
-function talkingLevelOf(char) {
-  if (!char) return 0;
-  if (VOWEL.test(char)) return 1;
-  if (LETTER.test(char)) return CONSONANT_LEVEL;
-  return /\s/.test(char) ? SPACE_LEVEL : 0;
-}
 
 export function createWelcome({
   fetchImpl = (...args) => globalThis.fetch(...args),
@@ -92,6 +81,8 @@ export function createWelcome({
   let stopped = false;
   // Stopped before it had finished: the visitor spoke or wrote over it.
   let cut = false;
+  // Where the letters stood when it was stopped, so its cues hold there.
+  let stoppedAtChars = null;
 
   const endMs = () => (recording ? (recording.startsMs.at(-1) ?? 0) + TAIL_MS : 0);
   // While heard, the audio's own position is the truth; otherwise our clock.
@@ -126,7 +117,8 @@ export function createWelcome({
         if (!response.ok) return false;
         const body = await response.json();
         if (!Array.isArray(body?.alignment?.chars) || !Array.isArray(body?.alignment?.startsMs)) return false;
-        recording = { text: body.alignment.chars.join(''), startsMs: body.alignment.startsMs };
+        const text = body.alignment.chars.join('');
+        recording = { text, startsMs: body.alignment.startsMs, speech: analyseSpeech(text) };
         audio = createAudio(body.audioUrl);
         return true;
       } catch {
@@ -141,9 +133,6 @@ export function createWelcome({
       const index = recording ? recording.text.indexOf(phrase) : -1;
       return index < 0 ? null : recording.startsMs[index];
     },
-
-    /** How long the welcome lasts: its last letter plus a breath; 0 before it loads. */
-    lengthMs: () => (recording ? endMs() : 0),
 
     /** How far into the welcome we are, in ms; null before it starts. */
     position: () => (startedAt === null ? null : elapsedMs()),
@@ -186,7 +175,10 @@ export function createWelcome({
 
     stop() {
       if (startedAt === null) return;
-      if (!finished()) cut = true;
+      if (!finished()) {
+        cut = true;
+        stoppedAtChars = playedChars();
+      }
       stopped = true;
       heard = false;
       audio?.pause();
@@ -213,12 +205,18 @@ export function createWelcome({
     },
 
     /**
-     * A level for the brain's talking motion: the syllable being spoken, heard
-     * or flowing silently, while the welcome plays; 0 otherwise.
+     * Puppet speech cues (Kyle, 2026-10-13): syllables and phrases spoken so
+     * far, heard or flowing silently, and whether a letter is being spoken.
      */
-    talkingLevel() {
-      if (!recording || startedAt === null || finished()) return 0;
-      return talkingLevelOf(recording.text[playedChars() - 1]);
+    cues() {
+      if (!recording || startedAt === null) return { syllables: 0, phrases: 0, speaking: false };
+      const { speech, text } = recording;
+      if (finished()) {
+        const last = (stoppedAtChars ?? text.length) - 1;
+        return { syllables: speech.syllablesUpTo(last), phrases: speech.phrasesUpTo(last), speaking: false };
+      }
+      const index = playedChars() - 1;
+      return { syllables: speech.syllablesUpTo(index), phrases: speech.phrasesUpTo(index), speaking: speech.speakingAt(index) };
     },
   };
 }

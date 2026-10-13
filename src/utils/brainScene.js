@@ -253,6 +253,24 @@ export function toHighlightUniforms({ now, feedback, voiceRegionIds, voiceFocusI
   };
 }
 
+const GESTURE_UP = new THREE.Vector3(0, 1, 0);
+const gestureAxis = new THREE.Vector3();
+const gestureTurn = new THREE.Quaternion();
+
+/**
+ * The guide's gesture as a turn of its own group: a sway about the vertical,
+ * a nod about the screen's horizontal and (Kyle, 2026-10-13, puppet speech) a
+ * tilt about the line of sight, applied in that order. Radians.
+ */
+export function gestureQuaternion({ yaw = 0, pitch = 0, roll = 0 } = {}, cameraQuaternion, out = new THREE.Quaternion()) {
+  out.setFromAxisAngle(GESTURE_UP, yaw);
+  gestureAxis.set(1, 0, 0).applyQuaternion(cameraQuaternion).normalize();
+  out.multiply(gestureTurn.setFromAxisAngle(gestureAxis, pitch));
+  gestureAxis.set(0, 0, 1).applyQuaternion(cameraQuaternion).normalize();
+  out.multiply(gestureTurn.setFromAxisAngle(gestureAxis, roll));
+  return out;
+}
+
 export function createVoiceUniforms() {
   return { uVoiceLevel: { value: 0 } };
 }
@@ -340,10 +358,6 @@ export class BrainScene {
     this.specimenGestureGroup = new THREE.Group();
     this.specimenRotationGroup.add(this.specimenGestureGroup);
     this.specimenGestureGroup.add(this.specimenOrientGroup);
-    this._gestureYawAxis = new THREE.Vector3(0, 1, 0);
-    this._gesturePitchAxis = new THREE.Vector3();
-    this._gestureYaw = new THREE.Quaternion();
-    this._gesturePitch = new THREE.Quaternion();
     this.specimenGroup.add(this.specimenRotationGroup);
     this.scene.add(this.specimenGroup);
     this._specimenPanY = 0;
@@ -551,11 +565,8 @@ export class BrainScene {
   }
 
   /** Sway (about world up) and nod (about the screen's horizontal), in radians. */
-  setGesture({ yaw = 0, pitch = 0 } = {}) {
-    this._gesturePitchAxis.set(1, 0, 0).applyQuaternion(this.camera.quaternion).normalize();
-    this._gestureYaw.setFromAxisAngle(this._gestureYawAxis, yaw);
-    this._gesturePitch.setFromAxisAngle(this._gesturePitchAxis, pitch);
-    this.specimenGestureGroup.quaternion.copy(this._gestureYaw).multiply(this._gesturePitch);
+  setGesture(gesture = {}) {
+    gestureQuaternion(gesture, this.camera.quaternion, this.specimenGestureGroup.quaternion);
   }
 
   /** Clears the player's selection, as a click on the selected region would. */

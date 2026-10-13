@@ -164,13 +164,6 @@ describe("The welcome's timings, for the spin", () => {
     expect(welcome.timeOf('a human brain')).toBeNull();
   });
 
-  it('knows how long it lasts: the last letter plus a breath', async () => {
-    const { welcome } = setup();
-    expect(welcome.lengthMs()).toBe(0);
-    await welcome.load('sylvi');
-    expect(welcome.lengthMs()).toBe(2500);
-  });
-
   it('reports how far in it is, on its own clock while silent', async () => {
     const { welcome, clock } = setup({ autoplay: false });
     await welcome.load('sylvi');
@@ -262,63 +255,5 @@ describe('Whether the welcome was cut short', () => {
     expect(welcome.cutShort()).toBe(false);
     welcome.stop();
     expect(welcome.cutShort()).toBe(false);
-  });
-});
-
-describe("The welcome's talking level, for the brain's motion", () => {
-  // "Welcome. I am Sylvi.": letter i starts at i * 100 ms.
-  it('rises on vowels, less on consonants, little on spaces and not at all on stops', async () => {
-    const { welcome, clock } = setup({ autoplay: false });
-    await welcome.load('sylvi');
-    await welcome.start();
-    const at = (ms) => {
-      clock.now = ms;
-      return welcome.talkingLevel();
-    };
-    const vowel = at(150); // "e" in "Welcome"
-    const consonant = at(250); // "l"
-    const stop = at(750); // "."
-    const space = at(850); // " "
-    const capitalVowel = at(950); // "I"
-    expect(vowel).toBe(1);
-    expect(capitalVowel).toBe(1);
-    expect(consonant).toBeGreaterThan(space);
-    expect(consonant).toBeLessThan(vowel);
-    expect(space).toBeGreaterThan(stop);
-    expect(stop).toBe(0);
-  });
-
-  it('follows the audio while heard', async () => {
-    const { welcome, audio } = setup({ autoplay: true });
-    await welcome.load('sylvi');
-    await welcome.start();
-    audio.currentTime = 0.15;
-    expect(welcome.talkingLevel()).toBe(1);
-  });
-
-  it('keeps moving while the welcome flows silently, unlike the hatching', async () => {
-    const { welcome, clock } = setup({ autoplay: false });
-    await welcome.load('sylvi');
-    await welcome.start();
-    clock.now = 150;
-    expect(welcome.talkingLevel()).toBe(1);
-    expect(welcome.level()).toBe(0);
-  });
-
-  it('is still before the welcome starts, once it is stopped and once it has finished', async () => {
-    const { welcome, clock } = setup({ autoplay: false });
-    expect(welcome.talkingLevel()).toBe(0);
-    await welcome.load('sylvi');
-    expect(welcome.talkingLevel()).toBe(0);
-    await welcome.start();
-    clock.now = 10_000;
-    expect(welcome.talkingLevel()).toBe(0);
-
-    const other = setup({ autoplay: true });
-    await other.welcome.load('sylvi');
-    await other.welcome.start();
-    other.audio.currentTime = 0.15;
-    other.welcome.stop();
-    expect(other.welcome.talkingLevel()).toBe(0);
   });
 });

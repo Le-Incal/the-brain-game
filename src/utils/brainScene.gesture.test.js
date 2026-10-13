@@ -33,7 +33,8 @@ describe('How a gesture turns the brain', () => {
     const expected = about(new THREE.Vector3(0, 1, 0), 0.03)
       .multiply(about(cameraAxis(1, 0, 0), 0.02))
       .multiply(about(cameraAxis(0, 0, 1), 0.04));
-    expect(gestureQuaternion({ yaw: 0.03, pitch: 0.02, roll: 0.04 }, camera.quaternion).angleTo(expected)).toBeLessThan(1e-9);
+    // angleTo resolves about 3e-8 rad near zero (an acos near 1).
+    expect(gestureQuaternion({ yaw: 0.03, pitch: 0.02, roll: 0.04 }, camera.quaternion).angleTo(expected)).toBeLessThan(1e-6);
   });
 
   it('is no turn at all when still', () => {

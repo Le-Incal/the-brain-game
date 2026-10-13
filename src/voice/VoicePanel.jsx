@@ -17,7 +17,9 @@ import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
-import { createGesture, gestureStrength, stepGesture } from './gestures.js';
+import { gestureStrength } from './gestures.js';
+import { createPuppet, stepPuppet } from './puppet.js';
+import { createCueTracker, createLevelCues } from './speechCues.js';
 import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
@@ -27,7 +29,7 @@ import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
-import { createSpinCue, gestureInput, welcomeTourTiming } from './welcomeSpin.js';
+import { createSpinCue, motionControl, welcomeTourTiming } from './welcomeSpin.js';
 
 function browserStorage() {
   try {
@@ -63,6 +65,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   commandsRef.current = commands;
   // The welcome tour: its cue and when it moves on from the greeting (Kyle, 2026-10-13).
   const spinRef = useRef(null);
+  // Once the introduction has finished, it turns slowly while it waits (Kyle, 2026-10-13).
+  const waitingRef = useRef(false);
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
   const [entries, setEntries] = useState([]);
   const [draft, setDraft] = useState('');
@@ -344,15 +348,18 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
   }, [state.phase, state.mode, session]);
 
-  // The hatching answers the guide's voice, and the brain gestures gently
-  // while it speaks, unless anything else is directing attention. Once its
-  // moves settle it floats: a drift while something is lit, a slow turn when
-  // nothing is and the guide is quiet. Motion off stills all of it. Each
-  // frame also streams the transcript to what has been heard.
+  // The hatching answers the guide's voice, and the brain speaks like a
+  // puppet (a beat on each syllable, a tilt on each phrase), unless anything
+  // else is directing attention. Once its moves settle it floats: a drift
+  // while something is lit, a slow turn when nothing is and the guide is
+  // quiet, or while it waits after its introduction. Motion off stills all of
+  // it. Each frame also streams the transcript to what has been heard.
   useEffect(() => {
     let frame;
     let last = performance.now();
-    const gesture = createGesture();
+    const puppet = createPuppet();
+    const welcomeCues = createCueTracker();
+    const liveCues = createLevelCues();
     const drift = createDrift();
     const reducedMotion = prefersReducedMotion();
     const idleTurnRate = (IDLE_TURN_DEGREES_PER_SECOND * Math.PI) / 180;
@@ -386,32 +393,38 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
           still,
         });
         if (action === 'start') {
-          Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs: spin.tourAtMs })).finally(() => spin.cue.done());
+          Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs: spin.tourAtMs }))
+            .then((outcome) => {
+              if (outcome?.ok) waitingRef.current = true;
+            })
+            .finally(() => spin.cue.done());
         } else if (action === 'home') {
-          commandsRef.current.endWelcomeSpin();
+          Promise.resolve(commandsRef.current.endWelcomeSpin()).then((outcome) => {
+            if (outcome?.ok) waitingRef.current = true;
+          });
         }
       }
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
-      // The brain talks with the welcome too, twice as large while it plays,
-      // and keeps talking through the tour.
-      const talk = gestureInput({
-        conversationLevel: level,
-        welcomeActive: welcome.active(),
-        welcomeLevel: welcome.talkingLevel(),
-        control: controlRef.current,
-        touring: Boolean(spin?.cue.running()),
-      });
-      const strength = gestureStrength({ control: talk.control, highlighted: lit, reducedMotion: still });
+      // Puppet speech: a beat on each syllable, a tilt on each phrase. The
+      // welcome's cues come from its text, the live guide's from her voice
+      // level; the brain keeps talking through the welcome tour.
+      const liveCue = liveCues.step({ dtSeconds, level });
+      const welcomeCue = welcomeCues.step(welcome.cues());
+      const cue = welcome.active() ? welcomeCue : liveCue;
+      const control = motionControl({ control: controlRef.current, touring: Boolean(spin?.cue.running()) });
+      const strength = gestureStrength({ control, highlighted: lit, reducedMotion: still });
       const mode = floatMode({
         connected: session.getState().phase === 'connected',
+        // After the introduction it turns slowly until the visitor takes hold.
+        waiting: waitingRef.current && !scene.controls.hasInteracted,
         control: controlRef.current,
         lit,
         guideSpeaking: guideSpeakingRef.current,
         reducedMotion: still,
       });
-      const sway = stepGesture(gesture, { dtSeconds, level: talk.level, strength, scale: talk.scale });
+      const speech = stepPuppet(puppet, { dtSeconds, ...cue, strength });
       const float = stepDrift(drift, { dtSeconds, active: mode === 'drift' });
-      scene.setGesture({ yaw: sway.yaw + float.yaw, pitch: sway.pitch + float.pitch });
+      scene.setGesture({ yaw: float.yaw, pitch: speech.pitch + float.pitch, roll: speech.roll });
       scene.controls.setIdleTurn(mode === 'turn' ? idleTurnRate : 0);
       last = now;
       frame = requestAnimationFrame(tick);
@@ -420,7 +433,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     return () => {
       cancelAnimationFrame(frame);
       scene.setVoiceLevel(0);
-      scene.setGesture({ yaw: 0, pitch: 0 });
+      scene.setGesture({ yaw: 0, pitch: 0, roll: 0 });
       scene.controls.setIdleTurn(0);
     };
   }, [session, scene, follower, stream, welcome]);

@@ -21,8 +21,11 @@ const ENVELOPE_SECONDS = 1.2;
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 
 /** 'drift', 'turn' or 'still'. */
-export function floatMode({ connected, control, lit, guideSpeaking, reducedMotion }) {
-  if (!connected || reducedMotion || control !== 'guide_free') return 'still';
+export function floatMode({ connected, waiting = false, control, lit, guideSpeaking, reducedMotion }) {
+  if (reducedMotion || control !== 'guide_free') return 'still';
+  // Outside a conversation it turns slowly only while it waits after its
+  // introduction, until the visitor takes hold (Kyle, 2026-10-13).
+  if (!connected) return waiting && !lit ? 'turn' : 'still';
   if (lit) return 'drift';
   // A view the guide is talking about holds still until the guide is quiet.
   return guideSpeaking ? 'still' : 'turn';

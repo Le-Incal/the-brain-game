@@ -30,7 +30,7 @@ import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
 import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, normalizeTourLength, tourStop } from './lobes.js';
-import { WELCOME_FACE_VIEW, WELCOME_TOUR_DEFAULT_AT_MS, faceTurn, welcomeTour } from './welcomeSpin.js';
+import { WELCOME_TOUR_DEFAULT_AT_MS, faceTurn, uprightFacing, welcomeTour } from './welcomeSpin.js';
 
 // The whole-brain view a tour starts and ends on.
 const OVERVIEW_VIEW = 'left_lateral';
@@ -808,8 +808,11 @@ export function createSceneCommands(
     if (!loaded()) return fail(NOT_LOADED_REASON);
     const view = frame();
     const viewPose = (name) => orientationForView(name, view, convertAxis);
-    const tour = welcomeTour({ start: controls.orientGroup.quaternion.clone(), viewPose, tourAtMs });
-    const token = { bookmark: null, face: viewPose(WELCOME_FACE_VIEW) };
+    const start = controls.orientGroup.quaternion.clone();
+    // It finishes facing us at the elevation it arrived with (Kyle, 2026-10-13).
+    const face = uprightFacing({ start, anterior: convertAxis([0, 0, 1]), toCamera: view.toCamera });
+    const tour = welcomeTour({ start, viewPose, tourAtMs, endPose: face });
+    const token = { bookmark: null, face };
     tourToken = token;
     const outcome = await followPath(token, tour);
     if (tourToken === token) tourToken = null;

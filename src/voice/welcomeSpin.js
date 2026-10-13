@@ -12,11 +12,11 @@
  *
  * It plays once, on arrival, and never for a visitor who has already turned
  * the brain. A grab stops it where it is; a welcome cut short turns the brain
- * calmly back to face us.
+ * calmly back to face us. It finishes facing us at the elevation it arrived
+ * with, so the slow turn while it waits never wobbles (Kyle, 2026-10-13).
  */
 
 import * as THREE from 'three';
-import { WELCOME_GESTURE_SCALE } from './gestures.js';
 
 export const WELCOME_TOUR_TURN_MS = 1500;
 export const WELCOME_TOUR_PAUSE_MS = 500;
@@ -49,14 +49,17 @@ export function welcomeTourTiming({ timeOf }) {
  * gives the orientation that squares a standard view to the viewer; `stops`
  * are `{ view, arriveMs, leaveMs }`. The greeting turns at the tour's pace,
  * taking longer from far round, and holds until `tourAtMs` with at least a pause.
+ * `endPose` is where it finishes (Kyle, 2026-10-13: facing us upright, as it
+ * arrived); the last turn takes as long as its angle needs at the same pace.
  */
-export function welcomeTour({ start, viewPose, tourAtMs }) {
+export function welcomeTour({ start, viewPose, tourAtMs, endPose = null }) {
   const poses = WELCOME_TOUR_VIEWS.map((view) => viewPose(view).clone().normalize());
+  if (endPose) poses[poses.length - 1] = endPose.clone().normalize();
   const from = start.clone().normalize();
   const greetMs = turnMs(from.angleTo(poses[0]), 1);
   const stops = [{ view: WELCOME_TOUR_VIEWS[0], arriveMs: greetMs, leaveMs: Math.max(tourAtMs, greetMs + WELCOME_TOUR_PAUSE_MS) }];
   for (let i = 1; i < poses.length; i += 1) {
-    const arriveMs = stops[i - 1].leaveMs + WELCOME_TOUR_TURN_MS;
+    const arriveMs = stops[i - 1].leaveMs + turnMs(poses[i - 1].angleTo(poses[i]), 1);
     const last = i === poses.length - 1;
     stops.push({ view: WELCOME_TOUR_VIEWS[i], arriveMs, leaveMs: last ? arriveMs : arriveMs + WELCOME_TOUR_PAUSE_MS });
   }
@@ -66,12 +69,28 @@ export function welcomeTour({ start, viewPose, tourAtMs }) {
     if (ms <= greetMs) return ease(from, poses[0], ms / greetMs);
     for (let i = 0; i < stops.length; i += 1) {
       if (ms <= stops[i].leaveMs || i === stops.length - 1) return poses[i].clone();
-      if (ms <= stops[i + 1].arriveMs) return ease(poses[i], poses[i + 1], (ms - stops[i].leaveMs) / WELCOME_TOUR_TURN_MS);
+      const next = stops[i + 1];
+      if (ms <= next.arriveMs) return ease(poses[i], poses[i + 1], (ms - stops[i].leaveMs) / (next.arriveMs - stops[i].leaveMs));
     }
     return poses.at(-1).clone();
   }
 
   return { durationMs, stops, poseAt: (progress) => poseAtMs(clamp(progress, 0, 1) * durationMs) };
+}
+
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+
+/**
+ * Facing us at the elevation it arrived with (Kyle, 2026-10-13): `start`
+ * turned about the vertical only, until its front (`anterior`, in the
+ * specimen's frame) heads toward the camera. Its lean is kept exactly, so a
+ * slow turn from there never wobbles.
+ */
+export function uprightFacing({ start, anterior, toCamera }) {
+  const front = anterior.clone().normalize().applyQuaternion(start);
+  const heading = (v) => Math.atan2(v.x, v.z);
+  const turn = heading(toCamera) - heading(front);
+  return new THREE.Quaternion().setFromAxisAngle(WORLD_UP, turn).multiply(start).normalize();
 }
 
 /** A calm turn from `start` back to `face` at the tour's pace: `{ durationMs, poseAt(progress) }`. */
@@ -117,13 +136,10 @@ export function createSpinCue({ startMs = 0 } = {}) {
 }
 
 /**
- * What the brain's talking motion follows: the live conversation as before,
- * and the welcome while it plays, twice as large. The tour counts as the
- * guide moving, which otherwise stills the motion; it lasts the whole
- * welcome, so the brain keeps talking through it.
+ * Who the speaking motion answers to. The tour counts as the guide moving,
+ * which otherwise stills the motion; it lasts the whole welcome, so the brain
+ * keeps talking through it. A held brain is never overridden.
  */
-export function gestureInput({ conversationLevel, welcomeActive, welcomeLevel, control, touring = false }) {
-  const motionControl = touring ? 'guide_free' : control;
-  if (!welcomeActive) return { level: conversationLevel, scale: 1, control: motionControl };
-  return { level: Math.max(conversationLevel, welcomeLevel), scale: WELCOME_GESTURE_SCALE, control: motionControl };
+export function motionControl({ control, touring = false }) {
+  return touring && control === 'guide_moving' ? 'guide_free' : control;
 }
