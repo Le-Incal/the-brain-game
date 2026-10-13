@@ -208,7 +208,7 @@ const ARRIVAL_STYLES = {
     background: 'transparent',
     color: INK,
     border: `1px solid ${INK}`,
-    boxShadow: '3px 3px 0 rgba(26, 24, 20, 0.18)',
+    // Flat on the page, no shadow beneath (Kyle, 2026-10-13).
     cursor: 'pointer',
   },
   text: {
