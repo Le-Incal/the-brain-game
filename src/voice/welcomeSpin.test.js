@@ -8,9 +8,14 @@ const spinModule = await import('./welcomeSpin.js').catch(() => ({}));
 const {
   WELCOME_TOUR_TURN_MS,
   WELCOME_TOUR_PAUSE_MS,
+  WELCOME_UNDERSIDE_PAUSE_MS,
   WELCOME_TOUR_VIEWS,
   WELCOME_TOUR_FROM,
   WELCOME_TOUR_DEFAULT_AT_MS,
+  WELCOME_SELECT_REGION_ID,
+  WELCOME_SELECT_HOLD_MS,
+  WELCOME_AFTER_SELECT_PAUSE_MS,
+  WELCOME_THREE_QUARTER,
   welcomeTourTiming,
   welcomeTour,
   faceTurn,
@@ -22,8 +27,15 @@ const {
 // Kyle, 2026-10-13: the continuous spin "rotates too fast, like it's doing
 // somersaults". On the open the brain turns to look at the visitor, its front
 // where a character's face would be; then it shows each side and below by
-// turning deliberately from one standard view to the next. His picks: all
-// sides and below, ending facing us; 1.5 s turns with 0.5 s pauses.
+// turning deliberately from one standard view to the next, 1.5 s a turn.
+//
+// Kyle, 2026-10-13 (later): at "turn me around and select any of my regions"
+// it shows what selecting looks like. "We spend a little too much time at
+// the back... shorten the time we spend on each side, flip to the bottom and
+// then rotate back to the top to select and then back to the front." So: the
+// left side, the back and the right side with no pause, a flip to the
+// underside, up to a view from the front-right a little above, the
+// prefrontal cortex selected for 2 s, then upright facing us.
 
 const UP = new THREE.Vector3(0, 1, 0);
 const FRAMES_PER_SECOND = 60;
@@ -63,14 +75,37 @@ function largestStep(poses) {
   return degrees(largest);
 }
 
+// Every step between two poses turns about the screen's vertical or its horizontal.
+function turnsAboutOneScreenAxis(poses) {
+  for (let i = 1; i < poses.length; i += 1) {
+    const step = poses[i].clone().multiply(poses[i - 1].clone().invert());
+    if (step.w < 0) step.set(-step.x, -step.y, -step.z, -step.w);
+    if (2 * Math.acos(Math.min(1, step.w)) < 1e-4) continue;
+    const axis = new THREE.Vector3(step.x, step.y, step.z).normalize();
+    if (Math.max(Math.abs(axis.dot(frame.screenUp)), Math.abs(axis.dot(screenRight))) < 0.999) return false;
+  }
+  return true;
+}
+
 describe('The welcome tour: its settings', () => {
-  it('turns in 1.5 s and pauses 0.5 s at each view', () => {
+  it('turns in 1.5 s, with no pause at the sides and a quarter second to see the underside', () => {
     expect(WELCOME_TOUR_TURN_MS).toBe(1500);
-    expect(WELCOME_TOUR_PAUSE_MS).toBe(500);
+    expect(WELCOME_TOUR_PAUSE_MS).toBe(0);
+    expect(WELCOME_UNDERSIDE_PAUSE_MS).toBe(250);
   });
 
-  it('faces us, then shows the right side, the back, the left side, faces us, shows the underside and faces us again', () => {
-    expect(WELCOME_TOUR_VIEWS).toEqual(['anterior', 'right_lateral', 'posterior', 'left_lateral', 'anterior', 'inferior', 'anterior']);
+  it('faces us, shows the left side, the back, the right side, the underside, rises to the front-right, then faces us', () => {
+    expect(WELCOME_TOUR_VIEWS).toEqual(['anterior', 'left_lateral', 'posterior', 'right_lateral', 'inferior', 'front_right_above', 'anterior']);
+  });
+
+  it('selects the prefrontal cortex for 2 s, then pauses a quarter second before turning back', () => {
+    expect(WELCOME_SELECT_REGION_ID).toBe(1);
+    expect(WELCOME_SELECT_HOLD_MS).toBe(2000);
+    expect(WELCOME_AFTER_SELECT_PAUSE_MS).toBe(250);
+  });
+
+  it('sees the brain from 40 degrees round from the front toward the right, 25 degrees above', () => {
+    expect(WELCOME_THREE_QUARTER).toEqual({ aroundDegrees: 40, aboveDegrees: 25 });
   });
 
   it('holds its greeting until "You can study"', () => {
@@ -107,7 +142,9 @@ describe('The tour, timed to Sylvi', () => {
   let cached = null;
   // Built lazily, so each test fails on its own while the module is absent.
   const endPose = () => uprightFacing({ start, anterior: new THREE.Vector3(0, 0, 1), toCamera: frame.toCamera });
-  const tour = () => (cached ??= welcomeTour({ start, viewPose, tourAtMs: 3480, endPose: endPose() }));
+  const tour = () => (cached ??= welcomeTour({ start, frame, viewPose, tourAtMs: 3480, endPose: endPose() }));
+  const stop = (view) => tour().stops.find((s) => s.view === view);
+  const poseAtMs = (ms) => tour().poseAt(ms / tour().durationMs);
 
   it('turns to face us first, within 1.5 s of "Welcome."', () => {
     const [greeting] = tour().stops;
@@ -119,46 +156,76 @@ describe('The tour, timed to Sylvi', () => {
     expect(tour().stops[0].leaveMs).toBe(3480);
   });
 
-  it('then stops at each view in turn: 1.5 s to turn, 0.5 s to look', () => {
-    const { stops, durationMs } = tour();
+  it('turns from side to side without pausing: 1.5 s for each, half a second less than before', () => {
+    const { stops } = tour();
     expect(stops.map(({ view }) => view)).toEqual(WELCOME_TOUR_VIEWS);
-    for (let i = 1; i < stops.length - 1; i += 1) {
+    for (let i = 1; i <= 3; i += 1) {
       expect(stops[i].arriveMs - stops[i - 1].leaveMs, `turn to ${stops[i].view}`).toBe(1500);
-      expect(stops[i].leaveMs - stops[i].arriveMs, `pause at ${stops[i].view}`).toBe(500);
+      expect(stops[i].leaveMs, `no pause at ${stops[i].view}`).toBe(stops[i].arriveMs);
     }
-    expect(durationMs).toBe(stops.at(-1).arriveMs);
+    expect(stop('right_lateral').arriveMs).toBe(3480 + 3 * 1500);
+  });
+
+  it('flips from the right side to the underside with a single quarter tip, and looks for a quarter second', () => {
+    const right = stop('right_lateral');
+    const under = stop('inferior');
+    expect(under.arriveMs - right.leaveMs).toBe(1500);
+    expect(under.leaveMs - under.arriveMs).toBe(250);
+    expect(degrees(poseAtMs(right.arriveMs).angleTo(poseAtMs(under.arriveMs)))).toBeCloseTo(90, 3);
+    expect(turnsAboutOneScreenAxis(sampleMs(tour(), right.leaveMs, under.arriveMs))).toBe(true);
+    expect(classifyView(poseAtMs(under.arriveMs), frame).view).toBe('inferior');
+  });
+
+  it('rises from the underside to see the brain from the front-right, a little above, at the same pace', () => {
+    const under = stop('inferior');
+    const top = stop('front_right_above');
+    const angle = degrees(poseAtMs(under.arriveMs).angleTo(poseAtMs(top.arriveMs)));
+    expect(top.arriveMs - under.leaveMs).toBe(Math.round((1500 * angle) / 90));
+    // Which way the viewer lies, in the brain's own frame (+x left, +y up, +z front).
+    const toViewer = frame.toCamera.clone().applyQuaternion(poseAtMs(top.arriveMs).clone().invert());
+    const a = THREE.MathUtils.degToRad(40);
+    const e = THREE.MathUtils.degToRad(25);
+    const expected = new THREE.Vector3(-Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e));
+    expect(degrees(toViewer.angleTo(expected))).toBeLessThan(0.5);
+  });
+
+  it('selects the prefrontal cortex as it arrives, holds it 2 s, then lets it go', () => {
+    const top = stop('front_right_above');
+    expect(tour().events).toEqual([
+      { type: 'select', regionId: 1, atMs: top.arriveMs },
+      { type: 'deselect', atMs: top.arriveMs + 2000 },
+    ]);
+    // It holds still while the region is selected, and a quarter second after.
+    expect(top.leaveMs).toBe(top.arriveMs + 2000 + 250);
+    expect(degrees(poseAtMs(top.arriveMs).angleTo(poseAtMs(top.leaveMs)))).toBeLessThan(1e-4);
   });
 
   // Kyle, 2026-10-13: "it should end on its starting elevation".
-  it('comes down from the underside to face us upright, as it arrived, at the same calm pace', () => {
+  it('turns back to face us upright, as it arrived, at the same calm pace', () => {
     const { stops, poseAt } = tour();
-    const [underside, last] = stops.slice(-2);
-    const angle = degrees(viewPose('inferior').angleTo(endPose()));
-    // More than a quarter turn: the views are squared to a camera above us.
-    expect(angle).toBeGreaterThan(90);
-    expect(last.arriveMs - underside.leaveMs).toBe(Math.round((1500 * angle) / 90));
+    const [top, last] = stops.slice(-2);
+    const angle = degrees(poseAtMs(top.leaveMs).angleTo(endPose()));
+    expect(last.arriveMs - top.leaveMs).toBe(Math.round(1500 * Math.max(1, angle / 90)));
     expect(degrees(poseAt(1).angleTo(endPose()))).toBeLessThan(1e-4);
     expect(tiltFromUpright(poseAt(1))).toBeCloseTo(tiltFromUpright(start), 6);
+    expect(tour().durationMs).toBe(last.arriveMs);
   });
 
-  it('sits square on each view while it pauses', () => {
-    const { stops, durationMs, poseAt } = tour();
-    for (const stop of stops.slice(0, -1)) {
-      const middle = (stop.arriveMs + stop.leaveMs) / 2;
-      expect(degrees(poseAt(middle / durationMs).angleTo(viewPose(stop.view))), stop.view).toBeLessThan(1e-4);
+  it('sits square on each standard view as it reaches it', () => {
+    for (const view of ['left_lateral', 'posterior', 'right_lateral']) {
+      expect(degrees(poseAtMs(stop(view).arriveMs).angleTo(viewPose(view))), view).toBeLessThan(1e-4);
     }
+    expect(degrees(poseAtMs(2500).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);
   });
 
-  it('shows exactly those views, in that order, and nothing in between', () => {
-    expect(viewsAlong(sampleMs(tour()))).toEqual([
+  it('shows the sides and the underside in order', () => {
+    expect(viewsAlong(sampleMs(tour(), 0, stop('inferior').leaveMs))).toEqual([
       'left_lateral',
       'anterior',
-      'right_lateral',
+      'left_lateral',
       'posterior',
-      'left_lateral',
-      'anterior',
+      'right_lateral',
       'inferior',
-      'anterior',
     ]);
   });
 
@@ -168,17 +235,8 @@ describe('The tour, timed to Sylvi', () => {
     expect(classifyView(poseAt(1), frame).view).toBe('anterior');
   });
 
-  it('turns about one axis at a time: round for the sides, a tip for the underside', () => {
-    const { stops } = tour();
-    const poses = sampleMs(tour(), stops[0].leaveMs);
-    for (let i = 1; i < poses.length; i += 1) {
-      const step = poses[i].clone().multiply(poses[i - 1].clone().invert());
-      if (step.w < 0) step.set(-step.x, -step.y, -step.z, -step.w);
-      if (2 * Math.acos(Math.min(1, step.w)) < 1e-4) continue;
-      const axis = new THREE.Vector3(step.x, step.y, step.z).normalize();
-      const aligned = Math.max(Math.abs(axis.dot(frame.screenUp)), Math.abs(axis.dot(screenRight)));
-      expect(aligned).toBeGreaterThan(0.999);
-    }
+  it('turns round for the sides and tips for the underside, one axis at a time', () => {
+    expect(turnsAboutOneScreenAxis(sampleMs(tour(), tour().stops[0].leaveMs, stop('inferior').arriveMs))).toBe(true);
   });
 
   it('never moves faster than about 94 degrees a second', () => {
@@ -187,29 +245,29 @@ describe('The tour, timed to Sylvi', () => {
 
   it('eases into and out of every turn: no motion jumps at a stop', () => {
     const { stops, durationMs, poseAt } = tour();
-    for (const stop of stops) {
-      const at = stop.arriveMs / durationMs;
+    for (const s of stops) {
+      const at = s.arriveMs / durationMs;
       const before = poseAt(at - FRAME_MS / durationMs);
-      expect(degrees(before.angleTo(poseAt(at))), stop.view).toBeLessThan(0.05);
+      expect(degrees(before.angleTo(poseAt(at))), s.view).toBeLessThan(0.05);
     }
   });
 });
 
 describe('The greeting from other poses', () => {
   it('turns at the same calm pace from far round, taking longer rather than going faster', () => {
-    const tour = welcomeTour({ start: viewPose('posterior'), viewPose, tourAtMs: 3480 });
+    const tour = welcomeTour({ start: viewPose('posterior'), frame, viewPose, tourAtMs: 3480 });
     expect(tour.stops[0].arriveMs).toBe(3000);
     expect(largestStep(sampleMs(tour))).toBeLessThanOrEqual(PEAK_DEGREES_PER_FRAME);
   });
 
   it('keeps a pause after the greeting when the words come early', () => {
-    const tour = welcomeTour({ start: viewPose('posterior'), viewPose, tourAtMs: 1000 });
+    const tour = welcomeTour({ start: viewPose('posterior'), frame, viewPose, tourAtMs: 1000 });
     expect(tour.stops[0].leaveMs).toBe(3500);
   });
 
   it('starts from wherever the arrival turn has carried it', () => {
     const start = uprightLeft(40);
-    const tour = welcomeTour({ start, viewPose, tourAtMs: 3480 });
+    const tour = welcomeTour({ start, frame, viewPose, tourAtMs: 3480 });
     expect(tour.poseAt(0).angleTo(start)).toBeLessThan(1e-6);
     expect(tour.stops[0].arriveMs).toBe(1500);
     expect(degrees(tour.poseAt(1500 / tour.durationMs).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);

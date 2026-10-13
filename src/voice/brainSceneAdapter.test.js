@@ -266,3 +266,57 @@ describe('The guide focus reaches the left panel and the two-level light', () =>
     expect(focus).toEqual([expect.objectContaining({ id: 6 }), null, expect.objectContaining({ id: 6 }), null]);
   });
 });
+
+// Kyle, 2026-10-13: at "select any of my regions" the welcome shows what
+// selecting looks like. It selects exactly as a click would, so the region
+// is shaded and named, but it is not the visitor's click.
+describe("The welcome's demonstration of selecting a region", () => {
+  function adapterWithSelection() {
+    const calls = [];
+    const scene = {
+      controls: {},
+      selectedRegionId: -1,
+      selectRegion(regionId, options) {
+        scene.selectedRegionId = regionId;
+        calls.push(['selectRegion', regionId, options]);
+      },
+      clearSelection(options) {
+        scene.selectedRegionId = -1;
+        calls.push(['clearSelection', options]);
+      },
+      setVoiceHighlight: () => {},
+      getVoiceHighlight: () => null,
+      toSpecimenSpace: () => null,
+      toSpecimenDirection: () => null,
+    };
+    const adapter = createBrainSceneAdapter({ scene, getMode: () => 'explore', getColourRegions: () => false, setColourRegions: () => {} });
+    return { adapter, calls, scene };
+  }
+
+  it('selects as a click would, marked as a demonstration', () => {
+    const { adapter, calls } = adapterWithSelection();
+    adapter.demoSelect(1);
+    expect(calls).toEqual([['selectRegion', 1, { demo: true }]]);
+  });
+
+  it('lets go of its own selection', () => {
+    const { adapter, calls } = adapterWithSelection();
+    adapter.demoSelect(1);
+    adapter.clearDemoSelect();
+    expect(calls.at(-1)).toEqual(['clearSelection', { demo: true }]);
+  });
+
+  it('never clears a selection the visitor has made since', () => {
+    const { adapter, calls, scene } = adapterWithSelection();
+    adapter.demoSelect(1);
+    scene.selectedRegionId = 7;
+    adapter.clearDemoSelect();
+    expect(calls).toEqual([['selectRegion', 1, { demo: true }]]);
+  });
+
+  it('does nothing when there is nothing to let go', () => {
+    const { adapter, calls } = adapterWithSelection();
+    adapter.clearDemoSelect();
+    expect(calls).toEqual([]);
+  });
+});

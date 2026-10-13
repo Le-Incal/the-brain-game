@@ -424,3 +424,24 @@ describe('The choice on arrival', () => {
     expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: null, chosen: false })).toBe(true);
   });
 });
+
+// Kyle, 2026-10-13: the welcome shows what selecting a region looks like.
+// The page shows it exactly as after a click (the region shaded, its name and
+// description, the arrival choices stepping aside), but it is not the
+// visitor's click: the guide is not told, and the guide's own light stays.
+describe('What a selection does on the page', () => {
+  const region = { id: 1, name: 'Prefrontal Cortex' };
+
+  it("shows a visitor's click and tells the guide", () => {
+    expect(frontDoor.regionSelection(region)).toEqual({ selected: region, playerSelected: true, tellGuide: true });
+  });
+
+  it('clears a click without telling the guide anything', () => {
+    expect(frontDoor.regionSelection(null)).toEqual({ selected: null, playerSelected: true, tellGuide: false });
+  });
+
+  it("shows the welcome's demonstration the same way, but it is not the visitor's", () => {
+    expect(frontDoor.regionSelection(region, { demo: true })).toEqual({ selected: region, playerSelected: false, tellGuide: false });
+    expect(frontDoor.regionSelection(null, { demo: true })).toEqual({ selected: null, playerSelected: false, tellGuide: false });
+  });
+});

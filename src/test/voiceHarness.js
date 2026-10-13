@@ -124,7 +124,8 @@ export function directionFromPivot(point, pivot = geometryPivot()) {
 /** In-memory scene adapter: what BrainScene will expose to the command layer. */
 export function createFakeSceneAdapter(controlOptions = {}) {
   const harness = createControls(controlOptions);
-  const state = { highlight: null, focus: null, colourRegions: false, mode: 'study' };
+  // `demoSelected` and `selections`: the welcome's demonstration of selecting a region.
+  const state = { highlight: null, focus: null, colourRegions: false, mode: 'study', demoSelected: null, selections: [] };
   const pivot = geometryPivot();
   return {
     ...harness,
@@ -148,6 +149,16 @@ export function createFakeSceneAdapter(controlOptions = {}) {
       },
       getColourRegions: () => state.colourRegions,
       getMode: () => state.mode,
+      // Selects as a click would, without being the visitor's click.
+      demoSelect(regionId) {
+        state.demoSelected = regionId;
+        state.selections.push(['select', regionId]);
+      },
+      clearDemoSelect() {
+        if (state.demoSelected === null) return;
+        state.demoSelected = null;
+        state.selections.push(['clear']);
+      },
     },
   };
 }

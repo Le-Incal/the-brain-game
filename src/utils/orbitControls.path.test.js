@@ -117,3 +117,30 @@ describe('Whether the visitor has touched the brain yet', () => {
     expect(controls.hasInteracted).toBe(true);
   });
 });
+
+// The welcome's demonstration selects a region at a moment in the tour, so
+// a path move reports how far along it is on every frame.
+describe('A path move reports its progress', () => {
+  it('on every frame, rising to exactly 1 at the end', async () => {
+    const { controls } = createControls();
+    const steps = [];
+    const result = controls.followPath(fullTurn, { durationMs: 300, onStep: (progress) => steps.push(progress) });
+    await runFrames(controls, clock, 400);
+    await result;
+    expect(steps.length).toBeGreaterThanOrEqual(17);
+    for (let i = 1; i < steps.length; i += 1) expect(steps[i]).toBeGreaterThan(steps[i - 1]);
+    expect(steps.at(-1)).toBe(1);
+  });
+
+  it('stops reporting once a grab ends it', async () => {
+    const { controls, element } = createControls();
+    const steps = [];
+    controls.followPath(fullTurn, { durationMs: 1000, onStep: (progress) => steps.push(progress) });
+    await runFrames(controls, clock, 300);
+    element.dispatch('pointerdown');
+    const count = steps.length;
+    await runFrames(controls, clock, 300);
+    expect(steps.length).toBe(count);
+    element.dispatch('pointerup');
+  });
+});
