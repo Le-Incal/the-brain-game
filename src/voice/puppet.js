@@ -8,17 +8,24 @@
  * It replaced a slow sway that moved only 0.18 degrees at the pace of her
  * syllables. Cues come from speechCues.js; the pose rides the gesture group,
  * so the orientation the guide reads is untouched.
+ *
+ * Loosened the same day ("too fast and tight... slightly less quick jerking
+ * movements"; his pick B): each dip eases in over 0.18 s, syllables closer
+ * than 0.4 s fold into the dip already under way (at most 2.5 a second), and
+ * tilts settle in over about a second.
  */
 
 export const PUPPET_BEAT_DEGREES = 2;
 export const PUPPET_TILT_DEGREES = 3;
+// A dip eases in over 0.18 s and is gone by about 0.75 s: s^2 e^(2(1 - s)), s = t / 0.18 s.
+export const PUPPET_BEAT_PEAK_SECONDS = 0.18;
+// Syllables closer together than this fold into the dip already under way.
+export const PUPPET_MIN_BEAT_GAP_SECONDS = 0.4;
 
-// A beat rises to its dip in 0.1 s and is gone by about 0.4 s: s^2 e^(2(1 - s)), s = t / 0.1 s.
-const BEAT_PEAK_SECONDS = 0.1;
-// Only the latest few beats can still be seen.
+// Only the latest few dips can still be seen.
 const BEATS_KEPT = 3;
-// The tilt eases through two followers, so it starts and stops softly.
-const TILT_SECONDS = 0.12;
+// The tilt eases through two followers, so it starts and stops softly: about a second to settle in.
+const TILT_SECONDS = 0.24;
 // Strength changes (lit, moved, held) fade over a quarter second.
 const STRENGTH_SECONDS = 0.25;
 
@@ -26,7 +33,7 @@ const toRadians = (degrees) => (degrees * Math.PI) / 180;
 const follow = (current, target, dt, seconds) => current + (target - current) * (1 - Math.exp(-dt / seconds));
 
 function beatShape(ageSeconds) {
-  const s = ageSeconds / BEAT_PEAK_SECONDS;
+  const s = ageSeconds / PUPPET_BEAT_PEAK_SECONDS;
   return s * s * Math.exp(2 * (1 - s));
 }
 
@@ -49,7 +56,8 @@ export function stepPuppet(state, { dtSeconds, beat = false, phraseStart = false
   else state.weight = follow(state.weight, target, dt, STRENGTH_SECONDS);
   if (target === 0 && state.weight < 1e-3) state.weight = 0;
 
-  if (beat) {
+  const lastBeat = state.beats.at(-1) ?? -Infinity;
+  if (beat && state.time - lastBeat >= PUPPET_MIN_BEAT_GAP_SECONDS - 1e-9) {
     state.beats.push(state.time);
     if (state.beats.length > BEATS_KEPT) state.beats.shift();
   }
