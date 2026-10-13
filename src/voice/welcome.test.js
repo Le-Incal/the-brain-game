@@ -189,6 +189,49 @@ describe("The welcome's timings, for the spin", () => {
   });
 });
 
+// Kyle, 2026-10-13: the brain speaks like a puppet, a beat on each syllable
+// and a tilt on each phrase, so the welcome reports both as it is spoken.
+describe("The welcome's speech cues, for the brain's puppetry", () => {
+  // "Welcome. I am Sylvi.": letter i starts at i * 100 ms.
+  it('counts syllables and phrases as they are spoken, heard or silent', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    expect(welcome.cues()).toEqual({ syllables: 0, phrases: 0, speaking: false });
+    await welcome.load('sylvi');
+    await welcome.start();
+    const at = (ms) => {
+      clock.now = ms;
+      return welcome.cues();
+    };
+    expect(at(50)).toEqual({ syllables: 0, phrases: 1, speaking: true }); // "W"
+    expect(at(150)).toEqual({ syllables: 1, phrases: 1, speaking: true }); // "e"
+    expect(at(750)).toEqual({ syllables: 2, phrases: 1, speaking: false }); // "."
+    expect(at(950)).toEqual({ syllables: 3, phrases: 2, speaking: true }); // "I"
+  });
+
+  it('follows the audio while heard', async () => {
+    const { welcome, audio } = setup({ autoplay: true });
+    await welcome.load('sylvi');
+    await welcome.start();
+    audio.currentTime = 0.95;
+    expect(welcome.cues()).toEqual({ syllables: 3, phrases: 2, speaking: true });
+  });
+
+  it('stops speaking once finished or stopped, keeping its counts', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    await welcome.start();
+    clock.now = 10_000;
+    expect(welcome.cues()).toEqual({ syllables: 6, phrases: 2, speaking: false });
+
+    const other = setup({ autoplay: false });
+    await other.welcome.load('sylvi');
+    await other.welcome.start();
+    other.clock.now = 950;
+    other.welcome.stop();
+    expect(other.welcome.cues()).toEqual({ syllables: 3, phrases: 2, speaking: false });
+  });
+});
+
 // Kyle, 2026-10-13: the tour runs about 15 s and outlasts the welcome, so the
 // page needs to tell a welcome that was cut short from one that simply finished.
 describe('Whether the welcome was cut short', () => {

@@ -6,6 +6,7 @@ import {
   installFakeClock,
   runFrames,
 } from '../test/voiceHarness.js';
+import * as THREE from 'three';
 import { classifyView, getViewFrame, orientationForView } from './orientation.js';
 
 // Imported defensively so each test fails on its own while the module is absent.
@@ -17,9 +18,27 @@ const { createSceneCommands } = sceneCommandsModule;
 // the next, and ends facing us. The page starts it from the welcome's clock;
 // the scene commands run it, so it obeys every rule a guide move does.
 
-// Sylvi's "You can study"; the tour then takes 6 turns of 1.5 s and 5 pauses of 0.5 s.
+// Kyle, 2026-10-13 (later): it ends facing us at the elevation it arrived
+// with, upright, and then turns slowly while it waits.
+
+// Sylvi's "You can study"; then 5 turns of 1.5 s, 5 pauses of 0.5 s, and a
+// last tip down from the underside to upright (a little more than a quarter turn).
 const TOUR_AT_MS = 3480;
-const TOUR_MS = TOUR_AT_MS + 6 * 1500 + 5 * 500;
+const TOUR_MS = TOUR_AT_MS + 5 * 1500 + 5 * 500 + 2000;
+const UP = new THREE.Vector3(0, 1, 0);
+
+// Upright with `side` (an anatomical axis) toward the camera's heading.
+function upright(frame, side) {
+  const toward = new THREE.Vector3(frame.toCamera.x, 0, frame.toCamera.z).normalize();
+  const across = new THREE.Vector3().crossVectors(UP, toward);
+  // Anatomical axes: +x left, +y superior, +z anterior.
+  const basis =
+    side === 'left'
+      ? new THREE.Matrix4().makeBasis(toward, UP, new THREE.Vector3().crossVectors(toward, UP))
+      : new THREE.Matrix4().makeBasis(across, UP, toward);
+  return new THREE.Quaternion().setFromRotationMatrix(basis);
+}
+const tiltFromUpright = (pose) => Math.acos(Math.min(1, UP.clone().applyQuaternion(pose).dot(UP)));
 
 let clock;
 beforeEach(() => {
@@ -34,8 +53,10 @@ function setup({ reducedMotion = false, motionAllowed = true, autoRotate = true 
   harness.state.mode = 'explore';
   const frame = getViewFrame(harness.controls.camera, harness.controls.target);
   const view = (name) => orientationForView(name, frame);
-  harness.orientGroup.quaternion.copy(view('left_lateral'));
-  harness.controls.targetQuaternion.copy(view('left_lateral'));
+  // The arrival pose: upright, its left side toward us.
+  harness.orientGroup.quaternion.copy(upright(frame, 'left'));
+  harness.controls.targetQuaternion.copy(upright(frame, 'left'));
+  const uprightFace = upright(frame, 'front');
   const controlChanges = [];
   const timers = [];
   const commands = createSceneCommands(harness.adapter, {
@@ -48,7 +69,7 @@ function setup({ reducedMotion = false, motionAllowed = true, autoRotate = true 
     },
     clearTimeoutImpl: () => {},
   });
-  return { ...harness, frame, view, commands, controlChanges };
+  return { ...harness, frame, view, uprightFace, commands, controlChanges };
 }
 
 async function framesWithViews({ controls, orientGroup }, frame, durationMs) {
@@ -87,7 +108,16 @@ describe('The welcome tour as a scene command', () => {
       'anterior',
     ]);
     await expect(result).resolves.toMatchObject({ ok: true });
-    expect(harness.orientGroup.quaternion.angleTo(harness.view('anterior'))).toBeLessThan(0.01);
+    expect(harness.orientGroup.quaternion.angleTo(harness.uprightFace)).toBeLessThan(0.01);
+  });
+
+  it('ends at the elevation it arrived with: upright, not tipped toward the camera', async () => {
+    const harness = setup();
+    const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
+    await runFrames(harness.controls, clock, TOUR_MS + 100);
+    await result;
+    expect(tiltFromUpright(harness.orientGroup.quaternion)).toBeLessThan(1e-4);
+    expect(tiltFromUpright(harness.view('anterior'))).toBeGreaterThan(0.15);
   });
 
   it('is facing us 1.5 s after "Welcome.", and still holding there at "You can study"', async () => {
@@ -99,7 +129,7 @@ describe('The welcome tour as a scene command', () => {
     expect(harness.orientGroup.quaternion.angleTo(harness.view('anterior'))).toBeLessThan(0.01);
   });
 
-  it('stays still afterwards, facing us', async () => {
+  it('leaves the arrival turn off afterwards (the page takes over with a slow turn)', async () => {
     const harness = setup({ autoRotate: true });
     const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
     await runFrames(harness.controls, clock, TOUR_MS + 100);
@@ -134,7 +164,7 @@ describe('The welcome tour as a scene command', () => {
     harness.element.dispatch('pointerup');
   });
 
-  it('turns calmly back to face us when the welcome is cut short, then stays still', async () => {
+  it('turns calmly back to face us, upright, when the welcome is cut short', async () => {
     const harness = setup({ autoRotate: true });
     const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
     // Pausing at the back.
@@ -143,12 +173,12 @@ describe('The welcome tour as a scene command', () => {
 
     const home = harness.commands.endWelcomeSpin();
     await expect(result).resolves.toMatchObject({ ok: false });
-    // Half a turn at the tour's pace: 3 s.
+    // About half a turn at the tour's pace: about 3 s.
     await runFrames(harness.controls, clock, 1500);
-    expect(harness.orientGroup.quaternion.angleTo(harness.view('anterior'))).toBeGreaterThan(0.5);
-    await runFrames(harness.controls, clock, 1600);
+    expect(harness.orientGroup.quaternion.angleTo(harness.uprightFace)).toBeGreaterThan(0.5);
+    await runFrames(harness.controls, clock, 1800);
     await expect(home).resolves.toMatchObject({ ok: true });
-    expect(harness.orientGroup.quaternion.angleTo(harness.view('anterior'))).toBeLessThan(0.01);
+    expect(harness.orientGroup.quaternion.angleTo(harness.uprightFace)).toBeLessThan(0.01);
     expect(harness.controls.autoRotate).toBe(false);
   });
 

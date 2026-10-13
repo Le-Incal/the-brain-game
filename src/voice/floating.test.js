@@ -35,6 +35,28 @@ describe('Floating: which kind, when', () => {
   });
 });
 
+// Kyle, 2026-10-13: when the introduction finishes the brain goes back into a
+// slow free turn while it waits, until the visitor takes hold (4 degrees a second).
+describe('Floating: waiting after the introduction', () => {
+  const waiting = { ...base, connected: false, waiting: true };
+
+  it('turns slowly while it waits, outside a conversation', () => {
+    expect(floatMode(waiting)).toBe('turn');
+    expect(IDLE_TURN_DEGREES_PER_SECOND).toBe(4);
+  });
+
+  it('holds still with reduced motion, while held or moved, or with something lit', () => {
+    expect(floatMode({ ...waiting, reducedMotion: true })).toBe('still');
+    expect(floatMode({ ...waiting, control: 'player_holding' })).toBe('still');
+    expect(floatMode({ ...waiting, control: 'guide_moving' })).toBe('still');
+    expect(floatMode({ ...waiting, lit: true })).toBe('still');
+  });
+
+  it('holds still outside a conversation when it is not waiting', () => {
+    expect(floatMode({ ...waiting, waiting: false })).toBe('still');
+  });
+});
+
 describe('Floating: the drift', () => {
   function run(seconds, active, state = createDrift(), dt = 1 / 60) {
     const samples = [];

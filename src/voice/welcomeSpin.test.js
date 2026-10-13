@@ -14,8 +14,9 @@ const {
   welcomeTourTiming,
   welcomeTour,
   faceTurn,
+  uprightFacing,
   createSpinCue,
-  gestureInput,
+  motionControl,
 } = spinModule;
 
 // Kyle, 2026-10-13: the continuous spin "rotates too fast, like it's doing
@@ -91,11 +92,22 @@ describe('When the tour moves on from the greeting', () => {
   });
 });
 
+// The arrival pose: upright, its left side toward us, carried a little way
+// round by the arrival turn (about the vertical, so still upright).
+function uprightLeft(turnedDegrees = 0) {
+  const toward = new THREE.Vector3(frame.toCamera.x, 0, frame.toCamera.z).normalize();
+  const basis = new THREE.Matrix4().makeBasis(toward, UP, new THREE.Vector3().crossVectors(toward, UP));
+  const upright = new THREE.Quaternion().setFromRotationMatrix(basis);
+  return new THREE.Quaternion().setFromAxisAngle(UP, THREE.MathUtils.degToRad(turnedDegrees)).multiply(upright);
+}
+const tiltFromUpright = (pose) => degrees(Math.acos(Math.min(1, UP.clone().applyQuaternion(pose).dot(UP))));
+
 describe('The tour, timed to Sylvi', () => {
-  const start = viewPose('left_lateral');
+  const start = uprightLeft(20);
   let cached = null;
   // Built lazily, so each test fails on its own while the module is absent.
-  const tour = () => (cached ??= welcomeTour({ start, viewPose, tourAtMs: 3480 }));
+  const endPose = () => uprightFacing({ start, anterior: new THREE.Vector3(0, 0, 1), toCamera: frame.toCamera });
+  const tour = () => (cached ??= welcomeTour({ start, viewPose, tourAtMs: 3480, endPose: endPose() }));
 
   it('turns to face us first, within 1.5 s of "Welcome."', () => {
     const [greeting] = tour().stops;
@@ -110,15 +122,23 @@ describe('The tour, timed to Sylvi', () => {
   it('then stops at each view in turn: 1.5 s to turn, 0.5 s to look', () => {
     const { stops, durationMs } = tour();
     expect(stops.map(({ view }) => view)).toEqual(WELCOME_TOUR_VIEWS);
-    for (let i = 1; i < stops.length; i += 1) {
-      expect(stops[i].arriveMs - stops[i - 1].leaveMs, `turn to ${stops[i].view}`).toBe(1500);
-    }
     for (let i = 1; i < stops.length - 1; i += 1) {
+      expect(stops[i].arriveMs - stops[i - 1].leaveMs, `turn to ${stops[i].view}`).toBe(1500);
       expect(stops[i].leaveMs - stops[i].arriveMs, `pause at ${stops[i].view}`).toBe(500);
     }
-    // Facing us again, about 15 s in.
-    expect(stops.at(-1).arriveMs).toBe(3480 + 6 * 1500 + 5 * 500);
     expect(durationMs).toBe(stops.at(-1).arriveMs);
+  });
+
+  // Kyle, 2026-10-13: "it should end on its starting elevation".
+  it('comes down from the underside to face us upright, as it arrived, at the same calm pace', () => {
+    const { stops, poseAt } = tour();
+    const [underside, last] = stops.slice(-2);
+    const angle = degrees(viewPose('inferior').angleTo(endPose()));
+    // More than a quarter turn: the views are squared to a camera above us.
+    expect(angle).toBeGreaterThan(90);
+    expect(last.arriveMs - underside.leaveMs).toBe(Math.round((1500 * angle) / 90));
+    expect(degrees(poseAt(1).angleTo(endPose()))).toBeLessThan(1e-4);
+    expect(tiltFromUpright(poseAt(1))).toBeCloseTo(tiltFromUpright(start), 6);
   });
 
   it('sits square on each view while it pauses', () => {
@@ -145,7 +165,7 @@ describe('The tour, timed to Sylvi', () => {
   it('begins exactly where the brain is and ends facing us', () => {
     const { poseAt } = tour();
     expect(poseAt(0).angleTo(start)).toBeLessThan(1e-6);
-    expect(degrees(poseAt(1).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);
+    expect(classifyView(poseAt(1), frame).view).toBe('anterior');
   });
 
   it('turns about one axis at a time: round for the sides, a tip for the underside', () => {
@@ -188,11 +208,35 @@ describe('The greeting from other poses', () => {
   });
 
   it('starts from wherever the arrival turn has carried it', () => {
-    const start = new THREE.Quaternion().setFromAxisAngle(UP, THREE.MathUtils.degToRad(40)).multiply(viewPose('left_lateral'));
+    const start = uprightLeft(40);
     const tour = welcomeTour({ start, viewPose, tourAtMs: 3480 });
     expect(tour.poseAt(0).angleTo(start)).toBeLessThan(1e-6);
     expect(tour.stops[0].arriveMs).toBe(1500);
     expect(degrees(tour.poseAt(1500 / tour.durationMs).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);
+  });
+});
+
+describe('Facing us upright, as the brain arrived', () => {
+  const anterior = new THREE.Vector3(0, 0, 1);
+  const front = (pose) => anterior.clone().applyQuaternion(pose);
+  const heading = (v) => Math.atan2(v.x, v.z);
+
+  it.each([
+    ['upright', uprightLeft(0)],
+    ['carried round', uprightLeft(35)],
+    // At arrival the real brain leans 3.75 degrees from upright.
+    ['leaning as it arrives', new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 1).normalize(), THREE.MathUtils.degToRad(3.75)).multiply(uprightLeft(10))],
+  ])('keeps its lean exactly and turns its front toward us (%s)', (_, start) => {
+    const pose = uprightFacing({ start, anterior, toCamera: frame.toCamera });
+    expect(tiltFromUpright(pose)).toBeCloseTo(tiltFromUpright(start), 6);
+    expect(Math.abs(degrees(heading(front(pose)) - heading(frame.toCamera)))).toBeLessThan(0.01);
+  });
+
+  it('is turned only about the vertical, so a slow turn from there never wobbles', () => {
+    const start = uprightLeft(25);
+    const pose = uprightFacing({ start, anterior, toCamera: frame.toCamera });
+    const step = pose.clone().multiply(start.clone().invert());
+    expect(Math.abs(new THREE.Vector3(step.x, step.y, step.z).normalize().dot(UP))).toBeGreaterThan(0.999999);
   });
 });
 
@@ -275,26 +319,20 @@ describe('When the tour starts, and when it does not', () => {
   });
 });
 
-describe("What the brain's talking motion listens to", () => {
-  it('follows the live conversation as before, at its usual size', () => {
-    expect(gestureInput({ conversationLevel: 0.4, welcomeActive: false, welcomeLevel: 0 })).toEqual({ level: 0.4, scale: 1 });
-  });
-
-  // Kyle, 2026-10-11: stronger for the welcome only.
-  it('follows the welcome while it plays, twice as large', () => {
-    expect(gestureInput({ conversationLevel: 0, welcomeActive: true, welcomeLevel: 0.6 })).toEqual({ level: 0.6, scale: 2 });
-  });
-
-  it('holds the larger size through the pauses between words', () => {
-    expect(gestureInput({ conversationLevel: 0, welcomeActive: true, welcomeLevel: 0 })).toEqual({ level: 0, scale: 2 });
-  });
-
-  // The tour counts as the guide moving, which otherwise stills the talking
-  // motion; it lasts the whole welcome, so the brain keeps talking through it.
+describe('The talking motion during the tour', () => {
+  // The tour counts as the guide moving, which otherwise stills the talking;
+  // it lasts the whole welcome, so the brain keeps talking through it.
   it('keeps talking while the welcome tour runs', () => {
-    expect(gestureInput({ conversationLevel: 0, welcomeActive: true, welcomeLevel: 0.6, control: 'guide_moving', touring: true }))
-      .toMatchObject({ control: 'guide_free' });
-    expect(gestureInput({ conversationLevel: 0.3, welcomeActive: false, welcomeLevel: 0, control: 'guide_moving', touring: false }))
-      .toMatchObject({ control: 'guide_moving' });
+    expect(motionControl({ control: 'guide_moving', touring: true })).toBe('guide_free');
+  });
+
+  it('follows the usual rules otherwise', () => {
+    expect(motionControl({ control: 'guide_moving', touring: false })).toBe('guide_moving');
+    expect(motionControl({ control: 'player_holding', touring: false })).toBe('player_holding');
+  });
+
+  // A grab ends the tour, so a held brain is never touring.
+  it('never overrides the visitor holding it', () => {
+    expect(motionControl({ control: 'player_holding', touring: true })).toBe('player_holding');
   });
 });
