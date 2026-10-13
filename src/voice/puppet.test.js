@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 // Imported defensively so each test fails on its own while the module is absent.
 const puppetModule = await import('./puppet.js').catch(() => ({}));
-const { PUPPET_BEAT_DEGREES, PUPPET_TILT_DEGREES, createPuppet, stepPuppet } = puppetModule;
+const { PUPPET_BEAT_DEGREES, PUPPET_TILT_DEGREES, PUPPET_BEAT_PEAK_SECONDS, PUPPET_MIN_BEAT_GAP_SECONDS, createPuppet, stepPuppet } =
+  puppetModule;
 
 // Kyle, 2026-10-13: the brain "does not gesture in a manner that would suggest
 // the brain is where the voice is coming from. The brain needs to feel
@@ -10,6 +11,12 @@ const { PUPPET_BEAT_DEGREES, PUPPET_TILT_DEGREES, createPuppet, stepPuppet } = p
 // syllable, and a tilt of about 3 degrees to one side on each phrase,
 // settling at each stop. It replaces the slow sway, which moved only 0.18
 // degrees at the pace of her syllables.
+//
+// Kyle, 2026-10-13 (later): "too fast and tight... it can be loosened up a
+// little. Slightly less quick jerking movements." His pick (B): each dip eases
+// in over 0.18 s (was 0.1), at most 2.5 dips a second (was every syllable,
+// 3.8 a second in the welcome), tilts settling in over about a second (was
+// 0.6 s). Measured on Sylvi's welcome: fastest motion 21 degrees a second (was 37).
 
 const FRAME = 1 / 60;
 const deg = (radians) => (radians * 180) / Math.PI;
@@ -55,30 +62,47 @@ function speech(seconds) {
   return { beats, phrases, speaking };
 }
 
-describe('Puppet speech: its size', () => {
+describe('Puppet speech: its size and pace', () => {
   it('dips about 2 degrees on a syllable and tilts about 3 degrees on a phrase', () => {
     expect(PUPPET_BEAT_DEGREES).toBe(2);
     expect(PUPPET_TILT_DEGREES).toBe(3);
   });
+
+  it('eases into each dip over 0.18 s, and dips at most 2.5 times a second', () => {
+    expect(PUPPET_BEAT_PEAK_SECONDS).toBe(0.18);
+    expect(PUPPET_MIN_BEAT_GAP_SECONDS).toBe(0.4);
+  });
 });
 
 describe('A beat on every syllable', () => {
-  it('dips the head about 2 degrees, quickly, and is back within 0.4 s', () => {
-    const { frames } = play({ seconds: 1, beats: [0] });
+  it('eases the head into a dip of about 2 degrees over 0.18 s, and lets it go within 0.75 s', () => {
+    const { frames } = play({ seconds: 1.5, beats: [0] });
     const peak = frames.reduce((best, f) => (f.pitch > best.pitch ? f : best));
     expect(peak.pitch).toBeGreaterThan(1.8);
     expect(peak.pitch).toBeLessThanOrEqual(2.05);
-    expect(peak.t).toBeGreaterThan(0.06);
-    expect(peak.t).toBeLessThan(0.14);
-    for (const f of between(frames, 0.4, 1)) expect(Math.abs(f.pitch)).toBeLessThan(0.1);
+    expect(peak.t).toBeGreaterThan(0.15);
+    expect(peak.t).toBeLessThan(0.21);
+    for (const f of between(frames, 0.75, 1.5)) expect(Math.abs(f.pitch)).toBeLessThan(0.1);
   });
 
-  it('shows every syllable: at four a second the head rises and falls at least a degree each time', () => {
-    const beats = Array.from({ length: 12 }, (_, i) => i * 0.25);
-    const { frames } = play({ seconds: 3, beats });
-    for (let start = 1; start < 2.75; start += 0.25) {
-      const window = between(frames, start, start + 0.25).map(({ pitch }) => pitch);
-      expect(Math.max(...window) - Math.min(...window), `beat at ${start} s`).toBeGreaterThan(1);
+  // Peaks of the dip: frames higher than both neighbours and above 1.5 degrees.
+  const dips = (frames) =>
+    frames.filter((f, i) => i > 0 && i < frames.length - 1 && f.pitch > 1.5 && f.pitch > frames[i - 1].pitch && f.pitch >= frames[i + 1].pitch).length;
+
+  it('dips at most 2.5 times a second, however fast she talks: quicker syllables fold into the dip under way', () => {
+    const fast = Array.from({ length: 32 }, (_, i) => i * 0.125);
+    const { frames } = play({ seconds: 4.2, beats: fast });
+    const count = dips(frames);
+    expect(count).toBeGreaterThanOrEqual(8);
+    expect(count).toBeLessThanOrEqual(10);
+  });
+
+  it('still shows each dip it makes: the head rises and falls more than a degree each time', () => {
+    const beats = Array.from({ length: 8 }, (_, i) => i * 0.5);
+    const { frames } = play({ seconds: 4, beats });
+    for (let start = 1; start < 3.5; start += 0.5) {
+      const window = between(frames, start, start + 0.5).map(({ pitch }) => pitch);
+      expect(Math.max(...window) - Math.min(...window), `dip at ${start} s`).toBeGreaterThan(1);
     }
   });
 
@@ -90,11 +114,12 @@ describe('A beat on every syllable', () => {
 });
 
 describe('A tilt on each phrase', () => {
-  it('tilts the head about 3 degrees to one side within half a second, and holds it while the phrase lasts', () => {
-    const { frames } = play({ seconds: 1.5, phrases: [0] });
+  it('tilts the head about 3 degrees to one side within about a second, and holds it while the phrase lasts', () => {
+    const { frames } = play({ seconds: 2, phrases: [0] });
     const at = (t) => frames[Math.round(t / FRAME)].roll;
-    expect(Math.abs(at(0.5))).toBeGreaterThan(2.5);
-    for (const f of between(frames, 0.6, 1.5)) {
+    expect(Math.abs(at(0.5))).toBeLessThan(2.2);
+    expect(Math.abs(at(1))).toBeGreaterThan(2.5);
+    for (const f of between(frames, 1.2, 2)) {
       expect(Math.abs(f.roll)).toBeGreaterThan(2.7);
       expect(Math.abs(f.roll)).toBeLessThanOrEqual(3.05);
     }
@@ -102,16 +127,16 @@ describe('A tilt on each phrase', () => {
 
   it('tilts the next phrase to the other side', () => {
     const speaking = (t) => t < 1.2 || t >= 1.6;
-    const { frames } = play({ seconds: 2.6, phrases: [0, 1.6], speaking });
+    const { frames } = play({ seconds: 3.1, phrases: [0, 1.6], speaking });
     const first = frames[Math.round(1.1 / FRAME)].roll;
-    const second = frames[Math.round(2.5 / FRAME)].roll;
+    const second = frames[Math.round(3 / FRAME)].roll;
     expect(Math.sign(first)).not.toBe(Math.sign(second));
     expect(Math.abs(second)).toBeGreaterThan(2.5);
   });
 
   it('settles back at a stop', () => {
     const speaking = (t) => t < 1;
-    const { frames } = play({ seconds: 2, beats: [0.2, 0.45, 0.7, 0.95], phrases: [0], speaking });
+    const { frames } = play({ seconds: 2.5, beats: [0.2, 0.45, 0.7, 0.95], phrases: [0], speaking });
     const last = frames.at(-1);
     expect(Math.abs(last.roll)).toBeLessThan(0.3);
     expect(Math.abs(last.pitch)).toBeLessThan(0.1);
@@ -124,12 +149,12 @@ describe('Puppet speech: its manners', () => {
     expect(frames.every(({ pitch, roll }) => pitch === 0 && roll === 0)).toBe(true);
   });
 
-  it('never jumps: no more than 0.6 degrees between frames on either axis', () => {
+  it('moves loosely: no more than 0.35 degrees between frames on either axis (it was 0.6)', () => {
     const { beats, phrases, speaking } = speech(30);
     const { frames } = play({ seconds: 30, beats, phrases, speaking });
     for (let i = 1; i < frames.length; i += 1) {
-      expect(Math.abs(frames[i].pitch - frames[i - 1].pitch)).toBeLessThanOrEqual(0.6);
-      expect(Math.abs(frames[i].roll - frames[i - 1].roll)).toBeLessThanOrEqual(0.6);
+      expect(Math.abs(frames[i].pitch - frames[i - 1].pitch)).toBeLessThanOrEqual(0.35);
+      expect(Math.abs(frames[i].roll - frames[i - 1].roll)).toBeLessThanOrEqual(0.35);
     }
   });
 
