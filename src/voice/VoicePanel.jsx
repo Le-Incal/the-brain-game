@@ -27,7 +27,7 @@ import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
-import { createSpinCue, gestureInput, welcomeSpinWindow } from './welcomeSpin.js';
+import { createSpinCue, gestureInput, welcomeTourTiming } from './welcomeSpin.js';
 
 function browserStorage() {
   try {
@@ -61,7 +61,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   stillnessRef.current = stillness;
   const commandsRef = useRef(commands);
   commandsRef.current = commands;
-  // The welcome spin: when it runs within the welcome, and its cue (Kyle, 2026-10-11).
+  // The welcome tour: its cue and when it moves on from the greeting (Kyle, 2026-10-13).
   const spinRef = useRef(null);
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
   const [entries, setEntries] = useState([]);
@@ -374,35 +374,40 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         }
       }
       const still = reducedMotion || !motionRef.current || stillnessRef.current;
-      // The welcome turns the brain all the way round, from its own clock.
+      // The welcome tour: the brain faces the visitor on "Welcome.", then shows
+      // each side and below, from the welcome's own clock.
       const spin = spinRef.current;
       if (spin) {
         const action = spin.cue.tick({
           elapsedMs: welcome.position(),
           active: welcome.active(),
+          cut: welcome.cutShort(),
           touched: scene.controls.hasInteracted,
           still,
         });
         if (action === 'start') {
-          Promise.resolve(commandsRef.current.welcomeSpin({ durationMs: spin.durationMs })).finally(() => spin.cue.done());
+          Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs: spin.tourAtMs })).finally(() => spin.cue.done());
         } else if (action === 'home') {
           commandsRef.current.endWelcomeSpin();
         }
       }
       const lit = scene.getVoiceHighlight() !== null || scene.selectedRegionId >= 0;
-      const strength = gestureStrength({ control: controlRef.current, highlighted: lit, reducedMotion: still });
+      // The brain talks with the welcome too, twice as large while it plays,
+      // and keeps talking through the tour.
+      const talk = gestureInput({
+        conversationLevel: level,
+        welcomeActive: welcome.active(),
+        welcomeLevel: welcome.talkingLevel(),
+        control: controlRef.current,
+        touring: Boolean(spin?.cue.running()),
+      });
+      const strength = gestureStrength({ control: talk.control, highlighted: lit, reducedMotion: still });
       const mode = floatMode({
         connected: session.getState().phase === 'connected',
         control: controlRef.current,
         lit,
         guideSpeaking: guideSpeakingRef.current,
         reducedMotion: still,
-      });
-      // The brain talks with the welcome too, twice as large while it plays.
-      const talk = gestureInput({
-        conversationLevel: level,
-        welcomeActive: welcome.active(),
-        welcomeLevel: welcome.talkingLevel(),
       });
       const sway = stepGesture(gesture, { dtSeconds, level: talk.level, strength, scale: talk.scale });
       const float = stepDrift(drift, { dtSeconds, active: mode === 'drift' });
@@ -430,8 +435,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       hidden: document.hidden,
       onDue: async () => {
         if (!(await welcome.load(guideRef.current)) || cancelled) return;
-        const spinWindow = welcomeSpinWindow({ timeOf: (phrase) => welcome.timeOf(phrase), endMs: welcome.lengthMs() });
-        spinRef.current = { cue: createSpinCue({ startMs: spinWindow.startMs }), durationMs: spinWindow.durationMs };
+        const { tourAtMs } = welcomeTourTiming({ timeOf: (phrase) => welcome.timeOf(phrase) });
+        spinRef.current = { cue: createSpinCue({ startMs: 0 }), tourAtMs };
         stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
         welcomeStreamingRef.current = true;
         setEntries(stream.entries());

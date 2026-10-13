@@ -90,6 +90,8 @@ export function createWelcome({
   let startedAt = null;
   let heard = false;
   let stopped = false;
+  // Stopped before it had finished: the visitor spoke or wrote over it.
+  let cut = false;
 
   const endMs = () => (recording ? (recording.startsMs.at(-1) ?? 0) + TAIL_MS : 0);
   // While heard, the audio's own position is the truth; otherwise our clock.
@@ -184,10 +186,14 @@ export function createWelcome({
 
     stop() {
       if (startedAt === null) return;
+      if (!finished()) cut = true;
       stopped = true;
       heard = false;
       audio?.pause();
     },
+
+    /** Whether the welcome was stopped before it finished (Kyle, 2026-10-13: the tour outlasts it). */
+    cutShort: () => cut,
 
     audible: () => heard && !finished(),
     active: () => recording !== null && startedAt !== null && !finished(),

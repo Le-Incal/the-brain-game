@@ -1,113 +1,115 @@
 /**
- * The welcome spin (Kyle, 2026-10-11). While the brain introduces itself it
- * turns all the way round, so a visitor sees at once that it is a solid thing
- * to turn. One turn with a tilt, his pick: from the left side it turns its
- * front toward us with the top tipped forward, shows the right side, the back
- * with the underside tipped up, and settles square on the left side again.
- * No stops.
+ * The welcome tour (Kyle, 2026-10-13; it replaced a continuous spin that
+ * "rotates too fast, like it's doing somersaults").
  *
- * It starts on "a human brain" and settles before "turn me around", so the
- * invitation lands on a brain that is still and ready to grab. It plays once,
- * on arrival, and never for a visitor who has already turned the brain.
+ * On "Welcome." the brain turns to look at the visitor, its front where a
+ * character's face would be, and holds there while it says its name. From
+ * "You can study" it shows each side and below, turning deliberately from one
+ * standard view to the next: the right side, the back, the left side, facing
+ * us, the underside, and facing us again. Every turn is 90 degrees about one
+ * axis, takes 1.5 s eased on a sine (about 94 degrees a second at the
+ * fastest), and is followed by a 0.5 s pause square on the view.
+ *
+ * It plays once, on arrival, and never for a visitor who has already turned
+ * the brain. A grab stops it where it is; a welcome cut short turns the brain
+ * calmly back to face us.
  */
 
 import * as THREE from 'three';
 import { WELCOME_GESTURE_SCALE } from './gestures.js';
 
-export const WELCOME_SPIN_TILT_DEGREES = 65;
-export const WELCOME_SPIN_MAX_MS = 6000;
-export const WELCOME_SPIN_MIN_MS = 3000;
-export const WELCOME_SPIN_SETTLE_MARGIN_MS = 800;
-export const WELCOME_SPIN_FROM = 'a human brain';
-export const WELCOME_SPIN_SETTLE_BEFORE = 'turn me around';
+export const WELCOME_TOUR_TURN_MS = 1500;
+export const WELCOME_TOUR_PAUSE_MS = 500;
+export const WELCOME_FACE_VIEW = 'anterior';
+export const WELCOME_TOUR_VIEWS = [WELCOME_FACE_VIEW, 'right_lateral', 'posterior', 'left_lateral', WELCOME_FACE_VIEW, 'inferior', WELCOME_FACE_VIEW];
+export const WELCOME_TOUR_FROM = 'You can study';
+export const WELCOME_TOUR_DEFAULT_AT_MS = 3500;
 
-const TURN = Math.PI * 2;
-const WORLD_UP = new THREE.Vector3(0, 1, 0);
-// The share of the turn over which a pose that is not square is eased out.
-const SQUARE_UP_SHARE = 0.25;
+const QUARTER_TURN = Math.PI / 2;
+// A short turn still takes a moment, so it reads as deliberate.
+const SHORTEST_TURN_SHARE = 1 / 3;
 
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
-const easeInOutSine = (t) => 0.5 - 0.5 * Math.cos(Math.PI * t);
-const smoothstep = (t) => t * t * (3 - 2 * t);
+const easeInOutSine = (t) => 0.5 - 0.5 * Math.cos(Math.PI * clamp(t, 0, 1));
 
-/**
- * When the spin runs: `{ startMs, durationMs }` within the welcome. `timeOf`
- * gives when a phrase is spoken (or null); `endMs` is the welcome's length.
- */
-export function welcomeSpinWindow({ timeOf, endMs }) {
-  const startMs = timeOf(WELCOME_SPIN_FROM) ?? 0;
-  const settleAt = timeOf(WELCOME_SPIN_SETTLE_BEFORE) ?? endMs;
-  const room = settleAt - WELCOME_SPIN_SETTLE_MARGIN_MS - startMs;
-  return { startMs, durationMs: clamp(room, WELCOME_SPIN_MIN_MS, WELCOME_SPIN_MAX_MS) };
+// The tour's pace for any angle: a quarter turn in 1.5 s, longer turns take longer.
+function turnMs(radians, shortestShare) {
+  return Math.round(WELCOME_TOUR_TURN_MS * Math.max(shortestShare, radians / QUARTER_TURN));
+}
+
+const ease = (from, to, t) => new THREE.Quaternion().slerpQuaternions(from, to, easeInOutSine(t));
+
+/** When the tour moves on from the greeting, in ms into the welcome. */
+export function welcomeTourTiming({ timeOf }) {
+  return { tourAtMs: timeOf(WELCOME_TOUR_FROM) ?? WELCOME_TOUR_DEFAULT_AT_MS };
 }
 
 /**
- * The path, as `progress (0 to 1) -> orientation`. `start` is where the brain
- * is, `home` the left side square to the viewer, `frame` the live view frame
- * ({ toCamera, screenUp }), `anterior` the anatomical front in the specimen's frame.
+ * The tour from `start`: `{ durationMs, stops, poseAt(progress) }`. `viewPose`
+ * gives the orientation that squares a standard view to the viewer; `stops`
+ * are `{ view, arriveMs, leaveMs }`. The greeting turns at the tour's pace,
+ * taking longer from far round, and holds until `tourAtMs` with at least a pause.
  */
-export function welcomeSpinPath({ start, home, frame, anterior, tiltDegrees = WELCOME_SPIN_TILT_DEGREES }) {
-  const tilt = THREE.MathUtils.degToRad(tiltDegrees);
-  const screenRight = new THREE.Vector3().crossVectors(frame.screenUp, frame.toCamera).normalize();
+export function welcomeTour({ start, viewPose, tourAtMs }) {
+  const poses = WELCOME_TOUR_VIEWS.map((view) => viewPose(view).clone().normalize());
+  const from = start.clone().normalize();
+  const greetMs = turnMs(from.angleTo(poses[0]), 1);
+  const stops = [{ view: WELCOME_TOUR_VIEWS[0], arriveMs: greetMs, leaveMs: Math.max(tourAtMs, greetMs + WELCOME_TOUR_PAUSE_MS) }];
+  for (let i = 1; i < poses.length; i += 1) {
+    const arriveMs = stops[i - 1].leaveMs + WELCOME_TOUR_TURN_MS;
+    const last = i === poses.length - 1;
+    stops.push({ view: WELCOME_TOUR_VIEWS[i], arriveMs, leaveMs: last ? arriveMs : arriveMs + WELCOME_TOUR_PAUSE_MS });
+  }
+  const durationMs = stops.at(-1).arriveMs;
 
-  // Turn the way that brings the front toward the viewer first, as the arrival turn does.
-  const frontAtHome = anterior.clone().normalize().applyQuaternion(home);
-  const direction = Math.sign(new THREE.Vector3().crossVectors(WORLD_UP, frontAtHome).dot(frame.toCamera)) || 1;
+  function poseAtMs(ms) {
+    if (ms <= greetMs) return ease(from, poses[0], ms / greetMs);
+    for (let i = 0; i < stops.length; i += 1) {
+      if (ms <= stops[i].leaveMs || i === stops.length - 1) return poses[i].clone();
+      if (ms <= stops[i + 1].arriveMs) return ease(poses[i], poses[i + 1], (ms - stops[i].leaveMs) / WELCOME_TOUR_TURN_MS);
+    }
+    return poses.at(-1).clone();
+  }
 
-  // Where the brain is, relative to home: a turn about the vertical (how far
-  // round it already is) and whatever else is left (a tip), eased out early.
-  const relative = start.clone().multiply(home.clone().invert());
-  const along = WORLD_UP.clone().multiplyScalar(new THREE.Vector3(relative.x, relative.y, relative.z).dot(WORLD_UP));
-  const twist = new THREE.Quaternion(along.x, along.y, along.z, relative.w);
-  if (twist.length() < 1e-9) twist.identity();
-  twist.normalize();
-  const tip = relative.clone().multiply(twist.clone().invert()).normalize();
-  const signedTurn = 2 * Math.atan2(along.dot(WORLD_UP), relative.w);
-  const already = (((direction * signedTurn) % TURN) + TURN) % TURN;
-  let sweep = TURN - already;
-  // Nearly round already: one more full turn, so the visitor still sees every side.
-  if (sweep < Math.PI) sweep += TURN;
+  return { durationMs, stops, poseAt: (progress) => poseAtMs(clamp(progress, 0, 1) * durationMs) };
+}
 
-  const turnAbout = new THREE.Quaternion();
-  const tipAbout = new THREE.Quaternion();
-  const square = new THREE.Quaternion();
-
-  return (progress) => {
-    const s = easeInOutSine(clamp(progress, 0, 1));
-    turnAbout.setFromAxisAngle(WORLD_UP, direction * (already + sweep * s));
-    tipAbout.setFromAxisAngle(screenRight, tilt * Math.sin(TURN * s));
-    const leftover = tip.clone().slerp(square, smoothstep(clamp(s / SQUARE_UP_SHARE, 0, 1)));
-    return tipAbout.clone().multiply(leftover).multiply(turnAbout).multiply(home).normalize();
-  };
+/** A calm turn from `start` back to `face` at the tour's pace: `{ durationMs, poseAt(progress) }`. */
+export function faceTurn({ start, face }) {
+  const from = start.clone().normalize();
+  const to = face.clone().normalize();
+  return { durationMs: turnMs(from.angleTo(to), SHORTEST_TURN_SHARE), poseAt: (progress) => ease(from, to, progress) };
 }
 
 /**
- * When to start the spin, from the welcome's clock. `tick` returns 'start'
+ * When to start the tour, from the welcome's clock. `tick` returns 'start'
  * once, when the welcome reaches `startMs`; 'home' once, if the welcome is
- * cut short mid-spin; otherwise null. A touch, reduced motion or Motion off,
- * or a welcome cut short before the spin, means it never starts.
+ * cut short mid-tour; otherwise null. A welcome that simply finishes leaves
+ * the tour running (it outlasts the welcome). A touch, reduced motion or
+ * Motion off, or a welcome cut short before the tour, means it never starts.
  */
-export function createSpinCue({ startMs }) {
+export function createSpinCue({ startMs = 0 } = {}) {
   let state = 'waiting';
   return {
-    tick({ elapsedMs, active, touched, still }) {
+    tick({ elapsedMs, active, cut = false, touched, still }) {
       if (state === 'waiting') {
         // No clock yet: the welcome has not started.
         if (elapsedMs === null || elapsedMs === undefined) return null;
-        if (touched || still || !active) {
+        if (touched || still || cut || !active) {
           state = 'done';
           return null;
         }
         if (elapsedMs < startMs) return null;
-        state = 'spinning';
+        state = 'running';
         return 'start';
       }
-      if (state === 'spinning' && !active) {
+      if (state === 'running' && cut) {
         state = 'done';
         return 'home';
       }
       return null;
     },
+    running: () => state === 'running',
     done() {
       state = 'done';
     },
@@ -116,9 +118,12 @@ export function createSpinCue({ startMs }) {
 
 /**
  * What the brain's talking motion follows: the live conversation as before,
- * and the welcome while it plays, twice as large.
+ * and the welcome while it plays, twice as large. The tour counts as the
+ * guide moving, which otherwise stills the motion; it lasts the whole
+ * welcome, so the brain keeps talking through it.
  */
-export function gestureInput({ conversationLevel, welcomeActive, welcomeLevel }) {
-  if (!welcomeActive) return { level: conversationLevel, scale: 1 };
-  return { level: Math.max(conversationLevel, welcomeLevel), scale: WELCOME_GESTURE_SCALE };
+export function gestureInput({ conversationLevel, welcomeActive, welcomeLevel, control, touring = false }) {
+  const motionControl = touring ? 'guide_free' : control;
+  if (!welcomeActive) return { level: conversationLevel, scale: 1, control: motionControl };
+  return { level: Math.max(conversationLevel, welcomeLevel), scale: WELCOME_GESTURE_SCALE, control: motionControl };
 }
