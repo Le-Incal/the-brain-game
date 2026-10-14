@@ -15,7 +15,7 @@ import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
 import { randomId, signDevice, signReservation, verifyDevice, verifyReservation } from './signing.js';
 import { verifyElevenLabsSignature } from './webhook.js';
 import { fetchConversation, fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
-import { DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
+import { DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, WELCOME_KINDS, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
 // A reservation still open this long (token window, plus the 8-minute session
@@ -29,7 +29,8 @@ export const RECONCILE_INTERVAL_MS = 10 * 60 * 1000;
 export const CLIENT_EVENT_TYPES = new Set(['mic_blocked', 'mic_unsupported']);
 export const EVENT_RATE_LIMIT = { max: 30, windowMs: 60 * 60 * 1000 };
 // The welcome is served from memory; this only stops a script from looping on it.
-export const WELCOME_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
+// A visit fetches three recordings, text and audio each: room for 60 visits an hour.
+export const WELCOME_RATE_LIMIT = { max: 360, windowMs: 60 * 60 * 1000 };
 const WELCOME_CACHE_SECONDS = 600;
 // One per conversation: how it ended, how long it ran, every client tool call.
 // Checked field by field so nothing but these values can reach the logs.
@@ -194,17 +195,19 @@ export function createApp({
   const welcomes = createWelcomeCache({
     now,
     // The agent's model first; the fallback only if ElevenLabs refuses that model.
-    record: async (guide) => {
+    // Keyed "guide" for the arrival welcome, "guide:kind" for a choice's own.
+    record: async (key) => {
+      const [guide, kind = 'arrival'] = key.split(':');
       for (const [index, modelId] of welcomeModels.entries()) {
         try {
           const recording = await fetchWelcomeRecording({
             fetchImpl,
             apiKey: config.apiKey,
             voiceId: config.voices[guide],
-            text: welcomeText(GUIDE_NAMES[guide]),
+            text: welcomeText(GUIDE_NAMES[guide], kind),
             modelId,
           });
-          logger.info(`[voice] welcome recorded for ${guide} with ${modelId}`);
+          logger.info(`[voice] ${kind === 'arrival' ? 'welcome' : `${kind} welcome`} recorded for ${guide} with ${modelId}`);
           return recording;
         } catch (error) {
           const next = welcomeModels[index + 1];
@@ -252,8 +255,11 @@ export function createApp({
     markReady();
   } else {
     if (warmWelcomes) {
-      for (const guide of Object.keys(GUIDE_NAMES)) {
-        welcomes.get(guide).catch((error) => logger.warn(`[voice] welcome not recorded at start for ${guide}: ${error.message}`));
+      for (const kind of WELCOME_KINDS) {
+        for (const guide of Object.keys(GUIDE_NAMES)) {
+          const key = kind === 'arrival' ? guide : `${guide}:${kind}`;
+          welcomes.get(key).catch((error) => logger.warn(`[voice] welcome not recorded at start for ${key}: ${error.message}`));
+        }
       }
     }
     restoreToday(0);
@@ -379,12 +385,18 @@ export function createApp({
     return res.json({ available: true, remainingSeconds: ledger.deviceRemaining(deviceId) });
   });
 
-  // The recorded welcome: text, audio and letter timings, recorded once per guide.
+  // The recorded welcome: text, audio and letter timings, recorded once per guide
+  // and welcome (?kind=study or ?kind=play for a choice's own).
   async function welcomeFor(req, res) {
     if (!voiceGate(req, res, { onRefuse: 403 })) return null;
     const guide = String(req.params.guide ?? '').toLowerCase();
     if (!GUIDE_NAMES[guide]) {
       res.status(400).json({ error: 'unknown_guide' });
+      return null;
+    }
+    const kind = req.query.kind === undefined ? 'arrival' : String(req.query.kind);
+    if (!WELCOME_KINDS.includes(kind)) {
+      res.status(400).json({ error: 'unknown_welcome' });
       return null;
     }
     const limit = welcomeLimiter.take(clientAddress(req));
@@ -393,10 +405,11 @@ export function createApp({
       res.status(429).json({ available: false, reason: 'rate_limited' });
       return null;
     }
+    const key = kind === 'arrival' ? guide : `${guide}:${kind}`;
     try {
-      return { guide, recording: await welcomes.get(guide) };
+      return { guide, kind, recording: await welcomes.get(key) };
     } catch (error) {
-      logger.warn(`[voice] welcome unavailable for ${guide}: ${error.message}`);
+      logger.warn(`[voice] welcome unavailable for ${key}: ${error.message}`);
       res.status(502).json({ available: false, reason: 'upstream' });
       return null;
     }
@@ -405,13 +418,13 @@ export function createApp({
   app.get('/api/voice/welcome/:guide', async (req, res) => {
     const found = await welcomeFor(req, res);
     if (!found) return;
-    const { guide, recording } = found;
+    const { guide, kind, recording } = found;
     const guideName = GUIDE_NAMES[guide];
     res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
     res.json({
       guideName,
-      text: welcomeText(guideName),
-      audioUrl: `/api/voice/welcome/${guide}/audio`,
+      text: welcomeText(guideName, kind),
+      audioUrl: `/api/voice/welcome/${guide}/audio${kind === 'arrival' ? '' : `?kind=${kind}`}`,
       model: recording.model,
       alignment: { chars: recording.chars, startsMs: recording.startsMs },
     });

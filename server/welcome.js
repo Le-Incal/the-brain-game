@@ -18,7 +18,15 @@ export const WELCOME_FALLBACK_MODEL = 'eleven_turbo_v2_5';
 const MODEL_REFUSED = new Set([400, 403, 404, 422]);
 export const WELCOME_RETRY_AFTER_MS = 60_000;
 
-export function welcomeText(guideName) {
+// The arrival welcome, and one for each choice (Kyle, 2026-10-13: "Have a
+// custom welcome for each button if the first welcome never plays").
+export const WELCOME_KINDS = ['arrival', 'study', 'play'];
+
+export function welcomeText(guideName, kind = 'arrival') {
+  if (kind === 'study') {
+    return `Hello! I am ${guideName}, a human brain. Let's study together: turn me around and select any of my regions, or ask me anything.`;
+  }
+  if (kind === 'play') return `Hello! I am ${guideName}. Turn me so each word lands on the part of me that does it.`;
   // "Hello!", as a puppet that turns and suddenly recognizes the visitor (Kyle, 2026-10-13).
   return `Hello! I am ${guideName}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.`;
 }

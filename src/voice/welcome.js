@@ -92,6 +92,11 @@ export function createWelcome({
   objectUrl = (blob) => URL.createObjectURL(blob),
   now = () => performance.now(),
 } = {}) {
+  // Each loaded welcome by kind (Kyle, 2026-10-13): 'arrival', and one for each
+  // choice, 'study' and 'play'. The one in use is `recording`, heard through `audio`.
+  const loaded = new Map();
+  let current = 'arrival';
+  let primed = false;
   let recording = null;
   let audio = null;
   let startedAt = null;
@@ -129,20 +134,56 @@ export function createWelcome({
   }
 
   return {
-    async load(guide) {
+    /** Loads the guide's welcome: the arrival one, or a choice's own ('study', 'play'). */
+    async load(guide, kind = 'arrival') {
       try {
-        const response = await fetchImpl(`/api/voice/welcome/${guide}`);
+        const response = await fetchImpl(`/api/voice/welcome/${guide}${kind === 'arrival' ? '' : `?kind=${kind}`}`);
         if (!response.ok) return false;
         const body = await response.json();
         if (!Array.isArray(body?.alignment?.chars) || !Array.isArray(body?.alignment?.startsMs)) return false;
         const text = body.alignment.chars.join('');
-        recording = { text, startsMs: body.alignment.startsMs, speech: analyseSpeech(text) };
-        audio = createAudio(await heldInPage(fetchImpl, objectUrl, body.audioUrl));
+        const entry = {
+          recording: { text, startsMs: body.alignment.startsMs, speech: analyseSpeech(text) },
+          audio: createAudio(await heldInPage(fetchImpl, objectUrl, body.audioUrl)),
+        };
+        loaded.set(kind, entry);
+        if (kind === current && startedAt === null) ({ recording, audio } = entry);
         return true;
       } catch {
         return false;
       }
     },
+
+    /** Which welcome is in use. */
+    kind: () => current,
+
+    /** Plays a choice's own welcome in place of the arrival one; never once one has started or was stopped. */
+    use(kind) {
+      const entry = loaded.get(kind);
+      if (!entry || startedAt !== null || stopped) return false;
+      current = kind;
+      ({ recording, audio } = entry);
+      return true;
+    },
+
+    /**
+     * From inside the visitor's press: Safari allows a page sound only there, so
+     * each recording is started and paused at once, and may play when due.
+     */
+    prime() {
+      if (primed || loaded.size === 0) return;
+      primed = true;
+      for (const entry of loaded.values()) {
+        try {
+          const played = entry.audio.play();
+          entry.audio.pause();
+          Promise.resolve(played).catch(() => {});
+        } catch {
+          // Nothing to undo: it simply was not allowed.
+        }
+      }
+    },
+    primed: () => primed,
 
     text: () => recording?.text ?? '',
 
@@ -155,8 +196,13 @@ export function createWelcome({
     /** How far into the welcome we are, in ms; null before it starts. */
     position: () => (startedAt === null ? null : elapsedMs()),
 
-    /** Starts the welcome; resolves true if it is heard, false if it flows silently. */
-    async start() {
+    /**
+     * Starts the welcome; resolves true if it is heard, false if it flows
+     * silently. With `holdIfRefused` (Kyle, 2026-10-13: "only trigger streaming
+     * and motion if the voice talks") a refused welcome stays unstarted instead,
+     * and can start from the top once the visitor's press allows sound.
+     */
+    async start({ holdIfRefused = false } = {}) {
       if (stopped && startedAt === null) return false;
       if (!recording || startedAt !== null) return heard;
       startedAt = now();
@@ -165,6 +211,7 @@ export function createWelcome({
         heard = true;
       } catch {
         heard = false;
+        if (holdIfRefused) startedAt = null;
       }
       return heard;
     },

@@ -4,6 +4,7 @@ import { loadBrainModel } from './utils/brainLoader';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
 import { VOICE_ENABLED } from './voice/flags';
+import { createIntroHold } from './voice/choiceWelcome';
 import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guides';
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
@@ -404,6 +405,9 @@ export default function App() {
   const demoIndexRef = useRef(0);
   const runCountdownRef = useRef(null);
   const offerRef = useRef(null);
+  // Kyle, 2026-10-13: the countdown waits until she finishes the Brain Game's own welcome.
+  const introHoldRef = useRef(null);
+  if (!introHoldRef.current) introHoldRef.current = createIntroHold();
   if (!offerRef.current) {
     offerRef.current = createTourOffer({
       onStart: () => {
@@ -751,9 +755,20 @@ export default function App() {
     if (!brainReady) return;
     setSettingsOpen(false);
     setChoice((previous) => recordChoice(previous, 'play'));
+    // Play again while she gives the Brain Game's welcome: she stops, and the game starts.
+    if (introHoldRef.current.cancel()) {
+      voiceEventsRef.current?.choice?.('play');
+      beginGame(fromPlayer);
+      return;
+    }
     const action = playAction(gamePhase, studyReturnToRef.current);
-    if (action === 'start') beginGame(fromPlayer);
-    else if (action === 'start-now') {
+    if (action === 'start') {
+      // A first press on the Brain Game before any welcome was heard: the
+      // game's own welcome, then the countdown (Kyle, 2026-10-13).
+      const intro = fromPlayer ? voiceEventsRef.current?.choice?.('play') : null;
+      if (intro) introHoldRef.current.start(intro, () => beginGame(fromPlayer));
+      else beginGame(fromPlayer);
+    } else if (action === 'start-now') {
       offerRef.current.cancel();
       runCountdown();
     } else if (action === 'pause' || action === 'resume') togglePause();
@@ -772,8 +787,12 @@ export default function App() {
     if (!brainReady) return;
     setSettingsOpen(false);
     setChoice((previous) => recordChoice(previous, 'study'));
+    // Study while she gives the Brain Game's welcome: the game no longer starts.
+    introHoldRef.current.cancel();
     const action = studyAction(gamePhase);
     if (action === 'enter') {
+      // Study's own welcome, if no welcome was heard (Kyle, 2026-10-13).
+      voiceEventsRef.current?.choice?.('study');
       if (gamePhase === 'offer') offerRef.current.cancel();
       enterStudy(gamePhase === 'offer' ? 'ready' : gamePhase);
     }

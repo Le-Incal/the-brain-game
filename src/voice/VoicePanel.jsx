@@ -17,6 +17,8 @@ import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
 import { listenForFirstTap } from './firstTap.js';
+import { choiceWelcomeAction } from './choiceWelcome.js';
+import { createSoundCheck } from './soundCheck.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { gestureStrength } from './gestures.js';
@@ -116,16 +118,33 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const guideSpeakingRef = useRef(false);
   const stream = useMemo(() => createTranscriptStream(), []);
   const refreshEntries = () => setEntries(stream.entries());
-  // The recorded welcome on arrival: 'none' until it loads, then 'silent' or
-  // 'audible' while it plays, then 'done'.
+  // The recorded welcome on arrival: 'none' until its moment, 'held' while it
+  // waits for a press that allows sound (Kyle, 2026-10-13: "only trigger
+  // streaming and motion if the voice talks"), 'greeting' as it begins,
+  // 'audible' (or 'silent', once muted) while it plays, then 'done'.
   const welcome = useMemo(() => {
     const instance = createWelcome();
     if (import.meta.env.DEV) window.__welcome = instance;
     return instance;
   }, []);
+  const soundCheck = useMemo(() => createSoundCheck(), []);
   const [welcomeState, setWelcomeState] = useState('none');
   const welcomeStateRef = useRef('none');
+  const setWelcome = (next) => {
+    welcomeStateRef.current = next;
+    setWelcomeState(next);
+  };
   const welcomeStreamingRef = useRef(false);
+  // Whether a welcome was heard: the guide is told, and need not repeat it.
+  const welcomeHeardRef = useRef(false);
+  // Starts the arrival welcome from the top (set by the welcome's effect).
+  const greetRef = useRef(null);
+  // Those waiting for the welcome to finish (the Brain Game's countdown).
+  const welcomeWaitersRef = useRef([]);
+  const whenWelcomeDone = () =>
+    ['greeting', 'audible', 'silent'].includes(welcomeStateRef.current)
+      ? new Promise((resolve) => welcomeWaitersRef.current.push(resolve))
+      : Promise.resolve();
   // Follow the words: the brain lights what the guide names, as it names it.
   const follower = useMemo(() => {
     const instance = createWordFollower({
@@ -299,6 +318,9 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       gameMiss: ({ signal, ...miss }) => promptGuide(formatMissPrompt(miss, signal)),
       // The first Play of a visit: the guide offers an example.
       firstPlay: () => promptGuide(formatFirstPlay()),
+      // A press on Study the Brain or the Brain Game (Kyle, 2026-10-13): that
+      // choice's own welcome, if no welcome was heard. Resolves when she finishes.
+      choice: (kind) => playChoiceRef.current?.(kind) ?? null,
       canOffer: () => ['connected', 'resting'].includes(session.getState().phase),
     };
     const idle = window.setInterval(() => reporter.tick(), 1000);
@@ -322,7 +344,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     restTimer.connected(state.phase === 'connected');
     if (state.phase !== 'connected') return;
     const events = voiceEventsRef.current;
-    if (welcomeStateRef.current !== 'none') events?.welcomePlayed();
+    if (welcomeHeardRef.current) events?.welcomePlayed();
     if (connectedOnceRef.current) events?.resumed(stream.entries(), GUIDES.find((g) => g.id === guideRef.current)?.name ?? 'Guide');
     connectedOnceRef.current = true;
     events?.modeChanged(modeRef.current);
@@ -440,11 +462,16 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       const playback = welcomeStreamingRef.current ? welcome.playback() : follower.playback();
       if (welcomeStreamingRef.current && playback.done) welcomeStreamingRef.current = false;
       if (stream.tick(playback)) setEntries(stream.entries());
-      if (welcomeStateRef.current !== 'none') {
+      if (welcomeStateRef.current === 'audible' || welcomeStateRef.current === 'silent') {
         const next = welcome.active() ? (welcome.audible() ? 'audible' : 'silent') : 'done';
         if (next !== welcomeStateRef.current) {
           welcomeStateRef.current = next;
           setWelcomeState(next);
+        }
+        if (next === 'done') {
+          const waiters = welcomeWaitersRef.current;
+          welcomeWaitersRef.current = [];
+          for (const resolve of waiters) resolve();
         }
       }
       const still = reducedMotion || !motionRef.current || stillnessRef.current;
@@ -511,25 +538,62 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
 
   // Soon after the brain appears, and only once the page is seen, the brain
   // greets the visitor (Kyle, 2026-10-13): it turns from its side and snaps
-  // round to face them, and "Hello!" lands on the snap, 1.2 s in. Aloud where
-  // the browser allows it, otherwise as flowing text until the first tap. The
+  // round to face them, and "Hello!" lands on the snap, 1.2 s in. The
   // recording is fetched at once, so it plays on cue.
+  //
+  // Kyle, 2026-10-13: "only trigger streaming and motion if the voice talks".
+  // Before the brain turns, the page asks the browser whether she may be
+  // heard. Where she may not, nothing starts: the welcome waits ('held') for
+  // the visitor's first press, then plays from the top, aloud.
   useEffect(() => {
     let cancelled = false;
     let voiceTimer = null;
     const loading = welcome.load(guideRef.current);
+    // Each choice's own welcome, for a visitor whose first press is a choice.
+    loading.then(() => {
+      if (cancelled) return;
+      welcome.load(guideRef.current, 'study');
+      welcome.load(guideRef.current, 'play');
+    });
     const speak = async () => {
       if (cancelled || welcome.cutShort()) return;
+      const heard = await welcome.start({ holdIfRefused: true });
+      const spin = spinRef.current;
+      if (spin) spin.voicePending = false;
+      if (cancelled) return;
+      if (!heard) {
+        // Refused after all: the brain turns back to face us, and she waits for a press.
+        if (spin?.cue.running()) commandsRef.current.endWelcomeSpin();
+        spin?.cue.done();
+        spinRef.current = null;
+        setWelcome('held');
+        return;
+      }
       stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
       welcomeStreamingRef.current = true;
       setEntries(stream.entries());
-      const heard = await welcome.start();
-      if (spinRef.current) spinRef.current.voicePending = false;
-      if (cancelled) return;
-      welcomeStateRef.current = heard ? 'audible' : 'silent';
-      if (heard) wantVoice(true);
-      setWelcomeState(welcomeStateRef.current);
+      welcomeHeardRef.current = true;
+      wantVoice(true);
+      setWelcome('audible');
     };
+    // The brain starts its greeting now; she speaks as it snaps round.
+    const greet = () => {
+      if (cancelled || welcome.kind() !== 'arrival') return false;
+      if (welcomeStateRef.current !== 'none' && welcomeStateRef.current !== 'held') return false;
+      if (welcome.cutShort()) {
+        setWelcome('done');
+        return false;
+      }
+      setWelcome('greeting');
+      spinRef.current = {
+        cue: createSpinCue({ startMs: -WELCOME_GREETING_LEAD_MS }),
+        voiceAt: performance.now() + WELCOME_GREETING_LEAD_MS,
+        voicePending: true,
+      };
+      voiceTimer = setTimeout(speak, WELCOME_GREETING_LEAD_MS);
+      return true;
+    };
+    greetRef.current = greet;
     const clock = createArrivalClock({
       delayMs: WELCOME_DELAY_MS - WELCOME_GREETING_LEAD_MS,
       hidden: document.hidden,
@@ -541,19 +605,21 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
           waitingRef.current = true;
           return;
         }
-        // The brain starts its greeting now; she speaks as it snaps round.
-        spinRef.current = {
-          cue: createSpinCue({ startMs: -WELCOME_GREETING_LEAD_MS }),
-          voiceAt: performance.now() + WELCOME_GREETING_LEAD_MS,
-          voicePending: true,
-        };
-        voiceTimer = setTimeout(speak, WELCOME_GREETING_LEAD_MS);
+        // A press already made lets her be heard; otherwise ask the browser.
+        const allowed = welcome.primed() || (await soundCheck.allowed());
+        if (cancelled || welcomeStateRef.current !== 'none') return;
+        if (!allowed) {
+          setWelcome('held');
+          return;
+        }
+        greet();
       },
     });
     const onVisibility = () => clock.visibility(document.hidden);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelled = true;
+      greetRef.current = null;
       clock.dispose();
       if (voiceTimer !== null) clearTimeout(voiceTimer);
       document.removeEventListener('visibilitychange', onVisibility);
@@ -565,15 +631,54 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [welcome, stream]);
 
+  // Kyle, 2026-10-13: "Have a custom welcome for each button if the first
+  // welcome never plays". Called from inside the press, so she is heard.
+  const playChoiceRef = useRef(null);
+  playChoiceRef.current = (kind) => {
+    const action = choiceWelcomeAction({
+      welcomeState: welcomeStateRef.current,
+      currentKind: welcome.kind(),
+      voiceChosen: voiceChosenRef.current,
+    });
+    if (action === 'stop') {
+      welcome.stop();
+      return null;
+    }
+    if (action !== 'play') return null;
+    if (!welcome.use(kind)) {
+      // Its recording is not here: the choice is made, so the arrival welcome never plays.
+      welcome.stop();
+      setWelcome('done');
+      return null;
+    }
+    setWelcome('greeting');
+    return welcome.start({ holdIfRefused: true }).then((heard) => {
+      if (!heard) {
+        welcome.stop();
+        setWelcome('done');
+        return undefined;
+      }
+      stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
+      welcomeStreamingRef.current = true;
+      setEntries(stream.entries());
+      welcomeHeardRef.current = true;
+      wantVoice(true);
+      setWelcome('audible');
+      return whenWelcomeDone();
+    });
+  };
+
   // Kyle, 2026-10-13: "first click turn[s the voice on]". Chrome plays sound
   // only after a click, tap or key press on the site (or many visits with
-  // sound), so the welcome often streams silently on arrival. The first press
-  // anywhere turns Sylvi's voice on at the word she has reached; a press
-  // before she starts lets her start aloud. It never asks for the microphone.
+  // sound). Where the welcome waits for sound, the first press anywhere starts
+  // it from the top, aloud; a press before her moment lets her start aloud.
+  // It never asks for the microphone.
   useEffect(() => {
     const stop = listenForFirstTap({
       target: document,
       state: () => ({ welcomeState: welcomeStateRef.current, voiceChosen: voiceChosenRef.current }),
+      prime: () => welcome.prime(),
+      greet: () => greetRef.current?.() ?? false,
       unlock: async () => {
         if (!welcome.active()) return true;
         if (welcome.audible()) return true;
@@ -627,8 +732,11 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     if (on) {
       wantVoice(true);
       stream.setVoice(true);
-      // The first tap: the welcome's voice joins at the word its text has reached.
-      if (welcome.active() && !welcome.audible()) await welcome.unlock();
+      // A welcome waiting for sound starts now, from the top (primed inside the press).
+      if (welcomeStateRef.current === 'held') {
+        welcome.prime();
+        greetRef.current?.();
+      } else if (welcome.active() && !welcome.audible()) await welcome.unlock();
       const current = session.getState();
       // A conversation in writing becomes a spoken one.
       if (current.phase === 'connected' && current.mode === 'text') session.end();
