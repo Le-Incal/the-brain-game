@@ -484,10 +484,25 @@ describe('Where the arrival choices sit', () => {
     expect(ARRIVAL_PANEL_STYLE.top).toBeUndefined();
   });
 
+  // Measured in Chromium: the choices are 195px tall on tablets at bottom 62px,
+  // so 280px leaves 23px between them (250px overlapped by 7px).
   it('lift the region text above them on tablets, so the two never overlap', () => {
     const tablet = html.match(/@media \(min-width: 641px\) and \(max-width: 960px\) \{([\s\S]*?)\n      \}/);
     expect(tablet).not.toBeNull();
-    expect(tablet[1]).toMatch(/\.arrival-panel ~ \.description-panel \{[^}]*bottom: 250px !important/);
+    expect(tablet[1]).toMatch(/\.arrival-panel ~ \.description-panel \{[^}]*bottom: 280px !important/);
+  });
+
+  // Measured: centred, the longest region text met the choices on desktops
+  // under about 750px tall (19px over at 1024x600). There it rests above them:
+  // the choices are at most 219px tall (961px wide), plus a 26px gap.
+  it('rest the region text just above them on short desktops', () => {
+    const short = html.match(/@media \(min-width: 961px\) and \(max-height: 800px\) \{([\s\S]*?)\n      \}/);
+    expect(short).not.toBeNull();
+    const rule = short[1].match(/\.arrival-panel ~ \.description-panel \{([^}]*)\}/);
+    expect(rule).not.toBeNull();
+    expect(rule[1]).toMatch(/top: auto !important/);
+    expect(rule[1]).toMatch(/transform: none !important/);
+    expect(rule[1]).toMatch(/bottom: calc\(clamp\(18px, 3vh, 28px\) \+ 245px\) !important/);
   });
 
   it('share the top strip on phones, as before, giving way to a region the visitor is looking at', () => {
