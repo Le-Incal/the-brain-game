@@ -5,7 +5,8 @@ import { HOST, SECRETS, expectNoSecrets, fakeClock, startApp } from './helpers.j
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
 const welcomeModule = await import('../welcome.js').catch(() => ({}));
-const { welcomeText, WELCOME_RETRY_AFTER_MS, DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL } = welcomeModule;
+const { welcomeText, WELCOME_RETRY_AFTER_MS, DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, WELCOME_KINDS } = welcomeModule;
+const { WELCOME_RATE_LIMIT } = appModule;
 
 const setup = (options = {}) => startApp({ ...options, createApp });
 const getWelcome = (app, guide = 'sylvi', host = HOST) => request(app).get(`/api/voice/welcome/${guide}`).set('Host', host);
@@ -22,6 +23,75 @@ describe('The welcome, word for word', () => {
       'Hello! I am Sylvi, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.'
     );
     expect(welcomeText('Rollo')).toContain('I am Rollo, a human brain.');
+  });
+
+  // Kyle, 2026-10-13: "Have a custom welcome for each button if the first
+  // welcome never plays". A visitor whose first press is a choice hears the
+  // welcome for that choice instead. Lines as drafted, approved by Kyle.
+  it('has a welcome for each choice: Study the Brain and the Brain Game', () => {
+    expect(WELCOME_KINDS).toEqual(['arrival', 'study', 'play']);
+    expect(welcomeText('Sylvi', 'arrival')).toBe(welcomeText('Sylvi'));
+    expect(welcomeText('Sylvi', 'study')).toBe(
+      "Hello! I am Sylvi, a human brain. Let's study together: turn me around and select any of my regions, or ask me anything."
+    );
+    expect(welcomeText('Sylvi', 'play')).toBe('Hello! I am Sylvi. Turn me so each word lands on the part of me that does it.');
+    expect(welcomeText('Rollo', 'study')).toContain('I am Rollo, a human brain.');
+    expect(welcomeText('Rollo', 'play')).toContain('I am Rollo.');
+  });
+
+  it('has no em dashes', () => {
+    for (const kind of WELCOME_KINDS) expect(welcomeText('Sylvi', kind)).not.toMatch(/\u2014/);
+  });
+});
+
+describe('GET /api/voice/welcome/:guide?kind=', () => {
+  it("returns the choice's own welcome, and where to fetch its audio", async () => {
+    const { app } = await setup();
+    const response = await request(app).get('/api/voice/welcome/sylvi?kind=study').set('Host', HOST);
+    expect(response.status).toBe(200);
+    const text = welcomeText('Sylvi', 'study');
+    expect(response.body).toMatchObject({
+      guideName: 'Sylvi',
+      text,
+      audioUrl: '/api/voice/welcome/sylvi/audio?kind=study',
+      alignment: { chars: [...text] },
+    });
+  });
+
+  it("serves the choice's own audio", async () => {
+    const { app } = await setup();
+    const response = await request(app).get('/api/voice/welcome/rollo/audio?kind=play').set('Host', HOST).buffer(true).parse((res, done) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => done(null, Buffer.concat(chunks)));
+    });
+    expect(response.status).toBe(200);
+    expect(response.body.toString()).toBe(`mp3:${welcomeText('Rollo', 'play').length}`);
+  });
+
+  it('records each guide and welcome once', async () => {
+    const { app, upstream } = await setup();
+    await request(app).get('/api/voice/welcome/sylvi?kind=play').set('Host', HOST);
+    await request(app).get('/api/voice/welcome/sylvi/audio?kind=play').set('Host', HOST);
+    await getWelcome(app, 'sylvi');
+    expect(upstream.ttsRequests().map(({ init }) => JSON.parse(init.body).text)).toEqual([
+      welcomeText('Sylvi', 'play'),
+      welcomeText('Sylvi'),
+    ]);
+  });
+
+  it('rejects an unknown welcome without calling ElevenLabs', async () => {
+    const { app, upstream } = await setup();
+    const response = await request(app).get('/api/voice/welcome/sylvi?kind=goodbye').set('Host', HOST);
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'unknown_welcome' });
+    expect(upstream.ttsRequests()).toHaveLength(0);
+  });
+
+  // A visit now fetches three recordings, text and audio each: six requests.
+  // The limit only stops a script looping on them, so it keeps room for 60 visits an hour.
+  it('allows 60 visits an hour from one address', () => {
+    expect(WELCOME_RATE_LIMIT).toEqual({ max: 360, windowMs: 60 * 60 * 1000 });
   });
 });
 
@@ -158,18 +228,26 @@ describe('GET /api/voice/welcome/:guide', () => {
 // request after a deploy waited 2.1 s while the server recorded it. The
 // server records both guides as it starts, so no visitor waits.
 describe('Recording the welcome as the server starts', () => {
-  it('records both guides at once when asked to, before any visitor', async () => {
+  it('records both guides at once when asked to, every welcome, before any visitor', async () => {
     const { upstream } = await setup({ warmWelcomes: true });
     await new Promise((resolve) => setTimeout(resolve, 20));
-    const voices = upstream.ttsRequests().map(({ url }) => url.match(/text-to-speech\/([^/]+)\//)[1]).sort();
-    expect(voices).toEqual(['voice_rollo_test', 'voice_sylvi_test']);
+    const recorded = upstream
+      .ttsRequests()
+      .map(({ url, init }) => `${url.match(/text-to-speech\/([^/]+)\//)[1]} ${JSON.parse(init.body).text}`)
+      .sort();
+    const expected = [];
+    for (const [voice, name] of [['voice_rollo_test', 'Rollo'], ['voice_sylvi_test', 'Sylvi']]) {
+      for (const kind of ['arrival', 'study', 'play']) expected.push(`${voice} ${welcomeText(name, kind)}`);
+    }
+    expect(recorded).toEqual(expected.sort());
   });
 
   it('serves the first visitor from memory', async () => {
     const { app, upstream } = await setup({ warmWelcomes: true });
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect((await getWelcome(app, 'sylvi')).status).toBe(200);
-    expect(upstream.ttsRequests()).toHaveLength(2);
+    expect((await request(app).get('/api/voice/welcome/sylvi?kind=study').set('Host', HOST)).status).toBe(200);
+    expect(upstream.ttsRequests()).toHaveLength(6);
   });
 
   it('records nothing at start unless asked', async () => {

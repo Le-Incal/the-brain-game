@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const firstTapModule = await import('./firstTap.js').catch(() => ({}));
-const { firstTapAction, listenForFirstTap, FIRST_TAP_EVENTS } = firstTapModule;
+const { firstTapAction, listenForFirstTap, FIRST_TAP_EVENTS, CHOICE_SELECTOR, FIELD_SELECTOR } = firstTapModule;
 
 // Kyle, 2026-10-13: on brain-game.io the welcome streamed silently. Chrome
 // allows sound only after the visitor has clicked, tapped or pressed a key on
@@ -13,8 +13,23 @@ describe('What the first click, tap or key press does', () => {
     expect(firstTapAction({ welcomeState: 'silent' })).toBe('unlock');
   });
 
-  it('waits while the welcome has not started: the press lets it start aloud', () => {
-    expect(firstTapAction({ welcomeState: 'none' })).toBe('wait');
+  // Safari allows sound only from inside the press: the press primes the
+  // recordings, so she starts aloud when her moment comes.
+  it('primes the recordings while the welcome has not started, so she starts aloud', () => {
+    expect(firstTapAction({ welcomeState: 'none' })).toBe('prime');
+  });
+
+  // Kyle, 2026-10-13: "only trigger streaming and motion if the voice talks".
+  // Where the browser refused sound, the welcome waits, unstarted; the first
+  // press gives the whole welcome from the top, aloud.
+  it('starts a waiting welcome from the top', () => {
+    expect(firstTapAction({ welcomeState: 'held' })).toBe('greet');
+  });
+
+  it("leaves a waiting welcome to the switches, the choices' own welcomes and the message box", () => {
+    expect(firstTapAction({ welcomeState: 'held', onSwitch: true })).toBe('wait');
+    expect(firstTapAction({ welcomeState: 'held', onChoice: true })).toBe('wait');
+    expect(firstTapAction({ welcomeState: 'held', inField: true })).toBe('wait');
   });
 
   it('stops listening once the welcome is heard or over', () => {
@@ -85,6 +100,44 @@ describe('Listening for the first interaction', () => {
     await flush();
     expect(calls).toEqual([]);
     expect(target.listeners.size).toBe(0);
+  });
+
+  it('starts a waiting welcome at the first press, then stops listening', async () => {
+    const target = fakeTarget();
+    const calls = [];
+    listenForFirstTap({
+      target,
+      state: () => ({ welcomeState: 'held' }),
+      greet: () => calls.push('greet') > 0,
+      prime: () => calls.push('prime'),
+    });
+    target.fire('keydown');
+    await flush();
+    expect(calls).toEqual(['prime', 'greet']);
+    expect(target.listeners.size).toBe(0);
+  });
+
+  it('primes and keeps listening before the welcome starts', async () => {
+    const target = fakeTarget();
+    const calls = [];
+    listenForFirstTap({ target, state: () => ({ welcomeState: 'none' }), greet: () => true, prime: () => calls.push('prime') });
+    target.fire('pointerup');
+    await flush();
+    expect(calls).toEqual(['prime']);
+    expect(target.listeners.size).toBe(3);
+  });
+
+  it("knows a press on a choice or in the message box, and leaves those alone", async () => {
+    expect(CHOICE_SELECTOR).toBe('.arrival-study, .arrival-play, .bar-study, .bar-play');
+    expect(FIELD_SELECTOR).toBe('input, textarea, [contenteditable="true"]');
+    const target = fakeTarget();
+    const calls = [];
+    listenForFirstTap({ target, state: () => ({ welcomeState: 'held' }), greet: () => calls.push('greet') > 0, prime: () => {} });
+    target.fire('pointerup', { closest: (selector) => (selector === CHOICE_SELECTOR ? {} : null) });
+    target.fire('keydown', { closest: (selector) => (selector === FIELD_SELECTOR ? {} : null) });
+    await flush();
+    expect(calls).toEqual([]);
+    expect(target.listeners.size).toBe(3);
   });
 
   it('can be removed by the page', () => {

@@ -15,16 +15,24 @@ const response = {
   alignment: { chars: [...TEXT], startsMs: [...TEXT].map((_, i) => i * 100) },
 };
 
-function setup({ autoplay = true, fetchOk = true, audioFetch = 'ok' } = {}) {
-  const clock = { now: 0 };
-  const audio = {
+const STUDY_TEXT = "Hello! Let's study.";
+const studyResponse = {
+  guideName: 'Sylvi',
+  text: STUDY_TEXT,
+  audioUrl: '/api/voice/welcome/sylvi/audio?kind=study',
+  alignment: { chars: [...STUDY_TEXT], startsMs: [...STUDY_TEXT].map((_, i) => i * 100) },
+};
+
+function fakeAudio(options) {
+  return {
     src: null,
     currentTime: 0,
     paused: true,
     plays: 0,
+    pauses: 0,
     async play() {
       this.plays += 1;
-      if (!autoplay) {
+      if (!options.autoplay) {
         const error = new Error('blocked');
         error.name = 'NotAllowedError';
         throw error;
@@ -32,9 +40,18 @@ function setup({ autoplay = true, fetchOk = true, audioFetch = 'ok' } = {}) {
       this.paused = false;
     },
     pause() {
+      this.pauses += 1;
       this.paused = true;
     },
   };
+}
+
+function setup({ autoplay = true, fetchOk = true, audioFetch = 'ok' } = {}) {
+  const clock = { now: 0 };
+  const options = { autoplay };
+  // The first recording loaded (the arrival welcome) plays through `audio`.
+  const audio = fakeAudio(options);
+  const audios = [];
   const fetches = [];
   const blobs = [];
   const recordingBlob = { type: 'audio/mpeg', size: 1234 };
@@ -42,23 +59,26 @@ function setup({ autoplay = true, fetchOk = true, audioFetch = 'ok' } = {}) {
     now: () => clock.now,
     fetchImpl: async (url) => {
       fetches.push(url);
-      if (url === response.audioUrl) {
+      if (url === response.audioUrl || url === studyResponse.audioUrl) {
         if (audioFetch === 'throws') throw new Error('offline');
         const ok = audioFetch === 'ok';
-        return { ok, status: ok ? 200 : 502, blob: async () => recordingBlob };
+        return { ok, status: ok ? 200 : 502, blob: async () => ({ ...recordingBlob, url }) };
       }
-      return { ok: fetchOk, status: fetchOk ? 200 : 502, json: async () => (fetchOk ? response : { available: false }) };
+      const body = url.endsWith('?kind=study') ? studyResponse : response;
+      return { ok: fetchOk, status: fetchOk ? 200 : 502, json: async () => (fetchOk ? body : { available: false }) };
     },
     createAudio: (src) => {
-      audio.src = src;
-      return audio;
+      const created = audios.length === 0 ? audio : fakeAudio(options);
+      created.src = src;
+      audios.push(created);
+      return created;
     },
     objectUrl: (blob) => {
       blobs.push(blob);
-      return 'blob:welcome-recording';
+      return blob.url === studyResponse.audioUrl ? 'blob:study-recording' : 'blob:welcome-recording';
     },
   });
-  return { clock, audio, welcome, fetches, blobs, recordingBlob };
+  return { clock, audio, audios, welcome, fetches, blobs, recordingBlob, options };
 }
 
 describe('The welcome', () => {
@@ -100,7 +120,7 @@ describe('The welcome', () => {
   it('holds the recording in the page, so the voice can join mid-sentence', async () => {
     const { welcome, audio, blobs, recordingBlob } = setup();
     await welcome.load('sylvi');
-    expect(blobs).toEqual([recordingBlob]);
+    expect(blobs).toEqual([{ ...recordingBlob, url: '/api/voice/welcome/sylvi/audio' }]);
     expect(audio.src).toBe('blob:welcome-recording');
   });
 
@@ -304,5 +324,97 @@ describe('Whether the welcome was cut short', () => {
     expect(welcome.cutShort()).toBe(false);
     welcome.stop();
     expect(welcome.cutShort()).toBe(false);
+  });
+});
+
+// Kyle, 2026-10-13: "only trigger streaming and motion if the voice talks".
+// Where the browser refuses sound, the welcome waits, unstarted, for the
+// visitor's first press; nothing streams and nothing moves until it is heard.
+describe('Waiting for sound', () => {
+  it('stays unstarted when the browser refuses, so nothing flows silently', async () => {
+    const { welcome, clock } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    expect(await welcome.start({ holdIfRefused: true })).toBe(false);
+    clock.now = 850;
+    expect(welcome.position()).toBeNull();
+    expect(welcome.active()).toBe(false);
+    expect(welcome.playback()).toEqual({ id: null, playedChars: null, done: false });
+    expect(welcome.cues()).toEqual({ syllables: 0, phrases: 0, speaking: false });
+    expect(welcome.cutShort()).toBe(false);
+  });
+
+  it('starts from the top once a press allows sound', async () => {
+    const { welcome, clock, options } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    await welcome.start({ holdIfRefused: true });
+    clock.now = 4000;
+    options.autoplay = true;
+    expect(await welcome.start({ holdIfRefused: true })).toBe(true);
+    expect(welcome.position()).toBe(0);
+    expect(welcome.audible()).toBe(true);
+  });
+
+  // Safari allows a page sound only from inside the press itself. Starting and
+  // pausing each recording there lets it play when its moment comes.
+  it('primes every recording from inside the press, without starting the welcome', async () => {
+    const { welcome, audios } = setup({ autoplay: false });
+    await welcome.load('sylvi');
+    await welcome.load('sylvi', 'study');
+    expect(welcome.primed()).toBe(false);
+    welcome.prime();
+    expect(audios.map((a) => [a.plays, a.pauses])).toEqual([[1, 1], [1, 1]]);
+    expect(welcome.primed()).toBe(true);
+    expect(welcome.position()).toBeNull();
+    // Once is enough.
+    welcome.prime();
+    expect(audios.map((a) => a.plays)).toEqual([1, 1]);
+  });
+});
+
+// Kyle, 2026-10-13: "Have a custom welcome for each button if the first
+// welcome never plays". Each choice has its own short recording.
+describe("The choices' own welcomes", () => {
+  it("loads a choice's welcome beside the arrival one, without replacing it", async () => {
+    const { welcome, fetches, audios } = setup();
+    await welcome.load('sylvi');
+    expect(await welcome.load('sylvi', 'study')).toBe(true);
+    expect(fetches).toEqual([
+      '/api/voice/welcome/sylvi',
+      '/api/voice/welcome/sylvi/audio',
+      '/api/voice/welcome/sylvi?kind=study',
+      '/api/voice/welcome/sylvi/audio?kind=study',
+    ]);
+    expect(audios.map((a) => a.src)).toEqual(['blob:welcome-recording', 'blob:study-recording']);
+    expect(welcome.kind()).toBe('arrival');
+    expect(welcome.text()).toBe(TEXT);
+  });
+
+  it("plays a choice's welcome in place of the arrival one", async () => {
+    const { welcome, audios, audio } = setup();
+    await welcome.load('sylvi');
+    await welcome.load('sylvi', 'study');
+    expect(welcome.use('study')).toBe(true);
+    expect(welcome.kind()).toBe('study');
+    expect(welcome.text()).toBe(STUDY_TEXT);
+    expect(await welcome.start()).toBe(true);
+    expect(audios[1].paused).toBe(false);
+    expect(audio.plays).toBe(0);
+    expect(welcome.playback().id).toBe(WELCOME_ID);
+  });
+
+  it('never swaps a welcome that has started or was stopped, or one not loaded', async () => {
+    const { welcome } = setup();
+    await welcome.load('sylvi');
+    expect(welcome.use('play')).toBe(false);
+    await welcome.load('sylvi', 'study');
+    await welcome.start();
+    expect(welcome.use('study')).toBe(false);
+    expect(welcome.kind()).toBe('arrival');
+
+    const other = setup();
+    await other.welcome.load('sylvi');
+    await other.welcome.load('sylvi', 'study');
+    other.welcome.stop();
+    expect(other.welcome.use('study')).toBe(false);
   });
 });
