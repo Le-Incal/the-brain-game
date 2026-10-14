@@ -479,9 +479,17 @@ describe('The arrival turn', () => {
 describe('Where the arrival choices sit', () => {
   const html = readFileSync(fileURLToPath(new URL('../index.html', import.meta.url)), 'utf8');
 
-  it('sit at the bottom-left on desktop, level with the bottom bar, in line with the region text', () => {
-    expect(ARRIVAL_PANEL_STYLE).toMatchObject({ position: 'absolute', left: 'clamp(24px, 5vw, 64px)', bottom: 'clamp(18px, 3vh, 28px)' });
-    expect(ARRIVAL_PANEL_STYLE.top).toBeUndefined();
+  // Kyle, 2026-10-13: "move the buttons up in horizontal alignment with the
+  // hello text". The guide's "Hello!" line rests 324px above the bar's margin
+  // (measured 343-352px from the bottom at 640-1080px tall); the Study button's
+  // top edge sits 6px lower, level with the letters' tops.
+  it('sit on the left, their top level with the guide\'s "Hello!" line', () => {
+    expect(ARRIVAL_PANEL_STYLE).toMatchObject({
+      position: 'absolute',
+      left: 'clamp(24px, 5vw, 64px)',
+      top: 'calc(100% - clamp(18px, 3vh, 28px) - 318px)',
+    });
+    expect(ARRIVAL_PANEL_STYLE.bottom).toBeUndefined();
   });
 
   // On tablets the brain fills the width, so a region's full text lifted above
@@ -492,22 +500,24 @@ describe('Where the arrival choices sit', () => {
   it('on tablets, stack a hovered name above them and give way to a clicked region', () => {
     const tablet = html.match(/@media \(min-width: 641px\) and \(max-width: 960px\) \{([\s\S]*?)\n      \}/);
     expect(tablet).not.toBeNull();
+    expect(tablet[1]).toMatch(/\.arrival-panel \{[^}]*top: auto !important[^}]*bottom: 62px !important/);
     expect(tablet[1]).toMatch(/\.arrival-panel\[data-region="named"\] ~ \.description-panel \{[^}]*bottom: 280px !important/);
     expect(tablet[1]).toMatch(/\.arrival-panel\[data-region="described"\] \{[^}]*display: none !important/);
     expect(tablet[1]).not.toMatch(/\.arrival-panel ~ \.description-panel/);
   });
 
-  // Measured: centred, the longest region text met the choices on desktops
-  // under about 750px tall (19px over at 1024x600). There it rests above them:
-  // the choices are at most 219px tall (961px wide), plus a 26px gap.
-  it('rest the region text just above them on short desktops', () => {
-    const short = html.match(/@media \(min-width: 961px\) and \(max-height: 800px\) \{([\s\S]*?)\n      \}/);
-    expect(short).not.toBeNull();
-    const rule = short[1].match(/\.arrival-panel ~ \.description-panel \{([^}]*)\}/);
+  // Raised to the "Hello!" line, the choices would meet the centred region text
+  // on desktops under about 920px tall, so on desktop the region text rests
+  // 24px above them (318 + 24 = 342px).
+  it('rest the region text just above them on desktop', () => {
+    const desktop = html.match(/@media \(min-width: 961px\) \{([\s\S]*?)\n      \}/);
+    expect(desktop).not.toBeNull();
+    const rule = desktop[1].match(/\.arrival-panel ~ \.description-panel \{([^}]*)\}/);
     expect(rule).not.toBeNull();
     expect(rule[1]).toMatch(/top: auto !important/);
     expect(rule[1]).toMatch(/transform: none !important/);
-    expect(rule[1]).toMatch(/bottom: calc\(clamp\(18px, 3vh, 28px\) \+ 245px\) !important/);
+    expect(rule[1]).toMatch(/bottom: calc\(clamp\(18px, 3vh, 28px\) \+ 342px\) !important/);
+    expect(html).not.toMatch(/max-height: 800px/);
   });
 
   it('share the top strip on phones, as before, giving way to a region the visitor is looking at', () => {
