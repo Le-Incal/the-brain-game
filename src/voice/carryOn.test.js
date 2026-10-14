@@ -24,3 +24,27 @@ describe('A fresh session when the visitor moves into Study', () => {
     }
   });
 });
+
+// Entering Study mid-sentence, or through the guide's own switch_mode call,
+// waits for the guide to finish its turn; otherwise the fresh session starts now.
+describe('When the fresh session for Study starts', () => {
+  const timing = (options) => carryOnModule.studyHandoverTiming?.(options);
+
+  it('starts now when the guide is quiet and no tool has just run', () => {
+    expect(timing({ guideSpeaking: false, msSinceTool: 10_000 })).toBe('now');
+    expect(timing({ guideSpeaking: false, msSinceTool: Infinity })).toBe('now');
+  });
+
+  it("waits for the guide's turn to end while it speaks", () => {
+    expect(timing({ guideSpeaking: true, msSinceTool: Infinity })).toBe('after-turn');
+  });
+
+  it('waits when a tool has just run (the guide moved to Study itself and is about to speak)', () => {
+    expect(timing({ guideSpeaking: false, msSinceTool: 500 })).toBe('after-turn');
+    expect(timing({ guideSpeaking: false, msSinceTool: 1_999 })).toBe('after-turn');
+  });
+
+  it('waits at most 20 s for that turn', () => {
+    expect(carryOnModule.STUDY_HANDOVER_WAIT_MS).toBe(20_000);
+  });
+});
