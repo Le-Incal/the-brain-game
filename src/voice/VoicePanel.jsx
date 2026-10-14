@@ -24,7 +24,7 @@ import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
 import { createTranscriptStream } from './transcriptStream.js';
-import { createArrivalClock, createWelcome, WELCOME_DELAY_MS, WELCOME_ID } from './welcome.js';
+import { createArrivalClock, createWelcome, WELCOME_DELAY_MS, WELCOME_GREETING_LEAD_MS, WELCOME_ID } from './welcome.js';
 import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
@@ -385,16 +385,18 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       // each side and below, from the welcome's own clock.
       const spin = spinRef.current;
       if (spin) {
+        // Before she speaks, the welcome's clock runs from when she will.
+        const sinceVoice = welcome.position() ?? now - spin.voiceAt;
         const action = spin.cue.tick({
-          elapsedMs: welcome.position(),
-          active: welcome.active(),
+          elapsedMs: sinceVoice,
+          active: welcome.active() || (spin.voicePending && !welcome.cutShort()),
           cut: welcome.cutShort(),
           touched: scene.controls.hasInteracted,
           still,
         });
         if (action === 'start') {
           // Timed from where the welcome has reached, so a late first frame never lags her words.
-          const { tourAtMs } = welcomeTourTiming({ timeOf: (phrase) => welcome.timeOf(phrase), startedAtMs: welcome.position() ?? 0 });
+          const { tourAtMs } = welcomeTourTiming({ timeOf: (phrase) => welcome.timeOf(phrase), startedAtMs: sinceVoice });
           Promise.resolve(commandsRef.current.welcomeSpin({ tourAtMs }))
             .then((outcome) => {
               if (outcome?.ok) waitingRef.current = true;
@@ -440,25 +442,45 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     };
   }, [session, scene, follower, stream, welcome]);
 
-  // A few seconds after the brain appears, and only once the page is seen, the
-  // brain welcomes the visitor: aloud where the browser allows it, otherwise as
-  // flowing text until the first tap.
+  // Soon after the brain appears, and only once the page is seen, the brain
+  // greets the visitor (Kyle, 2026-10-13): it turns from its side and snaps
+  // round to face them, and "Hello!" lands on the snap, 1.2 s in. Aloud where
+  // the browser allows it, otherwise as flowing text until the first tap. The
+  // recording is fetched at once, so it plays on cue.
   useEffect(() => {
     let cancelled = false;
+    let voiceTimer = null;
+    const loading = welcome.load(guideRef.current);
+    const speak = async () => {
+      if (cancelled || welcome.cutShort()) return;
+      stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
+      welcomeStreamingRef.current = true;
+      setEntries(stream.entries());
+      const heard = await welcome.start();
+      if (spinRef.current) spinRef.current.voicePending = false;
+      if (cancelled) return;
+      welcomeStateRef.current = heard ? 'audible' : 'silent';
+      if (heard) wantVoice(true);
+      setWelcomeState(welcomeStateRef.current);
+    };
     const clock = createArrivalClock({
-      delayMs: WELCOME_DELAY_MS,
+      delayMs: WELCOME_DELAY_MS - WELCOME_GREETING_LEAD_MS,
       hidden: document.hidden,
       onDue: async () => {
-        if (!(await welcome.load(guideRef.current)) || cancelled) return;
-        spinRef.current = { cue: createSpinCue({ startMs: 0 }) };
-        stream.addGuide({ id: WELCOME_ID, text: welcome.text() });
-        welcomeStreamingRef.current = true;
-        setEntries(stream.entries());
-        const heard = await welcome.start();
+        const loaded = await loading;
         if (cancelled) return;
-        welcomeStateRef.current = heard ? 'audible' : 'silent';
-        if (heard) wantVoice(true);
-        setWelcomeState(welcomeStateRef.current);
+        // No welcome to give: the brain simply turns slowly while it waits.
+        if (!loaded) {
+          waitingRef.current = true;
+          return;
+        }
+        // The brain starts its greeting now; she speaks as it snaps round.
+        spinRef.current = {
+          cue: createSpinCue({ startMs: -WELCOME_GREETING_LEAD_MS }),
+          voiceAt: performance.now() + WELCOME_GREETING_LEAD_MS,
+          voicePending: true,
+        };
+        voiceTimer = setTimeout(speak, WELCOME_GREETING_LEAD_MS);
       },
     });
     const onVisibility = () => clock.visibility(document.hidden);
@@ -466,8 +488,12 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     return () => {
       cancelled = true;
       clock.dispose();
+      if (voiceTimer !== null) clearTimeout(voiceTimer);
       document.removeEventListener('visibilitychange', onVisibility);
-      welcome.stop();
+      // Silence it if it is playing. One that has not started is simply never
+      // started here: a stop before the start would cancel it for good, and
+      // React mounts this twice in development.
+      if (welcome.position() !== null) welcome.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [welcome, stream]);

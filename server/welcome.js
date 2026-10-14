@@ -19,7 +19,8 @@ const MODEL_REFUSED = new Set([400, 403, 404, 422]);
 export const WELCOME_RETRY_AFTER_MS = 60_000;
 
 export function welcomeText(guideName) {
-  return `Welcome. I am ${guideName}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.`;
+  // "Hello!", as a puppet that turns and suddenly recognizes the visitor (Kyle, 2026-10-13).
+  return `Hello! I am ${guideName}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.`;
 }
 
 /** One recording: `{ audio: Buffer, chars, startsMs }`. */

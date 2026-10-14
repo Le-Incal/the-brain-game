@@ -156,6 +156,9 @@ export function createApp({
   // cookie value, device id or address: reservations appear as an 8-character
   // prefix, conversations by their ElevenLabs id.
   logger = { info: (line) => console.log(line), warn: (line) => console.warn(line) },
+  // Record both guides' welcomes as the server starts, so no visitor waits for
+  // one (Kyle, 2026-10-13: the first request after a deploy took 2.1 s).
+  warmWelcomes = false,
 } = {}) {
   const config = readVoiceConfig(env);
   const app = express();
@@ -247,6 +250,11 @@ export function createApp({
     }
     markReady();
   } else {
+    if (warmWelcomes) {
+      for (const guide of Object.keys(GUIDE_NAMES)) {
+        welcomes.get(guide).catch((error) => logger.warn(`[voice] welcome not recorded at start for ${guide}: ${error.message}`));
+      }
+    }
     restoreToday(0);
     voice.sweep = sweepStaleReservations;
     voice.reconcile = reconcileWithElevenLabs;

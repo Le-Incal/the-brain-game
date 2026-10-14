@@ -1,6 +1,6 @@
 /**
- * The recorded welcome on arrival (Kyle, 2026-10-11). It begins 2 s after the
- * brain appears, counting only time the visitor can see the page, so a
+ * The recorded welcome on arrival (Kyle, 2026-10-11). It begins 1.2 s after
+ * the brain appears, counting only time the visitor can see the page, so a
  * background tab keeps its welcome until it is looked at. Where the browser allows sound it plays aloud;
  * where it does not (most first visits), its text flows on its own clock and
  * the voice joins at the word the text has reached on the visitor's first tap.
@@ -11,7 +11,11 @@
 
 import { analyseSpeech } from './speechCues.js';
 
-export const WELCOME_DELAY_MS = 2000;
+// "Hello!" 1.2 s after the brain appears (Kyle, 2026-10-13: it still started
+// "a little too delayed" at 2 s). The brain starts its greeting 0.6 s before
+// her, so "Hello!" lands on its snap.
+export const WELCOME_DELAY_MS = 1200;
+export const WELCOME_GREETING_LEAD_MS = 600;
 export const WELCOME_ID = 'welcome';
 
 /**
@@ -139,6 +143,7 @@ export function createWelcome({
 
     /** Starts the welcome; resolves true if it is heard, false if it flows silently. */
     async start() {
+      if (stopped && startedAt === null) return false;
       if (!recording || startedAt !== null) return heard;
       startedAt = now();
       try {
@@ -174,7 +179,12 @@ export function createWelcome({
     },
 
     stop() {
-      if (startedAt === null) return;
+      // Stopped before it starts (the visitor spoke or wrote first): it never plays.
+      if (startedAt === null) {
+        stopped = true;
+        cut = true;
+        return;
+      }
       if (!finished()) {
         cut = true;
         stoppedAtChars = playedChars();

@@ -39,6 +39,7 @@ import {
   NO_CHOICE,
   recordChoice,
   regionSelection,
+  arrivalTurn,
 } from './frontDoor.jsx';
 
 // The ElevenLabs SDK loads only in the voice build.
@@ -447,6 +448,8 @@ export default function App() {
       onRegionSelect: handleRegionSelect,
       onNavigatingChange: handleNavigatingChange,
     });
+    // With the guide coming, the brain holds its side still until it greets the visitor.
+    if (!arrivalTurn({ voiceEnabled: VOICE_ENABLED })) brainScene.controls.stopAutoRotate();
     sceneRef.current = brainScene;
     // StrictMode mounts this effect twice in development; a discarded scene's
     // model can finish loading after its replacement, so it must not attach.

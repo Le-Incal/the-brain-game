@@ -2,8 +2,11 @@
  * The welcome tour (Kyle, 2026-10-13; it replaced a continuous spin that
  * "rotates too fast, like it's doing somersaults").
  *
- * On "Welcome." the brain turns to look at the visitor, its front where a
- * character's face would be, and holds there while it says its name. From
+ * The brain greets the visitor like a puppet recognizing someone (Kyle,
+ * 2026-10-13): from its side it turns idly a little way toward us, notices
+ * us, snaps past us with its head lifted as it says "Hello!", and settles
+ * facing us, its front where a character's face would be. It holds there
+ * while it says its name. From
  * "You can study" it turns deliberately from one standard view to the next,
  * each a quarter turn about one axis in 1.5 s eased on a sine (about 94
  * degrees a second at the fastest): the left side, the back and the right
@@ -36,6 +39,9 @@ export const WELCOME_SELECT_REGION_ID = 1;
 export const WELCOME_SELECT_HOLD_MS = 2000;
 export const WELCOME_AFTER_SELECT_PAUSE_MS = 250;
 export const WELCOME_THREE_QUARTER = Object.freeze({ aroundDegrees: 40, aboveDegrees: 25 });
+// The greeting, a puppet's recognition (Kyle, 2026-10-13): an idle turn, a
+// snap past us with the head lifted, a settle. "Hello!" lands on the snap.
+export const WELCOME_GREETING = Object.freeze({ idleMs: 600, idleDegrees: 25, snapMs: 500, overshootDegrees: 7, liftDegrees: 5, settleMs: 500 });
 
 const QUARTER_TURN = Math.PI / 2;
 // A short turn still takes a moment, so it reads as deliberate.
@@ -52,6 +58,52 @@ function turnMs(radians, shortestShare) {
 }
 
 const ease = (from, to, t) => new THREE.Quaternion().slerpQuaternions(from, to, easeInOutSine(t));
+
+// The idle turn's speed as it notices us, for a full quarter-turn greeting (degrees a second).
+const NOTICING_SPEED = 60;
+// The 0.5 s snap is sized for this much turn; a longer one takes longer, at the same speed.
+const SNAP_SPAN_DEGREES = 65;
+
+// A cubic between two values and their speeds (seconds), so each phase flows into the next.
+function hermite(p0, v0, p1, v1, seconds, t) {
+  const s = t / seconds;
+  const s2 = s * s;
+  const s3 = s2 * s;
+  return (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * seconds * v0 + (-2 * s3 + 3 * s2) * p1 + (s3 - s2) * seconds * v1;
+}
+
+function greetingPhases(totalDegrees) {
+  const g = WELCOME_GREETING;
+  const idleDegrees = Math.min(g.idleDegrees, (g.idleDegrees * totalDegrees) / 90);
+  const snapMs = g.snapMs * Math.max(1, (totalDegrees - idleDegrees) / SNAP_SPAN_DEGREES);
+  return { idleDegrees, noticing: (NOTICING_SPEED * idleDegrees) / g.idleDegrees, snapMs, totalMs: g.idleMs + snapMs + g.settleMs };
+}
+
+/**
+ * The greeting's motion at `ms`, for a turn of `totalDegrees` to face us:
+ * `{ turn, lift }` in degrees. It turns idly a little way, notices us and
+ * snaps past us with its head lifted, then settles square on, head level.
+ */
+export function recognition(ms, totalDegrees) {
+  const g = WELCOME_GREETING;
+  const { idleDegrees, noticing, snapMs, totalMs } = greetingPhases(totalDegrees);
+  if (ms <= 0) return { turn: 0, lift: 0 };
+  if (ms >= totalMs) return { turn: totalDegrees, lift: 0 };
+  const peak = totalDegrees + g.overshootDegrees;
+  if (ms <= g.idleMs) return { turn: hermite(0, 0, idleDegrees, noticing, g.idleMs / 1000, ms / 1000), lift: 0 };
+  const intoSnap = ms - g.idleMs;
+  if (intoSnap <= snapMs) {
+    return {
+      turn: hermite(idleDegrees, noticing, peak, 0, snapMs / 1000, intoSnap / 1000),
+      lift: hermite(0, 0, g.liftDegrees, 0, snapMs / 1000, intoSnap / 1000),
+    };
+  }
+  const intoSettle = (intoSnap - snapMs) / 1000;
+  return {
+    turn: hermite(peak, 0, totalDegrees, 0, g.settleMs / 1000, intoSettle),
+    lift: hermite(g.liftDegrees, 0, 0, 0, g.settleMs / 1000, intoSettle),
+  };
+}
 const rawAxis = (axis) => new THREE.Vector3(...axis).normalize();
 
 /**
@@ -106,7 +158,24 @@ export function welcomeTour({ start, frame, viewPose, axis = rawAxis, tourAtMs, 
   ];
 
   const from = start.clone().normalize();
-  const greetMs = turnMs(from.angleTo(poses[0]), 1);
+  // The greeting turns about the one axis that carries the brain from its side to face us.
+  const toFace = poses[0].clone().multiply(from.clone().invert()).normalize();
+  if (toFace.w < 0) toFace.set(-toFace.x, -toFace.y, -toFace.z, -toFace.w);
+  const faceDegrees = THREE.MathUtils.radToDeg(2 * Math.acos(Math.min(1, toFace.w)));
+  const faceAxis = new THREE.Vector3(toFace.x, toFace.y, toFace.z);
+  if (faceAxis.lengthSq() < 1e-12) faceAxis.copy(frame.screenUp);
+  faceAxis.normalize();
+  const greetMs = Math.round(greetingPhases(faceDegrees).totalMs);
+  const greeting = (ms) => {
+    if (ms >= greetMs) return poses[0].clone();
+    const { turn, lift } = recognition(ms, faceDegrees);
+    // A lifted head: the top tips away from us.
+    return new THREE.Quaternion()
+      .setFromAxisAngle(screenRight, -THREE.MathUtils.degToRad(lift))
+      .multiply(new THREE.Quaternion().setFromAxisAngle(faceAxis, THREE.MathUtils.degToRad(turn)))
+      .multiply(from)
+      .normalize();
+  };
   const stops = [{ view: WELCOME_TOUR_VIEWS[0], arriveMs: greetMs, leaveMs: Math.max(tourAtMs, greetMs + GREETING_MIN_HOLD_MS) }];
   for (let i = 1; i < poses.length; i += 1) {
     const arriveMs = stops[i - 1].leaveMs + turnMs(poses[i - 1].angleTo(poses[i]), 1);
@@ -120,7 +189,7 @@ export function welcomeTour({ start, frame, viewPose, axis = rawAxis, tourAtMs, 
   ];
 
   function poseAtMs(ms) {
-    if (ms <= greetMs) return ease(from, poses[0], ms / greetMs);
+    if (ms <= greetMs) return greeting(ms);
     for (let i = 0; i < stops.length; i += 1) {
       if (ms <= stops[i].leaveMs || i === stops.length - 1) return poses[i].clone();
       const next = stops[i + 1];

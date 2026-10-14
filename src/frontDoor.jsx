@@ -112,6 +112,15 @@ export function shouldMountGuide({ voiceEnabled, brainReady, commandsReady }) {
   return Boolean(voiceEnabled && brainReady && commandsReady);
 }
 
+/**
+ * Whether the brain turns slowly on arrival. While the guide is coming it
+ * holds its side still, so it can turn and recognize the visitor (Kyle,
+ * 2026-10-13); without the guide it turns as before.
+ */
+export function arrivalTurn({ voiceEnabled }) {
+  return !voiceEnabled;
+}
+
 /** Motion starts on, unless the visitor's system asks for reduced motion. */
 export function initialMotion(reducedMotion) {
   return !reducedMotion;
