@@ -233,6 +233,10 @@ const ARRIVAL_STYLES = {
     textTransform: 'uppercase',
     // One pixel more each side keeps the size the 1px border gave.
     padding: '10px 19px',
+    // Both the length of the longer, "Study the Brain": 11.57em of text plus
+    // the padding (Kyle, 2026-10-13: "the same length").
+    minWidth: 'calc(11.6em + 38px)',
+    boxSizing: 'border-box',
     background: 'transparent',
     color: INK,
     // A fine line (Kyle, 2026-10-13: "a little thinner"). Chrome rounds a
