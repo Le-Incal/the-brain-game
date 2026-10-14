@@ -146,9 +146,10 @@ export function regionSelection(region, { demo = false } = {}) {
   return { selected: region ?? null, playerSelected: !demo, tellGuide: !demo && Boolean(region) };
 }
 
-export function shouldShowArrival({ gamePhase, brainReady, selectedRegion, chosen = false }) {
+export function shouldShowArrival({ gamePhase, brainReady, chosen = false }) {
   // Once a choice is made the bar holds both options, so the left never repeats them.
-  return gamePhase === 'ready' && Boolean(brainReady) && !selectedRegion && !chosen;
+  // A selected region no longer hides them: they sit bottom-left, its text beside them (Kyle, 2026-10-13).
+  return gamePhase === 'ready' && Boolean(brainReady) && !chosen;
 }
 
 /** The visitor's first choice on arrival (Kyle, 2026-10-11). */
@@ -203,6 +204,22 @@ export function ToggleButton({ label, active, onClick, compact = false, mini = f
     </button>
   );
 }
+
+/**
+ * Where the arrival choices sit (Kyle, 2026-10-13): bottom-left, level with
+ * the bottom bar and in line with the region text, so a region the visitor
+ * hovers or clicks is described while they stay in view. Tablets and phones
+ * adjust in index.html.
+ */
+export const ARRIVAL_PANEL_STYLE = Object.freeze({
+  position: 'absolute',
+  left: 'clamp(24px, 5vw, 64px)',
+  bottom: 'clamp(18px, 3vh, 28px)',
+  width: 'clamp(180px, 22vw, 280px)',
+  zIndex: 11,
+  pointerEvents: 'none',
+  textAlign: 'left',
+});
 
 const ARRIVAL_STYLES = {
   list: { display: 'flex', flexDirection: 'column', gap: 22, pointerEvents: 'auto' },

@@ -19,6 +19,7 @@ import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sec
 const SECTION_STUDY_ONLY = 'The section opens only in Study mode. Invite the player to press Study the Brain.';
 const SECTION_FADE = 'opacity 600ms ease';
 import {
+  ARRIVAL_PANEL_STYLE,
   ArrivalOptions,
   SettingsPanel,
   ToggleButton,
@@ -67,6 +68,27 @@ export function getDescribedRegion({
   if (isNavigating) return null;
   // A click wins; the guide's focus beats a cursor that happens to rest on the brain.
   return selectedRegion || guideFocus || hoveredRegion;
+}
+
+/**
+ * What the left side of the page shows (Kyle, 2026-10-13): the arrival
+ * choices bottom-left, and beside them the region the visitor hovers or
+ * clicks. `region` says how much of it is shown, 'named' (a hover) or
+ * 'described' (its full text), so phones and tablets, with room for one panel
+ * there, can let the choices give way. A game's factoid or correction shows
+ * once the choices have gone.
+ */
+export function leftColumn({
+  showArrival = false, describedRegion = null, describedText = null, factoid = null, correction = null,
+} = {}) {
+  const arrival = Boolean(showArrival);
+  let region = 'none';
+  if (arrival && describedRegion) region = describedText ? 'described' : 'named';
+  return {
+    arrival,
+    region,
+    description: Boolean(describedRegion) || (!arrival && Boolean(factoid || correction)),
+  };
 }
 
 /** The full text under the title: for a click or the guide's focus, never a hover. */
@@ -894,7 +916,8 @@ export default function App() {
     hoveredRegion,
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
-  const showArrival = shouldShowArrival({ gamePhase, brainReady, selectedRegion, chosen: choice.chosen });
+  const showArrival = shouldShowArrival({ gamePhase, brainReady, chosen: choice.chosen });
+  const left = leftColumn({ showArrival, describedRegion, describedText, factoid, correction });
   const barButtons = getBarButtons({
     gamePhase,
     brainReady,
@@ -1008,14 +1031,14 @@ export default function App() {
         </div>
       )}
 
-      {(showArrival ||
-        describedRegion ||
-        factoid ||
-        correction) && (
+      {left.arrival && (
+        <div className="arrival-panel" data-region={left.region} style={ARRIVAL_PANEL_STYLE}>
+          <ArrivalOptions guideName={guideName} onStudy={handleStudy} onPlay={() => handlePlay(true)} />
+        </div>
+      )}
+
+      {left.description && (
         <div className="description-panel" style={STYLES.descriptionPanel}>
-          {showArrival && !describedRegion && (
-            <ArrivalOptions guideName={guideName} onStudy={handleStudy} onPlay={() => handlePlay(true)} />
-          )}
           {describedRegion && (
             <div className="region-description" style={STYLES.hoverLabel}>
               <span
