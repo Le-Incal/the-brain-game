@@ -73,9 +73,23 @@ const TAIL_MS = 600;
 // A gentle level for the hatching while a letter is heard.
 const SPEAKING_LEVEL = 0.28;
 
+// The recording held in the page (Kyle, 2026-10-13): the server sends it
+// whole, so Chrome cannot jump into the middle of it from the server; from the
+// page it can, and the voice joins at the word reached on the first tap.
+async function heldInPage(fetchImpl, objectUrl, url) {
+  try {
+    const response = await fetchImpl(url);
+    if (!response.ok) return url;
+    return objectUrl(await response.blob());
+  } catch {
+    return url;
+  }
+}
+
 export function createWelcome({
   fetchImpl = (...args) => globalThis.fetch(...args),
   createAudio = (src) => new Audio(src),
+  objectUrl = (blob) => URL.createObjectURL(blob),
   now = () => performance.now(),
 } = {}) {
   let recording = null;
@@ -123,7 +137,7 @@ export function createWelcome({
         if (!Array.isArray(body?.alignment?.chars) || !Array.isArray(body?.alignment?.startsMs)) return false;
         const text = body.alignment.chars.join('');
         recording = { text, startsMs: body.alignment.startsMs, speech: analyseSpeech(text) };
-        audio = createAudio(body.audioUrl);
+        audio = createAudio(await heldInPage(fetchImpl, objectUrl, body.audioUrl));
         return true;
       } catch {
         return false;

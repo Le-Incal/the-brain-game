@@ -16,6 +16,7 @@ import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
+import { listenForFirstTap } from './firstTap.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { gestureStrength } from './gestures.js';
@@ -89,6 +90,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     voiceWantedRef.current = value;
     setVoiceWanted(value);
   };
+  // The visitor has used the Voice switch: the first-press rule leaves the voice to them.
+  const voiceChosenRef = useRef(false);
   // A conversation has connected before: the next one carries it on.
   const connectedOnceRef = useRef(false);
   // Kyle, 2026-10-13: a conversation carried on in a fresh session picks up
@@ -562,6 +565,32 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [welcome, stream]);
 
+  // Kyle, 2026-10-13: "first click turn[s the voice on]". Chrome plays sound
+  // only after a click, tap or key press on the site (or many visits with
+  // sound), so the welcome often streams silently on arrival. The first press
+  // anywhere turns Sylvi's voice on at the word she has reached; a press
+  // before she starts lets her start aloud. It never asks for the microphone.
+  useEffect(() => {
+    const stop = listenForFirstTap({
+      target: document,
+      state: () => ({ welcomeState: welcomeStateRef.current, voiceChosen: voiceChosenRef.current }),
+      unlock: async () => {
+        if (!welcome.active()) return true;
+        if (welcome.audible()) return true;
+        const heard = await welcome.unlock();
+        if (heard) {
+          wantVoice(true);
+          stream.setVoice(true);
+          welcomeStateRef.current = 'audible';
+          setWelcomeState('audible');
+        }
+        return heard;
+      },
+    });
+    return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [welcome, stream]);
+
   // Closing the tab is how most conversations really end; it still gets its summary.
   useEffect(() => {
     const onPageHide = () => session.pageClosing();
@@ -593,6 +622,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const voiceConversation = state.mode === 'voice' && (active || state.phase === 'resting');
 
   const turnVoice = async (on) => {
+    voiceChosenRef.current = true;
     restTimer.activity();
     if (on) {
       wantVoice(true);
