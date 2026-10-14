@@ -17,6 +17,7 @@ const {
   shouldShowArrival,
   getStudyCaption,
   ArrivalOptions,
+  ARRIVAL_PANEL_STYLE,
   SettingsPanel,
   shouldMountGuide,
   initialMotion,
@@ -157,10 +158,12 @@ describe('The two options on arrival', () => {
     expect(arrivalOptions(null)[0].text).toBe('Turn the brain and select any region to learn what it does.');
   });
 
-  it('shows only while exploring, with the brain ready and no region selected', () => {
+  it('shows only while exploring with the brain ready, whether or not a region is selected', () => {
     expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: null })).toBe(true);
     expect(shouldShowArrival({ gamePhase: 'ready', brainReady: false, selectedRegion: null })).toBe(false);
-    expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: { id: 5 } })).toBe(false);
+    // Kyle, 2026-10-13: the choices sit bottom-left now, so a selected region's
+    // description shows beside them instead of replacing them.
+    expect(shouldShowArrival({ gamePhase: 'ready', brainReady: true, selectedRegion: { id: 5 } })).toBe(true);
     for (const gamePhase of ['study', 'countdown', 'playing', 'paused']) {
       expect(shouldShowArrival({ gamePhase, brainReady: true, selectedRegion: null }), gamePhase).toBe(false);
     }
@@ -466,5 +469,31 @@ describe('The arrival turn', () => {
 
   it('turns as before when there is no guide', () => {
     expect(frontDoor.arrivalTurn({ voiceEnabled: false })).toBe(true);
+  });
+});
+
+// Kyle, 2026-10-13: 'Move "study the brain" and "play the brain game" down to
+// the bottom-left side so that you can see the region description when the
+// cursor hovers or when someone clicks on the brain.' His picks: hover keeps
+// the name only; phones keep the shared strip at the top.
+describe('Where the arrival choices sit', () => {
+  const html = readFileSync(fileURLToPath(new URL('../index.html', import.meta.url)), 'utf8');
+
+  it('sit at the bottom-left on desktop, level with the bottom bar, in line with the region text', () => {
+    expect(ARRIVAL_PANEL_STYLE).toMatchObject({ position: 'absolute', left: 'clamp(24px, 5vw, 64px)', bottom: 'clamp(18px, 3vh, 28px)' });
+    expect(ARRIVAL_PANEL_STYLE.top).toBeUndefined();
+  });
+
+  it('lift the region text above them on tablets, so the two never overlap', () => {
+    const tablet = html.match(/@media \(min-width: 641px\) and \(max-width: 960px\) \{([\s\S]*?)\n      \}/);
+    expect(tablet).not.toBeNull();
+    expect(tablet[1]).toMatch(/\.arrival-panel ~ \.description-panel \{[^}]*bottom: 250px !important/);
+  });
+
+  it('share the top strip on phones, as before, giving way to a region the visitor is looking at', () => {
+    const phone = html.match(/@media \(max-width: 640px\) \{([\s\S]*?)\n      \}/);
+    expect(phone).not.toBeNull();
+    expect(phone[1]).toMatch(/\.arrival-panel \{[^}]*top: 108px !important/);
+    expect(phone[1]).toMatch(/\.arrival-panel\[data-yields="true"\] \{[^}]*display: none/);
   });
 });
