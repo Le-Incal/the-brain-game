@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
+import { findSpokenNames } from './spokenNames.js';
 
 const looksModule = await import('./regionLooks.js').catch(() => ({}));
 const { REGION_LOOKS, findRegionByLooks } = looksModule;
@@ -90,6 +91,16 @@ describe('How each region is painted, and where it lies', () => {
     }
   });
 
+  // Kyle, 2026-10-13: "talks around the green strip but shows the red orange
+  // primary motor cortex". The guide read out "just behind my motor strip",
+  // and following its words lit region 5. A place never names a region or lobe.
+  it('never names a region or a lobe the guide\'s words would light', () => {
+    for (const [id, looks] of Object.entries(REGION_LOOKS)) {
+      expect(findSpokenNames(looks.place), `${id}: ${looks.place}`).toEqual([]);
+      expect(findSpokenNames(looks.colour), `${id}: ${looks.colour}`).toEqual([]);
+    }
+  });
+
   it('paints the Supplementary Motor Area golden yellow, at the very top', () => {
     expect(REGION_LOOKS[4]).toMatchObject({ colour: 'golden yellow', families: expect.arrayContaining(['yellow']), where: expect.arrayContaining(['top']) });
   });
@@ -103,6 +114,10 @@ describe('Finding a region by how it looks', () => {
     ['the grey part underneath', 20],
     ['the pale pink bit underneath at the front', 2],
     ['the brown area at the back', 17],
+    // Kyle, 2026-10-13: "What is the bright green spot?" found three greens.
+    ['the bright green spot', 7],
+    ['the pale green one', 10],
+    ['the dark green bit', 9],
   ])('%j is region %i', (text, id) => {
     const found = findRegionByLooks(text);
     expect(found.error).toBeUndefined();
@@ -114,6 +129,8 @@ describe('Finding a region by how it looks', () => {
     expect(found.region).toBeUndefined();
     expect(found.error).toContain('Supplementary Motor Area (golden yellow');
     expect(found.error).toContain('Cerebellum (pale yellow');
+    // Named aloud, each would light in turn: the guide asks by colour and place.
+    expect(found.error).toMatch(/by colour and place, without naming them/);
   });
 
   it('says so when no region is painted that way', () => {

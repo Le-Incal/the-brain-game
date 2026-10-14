@@ -130,6 +130,68 @@ describe('Following a spoken name', () => {
   });
 });
 
+// Kyle, 2026-10-13: "talks around the green strip but shows the red orange
+// primary motor cortex". Regions the guide looked up or showed in answer to
+// the visitor are its subject until the visitor's next turn: following its
+// words lights them, never a neighbour it names in passing.
+describe('Following names keeps to the subject the guide chose', () => {
+  it('after showing a region, a neighbour named in passing does not replace it', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.faceRegion(7));
+    expect(state.highlight).toBe(7);
+    expect((await settle(commands.followName(region(5)))).did).toBe('skipped');
+    expect((await settle(commands.followName(lobe('Frontal Lobe')))).did).toBe('skipped');
+    expect(state.highlight).toBe(7);
+  });
+
+  it('after looking a region up, its name lights and a neighbour\'s does not', async () => {
+    const { commands, state, settle } = setup();
+    expect(commands.lookupRegion({ name: 'the yellow spot on top' }).region.id).toBe(4);
+    expect(['lit', 'turned']).toContain((await settle(commands.followName(region(4)))).did);
+    expect((await settle(commands.followName(region(5)))).did).toBe('skipped');
+    expect(state.highlight).toBe(4);
+  });
+
+  it('within a lobe the guide showed, names its regions on top of it', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.faceLobe('Frontal Lobe'));
+    expect(['lit', 'turned']).toContain((await settle(commands.followName(region(4)))).did);
+    // As at a tour stop: the lobe stays lit and the named region stands out on top.
+    expect(state.highlight).toEqual(regionsOf('Frontal Lobe'));
+    expect(state.focus).toEqual([4]);
+    expect((await settle(commands.followName(region(7)))).did).toBe('skipped');
+  });
+
+  it("follows every name again from the visitor's next turn", async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.faceRegion(7));
+    commands.visitorTurn();
+    expect(['lit', 'turned']).toContain((await settle(commands.followName(region(5)))).did);
+    expect(state.highlight).toBe(5);
+  });
+
+  it('follows every name again once the guide clears the highlight', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.faceRegion(7));
+    commands.clearHighlight();
+    expect(['lit', 'turned']).toContain((await settle(commands.followName(region(5)))).did);
+    expect(state.highlight).toBe(5);
+  });
+
+  it('follows every name when the guide used no tool since the visitor spoke', async () => {
+    const { commands, state, settle } = setup();
+    await settle(commands.followName(region(4)));
+    await settle(commands.followName(region(5)));
+    expect(state.highlight).toBe(5);
+  });
+
+  it('keeps visitorTurn off the agent contract', () => {
+    const { commands } = setup();
+    expect(Object.keys(commands)).not.toContain('visitorTurn');
+    expect(typeof commands.visitorTurn).toBe('function');
+  });
+});
+
 describe('Following names during a tour stop', () => {
   async function atFrontalStop() {
     const harness = setup();
