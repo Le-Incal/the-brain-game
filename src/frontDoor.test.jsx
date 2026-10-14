@@ -502,6 +502,16 @@ describe('The arrival choices', () => {
     // One pixel more padding each side keeps the buttons the same size without the border.
     expect(markup.match(/padding:10px 19px/g)).toHaveLength(2);
   });
+
+  // Kyle, 2026-10-13: "make the two starting buttons the same length". Measured
+  // in Chromium with Playfair Display: "Study the Brain" is 11.57em of text
+  // plus 38px of padding (200px at 14px, 177px at 12px), "Play the Game"
+  // 10.38em. Both now take the longer one's width.
+  it('are the same length', () => {
+    const markup = renderToStaticMarkup(<ArrivalOptions guideName="Sylvi" onStudy={() => {}} onPlay={() => {}} />);
+    expect(markup.match(/min-width:calc\(11\.6em \+ 38px\)/g)).toHaveLength(2);
+    expect(markup.match(/box-sizing:border-box/g)).toHaveLength(2);
+  });
 });
 
 // Kyle, 2026-10-13: "The brain should start at side elevation but then turn
