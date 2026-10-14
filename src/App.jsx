@@ -22,6 +22,7 @@ import {
   ARRIVAL_PANEL_STYLE,
   ArrivalOptions,
   SettingsPanel,
+  pressClosesSettings,
   ToggleButton,
   getBarButtons,
   getStudyCaption,
@@ -892,14 +893,22 @@ export default function App() {
     setGuide(guideId);
   };
 
-  // Settings closes with Escape, like any disclosure.
+  // Settings closes with Escape, like any disclosure, and with a press anywhere
+  // outside it (Kyle, 2026-10-13). Capture, so the brain's own handlers cannot hide the press.
   useEffect(() => {
     if (!settingsOpen) return undefined;
     const onKey = (event) => {
       if (event.key === 'Escape') setSettingsOpen(false);
     };
+    const onPress = (event) => {
+      if (pressClosesSettings({ open: true, target: event.target })) setSettingsOpen(false);
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPress, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPress, true);
+    };
   }, [settingsOpen]);
 
   const studyCaption = gamePhase === 'study' ? getStudyCaption(VOICE_ENABLED ? guide : null) : null;

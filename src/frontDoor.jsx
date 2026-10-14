@@ -231,11 +231,15 @@ const ARRIVAL_STYLES = {
     fontWeight: 700,
     letterSpacing: '0.16em',
     textTransform: 'uppercase',
-    padding: '9px 18px',
+    // One pixel more each side keeps the size the 1px border gave.
+    padding: '10px 19px',
     background: 'transparent',
     color: INK,
-    border: `1px solid ${INK}`,
-    // Flat on the page, no shadow beneath (Kyle, 2026-10-13).
+    // A fine line (Kyle, 2026-10-13: "a little thinner"). Chrome rounds a
+    // border under 1px up to 1px, so a 0.5px hairline is drawn inside the edge:
+    // one device pixel on a 2x screen. Flat on the page, no shadow beneath.
+    border: 'none',
+    boxShadow: `inset 0 0 0 0.5px ${INK}`,
     cursor: 'pointer',
   },
   text: {
@@ -281,7 +285,8 @@ const SETTINGS_STYLES = {
     padding: '14px 18px',
     background: 'rgba(247, 240, 220, 0.97)',
     border: `1px solid ${INK}`,
-    boxShadow: `inset 0 0 0 3px #f7f0dc, inset 0 0 0 4px rgba(26, 24, 20, 0.24), 3px 3px 0 rgba(26, 24, 20, 0.18)`,
+    // One border, no inner ring (Kyle, 2026-10-13: "Remove the double line").
+    boxShadow: '3px 3px 0 rgba(26, 24, 20, 0.18)',
     minWidth: 240,
   },
   row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
@@ -320,6 +325,15 @@ export function ScoreDisplay({ score, level, gamePhase, style }) {
 function speedText(speed) {
   const value = Number(speed);
   return Number.isInteger(Math.round(value * 1000) / 100) ? value.toFixed(1) : String(Number(value.toFixed(2)));
+}
+
+/**
+ * Kyle, 2026-10-13: a press anywhere outside Settings closes it. The Settings
+ * button is left to toggle it, so one press does not close and reopen it.
+ */
+export function pressClosesSettings({ open, target }) {
+  if (!open || !target || typeof target.closest !== 'function') return false;
+  return !target.closest('.settings-panel, .bar-settings');
 }
 
 /** Guide, difficulty and the speed of falling words. */
