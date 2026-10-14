@@ -484,12 +484,17 @@ describe('Where the arrival choices sit', () => {
     expect(ARRIVAL_PANEL_STYLE.top).toBeUndefined();
   });
 
-  // Measured in Chromium: the choices are 195px tall on tablets at bottom 62px,
-  // so 280px leaves 23px between them (250px overlapped by 7px).
-  it('lift the region text above them on tablets, so the two never overlap', () => {
+  // On tablets the brain fills the width, so a region's full text lifted above
+  // the choices lay on its hatching at 960x700, 800x1000, 768x1024 and 700x900.
+  // As before: a hovered name sits just above the choices (they are 195px tall
+  // at bottom 62px, so 280px leaves 23px), and a clicked region's full text
+  // takes their place at the old spot.
+  it('on tablets, stack a hovered name above them and give way to a clicked region', () => {
     const tablet = html.match(/@media \(min-width: 641px\) and \(max-width: 960px\) \{([\s\S]*?)\n      \}/);
     expect(tablet).not.toBeNull();
-    expect(tablet[1]).toMatch(/\.arrival-panel ~ \.description-panel \{[^}]*bottom: 280px !important/);
+    expect(tablet[1]).toMatch(/\.arrival-panel\[data-region="named"\] ~ \.description-panel \{[^}]*bottom: 280px !important/);
+    expect(tablet[1]).toMatch(/\.arrival-panel\[data-region="described"\] \{[^}]*display: none !important/);
+    expect(tablet[1]).not.toMatch(/\.arrival-panel ~ \.description-panel/);
   });
 
   // Measured: centred, the longest region text met the choices on desktops
@@ -509,6 +514,7 @@ describe('Where the arrival choices sit', () => {
     const phone = html.match(/@media \(max-width: 640px\) \{([\s\S]*?)\n      \}/);
     expect(phone).not.toBeNull();
     expect(phone[1]).toMatch(/\.arrival-panel \{[^}]*top: 108px !important/);
-    expect(phone[1]).toMatch(/\.arrival-panel\[data-yields="true"\] \{[^}]*display: none/);
+    // A tap leaves the hover on the tapped region, so any region shown takes the strip.
+    expect(phone[1]).toMatch(/\.arrival-panel:not\(\[data-region="none"\]\) \{[^}]*display: none !important/);
   });
 });
