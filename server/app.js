@@ -33,7 +33,8 @@ export const WELCOME_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
 const WELCOME_CACHE_SECONDS = 600;
 // One per conversation: how it ended, how long it ran, every client tool call.
 // Checked field by field so nothing but these values can reach the logs.
-export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown', 'rest']);
+// 'handover': the conversation carried on in a fresh session (Kyle, 2026-10-13).
+export const SESSION_END_REASONS = new Set(['agent', 'error', 'user', 'time_limit', 'page_closed', 'unknown', 'rest', 'handover']);
 export const SESSION_SUMMARY_TOOL_LIMIT = 200;
 const SESSION_SUMMARY_KEYS = ['durationSecs', 'reason', 'session', 'tools', 'type'];
 // Optional: what following the guide's words did, and how it was timed.

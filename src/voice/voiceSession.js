@@ -7,6 +7,9 @@
  *   (Kyle, 2026-10-11: no consent box; turning the voice on, speaking or writing starts at once.)
  *                                     \-> unavailable (with a plain message)
  *   connected -> resting (rest, time limit) -> requesting (wake) -> ...
+ *   connected -> requesting (handover, carryingOn) -> connecting -> connected
+ *     (Kyle, 2026-10-13: before the 8-minute cap, and on entering Study, the
+ *     conversation carries on in a fresh session; the visitor hears a short pause.)
  *
  * A conversation is 'voice' or 'text' (text only: no microphone, no audio).
  * 'auto' asks for the microphone and carries on in text if it is refused.
@@ -16,6 +19,17 @@ import { describeVoiceUnavailable } from './voiceAvailability.js';
 import { formatTimeWarning } from './contextUpdates.js';
 
 const WARN_BEFORE_END_MS = 30_000;
+// The ElevenLabs agent's own maximum conversation duration (agent/architect-brief.md).
+export const AGENT_MAX_SECONDS = 480;
+// The handover opens this long before the cap: the guide is told to finish its
+// thought, and the conversation carries on at its first quiet moment...
+const HANDOVER_WINDOW_MS = 45_000;
+// ...or this long before the cap, whatever it is doing.
+const HANDOVER_LATEST_MS = 12_000;
+// A shorter session (today's voice time nearly spent) rests at its limit as before.
+const MIN_HANDOVER_SECONDS = 120;
+// The server frees the old slot when it hears the end; wait this long for it at most.
+const ENDED_REPORT_WAIT_MS = 1_500;
 // Right after this page's own conversation, the server may still count it
 // open until ElevenLabs' webhook lands (about 20 s in the first live run).
 const RETRY_BUSY_WITHIN_MS = 60_000;
@@ -96,6 +110,9 @@ export function createVoiceSession({
   let pendingGuide = null;
   let cutoffTimer = null;
   let warningTimer = null;
+  let handoverTimer = null;
+  let handoverDue = false;
+  let guideIsSpeaking = false;
   let retryTimer = null;
   let busyRetries = 0;
   let lastConversationEndedAt = null;
@@ -107,11 +124,13 @@ export function createVoiceSession({
   // What following the guide's words did: names lit, names turned to.
   let follow = null;
 
-  function conversationOver(reason) {
+  function conversationOver(reason, detail) {
     lastConversationEndedAt = now();
     sendSummary(reason);
-    reportEnded();
-    onConversationEnd();
+    const ended = reportEnded();
+    if (detail) onConversationEnd(detail);
+    else onConversationEnd();
+    return ended;
   }
 
   // The slot frees at once; the minutes wait for ElevenLabs' report.
@@ -120,8 +139,8 @@ export function createVoiceSession({
   function reportEnded() {
     const reservation = connectedReservation;
     connectedReservation = null;
-    if (!reservation) return;
-    Promise.resolve()
+    if (!reservation) return Promise.resolve();
+    return Promise.resolve()
       .then(() =>
         fetchImpl('/api/voice/ended', {
           method: 'POST',
@@ -204,15 +223,20 @@ export function createVoiceSession({
   }
 
   function set(patch) {
-    state = { ...state, ...patch };
+    // Carrying on lasts only while the next conversation starts.
+    const settled = patch.phase && patch.phase !== 'requesting' && patch.phase !== 'connecting';
+    state = { ...state, ...(settled && !('carryingOn' in patch) ? { carryingOn: false } : {}), ...patch };
     onChange(state);
   }
 
   function clearCutoff() {
     if (cutoffTimer !== null) clearTimeoutImpl(cutoffTimer);
     if (warningTimer !== null) clearTimeoutImpl(warningTimer);
+    if (handoverTimer !== null) clearTimeoutImpl(handoverTimer);
     cutoffTimer = null;
     warningTimer = null;
+    handoverTimer = null;
+    handoverDue = false;
   }
 
   function warnGuide() {
@@ -220,12 +244,44 @@ export function createVoiceSession({
     if (state.phase === 'connected') conversation.sendContextualUpdate(formatTimeWarning());
   }
 
+  // The handover window opens: tell the guide, then carry on at its first quiet moment.
+  function openHandover() {
+    warningTimer = null;
+    if (state.phase !== 'connected') return;
+    if (!guideIsSpeaking) {
+      handOver();
+      return;
+    }
+    conversation.sendContextualUpdate(formatTimeWarning());
+    handoverDue = true;
+  }
+
+  const wait = (ms) => new Promise((resolve) => setTimeoutImpl(resolve, ms));
+
+  /** Ends this conversation and starts the next at once, in the same guide and mode. */
+  async function handOver() {
+    if (state.phase !== 'connected') return;
+    clearCutoff();
+    clearRetry();
+    conversation.endSession();
+    const ended = conversationOver('handover', { carriedOn: true });
+    guideIsSpeaking = false;
+    set({ phase: 'requesting', carryingOn: true, conversationId: null, message: null });
+    // The server frees this page's slot when it hears the end: wait for that, briefly.
+    await Promise.race([ended.catch(() => {}), wait(ENDED_REPORT_WAIT_MS)]);
+    if (state.phase !== 'requesting' || !state.carryingOn) return;
+    if (state.mode === 'text') requestedMode = 'text';
+    await requestAndStart({ carriedOn: true });
+  }
+
   const starting = () => state.phase === 'requesting' || state.phase === 'connecting';
 
-  async function requestAndStart() {
+  async function requestAndStart({ carriedOn = false } = {}) {
     set({ phase: 'requesting', message: null, conversationId: null });
-    // A new conversation never inherits a region lit by the last one.
-    onConversationStart();
+    // A new conversation never inherits a region lit by the last one, unless it
+    // carries the same conversation on.
+    if (carriedOn) onConversationStart({ carriedOn: true });
+    else onConversationStart();
     clearRetry();
     busyRetries = 0;
     if (requestedMode === 'text') {
@@ -338,20 +394,37 @@ export function createVoiceSession({
     async handleConnect({ conversationId }) {
       connectedReservation = pendingReservation;
       pendingReservation = null;
-      set({ phase: 'connected', conversationId });
+      set({ phase: 'connected', conversationId, carryingOn: false });
       connectedAt = now();
       toolCalls = [];
       follow = null;
       clearCutoff();
-      // The server reserved this many seconds; end on time rather than overrun,
-      // and tell the guide 30 s before so it can say goodbye.
+      // The server reserved this many seconds; end on time rather than overrun.
       if (maxSeconds) {
         cutoffTimer = setTimeoutImpl(() => end('time_limit'), maxSeconds * 1000);
-        const warnIn = maxSeconds * 1000 - WARN_BEFORE_END_MS;
-        if (warnIn > 0) warningTimer = setTimeoutImpl(warnGuide, warnIn);
-        else warnGuide();
+        // Kyle, 2026-10-13: before the cap (the agent's 8 minutes or the
+        // reservation, whichever is first), carry on in a fresh session.
+        const capMs = Math.min(maxSeconds, AGENT_MAX_SECONDS) * 1000;
+        if (capMs >= MIN_HANDOVER_SECONDS * 1000) {
+          warningTimer = setTimeoutImpl(openHandover, capMs - HANDOVER_WINDOW_MS);
+          handoverTimer = setTimeoutImpl(() => handOver(), capMs - HANDOVER_LATEST_MS);
+        } else {
+          // Today's voice time is nearly spent: warn 30 s before, and rest at the limit.
+          const warnIn = maxSeconds * 1000 - WARN_BEFORE_END_MS;
+          if (warnIn > 0) warningTimer = setTimeoutImpl(warnGuide, warnIn);
+          else warnGuide();
+        }
       }
     },
+
+    /** Whether the guide is speaking: a due handover waits for it to finish. */
+    guideSpeaking(speaking) {
+      guideIsSpeaking = Boolean(speaking);
+      if (!guideIsSpeaking && handoverDue) handOver();
+    },
+
+    /** Carries the conversation on in a fresh session now (entering Study). */
+    handOver,
 
     handleDisconnect(details) {
       clearCutoff();

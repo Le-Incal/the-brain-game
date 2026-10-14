@@ -252,3 +252,13 @@ describe('Tonight\'s three prompt changes', () => {
     expect(prompt).toMatch(/^- On a tour, finish the stop you were on \(get_scene_state gives it as tour\), then call next_tour_stop\./m);
   });
 });
+
+// The app hands over before the agent's own cap, so the two must agree.
+describe('The session cap the app counts from is the agent\'s', () => {
+  it('matches the brief, which says the app carries on before it', async () => {
+    const { AGENT_MAX_SECONDS } = await import('./voiceSession.js');
+    const brief = readFileSync(briefPath, 'utf8');
+    expect(brief).toContain(`- **Max conversation duration:** ${AGENT_MAX_SECONDS} seconds (8 minutes).`);
+    expect(brief).toMatch(/Max conversation duration:\*\*[^\n]*carries the conversation on in a fresh session/);
+  });
+});

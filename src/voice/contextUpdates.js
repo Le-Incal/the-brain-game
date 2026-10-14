@@ -21,6 +21,9 @@ export const CONTEXT_MESSAGES = {
   streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
   struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
   firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
+  // Kyle, 2026-10-13: a conversation carried on in a fresh session picks up where it was.
+  carriedOnTour: '[app] the conversation carried on mid-tour, {where}: pick up where you left off, with no greeting',
+  carriedOnSpeaking: '[app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting',
 };
 
 export const IDLE_AFTER_MS = 25_000;
@@ -70,6 +73,18 @@ export function formatResume(entries, guideName) {
 export const formatTimeWarning = () => CONTEXT_MESSAGES.timeWarning;
 
 export const formatTourWaiting = ({ stop, of }) => fill(CONTEXT_MESSAGES.tourWaiting, { stop, of });
+
+/**
+ * After the conversation carried on in a fresh session: a prompt to pick up a
+ * tour or a cut-off sentence, or null when the guide was quiet with no tour.
+ */
+export function formatCarryOn({ tour = null, wasSpeaking = false } = {}) {
+  if (tour) {
+    const where = tour.stop >= 1 ? `at stop ${tour.stop} of ${tour.of}` : 'at its start';
+    return fill(CONTEXT_MESSAGES.carriedOnTour, { where });
+  }
+  return wasSpeaking ? CONTEXT_MESSAGES.carriedOnSpeaking : null;
+}
 
 function speedText(speed) {
   const value = Number(speed);

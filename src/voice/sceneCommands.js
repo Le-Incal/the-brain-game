@@ -31,6 +31,7 @@ import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
 import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, normalizeTourLength, tourStop } from './lobes.js';
 import { WELCOME_TOUR_DEFAULT_AT_MS, faceTurn, uprightFacing, welcomeTour } from './welcomeSpin.js';
+import { REGION_LOOKS, findRegionByLooks } from './regionLooks.js';
 
 // The whole-brain view a tour starts and ends on.
 const OVERVIEW_VIEW = 'left_lateral';
@@ -648,7 +649,9 @@ export function createSceneCommands(
       if (id === null) return fail(REGION_RANGE_REASON);
       region = REGION_BY_ID.get(id);
     } else if (name !== undefined && name !== null) {
-      const found = findRegionByName(name);
+      let found = findRegionByName(name);
+      // Kyle, 2026-10-13: "the bright yellow spot on top" is a description, not a name.
+      if (found.error) found = findRegionByLooks(name) ?? found;
       if (found.error) return fail(found.error);
       region = found.region;
     } else {
@@ -664,6 +667,9 @@ export function createSceneCommands(
         subtitle: region.subtitle,
         description: region.clickDescription,
         factoid: region.factoid,
+        // How it is painted and where it lies, so the guide never guesses (Kyle, 2026-10-13).
+        colour: REGION_LOOKS[region.id].colour,
+        place: REGION_LOOKS[region.id].place,
       },
     };
   }
@@ -689,6 +695,7 @@ export function createSceneCommands(
       visibleRegions: regionGeometry.labelsPerView[view].map(({ id, name, visibleFraction }) => ({
         id,
         name,
+        colour: REGION_LOOKS[id].colour,
         visibleFraction,
       })),
       highlightedRegion: litIds.length === 1 ? litIds[0] : null,

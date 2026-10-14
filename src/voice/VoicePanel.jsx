@@ -14,7 +14,8 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
+import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
+import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
 import { createGuidePrompter } from './guidePrompter.js';
 import { stripExpressiveTags } from './spokenNames.js';
 import { gestureStrength } from './gestures.js';
@@ -90,6 +91,13 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   };
   // A conversation has connected before: the next one carries it on.
   const connectedOnceRef = useRef(false);
+  // Kyle, 2026-10-13: a conversation carried on in a fresh session picks up
+  // where it was (a tour stop, a cut-off sentence). Set at the handover.
+  const carryOnRef = useRef(null);
+  // When the guide last used a tool: its own switch to Study is followed by speech.
+  const lastToolAtRef = useRef(-Infinity);
+  // A fresh Study session waiting for the guide's turn to end.
+  const studyHandoverRef = useRef(null);
   const modeRef = useRef(mode);
   modeRef.current = mode;
   // One conversation on screen, many underneath: rest after 30 s of quiet.
@@ -152,6 +160,13 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       follower.guideSpeaking(speaking);
       restTimer.guideSpeaking(speaking);
       prompter.guideSpeaking(speaking);
+      sessionRef.current?.guideSpeaking(speaking);
+      // The guide finished its turn: a fresh Study session can start now.
+      if (!speaking && studyHandoverRef.current) {
+        window.clearTimeout(studyHandoverRef.current);
+        studyHandoverRef.current = null;
+        sessionRef.current?.handOver();
+      }
       activityRef.current?.({ type: 'speaking', value: speaking });
       if (!speaking) {
         stream.guideStopped();
@@ -191,7 +206,10 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       cancelMoves: (reason) => scene.controls.cancelMove(reason),
       tourPacer,
       // An explicit scene tool wins over following the words.
-      onToolStart: (name) => follower.toolCalled(name),
+      onToolStart: (name) => {
+        lastToolAtRef.current = performance.now();
+        follower.toolCalled(name);
+      },
       onToolCall: (name, ok, detail) => sessionRef.current?.recordToolCall(name, ok, detail),
     });
     return createVoiceSession({
@@ -205,14 +223,28 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       clientTools,
       onChange: setState,
       // The guide lets go of the brain when the conversation is over.
-      onConversationEnd: () => {
+      onConversationEnd: (detail) => {
         follower.interrupted();
         stream.guideStopped();
         refreshEntries();
+        // Carried on in a fresh session (Kyle, 2026-10-13): the lit region stays,
+        // and the next conversation learns where to pick up.
+        if (detail?.carriedOn) {
+          carryOnRef.current = { tour: commands.getSceneState?.()?.tour ?? null, wasSpeaking: guideSpeakingRef.current };
+          // The old conversation is silent now, whatever the SDK last reported,
+          // so the pick-up prompt is not held behind a stale "speaking".
+          guideSpeakingRef.current = false;
+          prompter.guideSpeaking(false);
+          restTimer.guideSpeaking(false);
+          tourPacer.guideSpeaking(false);
+          return;
+        }
         commands.clearHighlight();
       },
-      // A new conversation never inherits a region lit by the last one.
-      onConversationStart: () => commands.clearHighlight(),
+      // A new conversation never inherits a region lit by the last one, unless it carries it on.
+      onConversationStart: (detail) => {
+        if (!detail?.carriedOn) commands.clearHighlight();
+      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands, scene, tourPacer, follower, stream]);
@@ -291,12 +323,41 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     const pending = pendingContextRef.current;
     pendingContextRef.current = [];
     for (const text of pending) session.sendContext(text);
-  }, [state.phase, voiceEventsRef, restTimer, stream, session]);
+    // Carried on mid-tour or mid-sentence: the guide picks up, with no greeting.
+    const carried = carryOnRef.current;
+    carryOnRef.current = null;
+    const pickUp = carried ? formatCarryOn(carried) : null;
+    if (pickUp) prompter.prompt(pickUp);
+  }, [state.phase, voiceEventsRef, restTimer, stream, session, prompter]);
 
-  // And whenever the mode changes while connected.
+  // And whenever the mode changes while connected. Kyle, 2026-10-13: Study
+  // begins with a fresh session, once the guide has finished its turn.
+  const previousModeRef = useRef(mode);
   useEffect(() => {
-    if (sessionRef.current?.getState().phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
+    const from = previousModeRef.current;
+    previousModeRef.current = mode;
+    const current = sessionRef.current;
+    if (!current) return;
+    if (freshSessionOnModeChange({ from, to: mode, phase: current.getState().phase })) {
+      const timing = studyHandoverTiming({
+        guideSpeaking: guideSpeakingRef.current,
+        msSinceTool: performance.now() - lastToolAtRef.current,
+      });
+      if (timing === 'now') {
+        current.handOver();
+        return;
+      }
+      if (studyHandoverRef.current) window.clearTimeout(studyHandoverRef.current);
+      studyHandoverRef.current = window.setTimeout(() => {
+        studyHandoverRef.current = null;
+        sessionRef.current?.handOver();
+      }, STUDY_HANDOVER_WAIT_MS);
+    }
+    if (current.getState().phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
   }, [mode, voiceEventsRef]);
+  useEffect(() => () => {
+    if (studyHandoverRef.current) window.clearTimeout(studyHandoverRef.current);
+  }, []);
 
   // A hidden tab rests the conversation soon after.
   useEffect(() => {
@@ -572,6 +633,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const notice = noticeFor(state.phase, state.message, name, {
     welcome: welcomeState === 'audible' || welcomeState === 'silent' ? welcomeState : null,
     micRefused: Boolean(state.micRefused),
+    carryingOn: Boolean(state.carryingOn),
   });
   return (
     <GuideColumnView
