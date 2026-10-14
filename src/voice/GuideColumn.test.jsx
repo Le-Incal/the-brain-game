@@ -205,6 +205,15 @@ describe('What the notice says without a microphone', () => {
   it('says nothing while a conversation rests with the microphone on', () => {
     expect(noticeFor('resting', null, 'Sylvi')).toBeNull();
   });
+
+  // Kyle, 2026-10-13: carrying on into a fresh session is not waking; it stays quiet.
+  it('says nothing while the conversation carries on into a fresh session', () => {
+    expect(noticeFor('requesting', null, 'Sylvi', { carryingOn: true })).toBeNull();
+    expect(noticeFor('connecting', 'One moment, Sylvi is getting ready…', 'Sylvi', { carryingOn: true })).toBeNull();
+    expect(noticeFor('unavailable', "You've used today's voice time.", 'Sylvi', { carryingOn: true })).toEqual({
+      text: "You've used today's voice time.",
+    });
+  });
 });
 
 // Kyle, 2026-10-11: he pressed Voice to silence the brain after the welcome and

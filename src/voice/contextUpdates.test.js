@@ -42,6 +42,39 @@ describe('M4: every contextual update, worded in one place', () => {
       streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
       struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
       firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
+      carriedOnTour: '[app] the conversation carried on mid-tour, {where}: pick up where you left off, with no greeting',
+      carriedOnSpeaking: '[app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting',
+    });
+  });
+
+  // Kyle, 2026-10-13: a conversation that carries on in a fresh session picks
+  // up where it was: mid-tour, or mid-sentence. Otherwise the guide waits.
+  describe('picking up after the conversation carried on', () => {
+    it('picks up a tour at its stop', () => {
+      expect(contextModule.formatCarryOn({ tour: { stop: 3, of: 7 }, wasSpeaking: false })).toBe(
+        '[app] the conversation carried on mid-tour, at stop 3 of 7: pick up where you left off, with no greeting'
+      );
+    });
+
+    it('picks up a tour that had only just begun', () => {
+      expect(contextModule.formatCarryOn({ tour: { stop: 0, of: 7 }, wasSpeaking: true })).toBe(
+        '[app] the conversation carried on mid-tour, at its start: pick up where you left off, with no greeting'
+      );
+    });
+
+    it('finishes a sentence it was cut off in', () => {
+      expect(contextModule.formatCarryOn({ tour: null, wasSpeaking: true })).toBe(
+        '[app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting'
+      );
+    });
+
+    it('says nothing when the guide was quiet and no tour was running', () => {
+      expect(contextModule.formatCarryOn({ tour: null, wasSpeaking: false })).toBeNull();
+      expect(contextModule.formatCarryOn()).toBeNull();
+    });
+
+    it('goes as a prompt the guide answers now', () => {
+      expect(contextModule.isAppPrompt(contextModule.formatCarryOn({ tour: { stop: 1, of: 7 } }))).toBe(true);
     });
   });
 

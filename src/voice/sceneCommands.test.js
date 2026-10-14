@@ -271,6 +271,8 @@ describe('C13: getSceneState', () => {
       regionGeometry.labelsPerView[view].map((label) => label.id)
     );
     for (const region of scene.visibleRegions) expect(typeof region.name).toBe('string');
+    // Kyle, 2026-10-13: the guide can say what colour each visible region is painted.
+    for (const region of scene.visibleRegions) expect(region.colour).toMatch(/^[a-z][a-z -]+$/);
   });
 
   it('reports highlight, colour and mode as the scene holds them, and no annotations', () => {
@@ -304,8 +306,29 @@ describe('C14: lookupRegion', () => {
         subtitle: broca.subtitle,
         description: broca.clickDescription,
         factoid: broca.factoid,
+        colour: 'raspberry',
+        place: expect.stringMatching(/left side/),
       },
     });
+  });
+
+  // Kyle, 2026-10-13: "the bright yellow spot on the top of the brain" is the
+  // Supplementary Motor Area, not the Primary Motor Cortex the guide guessed.
+  it.each([
+    ['the bright yellow spot on the top of the brain', 4],
+    ['the red orange region', 5],
+  ])('finds %j by its colour and place', (name, id) => {
+    const { commands } = setup();
+    const result = commands.lookupRegion({ name });
+    expect(result.ok).toBe(true);
+    expect(result.region.id).toBe(id);
+  });
+
+  it('asks which when a colour fits several', () => {
+    const { commands } = setup();
+    const result = commands.lookupRegion({ name: 'the yellow one' });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/Supplementary Motor Area .* Cerebellum/);
   });
 
   it.each([

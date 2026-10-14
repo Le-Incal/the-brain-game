@@ -120,7 +120,7 @@ describe('The brief tells the guide the welcome has already played', () => {
   it('quotes the welcome and the line that says it played', () => {
     expect(prompt).toContain('# Arrival');
     expect(prompt).toContain(
-      '"Welcome. I am {{guide_name}}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions."'
+      '"Hello! I am {{guide_name}}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions."'
     );
     expect(prompt).toContain('  [app] the welcome has played');
   });
@@ -214,5 +214,41 @@ describe('The guide speaks only when spoken to or prompted', () => {
     expect(prompt).toContain(
       '- Not everything you hear is said to you. When speech is plainly not addressed to you, such as a television or other people talking about something unrelated to the brain, the game or you, call skip_turn and say nothing.'
     );
+  });
+});
+
+// Kyle, 2026-10-13, from tonight's conversations on staging.
+describe('Tonight\'s three prompt changes', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+  const tools = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+  const examples = brief.slice(brief.indexOf('## 6.'));
+
+  // Audrey asked "About the moon" and heard "My expertise extends only as far as my own folds."
+  it('answers a question beyond the brain through the brain, instead of turning it away', () => {
+    expect(prompt).toContain(
+      '- Never turn a curious question away flatly. When someone asks about something beyond the brain (the moon, music, dinosaurs), answer through the brain: how you see it, remember it, feel about it or learn it, in a sentence or two, then offer to show the region involved. If the subject is unclear (is Atlas a map or a person?), ask what they mean.'
+    );
+    expect(brief).not.toContain('My expertise extends only as far as my own folds.');
+    expect(examples).toContain('User: "About the moon."');
+  });
+
+  // "That bright yellow is my Primary Motor Cortex": a guess, and wrong (it is region 4).
+  it('looks a region up by its colour or place, never guesses', () => {
+    expect(prompt).toContain(
+      '- When the player describes a region by its colour or place ("the yellow spot on top"), never guess: call lookup_region with their words as the name, and name only the region it returns. If it says the words could mean several, ask which.'
+    );
+    expect(tools).toMatch(/### lookup_region[\s\S]*colour[\s\S]*place/);
+    expect(tools).toMatch(/visibleRegions[^\n]*colour/);
+    expect(examples).toContain('User: "What is the bright yellow spot on the top of the brain?"');
+    expect(examples).toMatch(/lookup_region \{name: "the bright yellow spot on the top of the brain"\}[^\n]*region 4/);
+  });
+
+  // The tour stopped at the 8-minute cap; the conversation now carries on in a fresh session.
+  it('explains carrying on in a fresh session, and how to pick up', () => {
+    expect(prompt).toContain('  [app] the conversation carried on mid-tour, at stop 3 of 7: pick up where you left off, with no greeting');
+    expect(prompt).toContain('  [app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting');
+    expect(prompt).toMatch(/^- The app also carries a long conversation on in a fresh session before its time runs out, and starts a fresh one when the player enters Study\./m);
+    expect(prompt).toMatch(/^- On a tour, finish the stop you were on \(get_scene_state gives it as tour\), then call next_tour_stop\./m);
   });
 });

@@ -92,8 +92,8 @@ function setup({ server = fakeServer(), storage = memoryStorage(), mic = 'grante
       if (timers[id]) timers[id].cleared = true;
     },
     now: clock ? () => clock.now : undefined,
-    onConversationEnd: () => ended.push(true),
-    onConversationStart: () => started.push(true),
+    onConversationEnd: (detail) => ended.push(detail ?? true),
+    onConversationStart: (detail) => started.push(detail ?? true),
     ...(onChange ? { onChange } : {}),
     ...(beacon ? { sendBeacon: beacon } : {}),
   });
@@ -280,12 +280,14 @@ describe('M4: starting a conversation', () => {
 
 describe('M4: warning the guide before the cutoff', () => {
   // The app ends the conversation at its reserved time, which can be under
-  // 8 minutes; 30 s before that, the guide is told so it can say goodbye.
-  it('sends the warning once, 30 s before the reserved time', async () => {
+  // 8 minutes. Kyle, 2026-10-13: the warning now opens the handover, 45 s
+  // before the cap, so the guide finishes its thought and the app carries on.
+  it('sends the warning once, 45 s before the cap', async () => {
     const { session, conversation, timers } = setup();
     await session.start({ guide: 'rollo' });
     await session.handleConnect({ conversationId: 'c' });
-    const warning = timers.find(({ ms }) => ms === 450_000);
+    session.guideSpeaking?.(true);
+    const warning = timers.find(({ ms }) => ms === 435_000);
     expect(warning).toBeDefined();
     warning.fn();
     expect(conversation.calls.filter(([name]) => name === 'sendContextualUpdate')).toEqual([
@@ -307,7 +309,7 @@ describe('M4: warning the guide before the cutoff', () => {
     await session.start({ guide: 'rollo' });
     await session.handleConnect({ conversationId: 'c' });
     session.end();
-    expect(timers.find(({ ms }) => ms === 450_000).cleared).toBe(true);
+    expect(timers.find(({ ms }) => ms === 435_000).cleared).toBe(true);
   });
 });
 
@@ -805,5 +807,162 @@ describe('Resting and waking', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(server.requests.some(({ url }) => url === '/api/voice/ended')).toBe(true);
+  });
+});
+
+// Kyle, 2026-10-13: tours stopped at the 8-minute cap ("Call ended due to
+// maximum call duration limit", 8m 14s). Before the cap, the conversation
+// carries on in a fresh session, and the visitor hears at most a short pause.
+describe('Carrying on past the session cap', () => {
+  const flush = async () => {
+    for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  };
+  const connected = async (options) => {
+    const harness = setup(options);
+    await harness.session.start({ guide: 'rollo', mode: options?.mode ?? 'voice' });
+    await harness.session.handleConnect({ conversationId: 'conv_1' });
+    return harness;
+  };
+  const starts = (conversation) => conversation.calls.filter(([name]) => name === 'startSession');
+  const summaries = (server) => server.requests.filter(({ url, body }) => url === '/api/voice/event' && body?.type === 'session_summary');
+
+  it('caps a session at the agent\'s own 8 minutes', () => {
+    expect(sessionModule.AGENT_MAX_SECONDS).toBe(480);
+  });
+
+  it('opens the handover 45 s before the cap: the guide is told, and the handover waits for it to fall quiet', async () => {
+    const { session, conversation, timers, server } = await connected();
+    session.guideSpeaking(true);
+    timers.find(({ ms }) => ms === 435_000).fn();
+    expect(conversation.calls.filter(([name]) => name === 'sendContextualUpdate')).toEqual([
+      ['sendContextualUpdate', '[app] about 30 seconds of our conversation remain'],
+    ]);
+    expect(conversation.calls.some(([name]) => name === 'endSession')).toBe(false);
+    session.guideSpeaking(false);
+    await flush();
+    expect(conversation.calls.some(([name]) => name === 'endSession')).toBe(true);
+    expect(starts(conversation)).toHaveLength(2);
+    expect(summaries(server).map(({ body }) => body.reason)).toEqual(['handover']);
+  });
+
+  it('hands over at once when the window opens and the guide is already quiet', async () => {
+    const { session, conversation, timers } = await connected();
+    timers.find(({ ms }) => ms === 435_000).fn();
+    await flush();
+    expect(starts(conversation)).toHaveLength(2);
+    expect(session.getState().phase).toBe('connecting');
+  });
+
+  it('hands over 12 s before the cap even if the guide is still speaking', async () => {
+    const { session, conversation, timers } = await connected();
+    session.guideSpeaking(true);
+    timers.find(({ ms }) => ms === 435_000).fn();
+    timers.find(({ ms }) => ms === 468_000).fn();
+    await flush();
+    expect(starts(conversation)).toHaveLength(2);
+  });
+
+  it("counts from the agent's 8 minutes when the server reserved more", async () => {
+    const { timers } = await connected({ server: fakeServer({ token: { ...TOKEN_RESPONSE, maxSeconds: 600 } }) });
+    expect(timers.some(({ ms }) => ms === 435_000)).toBe(true);
+    expect(timers.some(({ ms }) => ms === 468_000)).toBe(true);
+  });
+
+  it('counts from the reservation when it is shorter', async () => {
+    const { timers } = await connected({ server: fakeServer({ token: { ...TOKEN_RESPONSE, maxSeconds: 300 } }) });
+    expect(timers.some(({ ms }) => ms === 255_000)).toBe(true);
+    expect(timers.some(({ ms }) => ms === 288_000)).toBe(true);
+  });
+
+  it('tells the server the old conversation ended before asking for the next', async () => {
+    const { timers, order } = await connected();
+    timers.find(({ ms }) => ms === 435_000).fn();
+    await flush();
+    const ended = order.indexOf('/api/voice/ended');
+    const secondToken = order.lastIndexOf('/api/voice/token');
+    expect(ended).toBeGreaterThan(-1);
+    expect(secondToken).toBeGreaterThan(ended);
+  });
+
+  it('keeps the guide and the mode: a written conversation carries on in writing', async () => {
+    const { conversation, timers, server } = await connected({ mode: 'text' });
+    timers.find(({ ms }) => ms === 435_000).fn();
+    await flush();
+    expect(starts(conversation)[1][1].textOnly).toBe(true);
+    const tokens = server.requests.filter(({ url }) => url === '/api/voice/token');
+    expect(tokens.map(({ body }) => body.guide)).toEqual(['rollo', 'rollo']);
+  });
+
+  it('tells the page the conversation carried on, so the lit region stays and the guide can pick up', async () => {
+    const states = [];
+    const harness = setup({ onChange: (state) => states.push(state) });
+    const { session, timers } = harness;
+    await session.start({ guide: 'rollo', mode: 'voice' });
+    await session.handleConnect({ conversationId: 'conv_1' });
+    states.length = 0;
+    timers.find(({ ms }) => ms === 435_000).fn();
+    await flush();
+    const starting = states.filter((s) => s.phase === 'requesting' || s.phase === 'connecting');
+    expect(starting.length).toBeGreaterThan(0);
+    expect(starting.every((s) => s.carryingOn)).toBe(true);
+    await session.handleConnect({ conversationId: 'conv_2' });
+    expect(session.getState()).toMatchObject({ phase: 'connected', carryingOn: false });
+    expect(harness.ended.at(-1)).toEqual({ carriedOn: true });
+    expect(harness.started.at(-1)).toEqual({ carriedOn: true });
+  });
+
+  it('does not hand over a short reservation (under 2 minutes): it warns 30 s before and rests at the limit, as before', async () => {
+    const { session, timers } = await connected({ server: fakeServer({ token: { ...TOKEN_RESPONSE, maxSeconds: 90 } }) });
+    expect(timers.some(({ ms }) => ms === 60_000)).toBe(true);
+    expect(timers.some(({ ms }) => ms === 45_000)).toBe(false);
+    timers.find(({ ms }) => ms === 90_000).fn();
+    expect(session.getState().phase).toBe('resting');
+  });
+
+  it('says why when the server refuses the next session', async () => {
+    const base = fakeServer();
+    let tokens = 0;
+    const server = {
+      requests: base.requests,
+      fetchImpl: async (url, init) => {
+        if (url === '/api/voice/token' && (tokens += 1) > 1) {
+          base.requests.push({ url, init, body: JSON.parse(init.body) });
+          return { ok: false, status: 429, json: async () => ({ available: false, reason: 'device_daily_cap', resetsInSeconds: 3 * 3600 }) };
+        }
+        return base.fetchImpl(url, init);
+      },
+    };
+    const { session, timers } = await connected({ server });
+    timers.find(({ ms }) => ms === 435_000).fn();
+    await flush();
+    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: "You've used today's voice time. Voice returns in about 3 hours." });
+  });
+
+  // Kyle, 2026-10-13: "Start a new session when moving to a study".
+  describe('a fresh session on demand (entering Study)', () => {
+    it('ends this conversation and starts the next at once, carrying on', async () => {
+      const { session, conversation, server, ended } = await connected();
+      await session.handOver();
+      await flush();
+      expect(starts(conversation)).toHaveLength(2);
+      expect(summaries(server).map(({ body }) => body.reason)).toEqual(['handover']);
+      expect(ended.at(-1)).toEqual({ carriedOn: true });
+    });
+
+    it('does nothing unless a conversation is connected', async () => {
+      const { session, conversation } = setup();
+      await session.handOver();
+      expect(conversation.calls).toEqual([]);
+      expect(session.getState().phase).toBe('idle');
+    });
+
+    it('cancels a pending timed handover', async () => {
+      const { session, conversation, timers } = await connected();
+      await session.handOver();
+      await flush();
+      expect(timers.find(({ ms }) => ms === 435_000).cleared).toBe(true);
+      expect(timers.find(({ ms }) => ms === 468_000).cleared).toBe(true);
+      expect(starts(conversation)).toHaveLength(2);
+    });
   });
 });
