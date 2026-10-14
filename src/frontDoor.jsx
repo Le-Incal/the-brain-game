@@ -206,15 +206,16 @@ export function ToggleButton({ label, active, onClick, compact = false, mini = f
 }
 
 /**
- * Where the arrival choices sit (Kyle, 2026-10-13): bottom-left, level with
- * the bottom bar and in line with the region text, so a region the visitor
- * hovers or clicks is described while they stay in view. Tablets and phones
+ * Where the arrival choices sit (Kyle, 2026-10-13): on the left, in line with
+ * the region text, their top level with the guide's "Hello!" line (which rests
+ * 324px above the bar's margin; +6px meets the letters' tops). A region the
+ * visitor hovers or clicks is described just above them. Tablets and phones
  * adjust in index.html.
  */
 export const ARRIVAL_PANEL_STYLE = Object.freeze({
   position: 'absolute',
   left: 'clamp(24px, 5vw, 64px)',
-  bottom: 'clamp(18px, 3vh, 28px)',
+  top: 'calc(100% - clamp(18px, 3vh, 28px) - 318px)',
   width: 'clamp(180px, 22vw, 280px)',
   zIndex: 11,
   pointerEvents: 'none',
