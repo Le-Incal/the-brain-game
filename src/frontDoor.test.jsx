@@ -239,6 +239,37 @@ describe('Settings', () => {
     expect(markup).not.toContain('Sylvi');
     expect(markup).toContain('Difficulty');
   });
+
+  // Kyle, 2026-10-13: "Remove the double line in the modal". One border, no inner ring.
+  it('has a single border, with no inner ring', () => {
+    const markup = renderToStaticMarkup(<SettingsPanel {...props} />);
+    const style = markup.match(/id="settings-panel"[^>]*style="([^"]*)"/)[1];
+    expect(style).toContain('border:1px solid #1a1814');
+    expect(style).not.toMatch(/inset/);
+  });
+
+  // Kyle, 2026-10-13: "if a user clicks off of settings then the modal should close".
+  describe('closes when the visitor presses anywhere outside it', () => {
+    const at = (selector) => ({ closest: (query) => (query.split(',').map((s) => s.trim()).includes(selector) ? {} : null) });
+
+    it('closes on a press on the brain, the page or another button', () => {
+      expect(frontDoor.pressClosesSettings({ open: true, target: at('canvas') })).toBe(true);
+      expect(frontDoor.pressClosesSettings({ open: true, target: at('.bar-colour') })).toBe(true);
+    });
+
+    it('stays open for a press inside it', () => {
+      expect(frontDoor.pressClosesSettings({ open: true, target: at('.settings-panel') })).toBe(false);
+    });
+
+    it('leaves the Settings button to toggle it, so one press does not close and reopen it', () => {
+      expect(frontDoor.pressClosesSettings({ open: true, target: at('.bar-settings') })).toBe(false);
+    });
+
+    it('does nothing while it is closed, or for a press with no element', () => {
+      expect(frontDoor.pressClosesSettings({ open: false, target: at('canvas') })).toBe(false);
+      expect(frontDoor.pressClosesSettings({ open: true, target: null })).toBe(false);
+    });
+  });
 });
 
 describe('The guide is there from arrival', () => {
@@ -456,6 +487,14 @@ describe('The arrival choices', () => {
     expect(markup).toContain('Study the Brain');
     expect(markup).toContain('Play the Game');
     expect(markup).not.toMatch(/shadow/i);
+  });
+
+  // Kyle, 2026-10-13: "Make the line around the brain game buttons a little
+  // thinner". 0.75px: one device pixel on a 2x screen (was two), two on a 3x phone (was three).
+  it('are drawn with a fine line', () => {
+    const markup = renderToStaticMarkup(<ArrivalOptions guideName="Sylvi" onStudy={() => {}} onPlay={() => {}} />);
+    expect(markup.match(/border:0\.75px solid #1a1814/g)).toHaveLength(2);
+    expect(markup).not.toContain('border:1px');
   });
 });
 
