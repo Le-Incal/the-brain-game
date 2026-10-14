@@ -15,9 +15,11 @@ const getWelcome = (app, guide = 'sylvi', host = HOST) => request(app).get(`/api
 // once, costs nothing per visit and still works when every slot is taken.
 
 describe('The welcome, word for word', () => {
-  it('introduces the guide as a human brain and names the three ways in', () => {
+  // Kyle, 2026-10-13: 'In stead of "Welcome" say "Hello!" As if the puppet is
+  // turning and suddenly recognizing that a user has arrived.'
+  it('says "Hello!", introduces the guide as a human brain and names the three ways in', () => {
     expect(welcomeText('Sylvi')).toBe(
-      'Welcome. I am Sylvi, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.'
+      'Hello! I am Sylvi, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.'
     );
     expect(welcomeText('Rollo')).toContain('I am Rollo, a human brain.');
   });
@@ -149,5 +151,30 @@ describe('GET /api/voice/welcome/:guide', () => {
     const { app, upstream } = await setup();
     await getWelcome(app);
     expect(upstream.tokenRequests()).toHaveLength(0);
+  });
+});
+
+// Kyle, 2026-10-13: the voice started late. Measured on staging, the first
+// request after a deploy waited 2.1 s while the server recorded it. The
+// server records both guides as it starts, so no visitor waits.
+describe('Recording the welcome as the server starts', () => {
+  it('records both guides at once when asked to, before any visitor', async () => {
+    const { upstream } = await setup({ warmWelcomes: true });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const voices = upstream.ttsRequests().map(({ url }) => url.match(/text-to-speech\/([^/]+)\//)[1]).sort();
+    expect(voices).toEqual(['voice_rollo_test', 'voice_sylvi_test']);
+  });
+
+  it('serves the first visitor from memory', async () => {
+    const { app, upstream } = await setup({ warmWelcomes: true });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect((await getWelcome(app, 'sylvi')).status).toBe(200);
+    expect(upstream.ttsRequests()).toHaveLength(2);
+  });
+
+  it('records nothing at start unless asked', async () => {
+    const { upstream } = await setup();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(upstream.ttsRequests()).toHaveLength(0);
   });
 });

@@ -16,6 +16,8 @@ const {
   WELCOME_SELECT_HOLD_MS,
   WELCOME_AFTER_SELECT_PAUSE_MS,
   WELCOME_THREE_QUARTER,
+  WELCOME_GREETING,
+  recognition,
   welcomeTourTiming,
   welcomeTour,
   faceTurn,
@@ -43,6 +45,8 @@ const FRAME_MS = 1000 / FRAMES_PER_SECOND;
 const degrees = (radians) => (radians * 180) / Math.PI;
 // 90 degrees in 1.5 s, eased on a sine: about 94 degrees a second at the fastest.
 const PEAK_DEGREES_PER_FRAME = 1.6;
+// The greeting's snap: about 200 degrees a second at the fastest, for a moment.
+const SNAP_DEGREES_PER_FRAME = 3.5;
 
 function liveFrame() {
   // The page's own camera: the harness builds it exactly as the scene does.
@@ -114,6 +118,64 @@ describe('The welcome tour: its settings', () => {
   });
 });
 
+// Kyle, 2026-10-13 (evening): "The brain should start at side elevation but
+// then turn and look at the user as if animated as a puppet... as if the puppet
+// is turning and suddenly recognizing that a user has arrived." His pick: a
+// casual turn, then a snap. It turns idly a little way toward us, notices us,
+// snaps the rest of the way past us with its head lifted in surprise, and
+// settles facing us. "Hello!" lands on the snap.
+describe("The greeting: a puppet's recognition", () => {
+  const FRAME_S = 1 / 60;
+  const speeds = (total, fromMs, toMs) => {
+    const out = [];
+    for (let ms = fromMs + FRAME_S * 1000; ms <= toMs; ms += FRAME_S * 1000) {
+      out.push(Math.abs(recognition(ms, total).turn - recognition(ms - FRAME_S * 1000, total).turn) / FRAME_S);
+    }
+    return out;
+  };
+
+  it('turns idly for 0.6 s, snaps for 0.5 s past us by 7 degrees with a 5 degree lift, and settles in 0.5 s', () => {
+    expect(WELCOME_GREETING).toEqual({ idleMs: 600, idleDegrees: 25, snapMs: 500, overshootDegrees: 7, liftDegrees: 5, settleMs: 500 });
+  });
+
+  it('starts still, square on its side', () => {
+    expect(recognition(0, 90)).toEqual({ turn: 0, lift: 0 });
+  });
+
+  it('turns idly about 25 degrees toward us first, slowly, without lifting', () => {
+    expect(recognition(600, 90).turn).toBeCloseTo(25, 6);
+    expect(recognition(600, 90).lift).toBe(0);
+    expect(Math.max(...speeds(90, 0, 600))).toBeLessThanOrEqual(61);
+  });
+
+  it('notices us and snaps past us by 7 degrees, lifting its head 5 degrees, at about 200 degrees a second at most', () => {
+    expect(recognition(1100, 90).turn).toBeCloseTo(97, 6);
+    expect(recognition(1100, 90).lift).toBeCloseTo(5, 6);
+    const fastest = Math.max(...speeds(90, 600, 1100));
+    expect(fastest).toBeGreaterThan(180);
+    expect(fastest).toBeLessThanOrEqual(205);
+  });
+
+  it('settles facing us, its head level again, and stays there', () => {
+    expect(recognition(1600, 90)).toEqual({ turn: 90, lift: 0 });
+    expect(recognition(4000, 90)).toEqual({ turn: 90, lift: 0 });
+  });
+
+  it('flows: no jump between frames, and it never stops dead mid-turn', () => {
+    const turns = speeds(90, 0, 1600);
+    for (let i = 1; i < turns.length; i += 1) expect(Math.abs(turns[i] - turns[i - 1]) * FRAME_S).toBeLessThan(0.5);
+    // Still moving as it notices us: the idle turn runs into the snap.
+    expect(speeds(90, 580, 620).every((v) => v > 40)).toBe(true);
+  });
+
+  it('keeps the idle turn a share of a shorter turn, and snaps no faster from far round', () => {
+    expect(recognition(600, 45).turn).toBeCloseTo(12.5, 6);
+    expect(recognition(1600, 45)).toEqual({ turn: 45, lift: 0 });
+    const far = Math.max(...speeds(180, 600, 3000));
+    expect(far).toBeLessThanOrEqual(205);
+  });
+});
+
 describe('When the tour moves on from the greeting', () => {
   it.each([
     ['Sylvi', 3480],
@@ -154,10 +216,29 @@ describe('The tour, timed to Sylvi', () => {
   const stop = (view) => tour().stops.find((s) => s.view === view);
   const poseAtMs = (ms) => tour().poseAt(ms / tour().durationMs);
 
-  it('turns to face us first, within 1.5 s of "Welcome."', () => {
+  it('turns to face us first, settled 1.6 s after it starts to turn', () => {
     const [greeting] = tour().stops;
     expect(greeting.view).toBe('anterior');
-    expect(greeting.arriveMs).toBe(1500);
+    expect(greeting.arriveMs).toBe(1600);
+  });
+
+  it('greets like a puppet: an idle turn, then a snap past us with its head lifted, then settles facing us', () => {
+    const face = viewPose('anterior');
+    const total = degrees(start.angleTo(face));
+    // A third of the way round after the idle turn.
+    expect(degrees(start.angleTo(poseAtMs(600)))).toBeCloseTo(Math.min(25, (25 * total) / 90), 0);
+    // At the end of the snap it has gone past us and lifted its head.
+    const overshot = poseAtMs(1100);
+    expect(degrees(overshot.angleTo(face))).toBeGreaterThan(7);
+    expect(UP.clone().applyQuaternion(overshot).dot(frame.toCamera)).toBeLessThan(UP.clone().applyQuaternion(face).dot(frame.toCamera));
+    // Then it settles, square on.
+    expect(degrees(poseAtMs(1600).angleTo(face))).toBeLessThan(1e-4);
+  });
+
+  it('snaps at about 200 degrees a second at the fastest, for a moment only', () => {
+    const snap = largestStep(sampleMs(tour(), 0, 1600));
+    expect(snap).toBeGreaterThan(2.5);
+    expect(snap).toBeLessThanOrEqual(SNAP_DEGREES_PER_FRAME);
   });
 
   it('holds the greeting while she says her name, until "You can study"', () => {
@@ -247,8 +328,8 @@ describe('The tour, timed to Sylvi', () => {
     expect(turnsAboutOneScreenAxis(sampleMs(tour(), tour().stops[0].leaveMs, stop('inferior').arriveMs))).toBe(true);
   });
 
-  it('never moves faster than about 94 degrees a second', () => {
-    expect(largestStep(sampleMs(tour()))).toBeLessThanOrEqual(PEAK_DEGREES_PER_FRAME);
+  it('never moves faster than about 94 degrees a second after the greeting', () => {
+    expect(largestStep(sampleMs(tour(), tour().stops[0].arriveMs))).toBeLessThanOrEqual(PEAK_DEGREES_PER_FRAME);
   });
 
   it('eases into and out of every turn: no motion jumps at a stop', () => {
@@ -262,23 +343,24 @@ describe('The tour, timed to Sylvi', () => {
 });
 
 describe('The greeting from other poses', () => {
-  it('turns at the same calm pace from far round, taking longer rather than going faster', () => {
+  it('snaps at the same speed from far round, taking longer rather than going faster', () => {
     const tour = welcomeTour({ start: viewPose('posterior'), frame, viewPose, tourAtMs: 3480 });
-    expect(tour.stops[0].arriveMs).toBe(3000);
-    expect(largestStep(sampleMs(tour))).toBeLessThanOrEqual(PEAK_DEGREES_PER_FRAME);
+    expect(tour.stops[0].arriveMs).toBeGreaterThan(1600);
+    expect(largestStep(sampleMs(tour, 0, tour.stops[0].arriveMs))).toBeLessThanOrEqual(SNAP_DEGREES_PER_FRAME);
+    expect(largestStep(sampleMs(tour, tour.stops[0].arriveMs))).toBeLessThanOrEqual(PEAK_DEGREES_PER_FRAME);
   });
 
   it('keeps a pause after the greeting when the words come early', () => {
     const tour = welcomeTour({ start: viewPose('posterior'), frame, viewPose, tourAtMs: 1000 });
-    expect(tour.stops[0].leaveMs).toBe(3500);
+    expect(tour.stops[0].leaveMs).toBe(tour.stops[0].arriveMs + 500);
   });
 
   it('starts from wherever the arrival turn has carried it', () => {
     const start = uprightLeft(40);
     const tour = welcomeTour({ start, frame, viewPose, tourAtMs: 3480 });
     expect(tour.poseAt(0).angleTo(start)).toBeLessThan(1e-6);
-    expect(tour.stops[0].arriveMs).toBe(1500);
-    expect(degrees(tour.poseAt(1500 / tour.durationMs).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);
+    expect(tour.stops[0].arriveMs).toBe(1600);
+    expect(degrees(tour.poseAt(1600 / tour.durationMs).angleTo(viewPose('anterior')))).toBeLessThan(1e-4);
   });
 });
 

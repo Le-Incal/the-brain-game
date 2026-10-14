@@ -134,7 +134,7 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
  * Builds the app and waits for today's usage to be restored from ElevenLabs,
  * as the real server does before it offers voice.
  */
-export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(), distDir = tempDist(), createApp, setIntervalImpl, logger } = {}) {
+export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(), distDir = tempDist(), createApp, setIntervalImpl, logger, warmWelcomes } = {}) {
   const upstream = fakeElevenLabs(elevenLabs);
   const app = createApp({
     env: makeEnv(env),
@@ -143,6 +143,7 @@ export async function startApp({ env = {}, elevenLabs = {}, clock = fakeClock(),
     now: clock.now,
     setIntervalImpl: setIntervalImpl ?? (() => null),
     logger: logger ?? { info: () => {}, warn: () => {} },
+    ...(warmWelcomes === undefined ? {} : { warmWelcomes }),
   });
   await app.locals.voice.ready;
   return { app, clock, upstream };

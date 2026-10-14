@@ -455,3 +455,16 @@ describe('The arrival choices', () => {
     expect(markup).not.toMatch(/shadow/i);
   });
 });
+
+// Kyle, 2026-10-13: "The brain should start at side elevation but then turn
+// and look at the user". While the guide is coming, the brain holds its side
+// still for the greeting; without the guide it turns slowly on arrival as before.
+describe('The arrival turn', () => {
+  it('waits, still on its side, while the guide is coming', () => {
+    expect(frontDoor.arrivalTurn({ voiceEnabled: true })).toBe(false);
+  });
+
+  it('turns as before when there is no guide', () => {
+    expect(frontDoor.arrivalTurn({ voiceEnabled: false })).toBe(true);
+  });
+});

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const welcomeModule = await import('./welcome.js').catch(() => ({}));
-const { createWelcome, WELCOME_DELAY_MS, WELCOME_ID } = welcomeModule;
+const { createWelcome, WELCOME_DELAY_MS, WELCOME_GREETING_LEAD_MS, WELCOME_ID } = welcomeModule;
 
 // Kyle, 2026-10-11: within seconds of the page loading the brain welcomes the
 // visitor. Browsers block sound until the first tap, so the welcome's text
@@ -53,8 +53,25 @@ function setup({ autoplay = true, fetchOk = true } = {}) {
 describe('The welcome', () => {
   // Kyle, 2026-10-11: it started too quickly; a visitor needs a moment to land.
   // Kyle, 2026-10-11 (later): 4 s felt too long; halved.
-  it('begins 2 s after the brain appears', () => {
-    expect(WELCOME_DELAY_MS).toBe(2000);
+  // Kyle, 2026-10-13: "the agent voice still starts a little too delayed";
+  // his pick: "Hello!" about 1.2 s after the brain appears.
+  it('says "Hello!" 1.2 s after the brain appears', () => {
+    expect(WELCOME_DELAY_MS).toBe(1200);
+  });
+
+  // The brain starts to turn before she speaks, so "Hello!" lands on its snap.
+  it('lets the brain start turning 0.6 s before she speaks', () => {
+    expect(WELCOME_GREETING_LEAD_MS).toBe(600);
+  });
+
+  it('never plays once stopped before it starts, and counts as cut short', async () => {
+    const { welcome, audio } = setup({ autoplay: true });
+    await welcome.load('sylvi');
+    welcome.stop();
+    expect(await welcome.start()).toBe(false);
+    expect(audio.plays).toBe(0);
+    expect(welcome.active()).toBe(false);
+    expect(welcome.cutShort()).toBe(true);
   });
 
   it("loads the guide's recording and its text", async () => {
