@@ -181,6 +181,15 @@ export function createSceneCommands(
   let litFocus = null;
   let litByWords = false;
   let lastFollowTurnAt = -Infinity;
+  // Kyle, 2026-10-13: "talks around the green strip but shows the red orange
+  // primary motor cortex". The regions the guide looked up or showed in answer
+  // to the visitor are its subject until the visitor's next turn: following
+  // its words lights them, never a neighbour named in passing. Null: no subject.
+  let subject = null;
+  const addSubject = (ids) => {
+    subject ??= new Set();
+    for (const id of [].concat(ids)) subject.add(id);
+  };
 
   // Every light goes through here, so the focus is always known.
   function light(ids, focus = null, { byWords = false } = {}) {
@@ -397,6 +406,7 @@ export function createSceneCommands(
     if (!inStudy()) return fail(GAME_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
+    addSubject(id);
     if (!motionAllowed()) {
       light(id);
       return fail(MOTION_OFF_REASON, `Highlighted my ${REGION_BY_ID.get(id).name} without turning it toward you.`);
@@ -487,6 +497,8 @@ export function createSceneCommands(
 
     const ids = lobeRegionIds(lobe);
     const { quaternion, arrived } = lobePose(lobe);
+    // A tour scopes its own stops; outside one, the lobe becomes the subject.
+    if (!tour) addSubject(ids);
 
     light(ids);
     const outcome = await move(bookmark ?? { command: 'faceLobe', lobe }, quaternion);
@@ -506,6 +518,7 @@ export function createSceneCommands(
 
   async function finishTour(did) {
     tour = null;
+    subject = null;
     onTourEvent?.({ type: 'end' });
     await showWholeBrain({ command: 'endTour' });
     return { ...ok(did), done: true };
@@ -516,6 +529,7 @@ export function createSceneCommands(
     if (moveRefusal()) return fail(moveRefusal());
     if (!loaded()) return fail(NOT_LOADED_REASON);
     tour = { index: -1, length: normalizeTourLength(length) };
+    subject = null;
     onTourEvent?.({ type: 'start' });
     await showWholeBrain({ command: 'startTour' });
     return {
@@ -577,6 +591,12 @@ export function createSceneCommands(
     return key(lit) === key(ids) && key(litFocus) === key(focus);
   };
 
+  // Whether what is lit is exactly the guide's subject (a lobe it showed), whatever stands out on top.
+  const litIsSubject = () => {
+    const lit = [].concat(adapter.getHighlight() ?? []);
+    return lit.length === subject.size && lit.every((id) => subject.has(id));
+  };
+
   const mayTurnForWords = () =>
     !moveRefusal() && !currentMove && !showcaseToken && loaded() && now() - lastFollowTurnAt >= FOLLOW_TURN_MIN_INTERVAL_MS;
 
@@ -593,10 +613,18 @@ export function createSceneCommands(
     if (section?.isOpen?.()) return skipped;
     let ids;
     let focus = null;
+    const targetIds = target.kind === 'region' ? [target.id] : LOBE_NAMES.includes(target.lobe) ? lobeRegionIds(target.lobe) : [];
     if (tour && tour.index >= 0) {
       const lobeIds = lobeRegionIds(TOUR_ORDER[tour.index]);
       if (target.kind !== 'region' || !lobeIds.includes(target.id)) return skipped;
       ids = lobeIds;
+      focus = [target.id];
+    } else if (subject && !targetIds.every((id) => subject.has(id))) {
+      // A neighbour named in passing: the subject stays lit.
+      return skipped;
+    } else if (subject && subject.size > 1 && target.kind === 'region' && litIsSubject()) {
+      // Within a lobe the guide showed: the lobe stays lit, the named region stands out on top.
+      ids = adapter.getHighlight();
       focus = [target.id];
     } else if (target.kind === 'region' && REGION_BY_ID.has(target.id)) {
       ids = target.id;
@@ -619,12 +647,14 @@ export function createSceneCommands(
     if (!inStudy()) return fail(GAME_REASON);
     const id = parseRegionId(regionId);
     if (id === null) return fail(REGION_RANGE_REASON);
+    addSubject(id);
     light(id);
     return ok(`Highlighted my ${REGION_BY_ID.get(id).name}.`);
   }
 
   function clearHighlight() {
     if (!inStudy()) return fail(GAME_REASON);
+    subject = null;
     light(null);
     return ok('Cleared the highlight.');
   }
@@ -657,6 +687,7 @@ export function createSceneCommands(
     } else {
       return fail('Provide a region_id or a name.');
     }
+    addSubject(region.id);
     return {
       ok: true,
       region: {
@@ -743,6 +774,13 @@ export function createSceneCommands(
   };
   // Kept off the enumerable keys: the agent contract is exactly thirteen commands.
   Object.defineProperty(commands, 'followName', { value: followName, enumerable: false });
+  // The visitor spoke, wrote or clicked: the guide's next words choose a new subject.
+  Object.defineProperty(commands, 'visitorTurn', {
+    value: () => {
+      subject = null;
+    },
+    enumerable: false,
+  });
   /**
    * The visitor opened the section: turn to the side it is drawn from. Not a
    * guide tool. With motion off the turn is instant, since the visitor asked for it.

@@ -190,6 +190,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         welcome.stop();
         stallGuardRef.current?.playerActivity();
         follower.interrupted();
+        // A new turn: the guide's next words choose a new subject (Kyle, 2026-10-13).
+        commandsRef.current?.visitorTurn?.();
         stream.addVisitor({ id: payload.event_id ? `u-${payload.event_id}` : nextLineId('u'), text: raw });
       } else if (payload?.role === 'agent') {
         follower.guideText(raw);
@@ -257,6 +259,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     // A click while the conversation rests wakes it, and the click goes with it.
     reporter.regionClicked = (region) => {
       restTimer.activity();
+      commandsRef.current?.visitorTurn?.();
       if (session.getState().phase === 'resting') {
         pendingContextRef.current.push(formatRegionClicked(region));
         session.wake();
@@ -616,6 +619,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     setDraft('');
     welcome.stop();
     restTimer.activity();
+    commandsRef.current?.visitorTurn?.();
     stream.addVisitor({ id: nextLineId('typed'), text });
     refreshEntries();
     activityRef.current?.({ type: 'visitor' });
