@@ -486,15 +486,21 @@ describe('The arrival choices', () => {
     const markup = renderToStaticMarkup(<ArrivalOptions guideName="Sylvi" onStudy={() => {}} onPlay={() => {}} />);
     expect(markup).toContain('Study the Brain');
     expect(markup).toContain('Play the Game');
-    expect(markup).not.toMatch(/shadow/i);
+    // The only box-shadow is the hairline drawn inside the edge (below): no offset, no blur.
+    const shadows = markup.match(/box-shadow:[^;"]*/g) ?? [];
+    for (const shadow of shadows) expect(shadow).toBe('box-shadow:inset 0 0 0 0.5px #1a1814');
   });
 
   // Kyle, 2026-10-13: "Make the line around the brain game buttons a little
-  // thinner". 0.75px: one device pixel on a 2x screen (was two), two on a 3x phone (was three).
+  // thinner". Chrome 141 rounds any border under 1px up to 1px (measured at
+  // 1x, 2x and 3x), so the line is a 0.5px hairline drawn inside the edge:
+  // one device pixel on a 2x screen (a 1px border is two), about half the ink on 1x.
   it('are drawn with a fine line', () => {
     const markup = renderToStaticMarkup(<ArrivalOptions guideName="Sylvi" onStudy={() => {}} onPlay={() => {}} />);
-    expect(markup.match(/border:0\.75px solid #1a1814/g)).toHaveLength(2);
-    expect(markup).not.toContain('border:1px');
+    expect(markup.match(/box-shadow:inset 0 0 0 0\.5px #1a1814/g)).toHaveLength(2);
+    expect(markup.match(/border:none/g)).toHaveLength(2);
+    // One pixel more padding each side keeps the buttons the same size without the border.
+    expect(markup.match(/padding:10px 19px/g)).toHaveLength(2);
   });
 });
 
