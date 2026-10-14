@@ -15,7 +15,7 @@ const response = {
   alignment: { chars: [...TEXT], startsMs: [...TEXT].map((_, i) => i * 100) },
 };
 
-function setup({ autoplay = true, fetchOk = true } = {}) {
+function setup({ autoplay = true, fetchOk = true, audioFetch = 'ok' } = {}) {
   const clock = { now: 0 };
   const audio = {
     src: null,
@@ -36,18 +36,29 @@ function setup({ autoplay = true, fetchOk = true } = {}) {
     },
   };
   const fetches = [];
+  const blobs = [];
+  const recordingBlob = { type: 'audio/mpeg', size: 1234 };
   const welcome = createWelcome({
     now: () => clock.now,
     fetchImpl: async (url) => {
       fetches.push(url);
+      if (url === response.audioUrl) {
+        if (audioFetch === 'throws') throw new Error('offline');
+        const ok = audioFetch === 'ok';
+        return { ok, status: ok ? 200 : 502, blob: async () => recordingBlob };
+      }
       return { ok: fetchOk, status: fetchOk ? 200 : 502, json: async () => (fetchOk ? response : { available: false }) };
     },
     createAudio: (src) => {
       audio.src = src;
       return audio;
     },
+    objectUrl: (blob) => {
+      blobs.push(blob);
+      return 'blob:welcome-recording';
+    },
   });
-  return { clock, audio, welcome, fetches };
+  return { clock, audio, welcome, fetches, blobs, recordingBlob };
 }
 
 describe('The welcome', () => {
@@ -77,9 +88,30 @@ describe('The welcome', () => {
   it("loads the guide's recording and its text", async () => {
     const { welcome, fetches, audio } = setup();
     expect(await welcome.load('sylvi')).toBe(true);
-    expect(fetches).toEqual(['/api/voice/welcome/sylvi']);
-    expect(audio.src).toBe('/api/voice/welcome/sylvi/audio');
+    expect(fetches).toEqual(['/api/voice/welcome/sylvi', '/api/voice/welcome/sylvi/audio']);
+    expect(audio.src).toBe('blob:welcome-recording');
     expect(welcome.text()).toBe(TEXT);
+  });
+
+  // Kyle, 2026-10-13, on brain-game.io: the first click turned the voice on
+  // from the start, not at the word reached. The server sends the recording
+  // whole, so Chrome cannot jump into its middle; a recording held in the page
+  // can always be joined anywhere, and is ready the instant the visitor presses.
+  it('holds the recording in the page, so the voice can join mid-sentence', async () => {
+    const { welcome, audio, blobs, recordingBlob } = setup();
+    await welcome.load('sylvi');
+    expect(blobs).toEqual([recordingBlob]);
+    expect(audio.src).toBe('blob:welcome-recording');
+  });
+
+  it("falls back to the recording's address if it cannot be held in the page", async () => {
+    for (const audioFetch of ['refused', 'throws']) {
+      const { welcome, audio, blobs } = setup({ audioFetch });
+      expect(await welcome.load('sylvi')).toBe(true);
+      expect(blobs).toEqual([]);
+      expect(audio.src).toBe('/api/voice/welcome/sylvi/audio');
+      expect(welcome.text()).toBe(TEXT);
+    }
   });
 
   it('plays aloud where the browser allows it, and reports what has been heard', async () => {
