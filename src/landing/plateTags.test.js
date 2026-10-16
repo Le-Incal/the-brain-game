@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import brainRegions from '../data/brainRegions.json';
 
 const plateTagsModule = await import('./plateTags.js').catch(() => ({}));
-const { elevationDistance, projectTag, tagOpacity, PLATE_FRAME, PLATE_TAGS } = plateTagsModule;
+const { elevationDistance, projectTag, tagOpacity, followSpot, PLATE_FRAME, PLATE_TAGS } = plateTagsModule;
 
 // Kyle, 2026-10-15: plates B and C as working pages. The landing page shows the
 // real engraved brain in side elevation, framed where the mockup's plate sat;
@@ -57,6 +57,20 @@ describe('A tag pinned to the brain', () => {
     group.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
     group.updateMatrixWorld();
     expect(projectTag({ ...tag, group, camera, width: 1000, height: 800 }).facing).toBeLessThan(-0.9);
+  });
+});
+
+// Kyle, 2026-10-15: "The labels do not rotate with the brain." Each label
+// travels with its spot, keeping the leader it has in the elevation.
+describe('A label travelling with its spot', () => {
+  const tag = { anchor: [10, 20], label: [1, 5], end: [3, 7] };
+
+  it('stays where the mockup placed it while the brain holds its elevation', () => {
+    expect(followSpot(tag, [10, 20])).toEqual({ label: [1, 5], end: [3, 7] });
+  });
+
+  it('moves with its spot as the brain turns, its leader unchanged', () => {
+    expect(followSpot(tag, [30, 42])).toEqual({ label: [21, 27], end: [23, 29] });
   });
 });
 
