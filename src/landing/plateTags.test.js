@@ -72,6 +72,26 @@ describe('A label travelling with its spot', () => {
   it('moves with its spot as the brain turns, its leader unchanged', () => {
     expect(followSpot(tag, [30, 42])).toEqual({ label: [21, 27], end: [23, 29] });
   });
+
+  // A label never leaves the plate: past the right edge it would run into the
+  // text, past the left edge it would break the page's even margins. `size` is
+  // the label's width and height in percent of the plate.
+  it('stops at the right edge, its leader stretching to meet it', () => {
+    const wernicke = { align: 'right', anchor: [80, 50], label: [100, 12], end: [86, 12] };
+    expect(followSpot(wernicke, [90, 50], [20, 3])).toEqual({ label: [100, 12], end: [86, 12] });
+  });
+
+  it('stops at the left edge', () => {
+    const prefrontal = { align: 'left', anchor: [15, 36], label: [0, 13], end: [2, 15] };
+    expect(followSpot(prefrontal, [5, 36], [20, 3])).toEqual({ label: [0, 13], end: [2, 15] });
+  });
+
+  it('stops at the top and bottom edges, measured from its middle', () => {
+    const motor = { align: 'center', anchor: [50, 25], label: [64, 3.5], end: [53, 5] };
+    expect(followSpot(motor, [50, 20], [30, 3])).toEqual({ label: [64, 1.5], end: [53, 3] });
+    const stem = { align: 'right', anchor: [62, 85], label: [58, 95.5], end: [54, 94] };
+    expect(followSpot(stem, [62, 90], [10, 3])).toEqual({ label: [58, 98.5], end: [54, 97] });
+  });
 });
 
 describe('How a tag fades as its spot turns away', () => {
