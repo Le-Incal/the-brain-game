@@ -2,7 +2,7 @@
  * The landing plates B and C, working (Kyle, 2026-10-15): the real engraved
  * brain in side elevation, framed where the mockup's plate sat. The visitor
  * may drag to turn it and look around it, and nothing else: no region picks,
- * no zoom, no pan. The analytical tags stay pinned to the anatomy as it turns.
+ * no zoom, no pan. The analytical tags travel with the anatomy as it turns.
  * Staging only, while we choose.
  */
 
@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { BrainScene } from '../utils/brainScene';
 import { loadBrainModel } from '../utils/brainLoader';
 import { getViewFrame, orientationForView } from '../voice/orientation.js';
-import { PLATE_FRAME, PLATE_TAGS, elevationDistance, projectTag, tagOpacity } from './plateTags.js';
+import { PLATE_FRAME, PLATE_TAGS, elevationDistance, followSpot, projectTag, tagOpacity } from './plateTags.js';
 import './landing.css';
 
 // One degree of view: an elevation, as drawn, not a perspective.
@@ -36,13 +36,16 @@ const tags = PLATE_TAGS.map((tag) => {
   leaders.appendChild(line);
   const dot = document.createElement('span');
   dot.className = 'plate-dot';
+  dot.style.left = `${tag.anchor[0]}%`;
+  dot.style.top = `${tag.anchor[1]}%`;
   const label = document.createElement('span');
   label.className = `plate-label plate-label-${tag.align}`;
   label.textContent = tag.text;
   label.style.left = `${tag.label[0]}%`;
   label.style.top = `${tag.label[1]}%`;
   plate.append(dot, label);
-  return { ...tag, line, dot, label, local: null, normal: null, region: null };
+  // `label` stays the tag's place in the plate; its element is `labelEl`.
+  return { ...tag, line, dot, labelEl: label, local: null, normal: null, region: null };
 });
 
 let elevation = null;
@@ -125,22 +128,33 @@ function followTags() {
   requestAnimationFrame(followTags);
   if (!elevation) return;
   const frame = frameOnCanvas();
+  // Read every label's size before anything is written, so the page lays out once.
+  const sizes = tags.map((tag) => [
+    (tag.labelEl.offsetWidth / frame.plateRect.width) * 100,
+    (tag.labelEl.offsetHeight / frame.plateRect.height) * 100,
+  ]);
   scene.specimenGroup.updateMatrixWorld(true);
   scene.camera.updateMatrixWorld();
-  for (const tag of tags) {
-    if (!tag.local) continue;
+  tags.forEach((tag, index) => {
+    if (!tag.local) return;
     const at = projectTag({ local: tag.local, normal: tag.normal, group: scene.specimenOrientGroup, camera: scene.camera, width: scene.width, height: scene.height });
     const x = ((frame.canvasRect.left + at.x - frame.plateRect.left) / frame.plateRect.width) * 100;
     const y = ((frame.canvasRect.top + at.y - frame.plateRect.top) / frame.plateRect.height) * 100;
+    // The label and its leader travel with the spot, inside the plate (Kyle, 2026-10-15).
+    const { label, end } = followSpot(tag, [x, y], sizes[index]);
     tag.line.setAttribute('x1', x.toFixed(2));
     tag.line.setAttribute('y1', y.toFixed(2));
+    tag.line.setAttribute('x2', end[0].toFixed(2));
+    tag.line.setAttribute('y2', end[1].toFixed(2));
     tag.dot.style.left = `${x}%`;
     tag.dot.style.top = `${y}%`;
+    tag.labelEl.style.left = `${label[0]}%`;
+    tag.labelEl.style.top = `${label[1]}%`;
     const opacity = tagOpacity(at.facing).toFixed(3);
     tag.line.style.opacity = opacity;
     tag.dot.style.opacity = opacity;
-    tag.label.style.opacity = opacity;
-  }
+    tag.labelEl.style.opacity = opacity;
+  });
 }
 
 loadBrainModel('/brain.glb')

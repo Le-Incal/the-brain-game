@@ -16,20 +16,34 @@ body {
   box-sizing: border-box;
   padding: 56px clamp(24px, 5vw, 88px);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: clamp(24px, 4vw, 72px);
   font-family: 'EB Garamond', Georgia, serif;
   color: var(--ink);
   background: var(--paper) url('/parchment.png') center / cover;
   overflow-x: hidden;
 }
 
+/*
+ * The plate and the text as one centred spread (Kyle, 2026-10-15: "The padding
+ * is not consistent between the left and right sides"). The plate's outer
+ * labels sit flush with its edges, so the page's margins match on both sides.
+ * At its widest: a 693 px plate (the brain 632 px), 72 px, and 440 px of text.
+ */
+.landing-spread {
+  width: 100%;
+  max-width: 1205px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 72px);
+}
+
 .plate-figure {
-  flex: 999 1 560px;
+  flex: 1 1 560px;
   min-width: 0;
-  max-width: 780px;
+  max-width: 693px;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -40,7 +54,7 @@ body {
 /* The plate: the brain's frame and its tags, in the mockup's proportions. */
 .plate {
   position: relative;
-  width: 88.8%;
+  width: 100%;
   aspect-ratio: 1361 / 1193;
   container-type: inline-size;
 }
@@ -94,6 +108,11 @@ body {
   font-size: 2.02cqw;
   line-height: 1.2;
   color: var(--ink);
+  /* A clear field of paper round the lettering, as an engraver leaves it,
+     so a label stays legible when the brain turns beneath it. */
+  text-shadow:
+    0 0 1px var(--paper), 0 0 2px var(--paper), 0 0 3px var(--paper),
+    0 0 4px var(--paper), 0 0 6px var(--paper), 0 0 8px var(--paper);
   pointer-events: none;
 }
 
@@ -264,7 +283,8 @@ body {
 }
 
 @media (max-width: 640px) {
-  .landing { padding: 30px 22px 26px; gap: 16px; }
+  .landing { padding: 30px 22px 26px; }
+  .landing-spread { gap: 16px; }
   .landing-text { gap: 16px; }
   .landing-text h1 { font-size: 46px; }
   .landing-subtitle { font-size: 19px; }
