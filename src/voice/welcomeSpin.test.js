@@ -24,6 +24,7 @@ const {
   uprightFacing,
   createSpinCue,
   motionControl,
+  catchUp,
 } = spinModule;
 
 // Kyle, 2026-10-13: the continuous spin "rotates too fast, like it's doing
@@ -482,5 +483,62 @@ describe('The talking motion during the tour', () => {
   // A grab ends the tour, so a held brain is never touring.
   it('never overrides the visitor holding it', () => {
     expect(motionControl({ control: 'player_holding', touring: true })).toBe('player_holding');
+  });
+});
+
+// Kyle, 2026-10-15: "if I grab the brain while it's talking and then let go,
+// it should keep going right back to where it would have been in its motion".
+// The tour's clock runs on while the visitor holds it; on release the brain
+// eases from where it was let go onto the tour, at the point the tour has
+// reached, and follows it from there.
+describe('Catching up with the tour after the visitor lets go', () => {
+  const Y = new THREE.Vector3(0, 1, 0);
+  const about = (degrees) => new THREE.Quaternion().setFromAxisAngle(Y, THREE.MathUtils.degToRad(degrees));
+  // A tour that turns steadily: 30 degrees a second.
+  const poseAtMs = (ms) => about((30 * ms) / 1000);
+
+  it('starts where the visitor let go and ends where the tour ends', () => {
+    const from = about(200);
+    const path = catchUp({ from, poseAtMs, startMs: 5000, endMs: 9000 });
+    expect(path.durationMs).toBe(4000);
+    expect(path.poseAt(0).angleTo(from)).toBeLessThan(1e-6);
+    expect(path.poseAt(1).angleTo(poseAtMs(9000))).toBeLessThan(1e-6);
+  });
+
+  it("is back on the tour once it has caught up, in step with the tour's clock", () => {
+    const from = about(200);
+    const path = catchUp({ from, poseAtMs, startMs: 5000, endMs: 9000 });
+    for (const ms of [path.catchMs, path.catchMs + 500, 3500]) {
+      expect(path.poseAt(ms / path.durationMs).angleTo(poseAtMs(5000 + ms))).toBeLessThan(1e-6);
+    }
+  });
+
+  // The tour's own pace: a quarter turn in 1.5 s, and at least half a second.
+  it('catches up at the pace the tour turns', () => {
+    const near = catchUp({ from: poseAtMs(5000).multiply(about(5)), poseAtMs, startMs: 5000, endMs: 9000 });
+    expect(near.catchMs).toBe(500);
+    const quarter = catchUp({ from: poseAtMs(5000).multiply(about(90)), poseAtMs, startMs: 5000, endMs: 9000 });
+    expect(quarter.catchMs).toBe(1500);
+  });
+
+  it('never jumps: each frame moves only a little', () => {
+    const from = about(200);
+    const path = catchUp({ from, poseAtMs, startMs: 5000, endMs: 9000 });
+    const frames = Math.ceil(path.durationMs / 16);
+    let previous = path.poseAt(0);
+    let largest = 0;
+    for (let i = 1; i <= frames; i += 1) {
+      const pose = path.poseAt(i / frames);
+      largest = Math.max(largest, pose.angleTo(previous));
+      previous = pose;
+    }
+    expect(THREE.MathUtils.radToDeg(largest)).toBeLessThan(4);
+  });
+
+  it('ends the catch-up with the tour if the tour ends first', () => {
+    const from = about(200);
+    const path = catchUp({ from, poseAtMs, startMs: 8800, endMs: 9000 });
+    expect(path.durationMs).toBe(path.catchMs);
+    expect(path.poseAt(1).angleTo(poseAtMs(9000))).toBeLessThan(1e-6);
   });
 });

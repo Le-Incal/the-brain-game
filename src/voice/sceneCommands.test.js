@@ -30,12 +30,13 @@ afterEach(() => {
   clock.restore();
 });
 
-function setup() {
+function setup({ guideSpeaking } = {}) {
   const harness = createFakeSceneAdapter();
   const interactions = [];
   const controlChanges = [];
   const timers = [];
   const commands = createSceneCommands(harness.adapter, {
+    ...(guideSpeaking ? { guideSpeaking } : {}),
     onUserInteraction: (event) => interactions.push(event),
     onControlChange: (control) => controlChanges.push(control),
     setTimeoutImpl: (fn, ms) => {
@@ -693,6 +694,8 @@ describe('C22: guide and player share the brain like an agent and a user share a
     expect(commands.getSceneState().control).toBe('guide_free');
   });
 
+  // Kyle, 2026-10-15: a grab mid-turn is a peek. The brain finishes the turn
+  // the grab cut short when the visitor lets go (C24), and nothing more.
   it('never moves the brain by itself when control returns', async () => {
     const { commands, controls, element, endQuietPeriod } = setup();
     const pending = commands.faceRegion(17);
@@ -701,12 +704,12 @@ describe('C22: guide and player share the brain like an agent and a user share a
     await pending;
     element.dispatch('pointermove', { clientX: 460, clientY: 300 });
     element.dispatch('pointerup', { clientX: 460, clientY: 300 });
-    await runFrames(controls, clock, 300); // let the drag's own smoothing finish
-    const settledByPlayer = controls.orientGroup.quaternion.clone();
+    await runFrames(controls, clock, 3200);
+    const settled = controls.orientGroup.quaternion.clone();
     endQuietPeriod();
     await runFrames(controls, clock, 1500);
     expect(controls.isMoving).toBe(false);
-    expect(controls.orientGroup.quaternion.angleTo(settledByPlayer)).toBeLessThan(1e-6);
+    expect(controls.orientGroup.quaternion.angleTo(settled)).toBeLessThan(1e-6);
   });
 });
 
@@ -763,6 +766,109 @@ describe('C23: the took-hold message waits 250 ms; the stop does not', () => {
     element.dispatch('pointerup', { clientX: 470, clientY: 300 });
     endQuietPeriod();
     expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
+  });
+});
+
+// Kyle, 2026-10-15: "if I grab the brain while it's talking and then let go,
+// it should keep going right back to where it would have been in its motion".
+// His pick: the welcome tour and her turns. A grab is a peek: the press still
+// stops the turn and she still hears about it, and on release the brain goes
+// back. Once she is quiet, or the visitor has taken a turn of their own, the
+// brain stays where the visitor leaves it; in a game it is always theirs.
+describe('C24: a grab while she turns or talks is a peek', () => {
+  // At most a half turn, at the tour's pace (a quarter turn in 1.5 s).
+  const RETURN_MS = 3200;
+
+  // Where faceRegion(17) settles, from the same start.
+  async function shownPose(regionId = 17) {
+    const reference = setup();
+    await reference.settle(reference.commands.faceRegion(regionId));
+    return reference.controls.orientGroup.quaternion.clone();
+  }
+
+  async function grabDragRelease(element, { between } = {}) {
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    element.dispatch('pointermove', { clientX: 480, clientY: 300 });
+    between?.();
+    element.dispatch('pointerup', { clientX: 480, clientY: 300 });
+    await flushMicrotasks();
+  }
+
+  // Where the visitor left it, once the drag's own smoothing has settled; and that it stays there.
+  async function expectLeftAlone({ controls }) {
+    await runFrames(controls, clock, 300);
+    const left = controls.orientGroup.quaternion.clone();
+    await runFrames(controls, clock, RETURN_MS);
+    expect(controls.isMoving).toBe(false);
+    expect(controls.orientGroup.quaternion.angleTo(left)).toBeLessThan(1e-6);
+  }
+
+  it('goes back to where her turn was heading when the visitor lets go', async () => {
+    const target = await shownPose();
+    const { commands, controls, element } = setup();
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 400);
+    element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    // The tool still reports the grab, so she hears it.
+    expect((await pending).ok).toBe(false);
+    element.dispatch('pointermove', { clientX: 480, clientY: 300 });
+    element.dispatch('pointerup', { clientX: 480, clientY: 300 });
+    await runFrames(controls, clock, RETURN_MS);
+    expect(controls.orientGroup.quaternion.angleTo(target)).toBeLessThan(0.01);
+    expect(commands.getSceneState().interrupted).toBeNull();
+  });
+
+  it('goes back to the view she turned to while she is still talking about it', async () => {
+    const { commands, controls, element, settle } = setup({ guideSpeaking: () => true });
+    await settle(commands.faceRegion(17));
+    const shown = controls.orientGroup.quaternion.clone();
+    await grabDragRelease(element);
+    await runFrames(controls, clock, 100);
+    expect(controls.orientGroup.quaternion.angleTo(shown)).toBeGreaterThan(0.05);
+    await runFrames(controls, clock, RETURN_MS);
+    expect(controls.orientGroup.quaternion.angleTo(shown)).toBeLessThan(0.01);
+  });
+
+  it('still tells her about the grab, and hands back after the quiet period', async () => {
+    const { commands, element, interactions, endQuietPeriod, controls } = setup({ guideSpeaking: () => true });
+    await runFrames(controls, clock, 0);
+    const pending = commands.faceRegion(17);
+    await runFrames(controls, clock, 400);
+    await grabDragRelease(element);
+    await pending;
+    endQuietPeriod();
+    expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
+  });
+
+  it('leaves the brain where the visitor puts it once she is quiet', async () => {
+    const harness = setup({ guideSpeaking: () => false });
+    await harness.settle(harness.commands.faceRegion(17));
+    await grabDragRelease(harness.element);
+    await expectLeftAlone(harness);
+  });
+
+  it('leaves it when the press selected a region: that is the visitor choosing', async () => {
+    const harness = setup({ guideSpeaking: () => true });
+    await harness.settle(harness.commands.faceRegion(17));
+    // The page reports a region click before the release.
+    await grabDragRelease(harness.element, { between: () => harness.commands.visitorTurn() });
+    await expectLeftAlone(harness);
+  });
+
+  it('leaves it once the visitor has taken a turn of their own since she turned', async () => {
+    const harness = setup({ guideSpeaking: () => true });
+    await harness.settle(harness.commands.faceRegion(17));
+    harness.commands.visitorTurn();
+    await grabDragRelease(harness.element);
+    await expectLeftAlone(harness);
+  });
+
+  it('never pulls the brain back in a game: turning it is how the player plays', async () => {
+    const harness = setup({ guideSpeaking: () => true });
+    await harness.settle(harness.commands.faceRegion(17));
+    harness.state.mode = 'game';
+    await grabDragRelease(harness.element);
+    await expectLeftAlone(harness);
   });
 });
 

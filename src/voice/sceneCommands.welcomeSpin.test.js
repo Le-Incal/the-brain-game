@@ -189,19 +189,68 @@ describe('The welcome tour as a scene command', () => {
     expect(harness.controlChanges).toEqual(['guide_moving', 'guide_free']);
   });
 
-  it('stops where it is when the visitor grabs, and the brain stays theirs', async () => {
+  // Kyle, 2026-10-15: "if I grab the brain while it's talking and then let
+  // go, it should keep going right back to where it would have been in its
+  // motion". The tour's clock runs on while the visitor holds the brain.
+  it("is the visitor's while held, then goes back onto its path and carries on in step", async () => {
+    const harness = setup();
+    const reference = setup();
+    const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
+    reference.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
+    const both = async (ms) => {
+      for (let elapsed = 0; elapsed < ms; elapsed += FRAME_MS) {
+        clock.advance(FRAME_MS);
+        harness.controls.update();
+        reference.controls.update();
+        await flushMicrotasks();
+      }
+    };
+    // Mid-turn from the left side to the back.
+    await both(TOUR_AT_MS + 1500 + 750);
+    harness.element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
+    harness.element.dispatch('pointermove', { clientX: 520, clientY: 300 });
+    await both(1000);
+    const held = harness.orientGroup.quaternion.clone();
+    await both(500);
+    // It never fights the hand.
+    expect(harness.orientGroup.quaternion.angleTo(held)).toBeLessThan(1e-6);
+    harness.element.dispatch('pointerup', { clientX: 520, clientY: 300 });
+    await flushMicrotasks();
+    // Back in step with the tour within a half turn at the tour's pace.
+    await both(3100);
+    expect(harness.orientGroup.quaternion.angleTo(reference.orientGroup.quaternion)).toBeLessThan(0.01);
+    await both(TOUR_MS);
+    await expect(result).resolves.toMatchObject({ ok: true });
+    expect(harness.orientGroup.quaternion.angleTo(harness.uprightFace)).toBeLessThan(0.01);
+  });
+
+  it('ends, as before, when the press selected a region: that is the visitor choosing', async () => {
     const harness = setup();
     const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
-    // Mid-turn from the left side to the back.
     await runFrames(harness.controls, clock, TOUR_AT_MS + 1500 + 750);
     harness.element.dispatch('pointerdown');
-    const grabbed = harness.orientGroup.quaternion.clone();
-    await flushMicrotasks();
-    await expect(result).resolves.toMatchObject({ ok: false });
-    expect(harness.controls.isMoving).toBe(false);
-    await runFrames(harness.controls, clock, 500);
-    expect(harness.orientGroup.quaternion.angleTo(grabbed)).toBeLessThan(1e-6);
+    // The page reports a region click before the release.
+    harness.commands.visitorTurn();
     harness.element.dispatch('pointerup');
+    await expect(result).resolves.toMatchObject({ ok: false });
+    await runFrames(harness.controls, clock, 300);
+    const left = harness.orientGroup.quaternion.clone();
+    await runFrames(harness.controls, clock, 3000);
+    expect(harness.orientGroup.quaternion.angleTo(left)).toBeLessThan(1e-6);
+  });
+
+  it('leaves the brain with the visitor when the welcome is cut short while they hold it', async () => {
+    const harness = setup();
+    const result = harness.commands.welcomeSpin({ tourAtMs: TOUR_AT_MS });
+    await runFrames(harness.controls, clock, TOUR_AT_MS + 1500 + 750);
+    harness.element.dispatch('pointerdown');
+    await harness.commands.endWelcomeSpin();
+    harness.element.dispatch('pointerup');
+    await expect(result).resolves.toMatchObject({ ok: false });
+    await runFrames(harness.controls, clock, 300);
+    const left = harness.orientGroup.quaternion.clone();
+    await runFrames(harness.controls, clock, 3000);
+    expect(harness.orientGroup.quaternion.angleTo(left)).toBeLessThan(1e-6);
   });
 
   it('turns calmly back to face us, upright, when the welcome is cut short', async () => {
@@ -228,9 +277,11 @@ describe('The welcome tour as a scene command', () => {
     await runUntil(harness, () => harness.state.demoSelected === PREFRONTAL, TOUR_MS);
     harness.element.dispatch('pointerdown');
     await flushMicrotasks();
-    await expect(result).resolves.toMatchObject({ ok: false });
     expect(harness.state.demoSelected).toBeNull();
     harness.element.dispatch('pointerup');
+    await runFrames(harness.controls, clock, TOUR_MS);
+    await expect(result).resolves.toMatchObject({ ok: true });
+    expect(harness.state.demoSelected).toBeNull();
   });
 
   it('lets go of the demonstration and turns to face us when the welcome is cut short while it is selected', async () => {

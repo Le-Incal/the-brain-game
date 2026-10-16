@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const firstTapModule = await import('./firstTap.js').catch(() => ({}));
-const { firstTapAction, listenForFirstTap, FIRST_TAP_EVENTS, CHOICE_SELECTOR, FIELD_SELECTOR } = firstTapModule;
+const { firstTapAction, listenForFirstTap, FIRST_TAP_EVENTS, CHOICE_SELECTOR, FIELD_SELECTOR, conversationOnFirstPress, listenForFirstInteraction } = firstTapModule;
 
 // Kyle, 2026-10-13: on brain-game.io the welcome streamed silently. Chrome
 // allows sound only after the visitor has clicked, tapped or pressed a key on
@@ -144,6 +144,76 @@ describe('Listening for the first interaction', () => {
     const target = fakeTarget();
     const stop = listenForFirstTap({ target, state: () => ({ welcomeState: 'none' }), unlock: async () => true });
     stop();
+    expect(target.listeners.size).toBe(0);
+  });
+});
+
+// Kyle, 2026-10-15: "The microphone is not turning on when I interact with
+// it." A press made her heard and the Voice switch read On, but nothing opened
+// the conversation, so the microphone never started. His pick: the first
+// click, tap or key press opens it, and the browser asks for the microphone once.
+describe('The first press opens the conversation', () => {
+  it('opens it on a press anywhere while none is open', () => {
+    expect(conversationOnFirstPress({ phase: 'idle' })).toBe('start');
+  });
+
+  it('counts a choice as a press: Study the Brain or the Brain Game opens it too', () => {
+    expect(conversationOnFirstPress({ phase: 'idle', onChoice: true })).toBe('start');
+  });
+
+  it('leaves the switches and the message box to themselves, and keeps listening', () => {
+    expect(conversationOnFirstPress({ phase: 'idle', onSwitch: true })).toBe('wait');
+    expect(conversationOnFirstPress({ phase: 'idle', inField: true })).toBe('wait');
+  });
+
+  it("never opens one over the visitor's own Voice choice, or beside one already open", () => {
+    expect(conversationOnFirstPress({ phase: 'idle', voiceChosen: true })).toBe('stop');
+    for (const phase of ['requesting', 'connecting', 'connected', 'resting', 'unavailable']) {
+      expect(conversationOnFirstPress({ phase })).toBe('stop');
+    }
+  });
+});
+
+describe('Listening for the first interaction', () => {
+  function fakeTarget() {
+    const listeners = new Map();
+    return {
+      listeners,
+      addEventListener: (type, fn, capture) => listeners.set(type, { fn, capture }),
+      removeEventListener: (type) => listeners.delete(type),
+      fire: (type, target = { closest: () => null }) => listeners.get(type)?.fn({ type, target }),
+    };
+  }
+  const on = (selector) => ({ closest: (asked) => (asked === selector ? {} : null) });
+
+  it('opens the conversation once, on the first press, before the page handles it', () => {
+    const target = fakeTarget();
+    const starts = [];
+    listenForFirstInteraction({ target, state: () => ({ phase: 'idle' }), start: () => starts.push('start') });
+    expect([...target.listeners.keys()]).toEqual(FIRST_TAP_EVENTS);
+    for (const { capture } of target.listeners.values()) expect(capture).toBe(true);
+    target.fire('pointerup');
+    expect(starts).toEqual(['start']);
+    expect(target.listeners.size).toBe(0);
+  });
+
+  it('waits past a switch or the message box for the next press', () => {
+    const target = fakeTarget();
+    const starts = [];
+    listenForFirstInteraction({ target, state: () => ({ phase: 'idle' }), start: () => starts.push('start') });
+    target.fire('pointerup', on('.guide-switch'));
+    target.fire('keydown', on(FIELD_SELECTOR));
+    expect(starts).toEqual([]);
+    target.fire('keydown');
+    expect(starts).toEqual(['start']);
+  });
+
+  it('stops listening without opening one when the visitor already chose', () => {
+    const target = fakeTarget();
+    const starts = [];
+    listenForFirstInteraction({ target, state: () => ({ phase: 'idle', voiceChosen: true }), start: () => starts.push('start') });
+    target.fire('pointerup');
+    expect(starts).toEqual([]);
     expect(target.listeners.size).toBe(0);
   });
 });
