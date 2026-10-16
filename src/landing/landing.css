@@ -26,13 +26,13 @@ body {
 
 /*
  * The plate and the text as one centred spread (Kyle, 2026-10-15: "The padding
- * is not consistent between the left and right sides"). The plate's outer
- * labels sit flush with its edges, so the page's margins match on both sides.
- * At its widest: a 693 px plate (the brain 632 px), 72 px, and 440 px of text.
+ * is not consistent between the left and right sides"). The plate is the
+ * brain's own outline, so the page's margins match on both sides. At its
+ * widest: a 625 px brain, 72 px, and 440 px of text.
  */
 .landing-spread {
   width: 100%;
-  max-width: 1205px;
+  max-width: 1137px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -41,9 +41,9 @@ body {
 }
 
 .plate-figure {
-  flex: 1 1 560px;
+  flex: 1 1 510px;
   min-width: 0;
-  max-width: 693px;
+  max-width: 625px;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -51,18 +51,18 @@ body {
   gap: 14px;
 }
 
-/* The plate: the brain's frame and its tags, in the mockup's proportions. */
+/* The plate: the brain's own outline in side elevation (Kyle, 2026-10-16: no
+   tags), measured on the render at 624.5 x 545.9 px. */
 .plate {
   position: relative;
   width: 100%;
-  aspect-ratio: 1361 / 1193;
-  container-type: inline-size;
+  aspect-ratio: 1.1438;
 }
 
-/* Room round the frame, so the brain is never clipped as it turns. */
+/* Room round the brain, so it is never clipped as it turns. */
 .plate-canvas {
   position: absolute;
-  inset: -12% -7% -8% -7%;
+  inset: -22.3% -13.2% -11.2% -13.2%;
   touch-action: none;
 }
 
@@ -73,79 +73,6 @@ body {
 
 .plate-canvas canvas:active {
   cursor: grabbing;
-}
-
-.plate-leaders {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.plate-leaders line {
-  stroke: var(--ink);
-  stroke-width: 0.75px;
-  vector-effect: non-scaling-stroke;
-}
-
-.plate-dot {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  margin: -2.5px 0 0 -2.5px;
-  border-radius: 50%;
-  background: var(--ink);
-  box-shadow: 0 0 0 1px var(--paper);
-  pointer-events: none;
-}
-
-.plate-label {
-  position: absolute;
-  white-space: nowrap;
-  font-style: italic;
-  font-size: 2.02cqw;
-  line-height: 1.2;
-  color: var(--ink);
-  /* A clear field of paper round the lettering, as an engraver leaves it,
-     so a label stays legible when the brain turns beneath it. */
-  text-shadow:
-    0 0 1px var(--paper), 0 0 2px var(--paper), 0 0 3px var(--paper),
-    0 0 4px var(--paper), 0 0 6px var(--paper), 0 0 8px var(--paper);
-  pointer-events: none;
-}
-
-.plate-label-left { transform: translate(0, -50%); }
-.plate-label-right { transform: translate(-100%, -50%); }
-.plate-label-center { transform: translate(-50%, -50%); }
-
-/* The tags come in once the specimen has loaded and they are pinned to it. */
-.plate .plate-leaders,
-.plate .plate-dot,
-.plate .plate-label {
-  visibility: hidden;
-}
-
-.plate.is-ready .plate-leaders,
-.plate.is-ready .plate-dot,
-.plate.is-ready .plate-label {
-  visibility: visible;
-  animation: plate-tags-in 0.8s ease both;
-}
-
-@keyframes plate-tags-in {
-  from { filter: opacity(0); }
-  to { filter: opacity(1); }
-}
-
-/* Too small to read on a phone: the brain alone. */
-@container (max-width: 520px) {
-  .plate-leaders,
-  .plate-dot,
-  .plate-label {
-    display: none;
-  }
 }
 
 .plate-figure figcaption {
@@ -285,6 +212,8 @@ body {
 @media (max-width: 640px) {
   .landing { padding: 30px 22px 26px; }
   .landing-spread { gap: 16px; }
+  /* The phone's brain keeps the size it had inside the tagged plate. */
+  .plate { width: 90%; }
   .landing-text { gap: 16px; }
   .landing-text h1 { font-size: 46px; }
   .landing-subtitle { font-size: 19px; }
