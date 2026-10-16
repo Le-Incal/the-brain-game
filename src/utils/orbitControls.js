@@ -91,6 +91,9 @@ export class BrainOrbitControls {
       : new THREE.Quaternion();
     this._lastUpdateTime = performance.now();
 
+    // The landing page only turns the brain (Kyle, 2026-10-15): no zoom, no pan.
+    this.zoomEnabled = options.zoom ?? true;
+    this.panEnabled = options.pan ?? true;
     this._onInteraction = options.onFirstInteraction ?? null;
     this._onClick = options.onClick ?? null;
     this._onPan = options.onPan ?? null;
@@ -161,7 +164,7 @@ export class BrainOrbitControls {
     this.activePointerId = e.pointerId;
     this.domElement.setPointerCapture?.(e.pointerId);
     this.isDragging = true;
-    this._dragMode = e.shiftKey ? 'pan' : 'rotate';
+    this._dragMode = e.shiftKey && this.panEnabled ? 'pan' : 'rotate';
     this._lastPointerY = e.clientY;
     this._pointerStartX = e.clientX;
     this._pointerStartY = e.clientY;
@@ -245,6 +248,8 @@ export class BrainOrbitControls {
   }
 
   _onWheel(e) {
+    // Without zoom the wheel is the page's: it scrolls as it would anywhere.
+    if (!this.zoomEnabled) return;
     e.preventDefault();
     this.radius = Math.max(
       this.minRadius,

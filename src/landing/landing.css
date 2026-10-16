@@ -1,0 +1,274 @@
+/* The landing plates B and C (Kyle, 2026-10-15), as in the mockup. */
+:root {
+  --ink: #1a1814;
+  --ink-soft: #3d3932;
+  --paper: #f7f0dc;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+}
+
+.landing {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 56px clamp(24px, 5vw, 88px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 72px);
+  font-family: 'EB Garamond', Georgia, serif;
+  color: var(--ink);
+  background: var(--paper) url('/parchment.png') center / cover;
+  overflow-x: hidden;
+}
+
+.plate-figure {
+  flex: 999 1 560px;
+  min-width: 0;
+  max-width: 780px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* The plate: the brain's frame and its tags, in the mockup's proportions. */
+.plate {
+  position: relative;
+  width: 88.8%;
+  aspect-ratio: 1361 / 1193;
+  container-type: inline-size;
+}
+
+/* Room round the frame, so the brain is never clipped as it turns. */
+.plate-canvas {
+  position: absolute;
+  inset: -12% -7% -8% -7%;
+  touch-action: none;
+}
+
+.plate-canvas canvas {
+  display: block;
+  cursor: grab;
+}
+
+.plate-canvas canvas:active {
+  cursor: grabbing;
+}
+
+.plate-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.plate-leaders line {
+  stroke: var(--ink);
+  stroke-width: 0.75px;
+  vector-effect: non-scaling-stroke;
+}
+
+.plate-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--paper);
+  pointer-events: none;
+}
+
+.plate-label {
+  position: absolute;
+  white-space: nowrap;
+  font-style: italic;
+  font-size: 2.02cqw;
+  line-height: 1.2;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.plate-label-left { transform: translate(0, -50%); }
+.plate-label-right { transform: translate(-100%, -50%); }
+.plate-label-center { transform: translate(-50%, -50%); }
+
+/* The tags come in once the specimen has loaded and they are pinned to it. */
+.plate .plate-leaders,
+.plate .plate-dot,
+.plate .plate-label {
+  visibility: hidden;
+}
+
+.plate.is-ready .plate-leaders,
+.plate.is-ready .plate-dot,
+.plate.is-ready .plate-label {
+  visibility: visible;
+  animation: plate-tags-in 0.8s ease both;
+}
+
+@keyframes plate-tags-in {
+  from { filter: opacity(0); }
+  to { filter: opacity(1); }
+}
+
+/* Too small to read on a phone: the brain alone. */
+@container (max-width: 520px) {
+  .plate-leaders,
+  .plate-dot,
+  .plate-label {
+    display: none;
+  }
+}
+
+.plate-figure figcaption {
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.landing-text {
+  flex: 1 1 340px;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.plate-number {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.plate-number span:first-child {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.plate-number span:last-child {
+  flex: 1;
+  height: 0;
+  border-top: 0.5px solid var(--ink);
+}
+
+.landing-text h1 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 900;
+  font-size: clamp(48px, 5.4vw, 80px);
+  letter-spacing: 0.12em;
+  line-height: 0.95;
+}
+
+.landing-subtitle {
+  margin: 10px 0 0;
+  font-style: italic;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.landing-voice {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.landing-note {
+  border: 0.5px solid var(--ink);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.landing-note span {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.landing-note p {
+  margin: 0;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.landing-enter {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.enter {
+  display: inline-block;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 16px 48px;
+  min-height: 54px;
+  box-sizing: border-box;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink), inset 0 0 0 4px var(--paper), inset 0 0 0 4.5px var(--ink);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.enter:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.enter:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.landing-enter p {
+  margin: 0;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.landing-enter kbd {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 0.5px solid var(--ink);
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  .landing { padding: 30px 22px 26px; gap: 16px; }
+  .landing-text { gap: 16px; }
+  .landing-text h1 { font-size: 46px; }
+  .landing-subtitle { font-size: 19px; }
+  .landing-voice { font-size: 18px; }
+  .landing-enter p { display: none; }
+  .enter { width: 100%; text-align: center; }
+}

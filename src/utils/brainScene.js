@@ -171,6 +171,14 @@ export function sampleRegionIdPixelsAtUv(pixels, width, height, uv) {
   return getRegionById(regionId) ? regionId : null;
 }
 
+/**
+ * Whether clicks and hovers pick regions. The landing page turns the brain
+ * only (Kyle, 2026-10-15): "they shouldn't be able to click any of the regions".
+ */
+export function regionPickingEnabled(options = {}) {
+  return options?.selectable !== false;
+}
+
 export function getResponsiveSpecimenScale(viewportWidth) {
   if (viewportWidth <= 480) return 0.73;
   if (viewportWidth <= 640) return 0.8;
@@ -362,11 +370,14 @@ export class BrainScene {
     this.scene.add(this.specimenGroup);
     this._specimenPanY = 0;
 
+    this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
       orientGroup: this.specimenOrientGroup,
       onFirstInteraction: options.onFirstInteraction,
-      onClick: (event) => this._selectRegionAtEvent(event),
+      onClick: this._regionPicking ? (event) => this._selectRegionAtEvent(event) : null,
       onPan: (normalizedDelta) => this._panSpecimenVertical(normalizedDelta),
+      zoom: options.zoom,
+      pan: options.pan,
     });
     this._positionSpecimen();
 
@@ -698,6 +709,7 @@ export class BrainScene {
   }
 
   _updateRaycast() {
+    if (!this._regionPicking) return;
     if (this.brainMeshes.length === 0 || !this._raycastDirty) return;
     // Full-mesh picking on the high-poly anatomical model can stall a frame.
     // Hover feedback is not needed mid-drag, so defer it until rotation ends.

@@ -88,7 +88,7 @@ describe("The plate's tags", () => {
       'Cerebellum',
       'Brain Stem',
     ]);
-    const names = new Map(brainRegions.map((region) => [region.id, region.name]));
+    const names = new Map(brainRegions.regions.map((region) => [region.id, region.name]));
     for (const tag of PLATE_TAGS) expect(names.get(tag.id)).toBe(tag.text);
   });
 
