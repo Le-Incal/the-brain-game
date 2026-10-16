@@ -30,7 +30,7 @@ import brainRegions from '../data/brainRegions.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { VIEWS, classifyView, getViewFrame, orientationFacing, orientationForView } from './orientation.js';
 import { LIMBIC_NOTE, LOBE_NAMES, TOUR_ORDER, lobeRegionIds, normalizeLobe, normalizeTourLength, tourStop } from './lobes.js';
-import { WELCOME_TOUR_DEFAULT_AT_MS, faceTurn, uprightFacing, welcomeTour } from './welcomeSpin.js';
+import { WELCOME_TOUR_DEFAULT_AT_MS, catchUp, faceTurn, uprightFacing, welcomeTour } from './welcomeSpin.js';
 import { REGION_LOOKS, findRegionByLooks } from './regionLooks.js';
 
 // The whole-brain view a tour starts and ends on.
@@ -163,6 +163,8 @@ export function createSceneCommands(
     now = () => performance.now(),
     reducedMotion = () => false,
     motionAllowed = () => true,
+    // Whether the guide is speaking now: while she is, a grab is a peek (Kyle, 2026-10-15).
+    guideSpeaking = () => false,
     // The page's midline section plate: { open() -> Promise<{ ok, reason }>, close(), isOpen() }.
     section = null,
     setTimeoutImpl = setTimeout,
@@ -197,6 +199,52 @@ export function createSceneCommands(
     litByWords = byWords && ids !== null && ids !== undefined;
     if (focus) adapter.setHighlight(ids, { focus });
     else adapter.setHighlight(ids);
+  }
+
+  // Kyle, 2026-10-15: "if I grab the brain while it's talking and then let go,
+  // it should keep going right back to where it would have been in its motion".
+  // His pick: the welcome tour and her turns. A grab is a peek: the press still
+  // stops the turn and she still hears about it; on release the brain goes back
+  // to where her turn was heading, or, while she is still speaking, to the view
+  // she turned to. Once she is quiet, or the visitor has taken a turn of their
+  // own (spoken, written, selected a region), it stays where they leave it. In
+  // a game it is always the player's.
+  let guidePose = null;
+  // The turn a grab cut short: { pose, bookmark }.
+  let peekFrom = null;
+  // A grab on the welcome tour: how the hold ended, true on release, false when
+  // the tour should end instead (the visitor's own turn, a welcome cut short).
+  // Kept until the tour reads it, since the release can come first.
+  let tourHold = null;
+  function endTourHold(released) {
+    if (!tourHold || tourHold.outcome !== null) return;
+    tourHold.outcome = released;
+    tourHold.resolve?.(released);
+  }
+  function tourHoldEnded() {
+    const hold = tourHold;
+    if (!hold) return Promise.resolve(false);
+    const consume = (released) => {
+      if (tourHold === hold) tourHold = null;
+      return released;
+    };
+    if (hold.outcome !== null) return Promise.resolve(consume(hold.outcome));
+    return new Promise((resolve) => {
+      hold.resolve = (released) => resolve(consume(released));
+    });
+  }
+
+  function returnAfterPeek() {
+    const cut = peekFrom;
+    peekFrom = null;
+    if (adapter.getMode() === 'game') {
+      guidePose = null;
+      return;
+    }
+    const pose = cut?.pose ?? (guidePose && guideSpeaking() ? guidePose : null);
+    if (!pose || !motionAllowed() || reducedMotion()) return;
+    const { durationMs } = faceTurn({ start: controls.orientGroup.quaternion.clone(), face: pose });
+    move(cut?.bookmark ?? null, pose, { durationMs });
   }
 
   // Shared control: the quiet period after player input, and the press that
@@ -259,6 +307,8 @@ export function createSceneCommands(
       // so the move still in flight here is the one the grab interrupted.
       const cut = currentMove ? currentMove.bookmark : null;
       if (cut) interrupted = cut;
+      peekFrom = currentMove?.pose ? { pose: currentMove.pose, bookmark: cut } : null;
+      if (tourToken && currentMove === tourToken) tourHold = { outcome: null, resolve: null };
       press = { interrupted: cut, announced: false, exploringBefore: quietTimer !== null };
       if (quietTimer !== null) {
         clearTimeoutImpl(quietTimer);
@@ -284,6 +334,9 @@ export function createSceneCommands(
         restartQuietPeriod();
       }
       press = null;
+      // The welcome tour carries on by itself; any other turn goes back from here.
+      if (tourHold) endTourHold(true);
+      else returnAfterPeek();
       notifyControl();
     } else if (event.type === 'zoom') {
       restartQuietPeriod();
@@ -291,8 +344,11 @@ export function createSceneCommands(
     }
   });
 
-  async function move(bookmark, quaternion, { durationMs } = {}) {
-    const token = { bookmark };
+  // `hers`: a turn of the guide's, which a peek goes back to; `returnTo`: where
+  // to go back to, when the turn is one step of several (the showcase).
+  async function move(bookmark, quaternion, { durationMs, hers = true, returnTo = null } = {}) {
+    const token = { bookmark, pose: hers ? (returnTo ?? quaternion).clone().normalize() : null };
+    guidePose = token.pose;
     currentMove = token;
     const settled = controls.moveTo(quaternion, durationMs ? { durationMs } : undefined);
     notifyControl();
@@ -325,7 +381,7 @@ export function createSceneCommands(
     (async () => {
       for (const target of steps) {
         if (showcaseToken !== token) return;
-        const outcome = await move(null, target, { durationMs: SHOWCASE_STEP_MS });
+        const outcome = await move(null, target, { durationMs: SHOWCASE_STEP_MS, returnTo: best });
         if (!outcome.completed) break;
       }
       if (showcaseToken === token) {
@@ -775,9 +831,13 @@ export function createSceneCommands(
   // Kept off the enumerable keys: the agent contract is exactly thirteen commands.
   Object.defineProperty(commands, 'followName', { value: followName, enumerable: false });
   // The visitor spoke, wrote or clicked: the guide's next words choose a new subject.
+  // Their turn also ends any peek: the brain stays where they put it (Kyle, 2026-10-15).
   Object.defineProperty(commands, 'visitorTurn', {
     value: () => {
       subject = null;
+      guidePose = null;
+      peekFrom = null;
+      endTourHold(false);
     },
     enumerable: false,
   });
@@ -792,7 +852,8 @@ export function createSceneCommands(
     if (!loaded()) return fail(NOT_LOADED_REASON);
     light(null);
     const quaternion = orientationForView(view, frame(), convertAxis);
-    const outcome = await move({ command: 'rotateTo', view }, quaternion, motionAllowed() ? undefined : { durationMs: 1 });
+    // The visitor's own turn (they opened the section), not one a peek goes back to.
+    const outcome = await move({ command: 'rotateTo', view }, quaternion, { hers: false, ...(motionAllowed() ? {} : { durationMs: 1 }) });
     return outcome.completed ? ok(`Turned to my ${viewLabel(view)} view.`) : fail(stoppedReason(outcome.reason));
   }
   Object.defineProperty(commands, 'turnToSide', { value: turnToSide, enumerable: false });
@@ -869,8 +930,7 @@ export function createSceneCommands(
       selected = false;
       adapter.clearDemoSelect?.();
     };
-    const onStep = (progress) => {
-      const atMs = progress * tour.durationMs;
+    const onTourMs = (atMs) => {
       while (pending.length > 0 && pending[0].atMs <= atMs + 1e-6) {
         const event = pending.shift();
         if (event.type === 'select') {
@@ -884,7 +944,24 @@ export function createSceneCommands(
 
     const token = { bookmark: null, face, letGo };
     tourToken = token;
-    const outcome = await followPath(token, { ...tour, onStep });
+    const startedAt = now();
+    let outcome = await followPath(token, { ...tour, onStep: (progress) => onTourMs(progress * tour.durationMs) });
+    // A peek (Kyle, 2026-10-15): its clock runs on while the visitor holds the
+    // brain; on release it eases back onto the tour where the tour has reached.
+    while (!outcome.completed && outcome.reason === 'user' && tourToken === token) {
+      letGo();
+      const released = await tourHoldEnded();
+      if (!released || tourToken !== token) break;
+      const fromMs = Math.min(tour.durationMs, now() - startedAt);
+      // A demonstration whose moment passed while it was held is not shown late.
+      while (pending[0]?.type === 'select' && (pending[1]?.atMs ?? Infinity) <= fromMs) pending.splice(0, 2);
+      const path = catchUp({ from: controls.orientGroup.quaternion.clone(), poseAtMs: tour.poseAtMs, startMs: fromMs, endMs: tour.durationMs });
+      outcome = await followPath(token, {
+        poseAt: path.poseAt,
+        durationMs: path.durationMs,
+        onStep: (progress) => onTourMs(Math.min(tour.durationMs, fromMs + progress * path.durationMs)),
+      });
+    }
     letGo();
     if (tourToken === token) tourToken = null;
     if (outcome.completed) controls.stopAutoRotate();
@@ -895,7 +972,15 @@ export function createSceneCommands(
   /** The welcome was cut short mid-tour: turn calmly back to face us, and stay still. */
   async function endWelcomeSpin() {
     const tour = tourToken;
-    if (!tour || currentMove !== tour) return fail(NO_SPIN_REASON);
+    if (!tour) return fail(NO_SPIN_REASON);
+    // Cut short while the visitor holds it: the brain stays theirs (Kyle, 2026-10-15).
+    if (userHolding) {
+      tourToken = null;
+      tour.letGo();
+      endTourHold(false);
+      return fail(USER_GRAB_REASON);
+    }
+    if (currentMove !== tour) return fail(NO_SPIN_REASON);
     tourToken = null;
     tour.letGo();
     const turn = faceTurn({ start: controls.orientGroup.quaternion.clone(), face: tour.face });

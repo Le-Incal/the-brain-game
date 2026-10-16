@@ -415,7 +415,10 @@ export default function App() {
       },
     });
   }
+  // Whether the guide is speaking now: while she is, a grab is a peek (Kyle, 2026-10-15).
+  const guideSpeakingRef = useRef(false);
   const onGuideActivity = useCallback((event) => {
+    if (event.type === 'speaking') guideSpeakingRef.current = event.value === true;
     if (event.type === 'speaking') offerRef.current.guideSpeaking(event.value);
     else if (event.type === 'visitor') offerRef.current.visitorSpoke();
   }, []);
@@ -578,6 +581,7 @@ export default function App() {
             // Each arrival shows the shape of what was lit, once.
             showcase: true,
             motionAllowed: () => liveStateRef.current.motionOn,
+            guideSpeaking: () => guideSpeakingRef.current,
             // The guide opens and closes the section through the page.
             section: {
               open: () => sectionApiRef.current?.open() ?? { ok: false, reason: SECTION_STUDY_ONLY },

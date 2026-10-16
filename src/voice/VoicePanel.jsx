@@ -16,7 +16,7 @@ import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
-import { listenForFirstTap } from './firstTap.js';
+import { listenForFirstInteraction, listenForFirstTap } from './firstTap.js';
 import { choiceWelcomeAction } from './choiceWelcome.js';
 import { createSoundCheck } from './soundCheck.js';
 import { createGuidePrompter } from './guidePrompter.js';
@@ -251,6 +251,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         follower.interrupted();
         stream.guideStopped();
         refreshEntries();
+        // An ended conversation is silent, whatever the SDK last reported (a grab is no longer a peek).
+        activityRef.current?.({ type: 'speaking', value: false });
         // Carried on in a fresh session (Kyle, 2026-10-13): the lit region stays,
         // and the next conversation learns where to pick up.
         if (detail?.carriedOn) {
@@ -695,6 +697,26 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     return stop;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [welcome, stream]);
+
+  // Kyle, 2026-10-15: "The microphone is not turning on when I interact with
+  // it." A press made her heard and the Voice switch read On, but nothing opened
+  // the conversation. The first click, tap or key press now opens it, and the
+  // browser asks for the microphone once. The switches and the message box act
+  // on their own; a visitor who has used the Voice switch is left to it.
+  useEffect(() => {
+    const stop = listenForFirstInteraction({
+      target: document,
+      state: () => ({ phase: session.getState().phase, voiceChosen: voiceChosenRef.current }),
+      start: () => {
+        restTimer.activity();
+        wantVoice(true);
+        stream.setVoice(true);
+        session.start({ guide: guideRef.current, mode: 'auto' });
+      },
+    });
+    return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, stream]);
 
   // Closing the tab is how most conversations really end; it still gets its summary.
   useEffect(() => {

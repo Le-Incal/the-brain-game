@@ -786,9 +786,11 @@ describe('C24: a grab while she turns or talks is a peek', () => {
     return reference.controls.orientGroup.quaternion.clone();
   }
 
-  async function grabDragRelease(element, { between } = {}) {
+  // A grab, a turn the brain follows on screen, and a release.
+  async function grabDragRelease({ element, controls }, { between } = {}) {
     element.dispatch('pointerdown', { clientX: 400, clientY: 300 });
     element.dispatch('pointermove', { clientX: 480, clientY: 300 });
+    await runFrames(controls, clock, 300);
     between?.();
     element.dispatch('pointerup', { clientX: 480, clientY: 300 });
     await flushMicrotasks();
@@ -819,10 +821,11 @@ describe('C24: a grab while she turns or talks is a peek', () => {
   });
 
   it('goes back to the view she turned to while she is still talking about it', async () => {
-    const { commands, controls, element, settle } = setup({ guideSpeaking: () => true });
+    const harness = setup({ guideSpeaking: () => true });
+    const { commands, controls, settle } = harness;
     await settle(commands.faceRegion(17));
     const shown = controls.orientGroup.quaternion.clone();
-    await grabDragRelease(element);
+    await grabDragRelease(harness);
     await runFrames(controls, clock, 100);
     expect(controls.orientGroup.quaternion.angleTo(shown)).toBeGreaterThan(0.05);
     await runFrames(controls, clock, RETURN_MS);
@@ -830,11 +833,11 @@ describe('C24: a grab while she turns or talks is a peek', () => {
   });
 
   it('still tells her about the grab, and hands back after the quiet period', async () => {
-    const { commands, element, interactions, endQuietPeriod, controls } = setup({ guideSpeaking: () => true });
-    await runFrames(controls, clock, 0);
+    const harness = setup({ guideSpeaking: () => true });
+    const { commands, interactions, endQuietPeriod, controls } = harness;
     const pending = commands.faceRegion(17);
     await runFrames(controls, clock, 400);
-    await grabDragRelease(element);
+    await grabDragRelease(harness);
     await pending;
     endQuietPeriod();
     expect(interactions.map(({ type }) => type)).toEqual(['grab', 'handoff']);
@@ -843,7 +846,7 @@ describe('C24: a grab while she turns or talks is a peek', () => {
   it('leaves the brain where the visitor puts it once she is quiet', async () => {
     const harness = setup({ guideSpeaking: () => false });
     await harness.settle(harness.commands.faceRegion(17));
-    await grabDragRelease(harness.element);
+    await grabDragRelease(harness);
     await expectLeftAlone(harness);
   });
 
@@ -851,7 +854,7 @@ describe('C24: a grab while she turns or talks is a peek', () => {
     const harness = setup({ guideSpeaking: () => true });
     await harness.settle(harness.commands.faceRegion(17));
     // The page reports a region click before the release.
-    await grabDragRelease(harness.element, { between: () => harness.commands.visitorTurn() });
+    await grabDragRelease(harness, { between: () => harness.commands.visitorTurn() });
     await expectLeftAlone(harness);
   });
 
@@ -859,7 +862,7 @@ describe('C24: a grab while she turns or talks is a peek', () => {
     const harness = setup({ guideSpeaking: () => true });
     await harness.settle(harness.commands.faceRegion(17));
     harness.commands.visitorTurn();
-    await grabDragRelease(harness.element);
+    await grabDragRelease(harness);
     await expectLeftAlone(harness);
   });
 
@@ -867,7 +870,7 @@ describe('C24: a grab while she turns or talks is a peek', () => {
     const harness = setup({ guideSpeaking: () => true });
     await harness.settle(harness.commands.faceRegion(17));
     harness.state.mode = 'game';
-    await grabDragRelease(harness.element);
+    await grabDragRelease(harness);
     await expectLeftAlone(harness);
   });
 });

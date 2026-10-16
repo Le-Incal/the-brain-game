@@ -18,9 +18,11 @@
  * lets it go, and turns back to face us upright, as it arrived.
  *
  * It plays once, on arrival, and never for a visitor who has already turned
- * the brain. A grab stops it where it is; a welcome cut short turns the brain
- * calmly back to face us. It finishes facing us at the elevation it arrived
- * with, so the slow turn while it waits never wobbles.
+ * the brain. A grab is a peek (Kyle, 2026-10-15): the brain is the visitor's
+ * while held, and on release it goes back onto the tour where the tour has
+ * reached. A welcome cut short turns the brain calmly back to face us. It
+ * finishes facing us at the elevation it arrived with, so the slow turn while
+ * it waits never wobbles.
  */
 
 import * as THREE from 'three';
@@ -198,7 +200,30 @@ export function welcomeTour({ start, frame, viewPose, axis = rawAxis, tourAtMs, 
     return poses.at(-1).clone();
   }
 
-  return { durationMs, stops, events, poseAt: (progress) => poseAtMs(clamp(progress, 0, 1) * durationMs) };
+  return { durationMs, stops, events, poseAtMs, poseAt: (progress) => poseAtMs(clamp(progress, 0, 1) * durationMs) };
+}
+
+/**
+ * Kyle, 2026-10-15: "if I grab the brain while it's talking and then let go,
+ * it should keep going right back to where it would have been in its motion".
+ * From `from` (where the visitor let go) back onto a motion whose pose at each
+ * moment is `poseAtMs(ms)`, from `startMs` (now, on its clock) to `endMs`.
+ * It eases onto the moving pose at the tour's pace (a quarter turn in 1.5 s,
+ * at least 0.5 s) and follows it from there. `{ durationMs, catchMs, poseAt(progress) }`.
+ */
+export function catchUp({ from, poseAtMs, startMs, endMs }) {
+  const start = from.clone().normalize();
+  const catchMs = turnMs(start.angleTo(poseAtMs(startMs)), SHORTEST_TURN_SHARE);
+  const durationMs = Math.max(endMs - startMs, catchMs);
+  return {
+    durationMs,
+    catchMs,
+    poseAt(progress) {
+      const ms = clamp(progress, 0, 1) * durationMs;
+      const on = poseAtMs(Math.min(endMs, startMs + ms)).clone().normalize();
+      return ms >= catchMs ? on : ease(start, on, ms / catchMs);
+    },
+  };
 }
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0);

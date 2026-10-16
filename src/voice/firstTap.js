@@ -85,3 +85,40 @@ export function listenForFirstTap({ target, state, unlock = async () => true, gr
   for (const type of FIRST_TAP_EVENTS) target.addEventListener(type, onPress, true);
   return stop;
 }
+
+/**
+ * Kyle, 2026-10-15: "The microphone is not turning on when I interact with
+ * it." The first click, tap or key press opens the conversation, so the
+ * browser asks for the microphone once. A choice counts; the switches and the
+ * message box act on their own. Returns 'start', 'wait' for the next press,
+ * or 'stop' listening.
+ */
+export function conversationOnFirstPress({ phase, voiceChosen = false, onSwitch = false, inField = false }) {
+  if (voiceChosen || phase !== 'idle') return 'stop';
+  if (onSwitch || inField) return 'wait';
+  return 'start';
+}
+
+/**
+ * Listens on `target` (the document) for the visitor's first press, before
+ * the page handles it. `state()` gives { phase, voiceChosen }; `start()` opens
+ * the conversation. Returns a function that stops listening.
+ */
+export function listenForFirstInteraction({ target, state, start }) {
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    for (const type of FIRST_TAP_EVENTS) target.removeEventListener(type, onPress, true);
+  };
+  function onPress(event) {
+    if (stopped) return;
+    const within = (selector) => Boolean(event?.target?.closest?.(selector));
+    const action = conversationOnFirstPress({ ...state(), onSwitch: within(SWITCH_SELECTOR), inField: within(FIELD_SELECTOR) });
+    if (action === 'wait') return;
+    stop();
+    if (action === 'start') start();
+  }
+  for (const type of FIRST_TAP_EVENTS) target.addEventListener(type, onPress, true);
+  return stop;
+}
