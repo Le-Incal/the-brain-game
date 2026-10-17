@@ -53,7 +53,9 @@ describe('Where the brain looks', () => {
   it('turns away level, a little counter-clockwise seen from above', () => {
     const look = lookAway({ frame });
     expect(Math.abs(pitchOf(look))).toBeLessThan(1e-6);
-    expect(degrees(look.angleTo(frame.toCamera))).toBeCloseTo(12, 0);
+    // Kyle, 2026-10-16: "start to auto rotate sooner". 6 degrees over the
+    // 1.5 s turn-away averages the drift's own 4 degrees a second.
+    expect(degrees(look.angleTo(frame.toCamera))).toBeCloseTo(6, 0);
     // Counter-clockwise from above swings the front from us toward screen-right.
     expect(look.dot(screenRight)).toBeGreaterThan(0);
   });
@@ -142,12 +144,12 @@ describe('The gaze', () => {
     expect(moves.map((m) => m.pose)).toEqual(['at the button', 'at you']);
     moves[1].resolve({ completed: true });
     await settle();
-    expect(HOLD_ON_YOU_MS).toBe(1500);
+    expect(HOLD_ON_YOU_MS).toBe(500);
     expect(timers.map((t) => t.ms)).toEqual([HOLD_ON_YOU_MS]);
     expect(drift.resume).not.toHaveBeenCalled();
     fireTimers();
     expect(moves.map((m) => m.pose)).toEqual(['at the button', 'at you', 'turning away']);
-    expect(AWAY_MS).toBe(3000);
+    expect(AWAY_MS).toBe(1500);
     expect(moves[2].options).toEqual({ durationMs: AWAY_MS });
     moves[2].resolve({ completed: true });
     await settle();
