@@ -15,19 +15,28 @@
 
 export const COMPOSITION_SLIDE_MS = 900;
 export const PHONE_MAX_WIDTH = 640;
+// Kyle, 2026-10-17: "we need to slightly lower the standard position now." A
+// quarter inch below the page's middle.
+export const CENTRE_DROP_CSS_PX = 24;
 
 export function centresOnPage(width) {
   return width > PHONE_MAX_WIDTH;
 }
 
+/** CSS pixels on the page as a height at the camera's target. */
+export function cssPxToWorld(px, { height, viewportHeight }) {
+  return (px / height) * viewportHeight;
+}
+
 /**
  * The specimen's offset that puts the brain's centre on the camera's target,
- * the page's middle. `brainCentre` is the brain's centre below (negative) or
- * above the specimen's origin, at a scale of 1, in the arrival pose.
+ * the page's middle, then `drop` lower. `brainCentre` is the brain's centre
+ * below (negative) or above the specimen's origin, at a scale of 1, in the
+ * arrival pose.
  */
-export function centreShiftFor({ width, brainCentre, scale, gameShift }) {
+export function centreShiftFor({ width, brainCentre, scale, gameShift, drop = 0 }) {
   if (!centresOnPage(width) || brainCentre === null || brainCentre === undefined) return gameShift;
-  return -brainCentre * scale;
+  return -brainCentre * scale + drop;
 }
 
 /**

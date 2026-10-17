@@ -20,7 +20,16 @@ import {
 } from './brainLoader';
 import { createSpecimenSpace } from './specimenSpace';
 import { mockVoiceLevel, smoothVoiceLevel } from '../voice/voiceLevel';
-import { COMPOSITION_SLIDE_MS, centreShiftFor, centresOnPage, composeSpecimenY, refineBrainCentre, slideLift } from './composition.js';
+import {
+  CENTRE_DROP_CSS_PX,
+  COMPOSITION_SLIDE_MS,
+  centreShiftFor,
+  centresOnPage,
+  composeSpecimenY,
+  cssPxToWorld,
+  refineBrainCentre,
+  slideLift,
+} from './composition.js';
 
 // Where the orbit target sits. The camera turns about this point, so the
 // specimen is displaced from it rather than moved with it.
@@ -376,6 +385,8 @@ export class BrainScene {
     this._lift = 1;
     this._slide = null;
     this._brainCentre = null;
+    // A quarter inch below the middle (Kyle, 2026-10-17); 0 while the centre is measured.
+    this._centreDropPx = CENTRE_DROP_CSS_PX;
 
     this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
@@ -526,9 +537,11 @@ export class BrainScene {
    */
   _landedBrainCentre(brainCentre) {
     if (brainCentre === null || !centresOnPage(this.width)) return brainCentre;
-    const held = { centre: this._brainCentre, lift: this._lift };
+    const held = { centre: this._brainCentre, lift: this._lift, drop: this._centreDropPx };
     this._brainCentre = brainCentre;
     this._lift = 1;
+    // Measured against the true middle; the drop is added after.
+    this._centreDropPx = 0;
     this._positionSpecimen();
     this.specimenGroup.updateMatrixWorld(true);
     this.camera.updateMatrixWorld();
@@ -546,6 +559,7 @@ export class BrainScene {
     }
     this._brainCentre = held.centre;
     this._lift = held.lift;
+    this._centreDropPx = held.drop;
     const distance = this.camera.position.distanceTo(this.controls.target);
     const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     return refineBrainCentre({
@@ -858,6 +872,7 @@ export class BrainScene {
       brainCentre: this._brainCentre,
       scale: getResponsiveSpecimenScale(this.width),
       gameShift: shift,
+      drop: cssPxToWorld(-this._centreDropPx, { height: this.height, viewportHeight }),
     });
     this.specimenGroup.position.y = composeSpecimenY({
       baseY,
