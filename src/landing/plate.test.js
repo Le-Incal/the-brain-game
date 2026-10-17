@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 
 const { elevationDistance } = await import('./elevation.js').catch(() => ({}));
-const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
-const pages = { B: read('../../landing/b/index.html'), C: read('../../landing/c/index.html') };
+const at = (path) => fileURLToPath(new URL(path, import.meta.url));
+const read = (path) => readFileSync(at(path), 'utf8');
+// Kyle, 2026-10-17: plate C is the landing; B is retired.
+const pages = { C: existsSync(at('../../landing/index.html')) ? read('../../landing/index.html') : '' };
 const rule = (selector) => read('./landing.css').match(new RegExp(`\\n${selector.replace('.', '\\.')} \\{[^}]*\\}`))?.[0] ?? '';
 
 // Kyle, 2026-10-15: plates B and C as working pages. The landing page shows the
@@ -17,6 +19,24 @@ describe("Fitting the side elevation into the plate", () => {
     const distance = elevationDistance({ brainWidth: 1.6, canvasWidth: 800, frameWidth: 400, fovDeg: 1, aspect: 2 });
     const visibleWidth = 2 * distance * Math.tan(THREE.MathUtils.degToRad(0.5)) * 2;
     expect(1.6 / visibleWidth).toBeCloseTo(400 / 800, 6);
+  });
+});
+
+// Kyle, 2026-10-17: "this version is ready let's commit push and merge to
+// production." Plate C is brain-game.io's front door; Enter goes into the app.
+describe('The landing in production', () => {
+  it('is plate C, at /landing/ in the build, and B is gone', () => {
+    expect(pages.C).toMatch(/data-plate="tinted"/);
+    expect(existsSync(at('../../landing/b/index.html'))).toBe(false);
+    expect(existsSync(at('../../landing/c/index.html'))).toBe(false);
+    const vite = read('../../vite.config.js');
+    expect(vite).toMatch(/landing: page\('\.\/landing\/index\.html'\)/);
+    expect(vite).not.toMatch(/landingB|landingC/);
+  });
+
+  it('goes into the app at /app, and may be found by search engines', () => {
+    expect(pages.C).toMatch(/<a class="enter" href="\/app">/);
+    expect(pages.C).not.toMatch(/noindex/);
   });
 });
 
@@ -55,7 +75,7 @@ describe('The landing copy', () => {
     // Kyle, 2026-10-16: the new body text.
     expect(html).toMatch(/<p class="landing-voice">\s*<span>This is embodied AI as the Human Brain\. Speak and interact to explore the anatomy and functional regions of the brain\.<\/span>\s*<span>Turn on your speaker(?:&nbsp;| )and(?:&nbsp;| )mic for the best experience\.<\/span>\s*<\/p>/);
     // Kyle, 2026-10-16: the frameless pointing hand ("I like this one!").
-    expect(html).toMatch(/<a class="enter" href="\/"><span class="enter-hand" aria-hidden="true">☞<\/span><span class="enter-word">Enter<\/span><\/a>/);
+    expect(html).toMatch(/<a class="enter" href="\/app"><span class="enter-hand" aria-hidden="true">☞<\/span><span class="enter-word">Enter<\/span><\/a>/);
     expect(html).toContain('family=Noto+Sans+Symbols+2&amp;text=%E2%98%9E');
     expect(html).not.toMatch(/landing-note|Explore the functions|or press|I am a human brain|A note on sound/i);
   });

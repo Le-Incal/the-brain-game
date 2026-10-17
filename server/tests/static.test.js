@@ -16,10 +16,19 @@ async function makeApp(env) {
 }
 
 describe('M3: serving the game', () => {
-  it('serves the built game at /', async () => {
+  // Kyle, 2026-10-17: brain-game.io opens on the landing; Enter goes into the app at /app.
+  it('serves the landing at /', async () => {
     const response = await request(await makeApp()).get('/').set('Host', HOST);
     expect(response.status).toBe(200);
-    expect(response.text).toContain('<title>Brain Game</title>');
+    expect(response.text).toContain('<main class="landing">');
+  });
+
+  it('serves the built game at /app', async () => {
+    for (const route of ['/app', '/app/']) {
+      const response = await request(await makeApp()).get(route).set('Host', HOST);
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('<title>Brain Game</title>');
+    }
   });
 
   it('serves built assets', async () => {
@@ -49,7 +58,7 @@ describe('M3: missing variables make voice unavailable, never the game', () => {
   const bare = { NODE_ENV: 'production' };
 
   it('still serves the game', async () => {
-    const response = await request(await makeApp(bare)).get('/').set('Host', HOST);
+    const response = await request(await makeApp(bare)).get('/app').set('Host', HOST);
     expect(response.status).toBe(200);
     expect(response.text).toContain('<title>Brain Game</title>');
   });

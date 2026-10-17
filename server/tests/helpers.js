@@ -175,6 +175,9 @@ export function tempDist() {
   fs.mkdirSync(path.join(dir, 'assets'));
   fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><title>Brain Game</title><div id="root"></div>');
   fs.writeFileSync(path.join(dir, 'assets', 'app.js'), 'console.log("brain game")');
+  // The front door (Kyle, 2026-10-17): the landing, built to landing/index.html.
+  fs.mkdirSync(path.join(dir, 'landing'));
+  fs.writeFileSync(path.join(dir, 'landing', 'index.html'), '<!doctype html><title>Brain Game · A Study in Cognition</title><main class="landing"></main>');
   return dir;
 }
 
