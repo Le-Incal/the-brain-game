@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const composition = await import('./composition.js').catch(() => ({}));
-const { composeSpecimenY, centreShiftFor, slideLift, centresOnPage, COMPOSITION_SLIDE_MS } = composition;
+const { composeSpecimenY, centreShiftFor, refineBrainCentre, slideLift, centresOnPage, COMPOSITION_SLIDE_MS } = composition;
 const { compositionForPhase } = await import('../frontDoor.jsx');
 
 // Kyle, 2026-10-16: "once we get into the application, I want the brain to be
@@ -37,6 +37,17 @@ describe("The brain's height on the page", () => {
     const centreShift = centreShiftFor({ width: 1440, brainCentre, scale: 1, gameShift: today.gameShift });
     const y = composeSpecimenY({ ...today, panY: 0.2, centreShift, lift: 1 });
     expect(y + brainCentre).toBeCloseTo(today.baseY + 0.2, 10);
+  });
+
+  // The camera looks down a little, so a centred box lands a few pixels off the
+  // middle on screen (12 px high at 1440 x 900). Where it lands corrects it.
+  it('corrects the centre by where the brain lands on screen', () => {
+    const viewportHeight = 2.157;
+    const height = 900;
+    // 12 px above the middle: NDC 12 / 450.
+    const refined = refineBrainCentre({ brainCentre, ndcCentre: 12 / 450, viewportHeight, scale: 1 });
+    expect(refined - brainCentre).toBeCloseTo((12 / height) * viewportHeight, 10);
+    expect(refineBrainCentre({ brainCentre, ndcCentre: 0, viewportHeight, scale: 1 })).toBe(brainCentre);
   });
 
   it('keeps phones where they are today, in every mode', () => {
