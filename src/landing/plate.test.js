@@ -63,7 +63,8 @@ describe('The landing copy', () => {
   it.each(Object.keys(pages))('plate %s has no plate number, and his caption', (plate) => {
     const html = pages[plate];
     expect(html).not.toMatch(/plate-number|Plate I/);
-    expect(html).toContain('<figcaption>Fig. 1. The left hemisphere of the Cerebrum</figcaption>');
+    // Kyle, 2026-10-16: the caption's latest wording.
+    expect(html).toContain('<figcaption>Fig. 1. The functional regions of the Cerebrum</figcaption>');
   });
 
   it('sets the caption flush with the left padding, and the copy at 19 px', () => {
