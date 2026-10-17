@@ -54,7 +54,9 @@ describe('The landing copy', () => {
     const html = pages[plate];
     // Kyle, 2026-10-16: the new body text.
     expect(html).toMatch(/<p class="landing-voice">\s*<span>This is embodied AI as the Human Brain\. Speak and interact to explore the anatomy and functional regions of the brain\.<\/span>\s*<span>Turn on your speaker(?:&nbsp;| )and(?:&nbsp;| )mic for the best experience\.<\/span>\s*<\/p>/);
-    expect(html).toMatch(/<a class="enter" href="\/">Enter<\/a>/);
+    // Kyle, 2026-10-16: the frameless pointing hand ("I like this one!").
+    expect(html).toMatch(/<a class="enter" href="\/"><span class="enter-hand" aria-hidden="true">☞<\/span><span class="enter-word">Enter<\/span><\/a>/);
+    expect(html).toContain('family=Noto+Sans+Symbols+2&amp;text=%E2%98%9E');
     expect(html).not.toMatch(/landing-note|Explore the functions|or press|I am a human brain|A note on sound/i);
   });
 
@@ -65,6 +67,12 @@ describe('The landing copy', () => {
     expect(html).not.toMatch(/plate-number|Plate I/);
     // Kyle, 2026-10-16: the caption's latest wording.
     expect(html).toContain('<figcaption>Fig. 1. The functional regions of the Cerebrum</figcaption>');
+  });
+
+  it('draws Enter without a frame: the hand moves toward the word and the rule draws under it', () => {
+    expect(rule('.enter')).not.toMatch(/box-shadow/);
+    expect(read('./landing.css')).toMatch(/\.enter:hover \.enter-hand,\s*\.enter:focus-visible \.enter-hand,\s*\.enter:active \.enter-hand \{\s*transform: translateX\(8px\);/);
+    expect(read('./landing.css')).toMatch(/\.enter:hover \.enter-word::after,\s*\.enter:focus-visible \.enter-word::after,\s*\.enter:active \.enter-word::after \{\s*transform: scaleX\(1\);/);
   });
 
   it('sets the caption flush with the left padding, and the copy at 19 px', () => {

@@ -51,8 +51,8 @@ const degreesBetween = (a, b) => THREE.MathUtils.radToDeg(a.angleTo(b));
 function setup({ reducedMotion = false } = {}) {
   const { controls, orientGroup, element } = createControls();
   const timers = manualTimers();
-  startDrift({ controls, reducedMotion, schedule: timers.schedule });
-  return { controls, orientGroup, element, timers };
+  const drift = startDrift({ controls, reducedMotion, schedule: timers.schedule });
+  return { controls, orientGroup, element, timers, drift };
 }
 
 describe('The landing drift', () => {
@@ -95,6 +95,34 @@ describe('The landing drift', () => {
     expect(degreesBetween(orientGroup.quaternion, held)).toBeLessThan(1e-4);
     await run(controls, timers, 2000);
     expect(degreesBetween(orientGroup.quaternion, held)).toBeGreaterThan(2);
+  });
+
+  // The gaze (Kyle, 2026-10-16) holds the brain still while it looks, then
+  // hands the turn back.
+  it('pauses on request, and drifts on after the delay it is given', async () => {
+    const { controls, orientGroup, timers, drift } = setup();
+    await run(controls, timers, 1000);
+    drift.pause();
+    await run(controls, timers, 500);
+    const held = orientGroup.quaternion.clone();
+    await run(controls, timers, 2000);
+    expect(degreesBetween(orientGroup.quaternion, held)).toBeLessThan(1e-4);
+    drift.resume({ afterMs: 1500 });
+    await run(controls, timers, 1400);
+    expect(degreesBetween(orientGroup.quaternion, held)).toBeLessThan(1e-4);
+    await run(controls, timers, 2000);
+    expect(degreesBetween(orientGroup.quaternion, held)).toBeGreaterThan(2);
+  });
+
+  it('cancels a pending resume when paused again', async () => {
+    const { controls, orientGroup, timers, drift } = setup();
+    drift.pause();
+    drift.resume({ afterMs: 1500 });
+    await run(controls, timers, 500);
+    drift.pause();
+    const held = orientGroup.quaternion.clone();
+    await run(controls, timers, 3000);
+    expect(degreesBetween(orientGroup.quaternion, held)).toBeLessThan(1e-4);
   });
 
   it('keeps still for visitors who ask for reduced motion', async () => {
