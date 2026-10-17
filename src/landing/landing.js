@@ -12,6 +12,7 @@ import { loadBrainModel } from '../utils/brainLoader';
 import { getViewFrame, orientationForView } from '../voice/orientation.js';
 import { elevationDistance } from './elevation.js';
 import { startDrift } from './drift.js';
+import { lookAtButton, lookAway, lookUpAtVisitor, nearButton, poseLooking, startGaze } from './gaze.js';
 import './landing.css';
 
 // One degree of view: an elevation, as drawn, not a perspective.
@@ -19,6 +20,7 @@ const FOV_DEG = 1;
 
 const plate = document.querySelector('.plate');
 const host = plate.querySelector('.plate-canvas');
+const enter = document.querySelector('.enter');
 
 const scene = new BrainScene(host, { selectable: false, zoom: false, pan: false });
 scene.controls.stopAutoRotate();
@@ -95,7 +97,10 @@ loadBrainModel('/brain.glb')
     plate.classList.add('is-ready');
     // The brain drifts from the moment the visitor arrives (Kyle, 2026-10-16).
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    startDrift({ controls: scene.controls, reducedMotion });
+    const drift = startDrift({ controls: scene.controls, reducedMotion });
+    // It notices a cursor near Enter; a phone has no cursor to notice.
+    const finePointer = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+    if (enter && finePointer && !reducedMotion) watchForEnter(drift);
     new ResizeObserver(() => {
       scene._onResize();
       fit();
@@ -106,8 +111,53 @@ loadBrainModel('/brain.glb')
     plate.classList.add('is-missing');
   });
 
+const centreOf = (rect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+
+// The gaze (Kyle, 2026-10-16): near Enter the brain looks at it; pulled away,
+// it looks up at the visitor and drifts on.
+function watchForEnter(drift) {
+  const convert = (axis) => scene.toSpecimenDirection(axis);
+  const frame = () => getViewFrame(scene.camera, scene.controls.target);
+  const poses = {
+    button: () => {
+      const brain = centreOf(plate.getBoundingClientRect());
+      const button = centreOf(enter.getBoundingClientRect());
+      const view = frame();
+      return poseLooking(lookAtButton({ frame: view, toButton: { dx: button.x - brain.x, dy: button.y - brain.y } }), view, convert);
+    },
+    you: () => {
+      const view = frame();
+      return poseLooking(lookUpAtVisitor({ frame: view }), view, convert);
+    },
+    away: () => {
+      const view = frame();
+      return poseLooking(lookAway({ frame: view }), view, convert);
+    },
+  };
+  const gaze = startGaze({ controls: scene.controls, drift, poses });
+  let pointerNear = false;
+  let focused = false;
+  const update = () => gaze.setNear(pointerNear || focused);
+  document.addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'touch') return;
+    pointerNear = nearButton({ x: event.clientX, y: event.clientY }, enter.getBoundingClientRect());
+    update();
+  });
+  document.documentElement.addEventListener('pointerleave', () => {
+    pointerNear = false;
+    update();
+  });
+  enter.addEventListener('focus', () => {
+    focused = true;
+    update();
+  });
+  enter.addEventListener('blur', () => {
+    focused = false;
+    update();
+  });
+}
+
 // The Enter key does what the Enter button does.
-const enter = document.querySelector('.enter');
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && enter && document.activeElement !== enter) enter.click();
 });

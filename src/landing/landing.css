@@ -139,31 +139,70 @@ body {
   flex-wrap: wrap;
 }
 
+/*
+ * Enter, frameless, with a printer's pointing hand (Kyle, 2026-10-16: "I like
+ * this one!"). On hover, keyboard focus or a tap the hand moves toward the word
+ * and the rule draws under it.
+ */
 .enter {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 8px 0;
+  box-sizing: border-box;
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 700;
   font-size: 16px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 16px 48px;
-  min-height: 54px;
-  box-sizing: border-box;
   color: var(--ink);
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ink), inset 0 0 0 4px var(--paper), inset 0 0 0 4.5px var(--ink);
-  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-.enter:hover {
+.enter-hand {
+  font-family: 'Noto Sans Symbols 2', 'Apple Symbols', 'Segoe UI Symbol', serif;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: 0;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.enter-word {
+  position: relative;
+  padding-bottom: 7px;
+}
+
+/* The rule stops short of the word's trailing letter-space. */
+.enter-word::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0.3em;
+  bottom: 0;
+  height: 1.5px;
   background: var(--ink);
-  color: var(--paper);
+  transform: scaleX(0.3);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.enter:hover .enter-hand,
+.enter:focus-visible .enter-hand,
+.enter:active .enter-hand {
+  transform: translateX(8px);
+}
+
+.enter:hover .enter-word::after,
+.enter:focus-visible .enter-word::after,
+.enter:active .enter-word::after {
+  transform: scaleX(1);
 }
 
 .enter:focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 4px;
+  outline-offset: 6px;
 }
 
 @media (max-width: 640px) {
@@ -175,5 +214,4 @@ body {
   .landing-text h1 { font-size: 46px; }
   .landing-subtitle { font-size: 19px; margin-top: 14px; }
   .landing-voice { font-size: 18px; }
-  .enter { width: 100%; text-align: center; }
 }

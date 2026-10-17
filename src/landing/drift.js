@@ -4,7 +4,8 @@
  * turntable, counter-clockwise seen from above, at the same 4 degrees a second
  * as the voice guide's floating in the game. It runs through the orbit
  * controller's idle turn, so a grab stops it at once; it drifts on from where
- * the visitor let go, 3 seconds after they let go. Visitors who ask for reduced
+ * the visitor let go, 3 seconds after they let go. The gaze pauses it while the
+ * brain looks at Enter and resumes it after. Visitors who ask for reduced
  * motion get a still brain.
  */
 
@@ -18,9 +19,11 @@ function defaultSchedule(fn, ms) {
   return () => clearTimeout(id);
 }
 
-/** Starts the drift; returns a function that stops it for good. */
+const STILL = Object.freeze({ stop() {}, pause() {}, resume() {} });
+
+/** Starts the drift: `pause()`, `resume({ afterMs })`, and `stop()` for good. */
 export function startDrift({ controls, reducedMotion = false, schedule = defaultSchedule }) {
-  if (reducedMotion) return () => {};
+  if (reducedMotion) return STILL;
   // A positive turn about +y: counter-clockwise looking down on the brain.
   const rate = (DRIFT_DEGREES_PER_SECOND * Math.PI) / 180;
   let cancelResume = null;
@@ -29,22 +32,37 @@ export function startDrift({ controls, reducedMotion = false, schedule = default
     cancelResume = null;
   };
 
-  controls.setIdleTurn(rate);
+  function pause() {
+    clearResume();
+    controls.setIdleTurn(0);
+  }
+
+  function resume({ afterMs = 0 } = {}) {
+    clearResume();
+    if (afterMs <= 0) {
+      controls.setIdleTurn(rate);
+      return;
+    }
+    cancelResume = schedule(() => {
+      cancelResume = null;
+      controls.setIdleTurn(rate);
+    }, afterMs);
+  }
+
+  resume();
   const unsubscribe = controls.subscribeUserInput((event) => {
     // A grab has already stopped the turn; a pending resume waits for the next release.
     if (event.type === 'grab') clearResume();
-    if (event.type === 'release') {
-      clearResume();
-      cancelResume = schedule(() => {
-        cancelResume = null;
-        controls.setIdleTurn(rate);
-      }, DRIFT_RESUME_MS);
-    }
+    if (event.type === 'release') resume({ afterMs: DRIFT_RESUME_MS });
   });
 
-  return () => {
-    clearResume();
-    unsubscribe();
-    controls.setIdleTurn(0);
+  return {
+    pause,
+    resume,
+    stop() {
+      clearResume();
+      unsubscribe();
+      controls.setIdleTurn(0);
+    },
   };
 }
