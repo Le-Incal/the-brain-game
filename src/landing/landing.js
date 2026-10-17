@@ -11,6 +11,7 @@ import { BrainScene } from '../utils/brainScene';
 import { loadBrainModel } from '../utils/brainLoader';
 import { getViewFrame, orientationForView } from '../voice/orientation.js';
 import { elevationDistance } from './elevation.js';
+import { startDrift } from './drift.js';
 import './landing.css';
 
 // One degree of view: an elevation, as drawn, not a perspective.
@@ -92,6 +93,9 @@ loadBrainModel('/brain.glb')
     controls.targetQuaternion.copy(elevation);
     fit();
     plate.classList.add('is-ready');
+    // The brain drifts from the moment the visitor arrives (Kyle, 2026-10-16).
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    startDrift({ controls: scene.controls, reducedMotion });
     new ResizeObserver(() => {
       scene._onResize();
       fit();
