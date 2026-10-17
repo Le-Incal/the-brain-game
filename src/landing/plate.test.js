@@ -5,6 +5,8 @@ import * as THREE from 'three';
 
 const { elevationDistance } = await import('./elevation.js').catch(() => ({}));
 const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
+const pages = { B: read('../../landing/b/index.html'), C: read('../../landing/c/index.html') };
+const rule = (selector) => read('./landing.css').match(new RegExp(`\\n${selector.replace('.', '\\.')} \\{[^}]*\\}`))?.[0] ?? '';
 
 // Kyle, 2026-10-15: plates B and C as working pages. The landing page shows the
 // real engraved brain in side elevation and the visitor may turn it.
@@ -20,8 +22,6 @@ describe("Fitting the side elevation into the plate", () => {
 
 // Kyle, 2026-10-16: "Let's remove the labels." The brain alone, with no tags.
 describe('The landing plates', () => {
-  const pages = { B: read('../../landing/b/index.html'), C: read('../../landing/c/index.html') };
-
   it.each(Object.keys(pages))('plate %s shows the brain alone, with no leaders or labels', (plate) => {
     expect(pages[plate]).not.toMatch(/plate-leaders/);
     expect(read('./landing.js')).not.toMatch(/plate-label|plate-dot|plate-leaders/);
@@ -30,5 +30,30 @@ describe('The landing plates', () => {
   it("is the brain's own outline in side elevation, so the page's margins stay even", () => {
     // Measured on the rendered elevation: 624.5 x 545.9 px at 1440 wide.
     expect(read('./landing.css')).toMatch(/\.plate \{[^}]*aspect-ratio: 1\.1438;/);
+  });
+
+  // Kyle, 2026-10-16: "an ABABA situation. A is the padding of equal size, and
+  // B is the content." The same space at each edge and between brain and text.
+  it('keeps one measure of space at both edges and between the brain and the text', () => {
+    const spread = rule('.landing-spread');
+    expect(spread).toMatch(/padding: 0 var\(--a\);/);
+    expect(spread).toMatch(/column-gap: var\(--a\);/);
+    expect(spread).toMatch(/justify-content: space-evenly;/);
+    expect(rule('.landing')).toMatch(/padding: 56px 0;/);
+  });
+
+  it('leaves a little more space between the title and its subtitle', () => {
+    expect(rule('.landing-subtitle')).toMatch(/margin: 20px 0 0;/);
+  });
+});
+
+// Kyle, 2026-10-16: the words, the note and the button.
+describe('The landing copy', () => {
+  it.each(Object.keys(pages))('plate %s invites the visitor to speak with the brain', (plate) => {
+    const html = pages[plate];
+    expect(html).toContain('Speak and interact with the human brain. Explore the functions and anatomy of each brain region.');
+    expect(html).toMatch(/<span>Note<\/span>\s*<p>Turn on the speaker and mic for the best experience\.<\/p>/);
+    expect(html).toMatch(/<a class="enter" href="\/">Enter<\/a>/);
+    expect(html).not.toMatch(/or press|I am a human brain|A note on sound/i);
   });
 });
