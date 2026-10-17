@@ -14,7 +14,7 @@ body {
 .landing {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 56px clamp(24px, 5vw, 88px);
+  padding: 56px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,19 +25,22 @@ body {
 }
 
 /*
- * The plate and the text as one centred spread (Kyle, 2026-10-15: "The padding
- * is not consistent between the left and right sides"). The plate is the
- * brain's own outline, so the page's margins match on both sides. At its
- * widest: a 625 px brain, 72 px, and 440 px of text.
+ * A B A B A (Kyle, 2026-10-16): one measure of space, A, at each edge and
+ * between the brain and the text. The plate is the brain's own outline. The
+ * edges' padding and the gap are both A at least; once the brain (625 px) and
+ * the text (440 px) are at full size, space-evenly adds the same to all three.
  */
 .landing-spread {
+  --a: clamp(24px, 4vw, 72px);
   width: 100%;
-  max-width: 1137px;
+  box-sizing: border-box;
+  padding: 0 var(--a);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 4vw, 72px);
+  justify-content: space-evenly;
+  column-gap: var(--a);
+  row-gap: var(--a);
 }
 
 .plate-figure {
@@ -121,7 +124,7 @@ body {
 }
 
 .landing-subtitle {
-  margin: 10px 0 0;
+  margin: 20px 0 0;
   font-style: italic;
   font-size: 24px;
   letter-spacing: 0.04em;
@@ -191,33 +194,14 @@ body {
   outline-offset: 4px;
 }
 
-.landing-enter p {
-  margin: 0;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--ink-soft);
-}
-
-.landing-enter kbd {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: normal;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border: 0.5px solid var(--ink);
-  border-radius: 2px;
-}
-
 @media (max-width: 640px) {
-  .landing { padding: 30px 22px 26px; }
-  .landing-spread { gap: 16px; }
+  .landing { padding: 30px 0 26px; }
+  .landing-spread { --a: 22px; row-gap: 16px; }
   /* The phone's brain keeps the size it had inside the tagged plate. */
   .plate { width: 90%; }
   .landing-text { gap: 16px; }
   .landing-text h1 { font-size: 46px; }
-  .landing-subtitle { font-size: 19px; }
+  .landing-subtitle { font-size: 19px; margin-top: 14px; }
   .landing-voice { font-size: 18px; }
-  .landing-enter p { display: none; }
   .enter { width: 100%; text-align: center; }
 }
