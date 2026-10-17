@@ -20,6 +20,7 @@ import {
 } from './brainLoader';
 import { createSpecimenSpace } from './specimenSpace';
 import { mockVoiceLevel, smoothVoiceLevel } from '../voice/voiceLevel';
+import { COMPOSITION_SLIDE_MS, centreShiftFor, centresOnPage, composeSpecimenY, refineBrainCentre, slideLift } from './composition.js';
 
 // Where the orbit target sits. The camera turns about this point, so the
 // specimen is displaced from it rather than moved with it.
@@ -369,6 +370,12 @@ export class BrainScene {
     this.specimenGroup.add(this.specimenRotationGroup);
     this.scene.add(this.specimenGroup);
     this._specimenPanY = 0;
+    // The brain's height (Kyle, 2026-10-16): 1 is centred on the page, 0 the
+    // game's lower height. Centred from arrival; the brain's own centre is
+    // measured once it loads.
+    this._lift = 1;
+    this._slide = null;
+    this._brainCentre = null;
 
     this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
@@ -506,7 +513,91 @@ export class BrainScene {
     brainGroup.position.copy(pivotOffset);
     brainGroup.updateMatrixWorld(true);
 
+    this._brainCentre = this._measureBrainCentre();
+    // Twice: the second pass takes up what perspective leaves of the first.
+    for (let pass = 0; pass < 2; pass += 1) this._brainCentre = this._landedBrainCentre(this._brainCentre);
     this._positionSpecimen();
+  }
+
+  /**
+   * The brain's centre corrected by where its silhouette lands on screen when
+   * centred, so it sits on the page's middle as the landing's does. Phones,
+   * which are not centred, keep the measured centre.
+   */
+  _landedBrainCentre(brainCentre) {
+    if (brainCentre === null || !centresOnPage(this.width)) return brainCentre;
+    const held = { centre: this._brainCentre, lift: this._lift };
+    this._brainCentre = brainCentre;
+    this._lift = 1;
+    this._positionSpecimen();
+    this.specimenGroup.updateMatrixWorld(true);
+    this.camera.updateMatrixWorld();
+    let minY = Infinity;
+    let maxY = -Infinity;
+    const point = new THREE.Vector3();
+    for (const mesh of this.brainMeshes) {
+      const positions = mesh.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i += 2) {
+        point.fromBufferAttribute(positions, i);
+        mesh.localToWorld(point).project(this.camera);
+        if (point.y < minY) minY = point.y;
+        if (point.y > maxY) maxY = point.y;
+      }
+    }
+    this._brainCentre = held.centre;
+    this._lift = held.lift;
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    return refineBrainCentre({
+      brainCentre,
+      ndcCentre: (minY + maxY) / 2,
+      viewportHeight,
+      scale: this.specimenRotationGroup.scale.y || 1,
+    });
+  }
+
+  /**
+   * The brain's centre (its box, stem included, in the arrival pose) above or
+   * below the specimen's origin, at a scale of 1. The brain hangs from its
+   * cerebrum's centre, so the stem pulls this below the origin.
+   */
+  _measureBrainCentre() {
+    const held = this.specimenGroup.position.y;
+    this.specimenGroup.position.y = 0;
+    this.specimenGroup.updateMatrixWorld(true);
+    const box = new THREE.Box3();
+    for (const mesh of this.brainMeshes) box.expandByObject(mesh, true);
+    this.specimenGroup.position.y = held;
+    this.specimenGroup.updateMatrixWorld(true);
+    if (box.isEmpty()) return null;
+    const scale = this.specimenRotationGroup.scale.y || 1;
+    return (box.min.y + box.max.y) / 2 / scale;
+  }
+
+  /**
+   * 'centre' (Explore and Study) or 'game': slides the brain to that height
+   * over 0.9 s, eased, or moves it at once with `immediate`.
+   */
+  setComposition(name, { immediate = false, durationMs = COMPOSITION_SLIDE_MS } = {}) {
+    const to = name === 'game' ? 0 : 1;
+    if (immediate) {
+      this._slide = null;
+      this._lift = to;
+      this._positionSpecimen();
+      this._raycastDirty = true;
+      return;
+    }
+    if (this._slide ? this._slide.to === to : this._lift === to) return;
+    this._slide = { from: this._lift, to, startedAt: performance.now(), durationMs };
+  }
+
+  _stepComposition() {
+    if (!this._slide) return;
+    const now = performance.now();
+    this._lift = slideLift({ ...this._slide, now });
+    if (now - this._slide.startedAt >= this._slide.durationMs) this._slide = null;
+    this._positionSpecimen();
+    this._raycastDirty = true;
   }
 
   setColorMode(enabled) {
@@ -760,11 +851,22 @@ export class BrainScene {
       (getCompositionVerticalShiftCssPx(this.width) / this.height) *
       viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET;
-    this.specimenGroup.position.y =
-      baseY +
-      shift +
-      this._specimenPanY +
-      getResponsiveSpecimenVerticalOffset(this.width);
+    // The game keeps this height; Explore and Study lift the brain's own
+    // centre onto the page's middle (Kyle, 2026-10-16).
+    const centreShift = centreShiftFor({
+      width: this.width,
+      brainCentre: this._brainCentre,
+      scale: getResponsiveSpecimenScale(this.width),
+      gameShift: shift,
+    });
+    this.specimenGroup.position.y = composeSpecimenY({
+      baseY,
+      gameShift: shift,
+      centreShift,
+      lift: this._lift,
+      panY: this._specimenPanY,
+      responsiveOffset: getResponsiveSpecimenVerticalOffset(this.width),
+    });
     this.controls.target.x = 0;
     this.controls.target.y = baseY;
     this.controls.target.z = 0;
@@ -796,6 +898,7 @@ export class BrainScene {
     if (!this._animating) return;
     requestAnimationFrame(() => this._animate());
 
+    this._stepComposition();
     this.controls.update();
     this._syncNavigatingState();
     this._updateHighlightFeedback();

@@ -21,6 +21,14 @@ export function sceneModeForPhase(gamePhase) {
   return GAME_PHASES.has(gamePhase) ? 'game' : 'study';
 }
 
+/**
+ * The brain's height (Kyle, 2026-10-16): centred on the page, lowered for the
+ * game only, from the offer and countdown through play and pause.
+ */
+export function compositionForPhase(gamePhase) {
+  return sceneModeForPhase(gamePhase) === 'game' ? 'game' : 'centre';
+}
+
 /** What the guide is told: explore, study or game. */
 export function guideModeForPhase(gamePhase) {
   if (GAME_PHASES.has(gamePhase)) return 'game';
