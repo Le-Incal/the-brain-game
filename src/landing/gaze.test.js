@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 
 const gaze = await import('./gaze.js').catch(() => ({}));
-const { lookAtButton, lookUpAtVisitor, poseLooking, nearButton, startGaze, NOTICE_RADIUS_PX, TURN_MS, HOLD_ON_YOU_MS } = gaze;
+const { lookAtButton, lookUpAtVisitor, lookAway, poseLooking, nearButton, startGaze, NOTICE_RADIUS_PX, TURN_MS, HOLD_ON_YOU_MS, AWAY_MS } = gaze;
 
 // Kyle, 2026-10-16: "when the user draws near the Enter button with the cursor,
 // the brain rotates to look at the button and if the cursor pulls away from
@@ -48,6 +48,15 @@ describe('Where the brain looks', () => {
     expect(pitchOf(look)).toBeGreaterThan(5);
     expect(pitchOf(look)).toBeLessThan(15);
   });
+
+  // Turning away levels it again, so the drift after a gaze is not tipped up.
+  it('turns away level, a little counter-clockwise seen from above', () => {
+    const look = lookAway({ frame });
+    expect(Math.abs(pitchOf(look))).toBeLessThan(1e-6);
+    expect(degrees(look.angleTo(frame.toCamera))).toBeCloseTo(12, 0);
+    // Counter-clockwise from above swings the front from us toward screen-right.
+    expect(look.dot(screenRight)).toBeGreaterThan(0);
+  });
 });
 
 describe('The pose for a look', () => {
@@ -86,6 +95,17 @@ describe('Drawing near the button', () => {
 function fakeScene() {
   let listener = null;
   const moves = [];
+  const timers = [];
+  const schedule = (fn, ms) => {
+    const timer = { fn, ms, cancelled: false };
+    timers.push(timer);
+    return () => {
+      timer.cancelled = true;
+    };
+  };
+  const fireTimers = () => {
+    for (const timer of timers.splice(0)) if (!timer.cancelled) timer.fn();
+  };
   const controls = {
     isDragging: false,
     moveTo: vi.fn((pose, options) => new Promise((resolve) => moves.push({ pose, options, resolve }))),
@@ -97,9 +117,9 @@ function fakeScene() {
     },
   };
   const drift = { pause: vi.fn(), resume: vi.fn() };
-  const poses = { button: () => 'at the button', you: () => 'at you' };
-  const g = startGaze({ controls, drift, poses });
-  return { g, controls, drift, moves, input: (event) => listener?.(event) };
+  const poses = { button: () => 'at the button', you: () => 'at you', away: () => 'turning away' };
+  const g = startGaze({ controls, drift, poses, schedule });
+  return { g, controls, drift, moves, timers, fireTimers, input: (event) => listener?.(event) };
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -115,15 +135,35 @@ describe('The gaze', () => {
     expect(controls.moveTo).toHaveBeenCalledTimes(1);
   });
 
-  it('looks up at the visitor when the cursor pulls away, then drifts on after a pause', async () => {
-    const { g, drift, moves } = fakeScene();
+  it('looks up at the visitor when the cursor pulls away, holds, turns slowly away, then drifts on', async () => {
+    const { g, drift, moves, timers, fireTimers } = fakeScene();
     g.setNear(true);
     g.setNear(false);
     expect(moves.map((m) => m.pose)).toEqual(['at the button', 'at you']);
     moves[1].resolve({ completed: true });
     await settle();
     expect(HOLD_ON_YOU_MS).toBe(1500);
-    expect(drift.resume).toHaveBeenCalledWith({ afterMs: HOLD_ON_YOU_MS });
+    expect(timers.map((t) => t.ms)).toEqual([HOLD_ON_YOU_MS]);
+    expect(drift.resume).not.toHaveBeenCalled();
+    fireTimers();
+    expect(moves.map((m) => m.pose)).toEqual(['at the button', 'at you', 'turning away']);
+    expect(AWAY_MS).toBe(3000);
+    expect(moves[2].options).toEqual({ durationMs: AWAY_MS });
+    moves[2].resolve({ completed: true });
+    await settle();
+    expect(drift.resume).toHaveBeenCalledWith();
+  });
+
+  it('coming back while it holds on the visitor looks at the button again, and never turns away', async () => {
+    const { g, drift, moves, fireTimers } = fakeScene();
+    g.setNear(true);
+    g.setNear(false);
+    moves[1].resolve({ completed: true });
+    await settle();
+    g.setNear(true);
+    fireTimers();
+    expect(moves.map((m) => m.pose)).toEqual(['at the button', 'at you', 'at the button']);
+    expect(drift.resume).not.toHaveBeenCalled();
   });
 
   it('coming back during the turn to the visitor looks at the button again, without resuming the drift', async () => {
