@@ -8,8 +8,8 @@
  * 1.2 s so its frontal pole points three-quarters toward the button, halfway
  * between us and it, with a slight look down to wherever the button sits. It
  * holds there. When the cursor pulls away it turns to face the visitor, tilted
- * up a touch, and holds 1.5 s. Then it turns slowly away, 12 degrees
- * counter-clockwise and level again over 3 s, and the drift carries it on.
+ * up a touch, and holds 0.5 s. Then it turns slowly away, 6 degrees
+ * counter-clockwise and level again over 1.5 s, and the drift carries it on.
  * Every turn goes through the orbit controller, so a grab always wins.
  */
 
@@ -18,11 +18,13 @@ import { orientationFacing } from '../voice/orientation.js';
 
 export const NOTICE_RADIUS_PX = 120;
 export const TURN_MS = 1200;
-export const HOLD_ON_YOU_MS = 1500;
-export const AWAY_MS = 3000;
+// Kyle, 2026-10-16: "start to auto rotate sooner." A short hold, then a turn
+// away that averages the drift's own 4 degrees a second, straight into it.
+export const HOLD_ON_YOU_MS = 500;
+export const AWAY_MS = 1500;
 const THREE_QUARTER_DEGREES = 45;
 const LOOK_UP_DEGREES = 10;
-const AWAY_DEGREES = 12;
+const AWAY_DEGREES = 6;
 
 function defaultSchedule(fn, ms) {
   const id = setTimeout(fn, ms);
@@ -57,7 +59,7 @@ export function lookUpAtVisitor({ frame }) {
 }
 
 /**
- * The direction it turns away to: level, 12 degrees counter-clockwise seen
+ * The direction it turns away to: level, 6 degrees counter-clockwise seen
  * from above (the drift's way round), from facing the visitor.
  */
 export function lookAway({ frame }) {
