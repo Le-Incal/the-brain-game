@@ -79,6 +79,7 @@ describe('Which height each part of the app uses', () => {
     const app = readFileSync(fileURLToPath(new URL('../App.jsx', import.meta.url)), 'utf8');
     expect(scene).toMatch(/composeSpecimenY\(/);
     expect(scene).toMatch(/setComposition\(name/);
-    expect(app).toMatch(/setComposition\?\.\(compositionForPhase\(gamePhase\)\)/);
+    // With Motion off (the visitor's switch, or reduced motion) it moves without sliding.
+    expect(app).toMatch(/setComposition\?\.\(compositionForPhase\(gamePhase\), \{ immediate: !motionOn \}\)/);
   });
 });
