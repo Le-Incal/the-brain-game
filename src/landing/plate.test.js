@@ -47,13 +47,13 @@ describe('The landing plates', () => {
   });
 });
 
-// Kyle, 2026-10-16: the words, the note and the button.
+// Kyle, 2026-10-16: two lines and the button. No note box, no "explore" line
+// ("it's self explanatory"), no "or press Enter".
 describe('The landing copy', () => {
   it.each(Object.keys(pages))('plate %s invites the visitor to speak with the brain', (plate) => {
     const html = pages[plate];
-    expect(html).toContain('Speak and interact with the human brain. Explore the functions and anatomy of each brain region.');
-    expect(html).toMatch(/<span>Note<\/span>\s*<p>Turn on the speaker and mic for the best experience\.<\/p>/);
+    expect(html).toMatch(/<p class="landing-voice">Speak and interact with the human brain\.<br \/>\s*Turn on the speaker and mic for the best experience\.<\/p>/);
     expect(html).toMatch(/<a class="enter" href="\/">Enter<\/a>/);
-    expect(html).not.toMatch(/or press|I am a human brain|A note on sound/i);
+    expect(html).not.toMatch(/landing-note|Explore the functions|or press|I am a human brain|A note on sound/i);
   });
 });
