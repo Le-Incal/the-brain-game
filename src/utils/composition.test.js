@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const composition = await import('./composition.js').catch(() => ({}));
-const { composeSpecimenY, centreShiftFor, refineBrainCentre, slideLift, centresOnPage, COMPOSITION_SLIDE_MS } = composition;
+const { composeSpecimenY, centreShiftFor, refineBrainCentre, slideLift, centresOnPage, cssPxToWorld, COMPOSITION_SLIDE_MS, CENTRE_DROP_CSS_PX } = composition;
 const { compositionForPhase } = await import('../frontDoor.jsx');
 
 // Kyle, 2026-10-16: "once we get into the application, I want the brain to be
@@ -31,6 +31,20 @@ describe("The brain's height on the page", () => {
     const y = composeSpecimenY({ ...today, centreShift, lift: 1 });
     // The brain's centre lands on the camera's target, the page's middle.
     expect(y + brainCentre).toBeCloseTo(today.baseY, 10);
+  });
+
+  // Kyle, 2026-10-17: "we need to slightly lower the standard position now."
+  // A quarter inch below the page's middle in Explore and Study.
+  it('sits a quarter inch below the middle in Explore and Study', () => {
+    expect(CENTRE_DROP_CSS_PX).toBe(24);
+    const viewportHeight = 2.157;
+    const drop = cssPxToWorld(-CENTRE_DROP_CSS_PX, { height: 900, viewportHeight });
+    expect(drop).toBeCloseTo((-24 / 900) * viewportHeight, 12);
+    const centreShift = centreShiftFor({ width: 1440, brainCentre, scale: 1, gameShift: today.gameShift, drop });
+    const y = composeSpecimenY({ ...today, centreShift, lift: 1 });
+    expect(y + brainCentre).toBeCloseTo(today.baseY + drop, 10);
+    // Phones keep today's height: no drop there either.
+    expect(centreShiftFor({ width: 390, brainCentre, scale: 0.73, gameShift: 0, drop })).toBe(0);
   });
 
   it('keeps any pan the visitor or guide has made, on top', () => {
