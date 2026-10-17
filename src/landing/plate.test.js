@@ -95,6 +95,15 @@ describe('The landing copy', () => {
     expect(read('./landing.css')).toMatch(/\.enter:hover \.enter-word::after,\s*\.enter:focus-visible \.enter-word::after,\s*\.enter:active \.enter-word::after \{\s*transform: scaleX\(1\);/);
   });
 
+  // Kyle, 2026-10-17: on the phone, "remove the fig. 1 text under the brain to
+  // bring the brain and title closer". Desktop keeps it.
+  it('drops the caption on phones, so the title sits under the brain', () => {
+    const css = read('./landing.css');
+    const phone = css.slice(css.indexOf('@media (max-width: 640px)'));
+    expect(phone).toMatch(/\.plate-figure figcaption \{ display: none; \}/);
+    expect(rule('.plate-figure figcaption')).not.toMatch(/display: none/);
+  });
+
   it('sets the caption flush with the left padding, and the copy at 19 px', () => {
     const caption = rule('.plate-figure figcaption');
     expect(caption).toMatch(/align-self: flex-start;/);
