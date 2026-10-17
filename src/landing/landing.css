@@ -78,11 +78,13 @@ body {
   cursor: grabbing;
 }
 
+/* Flush with the left padding, under the brain's left edge (Kyle, 2026-10-16). */
 .plate-figure figcaption {
+  align-self: flex-start;
   font-style: italic;
   font-size: 15px;
   color: var(--ink-soft);
-  text-align: center;
+  text-align: left;
 }
 
 .landing-text {
@@ -93,25 +95,6 @@ body {
   gap: 24px;
   position: relative;
   z-index: 1;
-}
-
-.plate-number {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.plate-number span:first-child {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 12px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-}
-
-.plate-number span:last-child {
-  flex: 1;
-  height: 0;
-  border-top: 0.5px solid var(--ink);
 }
 
 .landing-text h1 {
@@ -133,7 +116,7 @@ body {
 
 .landing-voice {
   margin: 0;
-  font-size: 21px;
+  font-size: 19px;
   line-height: 1.5;
 }
 
