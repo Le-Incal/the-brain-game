@@ -137,27 +137,11 @@ body {
   line-height: 1.5;
 }
 
-.landing-note {
-  border: 0.5px solid var(--ink);
-  padding: 14px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.landing-note span {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.landing-note p {
-  margin: 0;
-  font-style: italic;
-  font-size: 17px;
-  line-height: 1.45;
-  color: var(--ink-soft);
+/* Each sentence on its own line, wrapped evenly so no word is left alone
+   ("Turn on the speaker and mic / for the best experience."). */
+.landing-voice span {
+  display: block;
+  text-wrap: balance;
 }
 
 .landing-enter {

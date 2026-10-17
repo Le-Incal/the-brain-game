@@ -52,7 +52,7 @@ describe('The landing plates', () => {
 describe('The landing copy', () => {
   it.each(Object.keys(pages))('plate %s invites the visitor to speak with the brain', (plate) => {
     const html = pages[plate];
-    expect(html).toMatch(/<p class="landing-voice">Speak and interact with the human brain\.<br \/>\s*Turn on the speaker and mic for the best experience\.<\/p>/);
+    expect(html).toMatch(/<p class="landing-voice">\s*<span>Speak and interact with the human brain\.<\/span>\s*<span>Turn on the speaker(?:&nbsp;| )and(?:&nbsp;| )mic for the best experience\.<\/span>\s*<\/p>/);
     expect(html).toMatch(/<a class="enter" href="\/">Enter<\/a>/);
     expect(html).not.toMatch(/landing-note|Explore the functions|or press|I am a human brain|A note on sound/i);
   });
