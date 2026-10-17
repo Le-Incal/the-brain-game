@@ -56,4 +56,20 @@ describe('The landing copy', () => {
     expect(html).toMatch(/<a class="enter" href="\/">Enter<\/a>/);
     expect(html).not.toMatch(/landing-note|Explore the functions|or press|I am a human brain|A note on sound/i);
   });
+
+  // Kyle, 2026-10-16: "Remove the line and plate 1 tag. Update the Fig. 1 to my
+  // text and left side justify to the padding." The copy at 19 px, as he set it.
+  it.each(Object.keys(pages))('plate %s has no plate number, and his caption', (plate) => {
+    const html = pages[plate];
+    expect(html).not.toMatch(/plate-number|Plate I/);
+    expect(html).toContain('<figcaption>Fig. 1. The left hemisphere of the Cerebrum</figcaption>');
+  });
+
+  it('sets the caption flush with the left padding, and the copy at 19 px', () => {
+    const caption = rule('.plate-figure figcaption');
+    expect(caption).toMatch(/align-self: flex-start;/);
+    expect(caption).toMatch(/text-align: left;/);
+    expect(rule('.landing-voice')).toMatch(/font-size: 19px;/);
+    expect(read('./landing.css')).not.toMatch(/\.plate-number/);
+  });
 });
