@@ -127,6 +127,11 @@ body {
   text-wrap: balance;
 }
 
+/* The speaker and mic line is its own paragraph (Kyle, 2026-10-16). */
+.landing-voice span + span {
+  margin-top: 12px;
+}
+
 .landing-enter {
   display: flex;
   align-items: center;
