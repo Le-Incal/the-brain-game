@@ -13,6 +13,7 @@ import { getViewFrame, orientationForView } from '../voice/orientation.js';
 import { elevationDistance } from './elevation.js';
 import { startDrift } from './drift.js';
 import { lookAtButton, lookAway, lookUpAtVisitor, nearButton, poseLooking, startGaze } from './gaze.js';
+import { createEnter } from './enter.js';
 import './landing.css';
 
 // One degree of view: an elevation, as drawn, not a perspective.
@@ -154,6 +155,22 @@ function watchForEnter(drift) {
   enter.addEventListener('blur', () => {
     focused = false;
     update();
+  });
+}
+
+// Enter asks for the microphone, then goes into the app (Kyle, 2026-10-15:
+// "that acts as your action to turn on your mic and your speakers").
+if (enter) {
+  let storage = null;
+  try {
+    storage = window.sessionStorage;
+  } catch {
+    storage = null;
+  }
+  const enterApp = createEnter({ mediaDevices: navigator.mediaDevices, storage, go: (path) => window.location.assign(path) });
+  enter.addEventListener('click', (event) => {
+    event.preventDefault();
+    enterApp();
   });
 }
 

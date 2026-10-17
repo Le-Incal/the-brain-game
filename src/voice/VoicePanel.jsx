@@ -17,6 +17,7 @@ import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
 import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
 import { listenForFirstInteraction, listenForFirstTap } from './firstTap.js';
+import { consumeEnteredMark, conversationOnArrival } from './arrivalEnter.js';
 import { choiceWelcomeAction } from './choiceWelcome.js';
 import { createSoundCheck } from './soundCheck.js';
 import { createGuidePrompter } from './guidePrompter.js';
@@ -52,6 +53,22 @@ function prefersReducedMotion() {
 }
 
 const ACTIVE_PHASES = new Set(['requesting', 'connecting', 'connected']);
+
+// Read once per page load: React mounts twice in development, and the mark
+// must not be spent on the mount it throws away.
+let enteredOnLoad;
+function arrivedThroughEnter() {
+  if (enteredOnLoad === undefined) {
+    let storage = null;
+    try {
+      storage = window.sessionStorage;
+    } catch {
+      storage = null;
+    }
+    enteredOnLoad = consumeEnteredMark({ storage });
+  }
+  return enteredOnLoad;
+}
 
 function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, motion, mode = 'explore', stillness = false, onGuideActivity }) {
   // The page hears when the guide talks and when the visitor answers (the first-Play offer waits for quiet).
@@ -715,6 +732,32 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       },
     });
     return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, stream]);
+
+  // Kyle, 2026-10-17: Enter on the landing turns on the mic and Sylvi. Arriving
+  // through it counts as the first press: where she can be heard, the
+  // conversation opens at once; where not, the first press here starts it.
+  useEffect(() => {
+    if (!arrivedThroughEnter()) return undefined;
+    let cancelled = false;
+    soundCheck.allowed().then((soundAllowed) => {
+      if (cancelled) return;
+      const action = conversationOnArrival({
+        entered: true,
+        soundAllowed,
+        phase: session.getState().phase,
+        voiceChosen: voiceChosenRef.current,
+      });
+      if (action !== 'start') return;
+      restTimer.activity();
+      wantVoice(true);
+      stream.setVoice(true);
+      session.start({ guide: guideRef.current, mode: 'auto' });
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, stream]);
 

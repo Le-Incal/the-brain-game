@@ -627,7 +627,11 @@ export function createApp({
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 
-  app.use(express.static(distDir, { index: 'index.html' }));
+  // The front door (Kyle, 2026-10-17): brain-game.io opens on the landing,
+  // and its Enter goes into the game at /app.
+  app.get('/', (req, res) => res.sendFile(path.join(distDir, 'landing', 'index.html')));
+  app.get(['/app', '/app/'], (req, res) => res.sendFile(path.join(distDir, 'index.html')));
+  app.use(express.static(distDir, { index: false }));
   // Unknown app routes get the game; a missing file (it has an extension) is a 404.
   app.use((req, res, next) => {
     if ((req.method !== 'GET' && req.method !== 'HEAD') || path.extname(req.path)) return next();

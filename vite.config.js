@@ -15,9 +15,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: page('./index.html'),
-        // The landing plates B and C, working, on staging while we choose (Kyle, 2026-10-15).
-        landingB: page('./landing/b/index.html'),
-        landingC: page('./landing/c/index.html'),
+        // The landing, plate C: brain-game.io's front door (Kyle, 2026-10-17).
+        landing: page('./landing/index.html'),
       },
     },
   },
