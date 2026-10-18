@@ -37,8 +37,10 @@ export const PHONE_CONVERSATION_RISE_PX = 165;
 // below the middle, keeping at least 16 px above the conversation.
 export const PHONE_BRAIN_DROP_PX = 24;
 export const PHONE_BRAIN_MIN_GAP_PX = 16;
-// Kyle, 2026-10-17: "In the game mode the brain can shift a little lower."
-export const PHONE_GAME_DROP_PX = 24;
+// Kyle, 2026-10-17: "In the game mode the brain can shift a little lower";
+// 2026-10-18: "Move the brain to an even lower position for the game." Down
+// to the 16 px it keeps above the conversation on most phones.
+export const PHONE_GAME_DROP_PX = 48;
 
 /**
  * Where a phone's brain, `brainPx` tall, has its middle, in CSS px down the

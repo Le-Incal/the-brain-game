@@ -83,6 +83,9 @@ describe('The bar on phones', () => {
     expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} level="Easy" gamePhase="playing" />)).toMatch(/data-mode="game"/);
     expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} gamePhase="study" />)).toMatch(/data-mode="study"/);
     expect(rule(css, '.guide-switches')).toMatch(/position: absolute;[^}]*bottom: -37\.5px;/);
+    // Kyle, 2026-10-18: finer lines round Settings and the buttons.
+    expect(css).toMatch(/\.settings-panel button,\s*\.game-controls button \{\s*border: none !important;\s*box-shadow: inset 0 0 0 0\.5px #1a1814 !important;/);
+    expect(css).toMatch(/\.settings-panel \{\s*border: none !important;\s*box-shadow: inset 0 0 0 0\.5px #1a1814/);
   });
 
   it('shows no arrival panel: the two choices are in the bar', () => {
@@ -319,8 +322,9 @@ describe("A phone's brain under the title", () => {
     // Then "a little lower again": 24 px, or less on a small phone.
     // The conversation's top: 499 px down at 390 x 664 once the switches moved to the bar's line.
     expect(phoneBrainMiddlePx({ height: 664, brainPx: 247 })).toBeCloseTo((80 + 499) / 2 + 24, 0);
-    // Kyle, 2026-10-17: "In the game mode the brain can shift a little lower": 24 px more.
-    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247, game: true })).toBeCloseTo((80 + 499) / 2 + 48, 0);
+    // Kyle, 2026-10-17 and 18: lower still in the game, down to 16 px above the conversation.
+    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247, game: true })).toBeCloseTo((80 + 499) / 2 + 70, 0);
+    expect(phoneBrainMiddlePx({ height: 932, brainPx: 345, game: true })).toBeCloseTo((88 + 767) / 2 + 72, 0);
     // 375 x 548: 76 to 345, a 205 px brain leaves 32 px each side, so 16 lower.
     expect(phoneBrainMiddlePx({ height: 548, brainPx: 205 })).toBeCloseTo((76.4 + 383) / 2 + 24, 0);
     // With less room the drop shrinks to keep 16 px clear: 205 px leaves 34.8 at most.
