@@ -303,8 +303,9 @@ describe("A phone's brain under the title", () => {
   const { PHONE_BRAIN_TOP_CSS_PX, shiftToTop, centreShiftFor, composeSpecimenY } = composition;
   const viewportHeight = 2.157;
 
-  it('moves the brain so its top lands 100 px down the page', () => {
-    expect(PHONE_BRAIN_TOP_CSS_PX).toBe(100);
+  // Kyle, 2026-10-17: "We can lower the brain position now slightly." 24 px.
+  it('moves the brain so its top lands 124 px down the page', () => {
+    expect(PHONE_BRAIN_TOP_CSS_PX).toBe(124);
     // At 390 x 664 today the brain's top is at 291 px.
     const shift = shiftToTop({ shift: 0, topPx: 291, targetTopPx: 100, height: 664, viewportHeight });
     expect(shift).toBeCloseTo((191 / 664) * viewportHeight, 10);

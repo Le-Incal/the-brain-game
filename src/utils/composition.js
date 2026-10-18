@@ -19,9 +19,9 @@ export const PHONE_MAX_WIDTH = 640;
 // quarter inch below the page's middle.
 export const CENTRE_DROP_CSS_PX = 24;
 // Kyle, 2026-10-17, on a phone: "Move the brain up under the title." The top
-// of the brain 100 px down the page, a little under the title's rule on every
-// phone (76 to 88 px down).
-export const PHONE_BRAIN_TOP_CSS_PX = 100;
+// of the brain under the title's rule on every phone (76 to 88 px down); then
+// "We can lower the brain position now slightly": 24 px lower, 124 px down.
+export const PHONE_BRAIN_TOP_CSS_PX = 124;
 
 export function centresOnPage(width) {
   return width > PHONE_MAX_WIDTH;
