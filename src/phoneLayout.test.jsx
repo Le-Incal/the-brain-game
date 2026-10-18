@@ -151,7 +151,7 @@ describe("A region's description on phones", () => {
   it('is wired: the title and the Study heading give way, and the panel moves up', () => {
     const source = read('./App.jsx');
     expect(source).toMatch(/const inHeader = descriptionInHeader\(\{ phone, describedRegion, gamePhase \}\);/);
-    expect(source).toMatch(/\{headerShows\(\{ gamePhase, inHeader \}\) && \(/);
+    expect(source).toMatch(/\{headerShows\(\{ gamePhase, inHeader, phone \}\) && \(/);
     expect(source).toMatch(/\{studyCaption && !inHeader && \(/);
     expect(source).toMatch(/className="description-panel" data-place=\{inHeader \? 'header' : undefined\}/);
   });
@@ -304,10 +304,13 @@ describe("A phone's brain under the title", () => {
   const viewportHeight = 2.157;
 
   // Kyle, 2026-10-17: "We can lower the brain position now slightly." 24 px.
-  it('moves the brain so its top lands 124 px down the page', () => {
+  it('centres the brain, then a little lower, never closer than 16 px to the conversation', () => {
     // Kyle, 2026-10-17: "center it between the top and bottom text": halfway
     // between the title's rule (80 px) and the conversation (461 px) at 390 x 664.
-    expect(phoneBrainMiddlePx({ height: 664 })).toBeCloseTo((80 + 461) / 2, 0);
+    // Then "a little lower again": 24 px, or less on a small phone.
+    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247 })).toBeCloseTo((80 + 461) / 2 + 24, 0);
+    // 375 x 548: 76 to 345, a 205 px brain leaves 32 px each side, so 16 lower.
+    expect(phoneBrainMiddlePx({ height: 548, brainPx: 205 })).toBeCloseTo((76.4 + 345) / 2 + 16, 0);
     // At 390 x 664 today the brain's top is at 291 px.
     const shift = shiftToTop({ shift: 0, topPx: 291, targetTopPx: 100, height: 664, viewportHeight });
     expect(shift).toBeCloseTo((191 / 664) * viewportHeight, 10);

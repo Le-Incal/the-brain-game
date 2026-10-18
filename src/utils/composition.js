@@ -32,12 +32,17 @@ export const CENTRE_DROP_CSS_PX = 24;
  */
 export const PHONE_TITLE_BLOCK_PX = 60;
 export const PHONE_CONVERSATION_RISE_PX = 203;
+// Kyle, 2026-10-17: "I think the brain can sit a little lower again." 24 px
+// below the middle, keeping at least 16 px above the conversation.
+export const PHONE_BRAIN_DROP_PX = 24;
+export const PHONE_BRAIN_MIN_GAP_PX = 16;
 
-/** Where a phone's brain has its middle, in CSS px down the page. */
-export function phoneBrainMiddlePx({ height, safeBottom = 0 }) {
+/** Where a phone's brain, `brainPx` tall, has its middle, in CSS px down the page. */
+export function phoneBrainMiddlePx({ height, safeBottom = 0, brainPx = 0 }) {
   const titleRule = Math.min(28, Math.max(16, 0.03 * height)) + PHONE_TITLE_BLOCK_PX;
   const conversationTop = height - safeBottom - PHONE_CONVERSATION_RISE_PX;
-  return (titleRule + conversationTop) / 2;
+  const spare = (conversationTop - titleRule - brainPx) / 2 - PHONE_BRAIN_MIN_GAP_PX;
+  return (titleRule + conversationTop) / 2 + Math.max(0, Math.min(PHONE_BRAIN_DROP_PX, spare));
 }
 
 export function centresOnPage(width) {

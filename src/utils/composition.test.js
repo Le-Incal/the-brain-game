@@ -107,6 +107,8 @@ describe('Which height each part of the app uses', () => {
     expect(scene).toMatch(/composeSpecimenY\(/);
     expect(scene).toMatch(/setComposition\(name/);
     // With Motion off (the visitor's switch, or reduced motion) it moves without sliding.
-    expect(app).toMatch(/setComposition\?\.\(compositionForPhase\(gamePhase\), \{ immediate: !motionOn \}\)/);
+    expect(app).toMatch(/setComposition\?\.\(compositionForPhase\(gamePhase, \{ phone \}\), \{ immediate: !motionOn \}\)/);
+    // Kyle, 2026-10-17: on a phone the brain stays put for the game.
+    expect(['offer', 'countdown', 'playing', 'paused', 'ready', 'study'].map((phase) => compositionForPhase(phase, { phone: true }))).toEqual(Array(6).fill('centre'));
   });
 });

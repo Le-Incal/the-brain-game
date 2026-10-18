@@ -83,12 +83,20 @@ export function getDescribedRegion({
  * keeps its own places.
  */
 export function descriptionInHeader({ phone = false, describedRegion = null, gamePhase }) {
-  return Boolean(phone && describedRegion && compositionForPhase(gamePhase) === 'centre');
+  return Boolean(phone && describedRegion && sceneModeForPhase(gamePhase) !== 'game');
+}
+
+/**
+ * Kyle, 2026-10-17: in a game on a phone the brain stays where it is, so the
+ * titles and text above it go: the title, the region's text, the factoids.
+ */
+export function phoneGameClearsAbove({ phone = false, gamePhase }) {
+  return Boolean(phone && sceneModeForPhase(gamePhase) === 'game');
 }
 
 /** The title shows in its phases, unless a region's description has taken its place. */
-export function headerShows({ gamePhase, inHeader = false }) {
-  return shouldShowHeader(gamePhase) && !inHeader;
+export function headerShows({ gamePhase, inHeader = false, phone = false }) {
+  return shouldShowHeader(gamePhase) && !inHeader && !phoneGameClearsAbove({ phone, gamePhase });
 }
 
 const REGION_TITLE_STYLE = {
@@ -744,8 +752,8 @@ export default function App() {
   // The brain's height (Kyle, 2026-10-16): centred on the page, and slid down
   // for the game only. With Motion off it moves without sliding.
   useEffect(() => {
-    sceneRef.current?.setComposition?.(compositionForPhase(gamePhase), { immediate: !motionOn });
-  }, [gamePhase, motionOn]);
+    sceneRef.current?.setComposition?.(compositionForPhase(gamePhase, { phone }), { immediate: !motionOn });
+  }, [gamePhase, motionOn, phone]);
 
   // Motion off: the specimen's own slow turn stops too, and any move in flight.
   useEffect(() => {
@@ -1098,7 +1106,7 @@ export default function App() {
         </div>
       </div>
 
-      {headerShows({ gamePhase, inHeader }) && (
+      {headerShows({ gamePhase, inHeader, phone }) && (
         <div
           className={gamePhase === 'countdown' ? 'title-fold-up' : undefined}
           style={STYLES.header}
@@ -1143,7 +1151,7 @@ export default function App() {
         </div>
       )}
 
-      {left.description && (
+      {left.description && !phoneGameClearsAbove({ phone, gamePhase }) && (
         <div className="description-panel" data-place={inHeader ? 'header' : undefined} style={STYLES.descriptionPanel}>
           {describedRegion && (
             <RegionDescription region={describedRegion} text={describedText} style={STYLES.hoverLabel} />

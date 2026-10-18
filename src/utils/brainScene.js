@@ -543,7 +543,7 @@ export class BrainScene {
    */
   _landedPhoneShift() {
     if (!this._phoneCentred || centresOnPage(this.width) || !this.brainMeshes.length) return null;
-    const targetPx = phoneBrainMiddlePx({ height: this.height, safeBottom: this._safeAreaBottom() });
+    const safeBottom = this._safeAreaBottom();
     const held = { lift: this._lift, shift: this._phoneShift };
     const viewportHeight = this._viewportHeightAtTarget();
     let shift = (getCompositionVerticalShiftCssPx(this.width) / this.height) * viewportHeight;
@@ -554,6 +554,8 @@ export class BrainScene {
       this._positionSpecimen();
       const { minY, maxY } = this._silhouetteNdc();
       const middlePx = ((1 - (minY + maxY) / 2) / 2) * this.height;
+      const brainPx = ((maxY - minY) / 2) * this.height;
+      const targetPx = phoneBrainMiddlePx({ height: this.height, safeBottom, brainPx });
       shift = shiftToTop({ shift, topPx: middlePx, targetTopPx: targetPx, height: this.height, viewportHeight });
     }
     this._lift = held.lift;

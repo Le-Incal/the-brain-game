@@ -23,9 +23,12 @@ export function sceneModeForPhase(gamePhase) {
 
 /**
  * The brain's height (Kyle, 2026-10-16): centred on the page, lowered for the
- * game only, from the offer and countdown through play and pause.
+ * game only, from the offer and countdown through play and pause. On a phone
+ * it stays put for the game (Kyle, 2026-10-17: "don't lower the brain in the
+ * phone mode for the game").
  */
-export function compositionForPhase(gamePhase) {
+export function compositionForPhase(gamePhase, { phone = false } = {}) {
+  if (phone) return 'centre';
   return sceneModeForPhase(gamePhase) === 'game' ? 'game' : 'centre';
 }
 
