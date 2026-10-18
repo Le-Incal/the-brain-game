@@ -25,6 +25,8 @@ import {
   COMPOSITION_SLIDE_MS,
   centreShiftFor,
   centresOnPage,
+  PHONE_BRAIN_TOP_CSS_PX,
+  shiftToTop,
   composeSpecimenY,
   cssPxToWorld,
   refineBrainCentre,
@@ -387,6 +389,10 @@ export class BrainScene {
     this._brainCentre = null;
     // A quarter inch below the middle (Kyle, 2026-10-17); 0 while the centre is measured.
     this._centreDropPx = CENTRE_DROP_CSS_PX;
+    // On a phone, in the app only, the brain's top sits under the title (Kyle,
+    // 2026-10-17). Measured once it loads, and again when the page resizes.
+    this._phoneTopPx = options.phoneTop ? PHONE_BRAIN_TOP_CSS_PX : null;
+    this._phoneShift = null;
 
     this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
@@ -527,7 +533,57 @@ export class BrainScene {
     this._brainCentre = this._measureBrainCentre();
     // Twice: the second pass takes up what perspective leaves of the first.
     for (let pass = 0; pass < 2; pass += 1) this._brainCentre = this._landedBrainCentre(this._brainCentre);
+    this._phoneShift = this._landedPhoneShift();
     this._positionSpecimen();
+  }
+
+  /**
+   * The specimen's offset that puts the brain's top under a phone's title, in
+   * its current pose, or null on a wider page or outside the app.
+   */
+  _landedPhoneShift() {
+    if (this._phoneTopPx === null || centresOnPage(this.width) || !this.brainMeshes.length) return null;
+    const held = { lift: this._lift, shift: this._phoneShift };
+    const viewportHeight = this._viewportHeightAtTarget();
+    let shift = (getCompositionVerticalShiftCssPx(this.width) / this.height) * viewportHeight;
+    this._lift = 1;
+    // Three passes: the brain's size on screen changes a little as it rises.
+    for (let pass = 0; pass < 3; pass += 1) {
+      this._phoneShift = shift;
+      this._positionSpecimen();
+      const { maxY } = this._silhouetteNdc();
+      const topPx = ((1 - maxY) / 2) * this.height;
+      shift = shiftToTop({ shift, topPx, targetTopPx: this._phoneTopPx, height: this.height, viewportHeight });
+    }
+    this._lift = held.lift;
+    this._phoneShift = held.shift;
+    this._positionSpecimen();
+    return shift;
+  }
+
+  /** The height the camera sees at its target's depth, in world units. */
+  _viewportHeightAtTarget() {
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    return 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+  }
+
+  /** The brain's silhouette, top and bottom, in normalized device units. */
+  _silhouetteNdc() {
+    this.specimenGroup.updateMatrixWorld(true);
+    this.camera.updateMatrixWorld();
+    let minY = Infinity;
+    let maxY = -Infinity;
+    const point = new THREE.Vector3();
+    for (const mesh of this.brainMeshes) {
+      const positions = mesh.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i += 2) {
+        point.fromBufferAttribute(positions, i);
+        mesh.localToWorld(point).project(this.camera);
+        if (point.y < minY) minY = point.y;
+        if (point.y > maxY) maxY = point.y;
+      }
+    }
+    return { minY, maxY };
   }
 
   /**
@@ -543,20 +599,7 @@ export class BrainScene {
     // Measured against the true middle; the drop is added after.
     this._centreDropPx = 0;
     this._positionSpecimen();
-    this.specimenGroup.updateMatrixWorld(true);
-    this.camera.updateMatrixWorld();
-    let minY = Infinity;
-    let maxY = -Infinity;
-    const point = new THREE.Vector3();
-    for (const mesh of this.brainMeshes) {
-      const positions = mesh.geometry.attributes.position;
-      for (let i = 0; i < positions.count; i += 2) {
-        point.fromBufferAttribute(positions, i);
-        mesh.localToWorld(point).project(this.camera);
-        if (point.y < minY) minY = point.y;
-        if (point.y > maxY) maxY = point.y;
-      }
-    }
+    const { minY, maxY } = this._silhouetteNdc();
     this._brainCentre = held.centre;
     this._lift = held.lift;
     this._centreDropPx = held.drop;
@@ -846,6 +889,7 @@ export class BrainScene {
     this.height = this.container.clientHeight;
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
+    this._phoneShift = this._landedPhoneShift();
     this._positionSpecimen();
     this.renderer.setSize(this.width, this.height);
   }
@@ -873,6 +917,7 @@ export class BrainScene {
       scale: getResponsiveSpecimenScale(this.width),
       gameShift: shift,
       drop: cssPxToWorld(-this._centreDropPx, { height: this.height, viewportHeight }),
+      phoneShift: this._phoneShift,
     });
     this.specimenGroup.position.y = composeSpecimenY({
       baseY,

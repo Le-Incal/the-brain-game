@@ -16,6 +16,8 @@ import { createTourOffer, DEMO_FALL_SPEED, DEMO_TILT_DEGREES, demoWord } from '.
 import { getRegionById } from './data/regions';
 import { VoiceDebugPanel, shouldShowVoiceDebugPanel } from './voice/debugPanel';
 import { SECTION_PLATE, plateBox, screenBounds, shouldCloseSection } from './sectionPlate.js';
+import { usePhoneLayout } from './utils/phoneLayout.js';
+import { keepPageAtTop } from './utils/pageTop.js';
 
 const SECTION_STUDY_ONLY = 'The section opens only in Study mode. Invite the player to press Study the Brain.';
 const SECTION_FADE = 'opacity 600ms ease';
@@ -67,10 +69,67 @@ export function getDescribedRegion({
   selectedRegion = null,
   guideFocus = null,
   hoveredRegion = null,
+  phone = false,
 } = {}) {
   if (isNavigating) return null;
   // A click wins; the guide's focus beats a cursor that happens to rest on the brain.
-  return selectedRegion || guideFocus || hoveredRegion;
+  // A phone has no hover: a tap can leave one behind, so it is set aside (Kyle, 2026-10-17).
+  return selectedRegion || guideFocus || (phone ? null : hoveredRegion);
+}
+
+/**
+ * Kyle, 2026-10-17: on a phone, "when a region is selected the title and
+ * header are replaced with the description", in Explore and Study. The game
+ * keeps its own places.
+ */
+export function descriptionInHeader({ phone = false, describedRegion = null, gamePhase }) {
+  return Boolean(phone && describedRegion && compositionForPhase(gamePhase) === 'centre');
+}
+
+/** The title shows in its phases, unless a region's description has taken its place. */
+export function headerShows({ gamePhase, inHeader = false }) {
+  return shouldShowHeader(gamePhase) && !inHeader;
+}
+
+const REGION_TITLE_STYLE = {
+  display: 'block',
+  color: '#1a1814',
+  fontFamily: "'Playfair Display', Georgia, serif",
+  fontStyle: 'normal',
+  fontWeight: 600,
+};
+const REGION_NAME_STYLE = { display: 'block', opacity: 0.65, marginTop: 4 };
+const REGION_TEXT_STYLE = {
+  display: 'block',
+  marginTop: 12,
+  fontStyle: 'normal',
+  lineHeight: 1.55,
+  letterSpacing: '0.03em',
+};
+
+/**
+ * A region's title, its name and its text. On phones index.html sets the name
+ * on the title's line (Kyle, 2026-10-17: "Broca Area should move to the same
+ * line as 'The articulate engine'").
+ */
+export function RegionDescription({ region, text, style }) {
+  return (
+    <div className="region-description" style={style}>
+      <span className="region-title" style={REGION_TITLE_STYLE}>
+        {region.subtitle || region.name}
+      </span>
+      {region.subtitle && (
+        <span className="region-name" style={REGION_NAME_STYLE}>
+          {region.name}
+        </span>
+      )}
+      {text && (
+        <span className="region-text" style={REGION_TEXT_STYLE}>
+          {text}
+        </span>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -368,6 +427,9 @@ export default function App() {
   // What the voice guide is showing, for the left panel.
   const [guideFocus, setGuideFocus] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const phone = usePhoneLayout();
+  // The title cut off on an iPhone (Kyle, 2026-10-17): back to the top once the keyboard goes.
+  useEffect(() => keepPageAtTop(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [score, setScore] = useState(0);
@@ -475,6 +537,8 @@ export default function App() {
     if (!mountRef.current) return;
 
     const brainScene = new BrainScene(mountRef.current, {
+      // Kyle, 2026-10-17: on a phone the brain sits under the title.
+      phoneTop: true,
       onHoverChange: handleHover,
       onRegionSelect: handleRegionSelect,
       onNavigatingChange: handleNavigatingChange,
@@ -941,7 +1005,7 @@ export default function App() {
     };
   }, [settingsOpen]);
 
-  const studyCaption = gamePhase === 'study' ? getStudyCaption(VOICE_ENABLED ? guide : null) : null;
+  const studyCaption = gamePhase === 'study' ? getStudyCaption(VOICE_ENABLED ? guide : null, { phone }) : null;
   const controlIndicator = getControlIndicator({ control, guide });
   const showVoiceDebug = shouldShowVoiceDebugPanel({
     voiceEnabled: VOICE_ENABLED,
@@ -953,9 +1017,11 @@ export default function App() {
     selectedRegion,
     guideFocus,
     hoveredRegion,
+    phone,
   });
   const describedText = getDescribedText({ isNavigating, selectedRegion, guideFocus });
-  const showArrival = shouldShowArrival({ gamePhase, brainReady, chosen: choice.chosen });
+  const inHeader = descriptionInHeader({ phone, describedRegion, gamePhase });
+  const showArrival = shouldShowArrival({ gamePhase, brainReady, chosen: choice.chosen, phone });
   const left = leftColumn({ showArrival, describedRegion, describedText, factoid, correction });
   const barButtons = getBarButtons({
     gamePhase,
@@ -965,6 +1031,7 @@ export default function App() {
     sectionOpen,
     sectionAvailable: VOICE_ENABLED,
     chosen: choice.chosen,
+    phone,
   });
   const barActions = {
     colour: () => setColorMode(!colorMode),
@@ -1031,7 +1098,7 @@ export default function App() {
         </div>
       </div>
 
-      {shouldShowHeader(gamePhase) && (
+      {headerShows({ gamePhase, inHeader }) && (
         <div
           className={gamePhase === 'countdown' ? 'title-fold-up' : undefined}
           style={STYLES.header}
@@ -1077,39 +1144,9 @@ export default function App() {
       )}
 
       {left.description && (
-        <div className="description-panel" style={STYLES.descriptionPanel}>
+        <div className="description-panel" data-place={inHeader ? 'header' : undefined} style={STYLES.descriptionPanel}>
           {describedRegion && (
-            <div className="region-description" style={STYLES.hoverLabel}>
-              <span
-                style={{
-                  display: 'block',
-                  color: '#1a1814',
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'normal',
-                  fontWeight: 600,
-                }}
-              >
-                {describedRegion.subtitle || describedRegion.name}
-              </span>
-              {describedRegion.subtitle && (
-                <span style={{ display: 'block', opacity: 0.65, marginTop: 4 }}>
-                  {describedRegion.name}
-                </span>
-              )}
-              {describedText && (
-                <span
-                  style={{
-                    display: 'block',
-                    marginTop: 12,
-                    fontStyle: 'normal',
-                    lineHeight: 1.55,
-                    letterSpacing: '0.03em',
-                  }}
-                >
-                  {describedText}
-                </span>
-              )}
-            </div>
+            <RegionDescription region={describedRegion} text={describedText} style={STYLES.hoverLabel} />
           )}
           {!showArrival && factoid && (
             <div className="region-description" style={STYLES.factoid}>{factoid}</div>
@@ -1154,6 +1191,7 @@ export default function App() {
           onDifficulty={chooseDifficulty}
           speed={speedMultiplier}
           onSpeed={setSpeedMultiplier}
+          colour={phone ? { on: colorMode, onChange: setColorMode } : undefined}
         />
       )}
 
@@ -1164,10 +1202,12 @@ export default function App() {
         />
       )}
 
-      {studyCaption && (
+      {studyCaption && !inHeader && (
         <div className="study-caption" style={STYLES.studyCaption} aria-live="polite">
           <div style={STYLES.studyCaptionTitle}>{studyCaption.title}</div>
-          <div style={STYLES.studyCaptionNote}>{studyCaption.note}</div>
+          {studyCaption.note && (
+            <div style={STYLES.studyCaptionNote}>{studyCaption.note}</div>
+          )}
           {controlIndicator && (
             <div className="control-indicator" style={STYLES.controlIndicator}>
               {controlIndicator.text}

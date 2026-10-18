@@ -11,6 +11,9 @@ export function formatTimeUntilReset(seconds) {
   return `in about ${Math.round(hours)} hours`;
 }
 
+/** The catch-all, when there is nothing more to say (phones leave it out, Kyle 2026-10-17). */
+export const VOICE_UNAVAILABLE = 'Voice is unavailable right now. The game works as usual.';
+
 export function describeVoiceUnavailable({ reason, resetsInSeconds } = {}) {
   switch (reason) {
     case 'device_daily_cap':
@@ -24,6 +27,6 @@ export function describeVoiceUnavailable({ reason, resetsInSeconds } = {}) {
     case 'rate_limited':
       return 'Too many conversations from this network. Try again in a few minutes.';
     default:
-      return 'Voice is unavailable right now. The game works as usual.';
+      return VOICE_UNAVAILABLE;
   }
 }

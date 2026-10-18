@@ -18,6 +18,10 @@ export const PHONE_MAX_WIDTH = 640;
 // Kyle, 2026-10-17: "we need to slightly lower the standard position now." A
 // quarter inch below the page's middle.
 export const CENTRE_DROP_CSS_PX = 24;
+// Kyle, 2026-10-17, on a phone: "Move the brain up under the title." The top
+// of the brain 100 px down the page, a little under the title's rule on every
+// phone (76 to 88 px down).
+export const PHONE_BRAIN_TOP_CSS_PX = 100;
 
 export function centresOnPage(width) {
   return width > PHONE_MAX_WIDTH;
@@ -32,11 +36,22 @@ export function cssPxToWorld(px, { height, viewportHeight }) {
  * The specimen's offset that puts the brain's centre on the camera's target,
  * the page's middle, then `drop` lower. `brainCentre` is the brain's centre
  * below (negative) or above the specimen's origin, at a scale of 1, in the
- * arrival pose.
+ * arrival pose. A phone uses `phoneShift`, which puts the brain under the
+ * title, once its scene has measured it; until then, and on the landing, it
+ * keeps the game's height.
  */
-export function centreShiftFor({ width, brainCentre, scale, gameShift, drop = 0 }) {
-  if (!centresOnPage(width) || brainCentre === null || brainCentre === undefined) return gameShift;
+export function centreShiftFor({ width, brainCentre, scale, gameShift, drop = 0, phoneShift = null }) {
+  if (!centresOnPage(width)) return phoneShift ?? gameShift;
+  if (brainCentre === null || brainCentre === undefined) return gameShift;
   return -brainCentre * scale + drop;
+}
+
+/**
+ * The specimen's offset corrected so the brain's top, now at `topPx` down the
+ * page, lands at `targetTopPx`.
+ */
+export function shiftToTop({ shift, topPx, targetTopPx, height, viewportHeight }) {
+  return shift + cssPxToWorld(topPx - targetTopPx, { height, viewportHeight });
 }
 
 /**

@@ -165,27 +165,41 @@
           border-top: 1px solid rgba(26, 24, 20, 0.24);
           border-bottom: 1px solid rgba(26, 24, 20, 0.24);
         }
-        .arrival-panel {
-          left: 16px !important;
-          top: 108px !important;
-          bottom: auto !important;
-          width: calc(100vw - 32px) !important;
-          max-height: 220px;
-          overflow: hidden;
-          padding: 8px 10px;
-          background: rgba(247, 240, 220, 0.92);
-          border-top: 1px solid rgba(26, 24, 20, 0.24);
-          border-bottom: 1px solid rgba(26, 24, 20, 0.24);
+        /*
+         * Kyle, 2026-10-17: "Region descriptions need to become compact ...
+         * when a region is selected the title and header are replaced with the
+         * description." The name on the title's line, the text under it.
+         */
+        .description-panel[data-place="header"] {
+          top: clamp(16px, 3vh, 28px) !important;
+          max-height: none;
+          padding: 0 2px;
+          background: transparent;
+          border: none;
         }
-        .arrival-panel:not([data-region="none"]) {
-          display: none !important;
-        }
-        .arrival-options {
-          gap: 12px !important;
-        }
-        .arrival-text {
+        .description-panel[data-place="header"] .region-description {
           font-size: 12.5px !important;
+          letter-spacing: 0.02em !important;
+          margin-bottom: 0 !important;
+        }
+        .region-title,
+        .region-name {
+          display: inline !important;
+        }
+        .description-panel[data-place="header"] .region-title {
+          font-size: 16px;
+        }
+        .region-name {
+          margin-top: 0 !important;
+        }
+        .region-name::before {
+          content: '·';
+          margin: 0 0.45em;
+        }
+        .region-text {
           margin-top: 4px !important;
+          line-height: 1.35 !important;
+          letter-spacing: 0.01em !important;
         }
         .settings-panel {
           bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;
@@ -215,6 +229,11 @@
           padding: 3px 7px !important;
           letter-spacing: 0.06em !important;
         }
+        /* Kyle, 2026-10-17: Study and Play, small, in the bottom right. */
+        .game-controls .bar-settings { order: 0; }
+        .game-controls .score-display { order: 1; }
+        .game-controls .bar-study { order: 2; margin-left: auto !important; }
+        .game-controls .bar-play { order: 3; }
         .guide-column {
           top: auto !important;
           bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;
@@ -223,9 +242,17 @@
           width: auto !important;
           max-height: 40vh;
         }
+        /* Kyle, 2026-10-17: "Limit text streaming to 3 lines." */
+        .guide-transcript {
+          max-height: 66px !important;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px) !important;
+          mask-image: linear-gradient(to bottom, transparent 0, #000 10px) !important;
+        }
+        .guide-transcript > div { padding-top: 0 !important; }
         .guide-line, .visitor-line {
           font-size: 14px !important;
-          margin-bottom: 8px !important;
+          line-height: 1.5 !important;
+          margin-bottom: 3px !important;
         }
         .speed-control { gap: 3px !important; }
         .speed-label {

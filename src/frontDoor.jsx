@@ -44,9 +44,19 @@ export function getBarButtons({
   sectionAvailable = true,
   // Kyle, 2026-10-11: Play and Study join the bar once the visitor has picked one on arrival.
   chosen = true,
+  phone = false,
 }) {
   const blocked = !brainReady || gamePhase === 'countdown';
   const playLabel = gamePhase === 'playing' ? 'Pause' : gamePhase === 'paused' ? 'Resume' : 'Play the Game';
+  // Kyle, 2026-10-17, on phones: Settings, then Study and Play, small and from
+  // arrival; Colour Regions moves into Settings and Section goes.
+  if (phone) {
+    return [
+      { id: 'settings', label: 'Settings', expanded: Boolean(settingsOpen), disabled: false },
+      { id: 'study', label: 'Study', pressed: gamePhase === 'study', disabled: blocked },
+      { id: 'play', label: playLabel === 'Play the Game' ? 'Play' : playLabel, pressed: gamePhase === 'paused', disabled: blocked },
+    ];
+  }
   return [
     { id: 'colour', label: 'Colour Regions', pressed: Boolean(colorMode), disabled: false },
     ...(chosen
@@ -154,10 +164,11 @@ export function regionSelection(region, { demo = false } = {}) {
   return { selected: region ?? null, playerSelected: !demo, tellGuide: !demo && Boolean(region) };
 }
 
-export function shouldShowArrival({ gamePhase, brainReady, chosen = false }) {
+export function shouldShowArrival({ gamePhase, brainReady, chosen = false, phone = false }) {
   // Once a choice is made the bar holds both options, so the left never repeats them.
   // A selected region no longer hides them: they sit bottom-left, its text beside them (Kyle, 2026-10-13).
-  return gamePhase === 'ready' && Boolean(brainReady) && !chosen;
+  // On phones the bar holds them from arrival (Kyle, 2026-10-17).
+  return gamePhase === 'ready' && Boolean(brainReady) && !chosen && !phone;
 }
 
 /** The visitor's first choice on arrival (Kyle, 2026-10-11). */
@@ -168,15 +179,16 @@ export function recordChoice(previous, pick) {
   return { chosen: true, played: Boolean(previous.played || pick === 'play') };
 }
 
-export function getStudyCaption(guide) {
+export function getStudyCaption(guide, { phone = false } = {}) {
   const id = normalizeGuide(guide);
   if (!id) {
-    return { title: 'Study the Brain', note: 'Turn the brain and select any region to read about it.' };
+    return { title: 'Study the Brain', note: phone ? null : 'Turn the brain and select any region to read about it.' };
   }
   const { name } = GUIDES.find((entry) => entry.id === id);
   return {
     title: `Studying with ${name}`,
-    note: `Ask ${name} anything, or turn the brain and select a region to read about it.`,
+    // Kyle, 2026-10-17: phones drop the sentence.
+    note: phone ? null : `Ask ${name} anything, or turn the brain and select a region to read about it.`,
   };
 }
 
@@ -348,10 +360,23 @@ export function pressClosesSettings({ open, target }) {
   return !target.closest('.settings-panel, .bar-settings');
 }
 
-/** Guide, difficulty and the speed of falling words. */
-export function SettingsPanel({ voiceEnabled, guide, onGuide, difficulty, onDifficulty, speed, onSpeed }) {
+/**
+ * Guide, difficulty and the speed of falling words. On phones Colour Regions
+ * comes here from the bar (Kyle, 2026-10-17), given as `colour`.
+ */
+export function SettingsPanel({ voiceEnabled, guide, onGuide, difficulty, onDifficulty, speed, onSpeed, colour }) {
   return (
     <div id="settings-panel" className="settings-panel" role="group" aria-label="Settings" style={SETTINGS_STYLES.panel}>
+      {colour && (
+        <div className="settings-colour" style={SETTINGS_STYLES.row}>
+          <span style={SETTINGS_STYLES.label}>Colour Regions</span>
+          <span style={SETTINGS_STYLES.choices}>
+            {[false, true].map((on) => (
+              <ToggleButton key={String(on)} label={on ? 'On' : 'Off'} active={Boolean(colour.on) === on} onClick={() => colour.onChange(on)} mini />
+            ))}
+          </span>
+        </div>
+      )}
       {voiceEnabled && (
         <div style={SETTINGS_STYLES.row}>
           <span style={SETTINGS_STYLES.label}>Guide</span>

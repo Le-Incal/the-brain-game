@@ -8,6 +8,7 @@
 import quillSource from '../assets/quill.svg?raw';
 import { GUIDE_COLUMN_STYLE } from './voicePanelLayout.js';
 import { completedSentences } from './transcriptStream.js';
+import { VOICE_UNAVAILABLE } from './voiceAvailability.js';
 
 const INK = '#1a1814';
 const PARCHMENT = '#f7f0dc';
@@ -119,8 +120,9 @@ const STYLES = {
  * What to say under the switches, if anything: an invitation while the voice
  * is off, progress while it wakes, or why it could not.
  */
-export function noticeFor(phase, message, name, { welcome = null, micRefused = false, carryingOn = false } = {}) {
-  if (phase === 'unavailable' && message) return { text: message };
+export function noticeFor(phase, message, name, { welcome = null, micRefused = false, carryingOn = false, phone = false } = {}) {
+  // Kyle, 2026-10-17: phones leave out the catch-all; a line saying when voice returns stays.
+  if (phase === 'unavailable' && message) return phone && message === VOICE_UNAVAILABLE ? null : { text: message };
   // Carrying on into a fresh session is not waking: the visitor sees nothing (Kyle, 2026-10-13).
   if (carryingOn && (phase === 'requesting' || phase === 'connecting')) return null;
   // Without the microphone the guide carries on in writing.

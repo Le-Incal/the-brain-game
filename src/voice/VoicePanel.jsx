@@ -28,7 +28,8 @@ import { createCueTracker, createLevelCues } from './speechCues.js';
 import { createTourStallGuard } from './tourStallGuard.js';
 import { createTourPacer } from './tourPacer.js';
 import { createWordFollower } from './followWords.js';
-import { createTranscriptStream } from './transcriptStream.js';
+import { createTranscriptStream, withoutSoundTags } from './transcriptStream.js';
+import { usePhoneLayout } from '../utils/phoneLayout.js';
 import { createArrivalClock, createWelcome, WELCOME_DELAY_MS, WELCOME_GREETING_LEAD_MS, WELCOME_ID } from './welcome.js';
 import { createRestTimer, createSpeechOnset } from './restWake.js';
 import { isAtBottom } from './transcriptScroll.js';
@@ -89,6 +90,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   // Once the introduction has finished, it turns slowly while it waits (Kyle, 2026-10-13).
   const waitingRef = useRef(false);
   const [state, setState] = useState({ phase: 'idle', guide, message: null });
+  const phone = usePhoneLayout();
   const [entries, setEntries] = useState([]);
   const [draft, setDraft] = useState('');
   const [following, setFollowing] = useState(true);
@@ -231,7 +233,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
         follower.interrupted();
         // A new turn: the guide's next words choose a new subject (Kyle, 2026-10-13).
         commandsRef.current?.visitorTurn?.();
-        stream.addVisitor({ id: payload.event_id ? `u-${payload.event_id}` : nextLineId('u'), text: raw });
+        stream.addVisitor({ id: payload.event_id ? `u-${payload.event_id}` : nextLineId('u'), text: withoutSoundTags(raw) });
       } else if (payload?.role === 'agent') {
         follower.guideText(raw);
         stream.addGuide({ id: payload.event_id ? `g-${payload.event_id}` : nextLineId('g'), text: stripExpressiveTags(raw) });
@@ -838,6 +840,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   };
 
   const notice = noticeFor(state.phase, state.message, name, {
+    phone,
     welcome: welcomeState === 'audible' || welcomeState === 'silent' ? welcomeState : null,
     micRefused: Boolean(state.micRefused),
     carryingOn: Boolean(state.carryingOn),

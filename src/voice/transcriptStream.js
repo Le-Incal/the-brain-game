@@ -22,6 +22,23 @@ export function completedSentences(text) {
   return match ? match[0] : '';
 }
 
+// The speech engine's sound tags, "(clears throat)" or "[laughs]": a bracket
+// of lowercase words only, so "(Area 10)" stays.
+const SOUND_TAG = /[([]\s*[a-z][a-z '-]*\s*[)\]]/g;
+// The same sounds bare, before the visitor's first word (Kyle's screenshot,
+// 2026-10-17: "clears throat Show me the temporal lobe.").
+const LEADING_SOUND = /^(?:clears (?:his |her |their |my )?throat|coughs?|laughs?|laughter|sighs?|sniffs?)\s+(?=[A-Z])/;
+
+/** The visitor's spoken words without the speech engine's sound tags. */
+export function withoutSoundTags(text) {
+  return String(text ?? '')
+    .replace(SOUND_TAG, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,!?;:])/g, '$1')
+    .trim()
+    .replace(LEADING_SOUND, '');
+}
+
 export function createTranscriptStream({ now = () => performance.now(), readingCps = READING_CHARS_PER_SECOND } = {}) {
   let list = [];
   // The guide line still streaming, and the last reply id a line was bound to.
