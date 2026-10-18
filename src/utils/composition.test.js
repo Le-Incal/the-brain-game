@@ -64,7 +64,9 @@ describe("The brain's height on the page", () => {
     expect(refineBrainCentre({ brainCentre, ndcCentre: 0, viewportHeight, scale: 1 })).toBe(brainCentre);
   });
 
-  it('keeps phones where they are today, in every mode', () => {
+  // Kyle, 2026-10-17: in the app a phone's brain moves up under the title (see
+  // phoneLayout.test.jsx); with nothing measured, as on the landing, it stays.
+  it('keeps a phone where it was when nothing has measured its top', () => {
     expect(centresOnPage(640)).toBe(false);
     expect(centresOnPage(641)).toBe(true);
     const phone = { baseY: -0.5, gameShift: 0, panY: 0, responsiveOffset: -0.2 };

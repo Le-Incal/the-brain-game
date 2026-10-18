@@ -575,11 +575,11 @@ describe('Where the arrival choices sit', () => {
     expect(html).not.toMatch(/max-height: 800px/);
   });
 
-  it('share the top strip on phones, as before, giving way to a region the visitor is looking at', () => {
+  // Kyle, 2026-10-17: on phones Study and Play sit small in the bar, bottom
+  // right, from arrival, so the arrival panel never shows there.
+  it('are not on phones, so the phone styles no longer place them', () => {
     const phone = html.match(/@media \(max-width: 640px\) \{([\s\S]*?)\n      \}/);
     expect(phone).not.toBeNull();
-    expect(phone[1]).toMatch(/\.arrival-panel \{[^}]*top: 108px !important/);
-    // A tap leaves the hover on the tapped region, so any region shown takes the strip.
-    expect(phone[1]).toMatch(/\.arrival-panel:not\(\[data-region="none"\]\) \{[^}]*display: none !important/);
+    expect(phone[1]).not.toMatch(/\.arrival-(panel|options|text)/);
   });
 });
