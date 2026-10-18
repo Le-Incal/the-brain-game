@@ -78,15 +78,6 @@ body {
   cursor: grabbing;
 }
 
-/* Flush with the left padding, under the brain's left edge (Kyle, 2026-10-16). */
-.plate-figure figcaption {
-  align-self: flex-start;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--ink-soft);
-  text-align: left;
-}
-
 .landing-text {
   flex: 1 1 340px;
   max-width: 440px;
@@ -210,8 +201,6 @@ body {
   .landing-spread { --a: 22px; row-gap: 16px; }
   /* The phone's brain keeps the size it had inside the tagged plate. */
   .plate { width: 90%; }
-  /* No caption on a phone: the title sits under the brain (Kyle, 2026-10-17). */
-  .plate-figure figcaption { display: none; }
   .landing-text { gap: 16px; }
   .landing-text h1 { font-size: 46px; }
   .landing-subtitle { font-size: 19px; margin-top: 14px; }
