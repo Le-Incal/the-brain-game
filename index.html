@@ -206,6 +206,14 @@
           min-width: 0 !important;
           width: calc(100vw - 32px);
         }
+        /* Kyle, 2026-10-17: every button in Settings the same size. */
+        .settings-panel button {
+          width: 52px;
+          box-sizing: border-box;
+          text-align: center;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
         .region-description {
           font-size: 11.5px !important;
           line-height: 1.3 !important;
@@ -229,11 +237,38 @@
           padding: 3px 7px !important;
           letter-spacing: 0.06em !important;
         }
-        /* Kyle, 2026-10-17: Study and Play, small, in the bottom right. */
-        .game-controls .bar-settings { order: 0; }
-        .game-controls .score-display { order: 1; }
-        .game-controls .bar-study { order: 2; margin-left: auto !important; }
+        /*
+         * Kyle, 2026-10-17: "move the buttons for Study, Play, and Settings
+         * together in that order at the right hand side. And move the toggles
+         * down in line with the buttons." The score sits just left of them.
+         */
+        .game-controls {
+          justify-content: flex-end !important;
+          overflow: visible !important;
+        }
+        .game-controls .bar-study { order: 2; }
         .game-controls .bar-play { order: 3; }
+        .game-controls .bar-settings { order: 4; }
+        /* Kyle, 2026-10-17: in a game, the score in the top right-hand corner; out of a game it rests. */
+        .game-controls .score-display {
+          display: none !important;
+        }
+        .game-controls .score-display[data-mode="game"] {
+          display: inline-flex !important;
+          position: fixed;
+          top: calc(env(safe-area-inset-top, 0px) + 16px);
+          right: 16px;
+          margin: 0 !important;
+          white-space: nowrap;
+        }
+        /* The column ends 34 px above the bar's line; its switches drop onto it, centred on the buttons, at the bar's margin. */
+        .guide-switches {
+          position: absolute;
+          left: -6px;
+          bottom: -37.5px;
+          margin: 0 !important;
+          align-items: center;
+        }
         .guide-column {
           top: auto !important;
           bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;

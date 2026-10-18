@@ -68,12 +68,21 @@ describe('The bar on phones', () => {
     expect(desktop.map((button) => button.label)).toEqual(['Colour Regions', 'Play the Game', 'Study the Brain', 'Section', 'Settings']);
   });
 
-  it('sets Study and Play in the bottom right, and the score beside Settings on the left', () => {
+  // Kyle, 2026-10-17: "move the buttons for Study, Play, and Settings together
+  // in that order at the right hand side. And move the toggles down in line
+  // with the buttons." The score sits on a small line just above them.
+  it('sets Study, Play and Settings together on the right, the switches on their line, the score top right in a game', () => {
     const css = phoneCss();
-    expect(rule(css, '.game-controls .bar-settings')).toMatch(/order: 0;/);
-    expect(rule(css, '.game-controls .score-display')).toMatch(/order: 1;/);
-    expect(rule(css, '.game-controls .bar-study')).toMatch(/order: 2;[^}]*margin-left: auto !important;/);
+    expect(css).toMatch(/\.game-controls \{\s*justify-content: flex-end !important;/);
+    expect(rule(css, '.game-controls .bar-study')).toMatch(/order: 2;/);
     expect(rule(css, '.game-controls .bar-play')).toMatch(/order: 3;/);
+    expect(rule(css, '.game-controls .bar-settings')).toMatch(/order: 4;/);
+    // Kyle, 2026-10-17: "the score can go in the top right hand corner" in a game.
+    expect(rule(css, '.game-controls .score-display')).toMatch(/display: none !important;/);
+    expect(rule(css, '.game-controls .score-display[data-mode="game"]')).toMatch(/position: fixed;[^}]*top: calc\(env\(safe-area-inset-top, 0px\) \+ 16px\);[^}]*right: 16px;/);
+    expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} level="Easy" gamePhase="playing" />)).toMatch(/data-mode="game"/);
+    expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} gamePhase="study" />)).toMatch(/data-mode="study"/);
+    expect(rule(css, '.guide-switches')).toMatch(/position: absolute;[^}]*bottom: -37\.5px;/);
   });
 
   it('shows no arrival panel: the two choices are in the bar', () => {
@@ -308,9 +317,14 @@ describe("A phone's brain under the title", () => {
     // Kyle, 2026-10-17: "center it between the top and bottom text": halfway
     // between the title's rule (80 px) and the conversation (461 px) at 390 x 664.
     // Then "a little lower again": 24 px, or less on a small phone.
-    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247 })).toBeCloseTo((80 + 461) / 2 + 24, 0);
+    // The conversation's top: 499 px down at 390 x 664 once the switches moved to the bar's line.
+    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247 })).toBeCloseTo((80 + 499) / 2 + 24, 0);
+    // Kyle, 2026-10-17: "In the game mode the brain can shift a little lower": 24 px more.
+    expect(phoneBrainMiddlePx({ height: 664, brainPx: 247, game: true })).toBeCloseTo((80 + 499) / 2 + 48, 0);
     // 375 x 548: 76 to 345, a 205 px brain leaves 32 px each side, so 16 lower.
-    expect(phoneBrainMiddlePx({ height: 548, brainPx: 205 })).toBeCloseTo((76.4 + 345) / 2 + 16, 0);
+    expect(phoneBrainMiddlePx({ height: 548, brainPx: 205 })).toBeCloseTo((76.4 + 383) / 2 + 24, 0);
+    // With less room the drop shrinks to keep 16 px clear: 205 px leaves 34.8 at most.
+    expect(phoneBrainMiddlePx({ height: 548, brainPx: 205, game: true })).toBeCloseTo((76.4 + 383) / 2 + 34.8, 0);
     // At 390 x 664 today the brain's top is at 291 px.
     const shift = shiftToTop({ shift: 0, topPx: 291, targetTopPx: 100, height: 664, viewportHeight });
     expect(shift).toBeCloseTo((191 / 664) * viewportHeight, 10);

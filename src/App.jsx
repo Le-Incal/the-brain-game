@@ -752,8 +752,8 @@ export default function App() {
   // The brain's height (Kyle, 2026-10-16): centred on the page, and slid down
   // for the game only. With Motion off it moves without sliding.
   useEffect(() => {
-    sceneRef.current?.setComposition?.(compositionForPhase(gamePhase, { phone }), { immediate: !motionOn });
-  }, [gamePhase, motionOn, phone]);
+    sceneRef.current?.setComposition?.(compositionForPhase(gamePhase), { immediate: !motionOn });
+  }, [gamePhase, motionOn]);
 
   // Motion off: the specimen's own slow turn stops too, and any move in flight.
   useEffect(() => {

@@ -412,7 +412,8 @@ describe('The score sits in the bottom bar', () => {
     const mobile = html.slice(html.indexOf('@media (max-width: 640px)'));
     const controls = mobile.slice(mobile.indexOf('.game-controls {'), mobile.indexOf('}', mobile.indexOf('.game-controls {')));
     expect(controls).not.toMatch(/right: 62px/);
-    const score = mobile.indexOf('.score-display {');
+    // The bar's own score rule; since 2026-10-17 the bar places it just above its buttons.
+    const score = mobile.search(/\n\s+\.score-display \{/);
     if (score > -1) {
       const rule = mobile.slice(score, mobile.indexOf('}', score));
       expect(rule).not.toMatch(/bottom:|right:/);

@@ -129,6 +129,8 @@ export function noticeFor(phase, message, name, { welcome = null, micRefused = f
   if (micRefused && (phase === 'connected' || phase === 'resting')) return { text: `Microphone off. Write to ${name} below.` };
   if (phase === 'requesting' || phase === 'connecting') return { text: message ?? `Waking ${name}…` };
   if (phase === 'idle') {
+    // Kyle, 2026-10-17: phones leave out the invitation; the Voice switch is there.
+    if (phone) return null;
     // Once the welcome is heard, sound is already on: only the microphone remains.
     if (welcome === 'audible') return { text: `Allow the microphone to speak with ${name}.`, invite: true };
     return { text: `Turn on sound and allow the microphone to speak with ${name}.`, invite: true };

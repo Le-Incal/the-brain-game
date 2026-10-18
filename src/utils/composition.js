@@ -27,22 +27,30 @@ export const CENTRE_DROP_CSS_PX = 24;
  *   the rule: the header's padding, clamp(16px, 3vh, 28px), then 60 px of
  *   title, subtitle and rule (80 px down at 390 x 664);
  *   the conversation: the column ends 44 px above the page's foot (and the
- *   safe area), over the switches (24 + 14), the field (41 + 14) and three
- *   lines (66), so 203 px up (461 px down at 390 x 664).
+ *   safe area), over the field (41 + 14) and three lines (66), so 165 px up
+ *   (499 px down at 390 x 664). The switches sit on the bar's line below it
+ *   (Kyle, 2026-10-17).
  */
 export const PHONE_TITLE_BLOCK_PX = 60;
-export const PHONE_CONVERSATION_RISE_PX = 203;
+export const PHONE_CONVERSATION_RISE_PX = 165;
 // Kyle, 2026-10-17: "I think the brain can sit a little lower again." 24 px
 // below the middle, keeping at least 16 px above the conversation.
 export const PHONE_BRAIN_DROP_PX = 24;
 export const PHONE_BRAIN_MIN_GAP_PX = 16;
+// Kyle, 2026-10-17: "In the game mode the brain can shift a little lower."
+export const PHONE_GAME_DROP_PX = 24;
 
-/** Where a phone's brain, `brainPx` tall, has its middle, in CSS px down the page. */
-export function phoneBrainMiddlePx({ height, safeBottom = 0, brainPx = 0 }) {
+/**
+ * Where a phone's brain, `brainPx` tall, has its middle, in CSS px down the
+ * page; in a game (`game`) a little lower still. Never closer than 16 px to
+ * the conversation.
+ */
+export function phoneBrainMiddlePx({ height, safeBottom = 0, brainPx = 0, game = false }) {
   const titleRule = Math.min(28, Math.max(16, 0.03 * height)) + PHONE_TITLE_BLOCK_PX;
   const conversationTop = height - safeBottom - PHONE_CONVERSATION_RISE_PX;
   const spare = (conversationTop - titleRule - brainPx) / 2 - PHONE_BRAIN_MIN_GAP_PX;
-  return (titleRule + conversationTop) / 2 + Math.max(0, Math.min(PHONE_BRAIN_DROP_PX, spare));
+  const drop = PHONE_BRAIN_DROP_PX + (game ? PHONE_GAME_DROP_PX : 0);
+  return (titleRule + conversationTop) / 2 + Math.max(0, Math.min(drop, spare));
 }
 
 export function centresOnPage(width) {

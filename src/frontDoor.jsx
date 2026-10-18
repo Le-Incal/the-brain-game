@@ -24,11 +24,10 @@ export function sceneModeForPhase(gamePhase) {
 /**
  * The brain's height (Kyle, 2026-10-16): centred on the page, lowered for the
  * game only, from the offer and countdown through play and pause. On a phone
- * it stays put for the game (Kyle, 2026-10-17: "don't lower the brain in the
- * phone mode for the game").
+ * the game's height is only a little lower (Kyle, 2026-10-17); the scene
+ * measures it.
  */
-export function compositionForPhase(gamePhase, { phone = false } = {}) {
-  if (phone) return 'centre';
+export function compositionForPhase(gamePhase) {
   return sceneModeForPhase(gamePhase) === 'game' ? 'game' : 'centre';
 }
 
@@ -337,7 +336,7 @@ const LEVEL_PHASES = new Set(['countdown', 'playing', 'paused']);
  */
 export function ScoreDisplay({ score, level, gamePhase, style }) {
   return (
-    <span className="score-display" style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, ...style }}>
+    <span className="score-display" data-mode={sceneModeForPhase(gamePhase)} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, ...style }}>
       <span>Score: {score}</span>
       {LEVEL_PHASES.has(gamePhase) && level ? (
         <span className="level-display" style={{ fontSize: '0.8em', letterSpacing: '0.14em', opacity: 0.8 }}>
@@ -370,22 +369,23 @@ export function pressClosesSettings({ open, target }) {
 export function SettingsPanel({ voiceEnabled, guide, onGuide, difficulty, onDifficulty, speed, onSpeed, colour }) {
   return (
     <div id="settings-panel" className="settings-panel" role="group" aria-label="Settings" style={SETTINGS_STYLES.panel}>
-      {colour && (
-        <div className="settings-colour" style={SETTINGS_STYLES.row}>
-          <span style={SETTINGS_STYLES.label}>Colour Regions</span>
-          <span style={SETTINGS_STYLES.choices}>
-            {[false, true].map((on) => (
-              <ToggleButton key={String(on)} label={on ? 'On' : 'Off'} active={Boolean(colour.on) === on} onClick={() => colour.onChange(on)} mini />
-            ))}
-          </span>
-        </div>
-      )}
       {voiceEnabled && (
         <div style={SETTINGS_STYLES.row}>
           <span style={SETTINGS_STYLES.label}>Guide</span>
           <span style={SETTINGS_STYLES.choices}>
             {GUIDES.map(({ id, name }) => (
               <ToggleButton key={id} label={name} active={guide === id} onClick={() => onGuide(id)} mini />
+            ))}
+          </span>
+        </div>
+      )}
+      {/* Kyle, 2026-10-17: the Guide first, then Colour Regions. */}
+      {colour && (
+        <div className="settings-colour" style={SETTINGS_STYLES.row}>
+          <span style={SETTINGS_STYLES.label}>Colour Regions</span>
+          <span style={SETTINGS_STYLES.choices}>
+            {[false, true].map((on) => (
+              <ToggleButton key={String(on)} label={on ? 'On' : 'Off'} active={Boolean(colour.on) === on} onClick={() => colour.onChange(on)} mini />
             ))}
           </span>
         </div>

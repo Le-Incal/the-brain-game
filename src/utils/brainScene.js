@@ -393,6 +393,8 @@ export class BrainScene {
     // 2026-10-17). Measured once it loads, and again when the page resizes.
     this._phoneCentred = Boolean(options.phoneTop);
     this._phoneShift = null;
+    // A little lower again for the game (Kyle, 2026-10-17).
+    this._phoneGameShift = null;
 
     this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
@@ -538,26 +540,32 @@ export class BrainScene {
   }
 
   /**
-   * The specimen's offset that puts the brain's top under a phone's title, in
-   * its current pose, or null on a wider page or outside the app.
+   * The specimen's offset that puts a phone's brain between the title and the
+   * conversation, in its current pose, or null on a wider page or outside the
+   * app. Sets the game's offset, a little lower, beside it.
    */
   _landedPhoneShift() {
+    this._phoneGameShift = null;
     if (!this._phoneCentred || centresOnPage(this.width) || !this.brainMeshes.length) return null;
     const safeBottom = this._safeAreaBottom();
     const held = { lift: this._lift, shift: this._phoneShift };
     const viewportHeight = this._viewportHeightAtTarget();
     let shift = (getCompositionVerticalShiftCssPx(this.width) / this.height) * viewportHeight;
     this._lift = 1;
+    let brainPx = 0;
     // Three passes: the brain's size on screen changes a little as it rises.
     for (let pass = 0; pass < 3; pass += 1) {
       this._phoneShift = shift;
       this._positionSpecimen();
       const { minY, maxY } = this._silhouetteNdc();
       const middlePx = ((1 - (minY + maxY) / 2) / 2) * this.height;
-      const brainPx = ((maxY - minY) / 2) * this.height;
+      brainPx = ((maxY - minY) / 2) * this.height;
       const targetPx = phoneBrainMiddlePx({ height: this.height, safeBottom, brainPx });
       shift = shiftToTop({ shift, topPx: middlePx, targetTopPx: targetPx, height: this.height, viewportHeight });
     }
+    const lower = phoneBrainMiddlePx({ height: this.height, safeBottom, brainPx, game: true })
+      - phoneBrainMiddlePx({ height: this.height, safeBottom, brainPx });
+    this._phoneGameShift = shift - cssPxToWorld(lower, { height: this.height, viewportHeight });
     this._lift = held.lift;
     this._phoneShift = held.shift;
     this._positionSpecimen();
@@ -926,19 +934,21 @@ export class BrainScene {
       (getCompositionVerticalShiftCssPx(this.width) / this.height) *
       viewportHeight;
     const baseY = BRAIN_BASE_VERTICAL_OFFSET;
+    // On a phone the game sits a little below Explore and Study, once measured.
+    const gameShift = !centresOnPage(this.width) && this._phoneGameShift !== null ? this._phoneGameShift : shift;
     // The game keeps this height; Explore and Study lift the brain's own
     // centre onto the page's middle (Kyle, 2026-10-16).
     const centreShift = centreShiftFor({
       width: this.width,
       brainCentre: this._brainCentre,
       scale: getResponsiveSpecimenScale(this.width),
-      gameShift: shift,
+      gameShift,
       drop: cssPxToWorld(-this._centreDropPx, { height: this.height, viewportHeight }),
       phoneShift: this._phoneShift,
     });
     this.specimenGroup.position.y = composeSpecimenY({
       baseY,
-      gameShift: shift,
+      gameShift,
       centreShift,
       lift: this._lift,
       panY: this._specimenPanY,
