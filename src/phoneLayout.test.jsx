@@ -300,12 +300,14 @@ describe('The page after the keyboard closes', () => {
 // little under the title's rule on every phone (76 to 88 px). The game keeps
 // today's height and the brain slides between them, as on desktop.
 describe("A phone's brain under the title", () => {
-  const { PHONE_BRAIN_TOP_CSS_PX, shiftToTop, centreShiftFor, composeSpecimenY } = composition;
+  const { phoneBrainMiddlePx, shiftToTop, centreShiftFor, composeSpecimenY } = composition;
   const viewportHeight = 2.157;
 
   // Kyle, 2026-10-17: "We can lower the brain position now slightly." 24 px.
   it('moves the brain so its top lands 124 px down the page', () => {
-    expect(PHONE_BRAIN_TOP_CSS_PX).toBe(124);
+    // Kyle, 2026-10-17: "center it between the top and bottom text": halfway
+    // between the title's rule (80 px) and the conversation (461 px) at 390 x 664.
+    expect(phoneBrainMiddlePx({ height: 664 })).toBeCloseTo((80 + 461) / 2, 0);
     // At 390 x 664 today the brain's top is at 291 px.
     const shift = shiftToTop({ shift: 0, topPx: 291, targetTopPx: 100, height: 664, viewportHeight });
     expect(shift).toBeCloseTo((191 / 664) * viewportHeight, 10);
@@ -329,7 +331,7 @@ describe("A phone's brain under the title", () => {
   it("is measured by the app's scene only, never the landing's", () => {
     const scene = read('./utils/brainScene.js');
     expect(scene).toMatch(/phoneShift: this\._phoneShift/);
-    expect(scene).toMatch(/this\._phoneTopPx = options\.phoneTop \? PHONE_BRAIN_TOP_CSS_PX : null;/);
+    expect(scene).toMatch(/this\._phoneCentred = Boolean\(options\.phoneTop\);/);
     expect(scene).toMatch(/this\._phoneShift = this\._landedPhoneShift\(\);/);
     expect(read('./App.jsx')).toMatch(/new BrainScene\(mountRef\.current, \{[^}]*phoneTop: true/);
     expect(read('./landing/landing.js')).not.toMatch(/phoneTop/);

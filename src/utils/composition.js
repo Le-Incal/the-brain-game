@@ -18,10 +18,27 @@ export const PHONE_MAX_WIDTH = 640;
 // Kyle, 2026-10-17: "we need to slightly lower the standard position now." A
 // quarter inch below the page's middle.
 export const CENTRE_DROP_CSS_PX = 24;
-// Kyle, 2026-10-17, on a phone: "Move the brain up under the title." The top
-// of the brain under the title's rule on every phone (76 to 88 px down); then
-// "We can lower the brain position now slightly": 24 px lower, 124 px down.
-export const PHONE_BRAIN_TOP_CSS_PX = 124;
+/*
+ * Kyle, 2026-10-17, on a phone: "Move the brain up under the title", then "the
+ * brain still sits too high I want you to center it between the top and
+ * bottom text." The brain's middle sits halfway between the title's rule and
+ * the top of the three lines of conversation, as index.html and the guide's
+ * column lay them out:
+ *   the rule: the header's padding, clamp(16px, 3vh, 28px), then 60 px of
+ *   title, subtitle and rule (80 px down at 390 x 664);
+ *   the conversation: the column ends 44 px above the page's foot (and the
+ *   safe area), over the switches (24 + 14), the field (41 + 14) and three
+ *   lines (66), so 203 px up (461 px down at 390 x 664).
+ */
+export const PHONE_TITLE_BLOCK_PX = 60;
+export const PHONE_CONVERSATION_RISE_PX = 203;
+
+/** Where a phone's brain has its middle, in CSS px down the page. */
+export function phoneBrainMiddlePx({ height, safeBottom = 0 }) {
+  const titleRule = Math.min(28, Math.max(16, 0.03 * height)) + PHONE_TITLE_BLOCK_PX;
+  const conversationTop = height - safeBottom - PHONE_CONVERSATION_RISE_PX;
+  return (titleRule + conversationTop) / 2;
+}
 
 export function centresOnPage(width) {
   return width > PHONE_MAX_WIDTH;

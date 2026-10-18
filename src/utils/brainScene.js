@@ -25,7 +25,7 @@ import {
   COMPOSITION_SLIDE_MS,
   centreShiftFor,
   centresOnPage,
-  PHONE_BRAIN_TOP_CSS_PX,
+  phoneBrainMiddlePx,
   shiftToTop,
   composeSpecimenY,
   cssPxToWorld,
@@ -391,7 +391,7 @@ export class BrainScene {
     this._centreDropPx = CENTRE_DROP_CSS_PX;
     // On a phone, in the app only, the brain's top sits under the title (Kyle,
     // 2026-10-17). Measured once it loads, and again when the page resizes.
-    this._phoneTopPx = options.phoneTop ? PHONE_BRAIN_TOP_CSS_PX : null;
+    this._phoneCentred = Boolean(options.phoneTop);
     this._phoneShift = null;
 
     this._regionPicking = regionPickingEnabled(options);
@@ -542,7 +542,8 @@ export class BrainScene {
    * its current pose, or null on a wider page or outside the app.
    */
   _landedPhoneShift() {
-    if (this._phoneTopPx === null || centresOnPage(this.width) || !this.brainMeshes.length) return null;
+    if (!this._phoneCentred || centresOnPage(this.width) || !this.brainMeshes.length) return null;
+    const targetPx = phoneBrainMiddlePx({ height: this.height, safeBottom: this._safeAreaBottom() });
     const held = { lift: this._lift, shift: this._phoneShift };
     const viewportHeight = this._viewportHeightAtTarget();
     let shift = (getCompositionVerticalShiftCssPx(this.width) / this.height) * viewportHeight;
@@ -551,14 +552,28 @@ export class BrainScene {
     for (let pass = 0; pass < 3; pass += 1) {
       this._phoneShift = shift;
       this._positionSpecimen();
-      const { maxY } = this._silhouetteNdc();
-      const topPx = ((1 - maxY) / 2) * this.height;
-      shift = shiftToTop({ shift, topPx, targetTopPx: this._phoneTopPx, height: this.height, viewportHeight });
+      const { minY, maxY } = this._silhouetteNdc();
+      const middlePx = ((1 - (minY + maxY) / 2) / 2) * this.height;
+      shift = shiftToTop({ shift, topPx: middlePx, targetTopPx: targetPx, height: this.height, viewportHeight });
     }
     this._lift = held.lift;
     this._phoneShift = held.shift;
     this._positionSpecimen();
     return shift;
+  }
+
+  /** The page's bottom safe area (an iPhone's home bar in full screen), in CSS px. */
+  _safeAreaBottom() {
+    try {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;height:env(safe-area-inset-bottom, 0px)';
+      this.container.appendChild(probe);
+      const px = probe.getBoundingClientRect().height;
+      probe.remove();
+      return px || 0;
+    } catch {
+      return 0;
+    }
   }
 
   /** The height the camera sees at its target's depth, in world units. */
