@@ -397,13 +397,14 @@ describe('The score sits in the bottom bar', () => {
     expect(markup).not.toContain('<button');
   });
 
-  it('comes right after Settings, inside the bar', () => {
+  // Kyle, 2026-10-20: "the score should sit in the top right hand of the
+  // screen just like on the phone" (studyAndScore.test.jsx).
+  it('has left the bar for the top right-hand corner', () => {
     const app = read('./App.jsx');
     const bar = app.slice(app.indexOf('<div className="game-controls"'));
     const close = bar.indexOf('\n      </div>');
     expect(bar.indexOf('{barButtons.map(')).toBeGreaterThan(-1);
-    expect(bar.indexOf('<ScoreDisplay')).toBeGreaterThan(bar.indexOf('{barButtons.map('));
-    expect(bar.indexOf('<ScoreDisplay')).toBeLessThan(close);
+    expect(bar.slice(0, close)).not.toContain('<ScoreDisplay');
     expect(app).not.toContain('scorePosition');
   });
 

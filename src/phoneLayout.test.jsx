@@ -77,11 +77,10 @@ describe('The bar on phones', () => {
     expect(rule(css, '.game-controls .bar-study')).toMatch(/order: 2;/);
     expect(rule(css, '.game-controls .bar-play')).toMatch(/order: 3;/);
     expect(rule(css, '.game-controls .bar-settings')).toMatch(/order: 4;/);
-    // Kyle, 2026-10-17: "the score can go in the top right hand corner" in a game.
-    expect(rule(css, '.game-controls .score-display')).toMatch(/display: none !important;/);
-    expect(rule(css, '.game-controls .score-display[data-mode="game"]')).toMatch(/position: fixed;[^}]*top: calc\(env\(safe-area-inset-top, 0px\) \+ 16px\);[^}]*right: 16px;/);
+    // Kyle, 2026-10-17: "the score can go in the top right hand corner" in a
+    // game. Since 2026-10-20 the app places it there on every screen.
+    expect(css).not.toMatch(/\.game-controls \.score-display/);
     expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} level="Easy" gamePhase="playing" />)).toMatch(/data-mode="game"/);
-    expect(renderToStaticMarkup(<frontDoor.ScoreDisplay score={3} gamePhase="study" />)).toMatch(/data-mode="study"/);
     expect(rule(css, '.guide-switches')).toMatch(/position: absolute;[^}]*bottom: -37\.5px;/);
     // Kyle, 2026-10-18: finer lines round Settings and the buttons.
     expect(css).toMatch(/\.settings-panel button,\s*\.game-controls button \{\s*border: none !important;\s*box-shadow: inset 0 0 0 0\.5px #1a1814 !important;/);
