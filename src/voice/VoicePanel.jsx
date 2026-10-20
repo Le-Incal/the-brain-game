@@ -14,8 +14,8 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { GUIDES } from './guides.js';
 import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
-import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, isAppPrompt } from './contextUpdates.js';
-import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyHandoverTiming } from './carryOn.js';
+import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, formatStudyOffer, isAppPrompt } from './contextUpdates.js';
+import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyEntry, studyHandoverTiming } from './carryOn.js';
 import { listenForFirstInteraction, listenForFirstTap } from './firstTap.js';
 import { consumeEnteredMark, conversationOnArrival } from './arrivalEnter.js';
 import { choiceWelcomeAction } from './choiceWelcome.js';
@@ -122,6 +122,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const lastToolAtRef = useRef(-Infinity);
   // A fresh Study session waiting for the guide's turn to end.
   const studyHandoverRef = useRef(null);
+  // Kyle, 2026-10-20: once Study has brought her in, she offers a tour or a region.
+  const studyOfferRef = useRef(false);
   const modeRef = useRef(mode);
   modeRef.current = mode;
   // One conversation on screen, many underneath: rest after 30 s of quiet.
@@ -377,6 +379,13 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     carryOnRef.current = null;
     const pickUp = carried ? formatCarryOn(carried) : null;
     if (pickUp) prompter.prompt(pickUp);
+    else if (studyOfferRef.current && modeRef.current === 'study') {
+      studyOfferRef.current = false;
+      // After any welcome still playing, so she never talks over her own recording.
+      whenWelcomeDone().then(() => {
+        if (modeRef.current === 'study' && session.getState().phase === 'connected') prompter.prompt(formatStudyOffer());
+      });
+    }
   }, [state.phase, voiceEventsRef, restTimer, stream, session, prompter]);
 
   // And whenever the mode changes while connected. Kyle, 2026-10-13: Study
@@ -387,6 +396,24 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     previousModeRef.current = mode;
     const current = sessionRef.current;
     if (!current) return;
+    // Kyle, 2026-10-20: "I just selected study but nothing happened." Study
+    // brings Sylvi in whatever state the conversation is in.
+    const entered = studyEntry({
+      from,
+      to: mode,
+      phase: current.getState().phase,
+      voiceOff: voiceChosenRef.current && !voiceWantedRef.current,
+      msSinceTool: performance.now() - lastToolAtRef.current,
+    });
+    if (mode !== 'study') studyOfferRef.current = false;
+    else if (from !== 'study') studyOfferRef.current = entered.offer;
+    if (entered.action !== 'none') restTimer.activity();
+    if (entered.action === 'start') {
+      wantVoice(true);
+      stream.setVoice(true);
+    }
+    if (entered.action === 'wake') current.wake();
+    else if (entered.action === 'start') current.start({ guide: guideRef.current, mode: 'auto' });
     if (freshSessionOnModeChange({ from, to: mode, phase: current.getState().phase })) {
       const timing = studyHandoverTiming({
         guideSpeaking: guideSpeakingRef.current,

@@ -262,18 +262,6 @@
         .game-controls .bar-study { order: 2; }
         .game-controls .bar-play { order: 3; }
         .game-controls .bar-settings { order: 4; }
-        /* Kyle, 2026-10-17: in a game, the score in the top right-hand corner; out of a game it rests. */
-        .game-controls .score-display {
-          display: none !important;
-        }
-        .game-controls .score-display[data-mode="game"] {
-          display: inline-flex !important;
-          position: fixed;
-          top: calc(env(safe-area-inset-top, 0px) + 16px);
-          right: 16px;
-          margin: 0 !important;
-          white-space: nowrap;
-        }
         /* The column ends 34 px above the bar's line; its switches drop onto it, centred on the buttons, at the bar's margin. */
         .guide-switches {
           position: absolute;

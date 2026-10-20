@@ -21,6 +21,8 @@ export const CONTEXT_MESSAGES = {
   streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
   struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
   firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
+  // Kyle, 2026-10-20: when Study brings her in, she offers a tour or a region.
+  studyOffer: '[app] the player opened Study; offer: a tour, or a region to look at',
   // Kyle, 2026-10-13: a conversation carried on in a fresh session picks up where it was.
   carriedOnTour: '[app] the conversation carried on mid-tour, {where}: pick up where you left off, with no greeting',
   carriedOnSpeaking: '[app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting',
@@ -55,6 +57,7 @@ export const formatMiss = ({ word, region, where, why }) => fill(CONTEXT_MESSAGE
 
 export const formatWelcomePlayed = () => CONTEXT_MESSAGES.welcomePlayed;
 
+export const formatStudyOffer = () => CONTEXT_MESSAGES.studyOffer;
 export const formatSection = (open) => fill(CONTEXT_MESSAGES.section, { state: open ? 'open' : 'closed' });
 
 // A conversation woken from rest carries the last few lines, kept short.

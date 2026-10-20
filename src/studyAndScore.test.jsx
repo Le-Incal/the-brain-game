@@ -69,7 +69,7 @@ describe("Sylvi's offer when Study opens", () => {
     expect(panel).toMatch(/entered\.action === 'start'\) current\.start\(\{ guide: guideRef\.current, mode: 'auto' \}\);/);
     expect(panel).toMatch(/studyOfferRef\.current = entered\.offer;/);
     // A conversation carried on mid-tour or mid-sentence picks up instead.
-    expect(panel).toMatch(/else if \(studyOfferRef\.current && modeRef\.current === 'study'\) prompter\.prompt\(formatStudyOffer\(\)\);/);
+    expect(panel).toMatch(/else if \(studyOfferRef\.current && modeRef\.current === 'study'\) \{\s*studyOfferRef\.current = false;[\s\S]{0,160}whenWelcomeDone\(\)\.then\(\(\) => \{\s*if \(modeRef\.current === 'study' && session\.getState\(\)\.phase === 'connected'\) prompter\.prompt\(formatStudyOffer\(\)\);/);
   });
 });
 

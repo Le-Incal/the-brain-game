@@ -94,6 +94,24 @@ export function phoneGameClearsAbove({ phone = false, gamePhase }) {
   return Boolean(phone && sceneModeForPhase(gamePhase) === 'game');
 }
 
+/**
+ * Kyle, 2026-10-20: "when I moved from the game back to the study, the
+ * falling word stopped and stalled out, stuck in place." Study hides the
+ * paused word; it stays where it stopped, and shows again on the way back.
+ */
+export function fallingWordHidden(gamePhase) {
+  return gamePhase === 'study';
+}
+
+/**
+ * Kyle, 2026-10-20: "the score did not go away. I think the score should sit
+ * in the top right hand of the screen just like on the phone." During a game
+ * only, once the visitor has played.
+ */
+export function scoreShows({ played = false, gamePhase }) {
+  return Boolean(played) && sceneModeForPhase(gamePhase) === 'game';
+}
+
 /** The title shows in its phases, unless a region's description has taken its place. */
 export function headerShows({ gamePhase, inHeader = false, phone = false }) {
   return shouldShowHeader(gamePhase) && !inHeader && !phoneGameClearsAbove({ phone, gamePhase });
@@ -317,9 +335,12 @@ export const STYLES = {
     marginBottom: 14,
   },
   // In the bottom bar, after Settings (Kyle, 2026-10-11).
-  score: {
-    alignSelf: 'center',
-    marginLeft: 6,
+  // In the top right-hand corner, in line with the guide's column (Kyle, 2026-10-20).
+  scoreCorner: {
+    position: 'absolute',
+    top: 'calc(env(safe-area-inset-top, 0px) + clamp(16px, 3vh, 28px))',
+    right: 'clamp(16px, 4vw, 56px)',
+    zIndex: 12,
     fontFamily: "'EB Garamond', Georgia, serif",
     fontSize: 14,
     letterSpacing: '0.1em',
@@ -1087,7 +1108,7 @@ export default function App() {
             <div
               ref={wordRef}
               className={wordAnim === 'absorb' ? 'word-absorb' : undefined}
-              style={STYLES.fallingWord}
+              style={fallingWordHidden(gamePhase) ? { ...STYLES.fallingWord, visibility: 'hidden' } : STYLES.fallingWord}
             >
               {splitWordLines(activeWordLabel).map((line, index) => (
                 <span key={`${line}-${index}`}>{line}</span>
@@ -1180,15 +1201,16 @@ export default function App() {
             compact
           />
         ))}
-        {choice.played && (
-          <ScoreDisplay
-            score={score}
-            level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
-            gamePhase={gamePhase}
-            style={STYLES.score}
-          />
-        )}
       </div>
+
+      {scoreShows({ played: choice.played, gamePhase }) && (
+        <ScoreDisplay
+          score={score}
+          level={gameLevel({ speed: speedMultiplier, colour: colorMode, exact: difficulty === 'hard' }).label}
+          gamePhase={gamePhase}
+          style={STYLES.scoreCorner}
+        />
+      )}
 
       {settingsOpen && (
         <SettingsPanel

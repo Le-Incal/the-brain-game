@@ -42,6 +42,8 @@ describe('M4: every contextual update, worded in one place', () => {
       streak: '[app] streak: {count} caught in a row at {level} ({settings}); offer: {offers}',
       struggling: '[app] struggling: {pattern} at {level} ({settings}); offer: {offers}',
       firstPlay: '[app] the player pressed Play for the first time; offer: a quick example first',
+      // Kyle, 2026-10-20: when Study brings her in, she offers a tour or a region.
+      studyOffer: '[app] the player opened Study; offer: a tour, or a region to look at',
       carriedOnTour: '[app] the conversation carried on mid-tour, {where}: pick up where you left off, with no greeting',
       carriedOnSpeaking: '[app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting',
     });
