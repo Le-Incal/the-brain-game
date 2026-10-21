@@ -359,7 +359,7 @@ describe('M4: during and after a conversation', () => {
     expect(conversation.calls.filter(([name]) => name === 'endSession')).toHaveLength(0);
     session.end();
     await session.start({});
-    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body).toEqual({ guide: 'sylvi' });
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body).toEqual({ guide: 'sylvi', transport: 'webrtc' });
   });
 
   it('"Switch now" ends this conversation and starts one with the new guide', async () => {
@@ -511,7 +511,7 @@ describe('One conversation at a time', () => {
     await session.handleConnect({ conversationId: 'c' });
     session.end();
     await session.start({});
-    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body).toEqual({ guide: 'sylvi' });
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body).toEqual({ guide: 'sylvi', transport: 'webrtc' });
   });
 
   it('clears any lingering highlight when a new conversation starts', async () => {

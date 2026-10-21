@@ -242,7 +242,11 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       }
       refreshEntries();
     },
-    onError: (message) => console.warn('[voice]', message),
+    // Kyle, 2026-10-21: an error before connecting means the start failed; the session tries our relay.
+    onError: (message) => {
+      console.warn('[voice]', message);
+      sessionRef.current?.handleError(message);
+    },
   });
   sdkRef.current = sdk;
 

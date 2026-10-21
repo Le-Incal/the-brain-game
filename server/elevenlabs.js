@@ -13,6 +13,22 @@ export async function fetchConversationToken({ fetchImpl, apiKey, agentId }) {
   return { token: body.token, conversationId: typeof body.conversation_id === 'string' ? body.conversation_id : null };
 }
 
+/**
+ * A signed WebSocket address for one conversation (Kyle, 2026-10-21: the relay
+ * for networks that block WebRTC). It carries the agent id and a signature,
+ * so it stays on the server; the browser reaches it only through our relay.
+ */
+export async function fetchSignedUrl({ fetchImpl, apiKey, agentId }) {
+  const url = `${API}/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`;
+  const response = await fetchImpl(url, { method: 'GET', headers: { 'xi-api-key': apiKey } });
+  if (!response.ok) throw new Error(`ElevenLabs signed URL request failed (${response.status})`);
+  const body = await response.json();
+  if (typeof body?.signed_url !== 'string' || !/^wss?:\/\//.test(body.signed_url)) {
+    throw new Error('ElevenLabs signed URL response had no address');
+  }
+  return body.signed_url;
+}
+
 /** One conversation's status and length, or null if ElevenLabs has no such conversation. */
 export async function fetchConversation({ fetchImpl, apiKey, conversationId }) {
   const response = await fetchImpl(`${API}/v1/convai/conversations/${encodeURIComponent(conversationId)}`, {

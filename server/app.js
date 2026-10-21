@@ -14,7 +14,8 @@ import { createMinuteLedger, MIN_RESERVATION_SECONDS } from './ledger.js';
 import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
 import { randomId, signDevice, signReservation, verifyDevice, verifyReservation } from './signing.js';
 import { verifyElevenLabsSignature } from './webhook.js';
-import { fetchConversation, fetchConversationToken, fetchConversationsSince } from './elevenlabs.js';
+import { fetchConversation, fetchConversationToken, fetchConversationsSince, fetchSignedUrl } from './elevenlabs.js';
+import { createVoiceRelay } from './relay.js';
 import { DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, WELCOME_KINDS, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
@@ -219,6 +220,22 @@ export function createApp({
     },
   });
   const shortId = (reservationId) => String(reservationId).slice(0, 8);
+
+  // Kyle, 2026-10-21: the relay for networks that block WebRTC. A ticket is
+  // good only for the browser it was minted for, on one of our hosts.
+  const relay = createVoiceRelay({
+    now,
+    logger,
+    authorize: (req, entry) =>
+      config.available &&
+      hostAllowed(requestHost(req)) &&
+      verifyDevice(readCookie(req, DEVICE_COOKIE), config.sessionSecret, requestHost(req)) === entry.deviceId,
+    onConversation: (reservationId, conversationId) => {
+      ledger?.attachConversation(reservationId, conversationId);
+      logger.info(`[voice] relay ${shortId(reservationId)} is conversation ${conversationId}`);
+    },
+  });
+  app.voiceRelay = relay;
   const chargedSeconds = (durationSecs) =>
     Math.min(config.sessionMaxSeconds, Math.max(0, Math.round(Number(durationSecs) || 0)));
   function logSettled(reservationId, conversationId, durationSecs, reservedSeconds) {
@@ -465,6 +482,23 @@ export function createApp({
       return res.status(refusal.status).json(refusal.body);
     }
     try {
+      // The relay (Kyle, 2026-10-21): the signed address stays here; the browser gets a ticket.
+      if (req.body?.transport === 'websocket') {
+        const signedUrl = await fetchSignedUrl({ fetchImpl, apiKey: config.apiKey, agentId: config.agentId });
+        const relayPath = relay.issue({ signedUrl, reservationId: reservation.reservationId, deviceId });
+        logger.info(`[voice] minted ${shortId(reservation.reservationId)} for the relay: reserved ${reservation.seconds} s (${guide})`);
+        const guideName = GUIDE_NAMES[guide];
+        return res.json({
+          relayPath,
+          guideName,
+          voiceId: config.voices[guide],
+          maxSeconds: reservation.seconds,
+          dynamicVariables: {
+            guide_name: guideName,
+            reservation: signReservation(reservation.reservationId, config.sessionSecret),
+          },
+        });
+      }
       const { token: conversationToken, conversationId } = await fetchConversationToken({
         fetchImpl,
         apiKey: config.apiKey,

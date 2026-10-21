@@ -44,6 +44,29 @@ export const MIC_BLOCKED_MESSAGE =
 export const START_FAILED_MESSAGE = "We couldn't start the conversation. Please try again.";
 export const MIC_UNAVAILABLE_MESSAGE = "This browser can't use a microphone here, so we can't talk aloud.";
 
+/*
+ * Kyle, 2026-10-20: "after pressing study, nothing happened." On networks that
+ * block WebRTC (UDP), the audio link never opens: ElevenLabs gives up after
+ * about 15 s and the page waited on "Waking Sylvi…" forever. A start that
+ * errors, disconnects or takes 15 s now releases its reservation and carries
+ * on over a WebSocket relayed by our server (server/relay.js). The browser
+ * remembers it needed the relay for six hours, so later conversations start
+ * there at once. If the relay fails too, the page says so plainly.
+ */
+export const CONNECT_TIMEOUT_MS = 15_000;
+export const TRANSPORT_KEY = 'brainGame.voiceTransport';
+export const WEBSOCKET_MEMORY_MS = 6 * 60 * 60 * 1000;
+// A failed attempt's last events can arrive just after the next has begun.
+const START_GRACE_MS = 2_000;
+
+export const noRouteMessage = (name) => `${name} can't connect on this network right now. The game works as usual.`;
+
+function defaultSocketOrigin() {
+  const location = globalThis.location;
+  if (!location?.host) return '';
+  return `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+}
+
 /**
  * The SDK cannot start a voice session without the microphone (WebRTC setup
  * waits for it and disconnects if refused), so ask before reserving minutes.
@@ -103,6 +126,8 @@ export function createVoiceSession({
   onConversationEnd = () => {},
   onConversationStart = () => {},
   sendBeacon = (url, data) => globalThis.navigator?.sendBeacon?.(url, data) ?? false,
+  // Where the relay is: this page's own host, over wss.
+  socketOrigin = defaultSocketOrigin(),
 }) {
   let state = { phase: 'idle', guide: null, message: null, conversationId: null, mode: 'voice', micRefused: false };
   // The mode asked for ('voice', 'text' or 'auto'), kept for waking from rest.
@@ -203,6 +228,78 @@ export function createVoiceSession({
   // The signed reservation for the conversation being started, kept until it
   // connects, so a failed start can be released at once.
   let pendingReservation = null;
+  // The route of the conversation being started ('webrtc' or 'websocket'),
+  // its number, when it began, and how long it may take.
+  let attemptTransport = null;
+  let attemptNumber = 0;
+  let attemptStartedAt = 0;
+  let attemptIsFallback = false;
+  let connectTimer = null;
+
+  function rememberedTransport() {
+    try {
+      const saved = JSON.parse(storage?.getItem?.(TRANSPORT_KEY) ?? 'null');
+      if (saved?.transport === 'websocket' && Number(saved.until) > now()) return 'websocket';
+    } catch {
+      // Storage blocked or unreadable: try WebRTC.
+    }
+    return 'webrtc';
+  }
+
+  function rememberRelay() {
+    try {
+      storage?.setItem?.(TRANSPORT_KEY, JSON.stringify({ transport: 'websocket', until: now() + WEBSOCKET_MEMORY_MS }));
+    } catch {
+      // Not remembered: the next conversation tries WebRTC first again.
+    }
+  }
+
+  function clearConnectTimer() {
+    if (connectTimer !== null) clearTimeoutImpl(connectTimer);
+    connectTimer = null;
+  }
+
+  const guideName = () => GUIDES.find((g) => g.id === state.guide)?.name ?? 'Your guide';
+
+  /** The conversation being started could not connect: try the relay, or say so. */
+  async function connectFailed() {
+    if (state.phase !== 'connecting') return;
+    clearConnectTimer();
+    const failed = attemptTransport;
+    const reservation = pendingReservation;
+    // Requesting first, so the failed attempt's own goodbye is ignored.
+    set({ phase: 'requesting', message: null });
+    try {
+      conversation.endSession();
+    } catch {
+      // Nothing left to end.
+    }
+    // Refund it if it never started, and free this browser's one slot either way.
+    releasePending();
+    if (failed === 'websocket') {
+      set({ phase: 'unavailable', message: noRouteMessage(guideName()), conversationId: null });
+      return;
+    }
+    rememberRelay();
+    const ended = reservation
+      ? Promise.resolve()
+          .then(() =>
+            fetchImpl('/api/voice/ended', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reservation }),
+            })
+          )
+          .catch(() => {})
+      : Promise.resolve();
+    await Promise.race([ended, wait(ENDED_REPORT_WAIT_MS)]);
+    if (state.phase !== 'requesting') return;
+    await requestToken('websocket', { fallback: true });
+  }
+
+  /** An event from the SDK about a start: ignore one that belongs to a failed attempt. */
+  const strayAfterFallback = () => attemptIsFallback && now() - attemptStartedAt < START_GRACE_MS;
 
   function releasePending() {
     const reservation = pendingReservation;
@@ -306,15 +403,16 @@ export function createVoiceSession({
     await requestToken();
   }
 
-  async function requestToken() {
+  async function requestToken(transport = rememberedTransport(), { fallback = false } = {}) {
+    let body;
     try {
       const response = await fetchImpl('/api/voice/token', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guide: state.guide }),
+        body: JSON.stringify({ guide: state.guide, transport }),
       });
-      const body = await response.json().catch(() => ({}));
+      body = await response.json().catch(() => ({}));
       if (!response.ok) {
         const justEnded = lastConversationEndedAt !== null && now() - lastConversationEndedAt <= RETRY_BUSY_WITHIN_MS;
         if (body?.reason === 'busy' && justEnded && busyRetries < BUSY_RETRIES) {
@@ -323,30 +421,54 @@ export function createVoiceSession({
           retryTimer = setTimeoutImpl(() => {
             retryTimer = null;
             busyRetries += 1;
-            return requestToken();
+            return requestToken(transport, { fallback });
           }, BUSY_RETRY_EVERY_MS);
           return;
         }
         set({ phase: 'unavailable', message: describeVoiceUnavailable(body) });
         return;
       }
-      maxSeconds = body.maxSeconds;
-      pendingReservation = body.dynamicVariables?.reservation ?? null;
-      sessionTag = pendingReservation ? String(pendingReservation).split('.')[0].slice(0, 8) : null;
-      set({ phase: 'connecting', message: null });
-      const textOnly = state.mode === 'text';
-      conversation.startSession({
-        conversationToken: body.conversationToken,
-        connectionType: 'webrtc',
-        dynamicVariables: body.dynamicVariables,
-        // Text only needs no microphone and makes no audio.
-        ...(textOnly ? { textOnly: true } : {}),
-        overrides: textOnly ? { conversation: { textOnly: true } } : { tts: { voiceId: body.voiceId } },
-        clientTools,
-      });
     } catch {
       set({ phase: 'unavailable', message: describeVoiceUnavailable({}) });
+      return;
     }
+    // Ended or restarted while the token was on its way.
+    if (state.phase !== 'requesting') return;
+    maxSeconds = body.maxSeconds;
+    pendingReservation = body.dynamicVariables?.reservation ?? null;
+    sessionTag = pendingReservation ? String(pendingReservation).split('.')[0].slice(0, 8) : null;
+    set({ phase: 'connecting', message: null });
+    const textOnly = state.mode === 'text';
+    const shared = {
+      dynamicVariables: body.dynamicVariables,
+      // Text only needs no microphone and makes no audio.
+      ...(textOnly ? { textOnly: true } : {}),
+      overrides: textOnly ? { conversation: { textOnly: true } } : { tts: { voiceId: body.voiceId } },
+      clientTools,
+    };
+    const config = body.relayPath
+      ? { signedUrl: `${socketOrigin}${body.relayPath}`, connectionType: 'websocket', ...shared }
+      : { conversationToken: body.conversationToken, connectionType: 'webrtc', ...shared };
+    attemptTransport = body.relayPath ? 'websocket' : 'webrtc';
+    attemptNumber += 1;
+    attemptStartedAt = now();
+    attemptIsFallback = fallback;
+    const attempt = attemptNumber;
+    clearConnectTimer();
+    connectTimer = setTimeoutImpl(() => {
+      connectTimer = null;
+      if (attempt === attemptNumber) connectFailed();
+    }, CONNECT_TIMEOUT_MS);
+    let started;
+    try {
+      started = conversation.startSession(config);
+    } catch {
+      connectFailed();
+      return;
+    }
+    Promise.resolve(started).catch(() => {
+      if (attempt === attemptNumber) connectFailed();
+    });
   }
 
   async function start({ guide, mode } = {}) {
@@ -369,6 +491,7 @@ export function createVoiceSession({
   const RESTING_REASONS = new Set(['rest', 'time_limit']);
 
   function end(reason = 'user') {
+    clearConnectTimer();
     clearCutoff();
     clearRetry();
     const wasConnected = state.phase === 'connected';
@@ -391,7 +514,13 @@ export function createVoiceSession({
       await start({ guide: state.guide, mode: state.mode === 'text' ? 'text' : requestedMode });
     },
 
+    /** The SDK reported an error: before connecting, the start has failed. */
+    handleError() {
+      if (state.phase === 'connecting' && !strayAfterFallback()) connectFailed();
+    },
+
     async handleConnect({ conversationId }) {
+      clearConnectTimer();
       connectedReservation = pendingReservation;
       pendingReservation = null;
       set({ phase: 'connected', conversationId, carryingOn: false });
@@ -427,13 +556,15 @@ export function createVoiceSession({
     handOver,
 
     handleDisconnect(details) {
-      clearCutoff();
+      // A new conversation is being arranged: this goodbye is the last one's.
+      if (state.phase === 'requesting') return;
       if (state.phase === 'connecting') {
-        // It never connected: free the reservation now, not in 30 minutes.
-        releasePending();
-        set({ phase: 'unavailable', message: START_FAILED_MESSAGE, conversationId: null });
+        if (strayAfterFallback()) return;
+        // It never connected: free the reservation now, and try the relay.
+        connectFailed();
         return;
       }
+      clearCutoff();
       if (state.phase === 'connected') {
         conversationOver(DISCONNECT_REASONS.has(details?.reason) ? details.reason : 'unknown');
         // No visible end: the next word or tap wakes another conversation.

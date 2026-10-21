@@ -102,8 +102,10 @@ describe('Sylvi on a network that blocks WebRTC', () => {
     await fail(session, timers);
     await settle();
     const urls = server.requests.map(({ url }) => url);
-    expect(urls).toEqual(['/api/voice/token', '/api/voice/release', '/api/voice/token']);
+    // Refunded if it never started, and this browser's one slot freed before the relay is asked for.
+    expect(urls).toEqual(['/api/voice/token', '/api/voice/release', '/api/voice/ended', '/api/voice/token']);
     expect(server.requests[1].body).toEqual({ reservation: 'r1.s1' });
+    expect(server.requests[2].body).toEqual({ reservation: 'r1.s1' });
     expect(server.tokens()[1].body).toEqual({ guide: 'sylvi', transport: 'websocket' });
     expect(calls.some(([name]) => name === 'endSession')).toBe(true);
     expect(starts(calls)[1]).toEqual({
