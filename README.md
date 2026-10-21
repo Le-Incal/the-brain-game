@@ -1,229 +1,156 @@
 # BRAIN GAME
 ### A Study in Cognition
 
-A web-based interactive learning experience where the player rotates a 3D brain model and catches falling words by aligning them with the correct brain region responsible for that function. Victorian woodblock engraving aesthetic. Built with React + Three.js + custom GLSL shaders.
+A human brain, drawn as a Victorian woodblock engraving, that you can talk to. The brain speaks in the first person as one of two guides, Sylvi or Rollo. It turns to show you its regions, lights them as it names them, teaches you how it works, and coaches a game in which you catch falling words on the region that does the work.
+
+Live at **[brain-game.io](https://www.brain-game.io)**. Built with React, Three.js, custom GLSL shaders, an Express server and an ElevenLabs voice agent.
 
 ---
 
-## Quick Start
+## The visitor's path
+
+1. **Landing** (`/`). The engraved brain in side elevation, drifting slowly counter-clockwise. On a computer it turns to look at Enter when the cursor comes near and looks up at the visitor as it leaves. Enter asks for the microphone once and opens the app at `/app`, where the conversation opens at once if the browser allows sound.
+2. **Arrival** (`/app`). A recorded welcome plays about 4 seconds after the brain appears, or at the first click where the browser holds back sound. The first click, tap or key press opens the live conversation. Without a microphone the guide carries on in writing.
+3. **Three modes.**
+
+| Mode | Who leads | What the guide does |
+|---|---|---|
+| **Explore** | The visitor | Answers questions and follows what the visitor selects, in one or two sentences unless asked for more. Tapping a region shows its name and description. |
+| **Study** | The guide | On opening Study, offers a tour of the seven lobes or a region to look at. Tours turn the brain and light each stop. On a computer, the midline section shows the structures inside. |
+| **Game** | The visitor | Words fall; the visitor turns the brain so each lands on the region that does the work. The guide never moves or lights the brain while a scored word can be in the air. It explains each miss in two short sentences, offers an example on the first Play, gives hints when asked, and after a streak or a struggle offers faster or slower words, colours on or off, or the exact region instead of the lobe. |
+
+4. **One conversation.** What the guide says streams as text beside the brain, with a field to write in and two switches, Voice and Motion. Underneath, the live session rests after 30 seconds of quiet and wakes on speech, writing, a tap on a region, a game event, or pressing Study. Long conversations carry on in a fresh session before their 8-minute cap. To the visitor it is one conversation.
+
+**Phones** (640 px wide and under): the title, the brain centred between the title and the conversation, three lines of conversation, then one row with Voice and Motion on the left and Study, Play and Settings on the right. Colour Regions lives in Settings. Tapping a region replaces the title with its name and a compact description. In a game the title gives way to the falling words, the brain sits a little lower, and the score sits top right.
+
+---
+
+## Quick start
 
 ```bash
 npm install
-npm run dev
+npm run dev        # Vite on http://localhost:3000: the app at /, the landing at /landing/
+npx vitest run     # every test (104 files, 1,715 tests on 2026-10-20)
 ```
 
-Then open `http://localhost:3000`.
+The voice build is switched on by `VITE_VOICE_ENABLED=true` at build time. In `npm run dev` there is no voice server, so voice reports itself unavailable and the game works as usual. To run the site as production does:
 
-**Local preview:** `http://localhost:3000` after `npm run dev`.
+```bash
+VITE_VOICE_ENABLED=true npm run build
+PORT=3001 npm start    # Express: / is the landing, /app the game, /api/voice/* the voice
+```
 
-A procedural stand-in `public/brain.glb` is included for development. Replace it with your Meshy anatomical model when ready. See [Brain Model](#brain-model) below.
+The server's variables (ElevenLabs key, agent id, voices, caps, secrets) are listed in [`docs/claude/RAILWAY_ENV.md`](docs/claude/RAILWAY_ENV.md). They live only in Railway: never commit them, and never give a secret a `VITE_` prefix (Vite ships those to every browser).
 
----
+**Knowledge base:**
 
-## Project Status
-
-### What's Built
-
-| Component | Status | File(s) |
-|---|---|---|
-| GLSL engraving shader (vertex + fragment) | **Done, tuned** | `src/shaders/` |
-| Custom orbit controls (drag, zoom, inertia, auto-rotate) | **Done** | `src/utils/orbitControls.js` |
-| Scene manager (camera, renderer, raycasting, CSS2D labels) | **Done** | `src/utils/brainScene.js` |
-| Brain model loader (GLB + region classifier) | **Done** | `src/utils/brainLoader.js` |
-| Region data (14 zones, colors, ~50-word bank) | **Done** | `src/data/regions.js` |
-| Game engine (fall, catch, miss/wrong/correct, tier scoring) | **Done** | `src/game/gameEngine.js` |
-| Victorian UI (title, toggles, difficulty, score, feedback) | **Done** | `src/App.jsx` |
-| Product docs (PRD, instructions, copy) | **Done** | `docs/claude/` |
-
-### What Needs Work
-
-1. **Replace the procedural stand-in GLB** with the Meshy anatomical model at `public/brain.glb`. Regenerate the stand-in anytime with `npm run generate-brain`. Tune `classifyVertex()` axes once the real mesh is in.
-
-2. **Shader on anatomical geometry.** Hatching density and fresnel may need dialing on the real gyri/sulci. Constants are at the top of `fragmentShader.js`.
-
-3. **Neuroscience review of the expanded word bank** (~50 entries) against Kandel / Purves / Nolte.
-
-4. **Painted vertex colors in Blender** for production region boundaries (replace positional heuristics).
-
-5. **Mobile playtesting** of touch orbit + word catching on small viewports.
-
-Canonical PRD: [`docs/claude/PRD.md`](docs/claude/PRD.md).
-
----
-
-## Brain Model
-
-The 3D brain was created with Meshy AI and should be decimated to approximately 50,000-100,000 faces. The visual quality comes from the shader, not polygon count.
-
-**To add your model:**
-
-1. Export from your 3D software as `.glb` format
-2. Center the origin
-3. Decimate to 50-100K faces (Blender: Decimate modifier)
-4. Place at `public/brain.glb`
-
-The loader will automatically center, normalize, and assign region IDs to vertices based on their position. For more accurate region boundaries, paint vertex colors in Blender corresponding to the 14 functional zones defined in `src/data/regions.js`.
+```bash
+npm run kb -- validate              # typed errors, exits 1 on any
+npm run kb -- preview               # proposed and approved -> knowledge/build/ (git-ignored)
+npm run kb -- review:export          # steward review sheet
+npm run kb -- review:import <csv>    # write steward decisions back
+npm run kb -- compile               # approved only -> src/data/brainGraph.json
+```
 
 ---
 
 ## Architecture
 
-### Two-Tier Region System
+### The brain
 
-**Tier 1 — Physical Geometry (8 meshes in the GLB):**
+- **Model:** `public/brain.glb`, a Meshy sculpt of 99,685 triangles, painted by the artist. The paint is fixed: names and text may change, colour regions may not.
+- **20 painted regions in 7 divisions**, canon in `src/data/brainRegions.json` (never edited). `src/data/regionGeometry.json` is generated by `scripts/generate-region-geometry.py`. Broca's area (6) and Wernicke's area (13) exist only on the anatomical left.
 
-| # | Mesh | Notes |
-|---|---|---|
-| 1 | Left Frontal Lobe | Bilateral split produces visible longitudinal fissure |
-| 2 | Right Frontal Lobe | |
-| 3 | Left Parietal Lobe | |
-| 4 | Right Parietal Lobe | |
-| 5 | Left Temporal Lobe | |
-| 6 | Right Temporal Lobe | |
-| 7 | Occipital Lobe | |
-| 8 | Cerebellum + Brain Stem | |
+| Division | Regions |
+|---|---|
+| Frontal Lobe | 1 Prefrontal Cortex, 2 Orbitofrontal Cortex, 3 Premotor Cortex, 4 Supplementary Motor Area, 5 Primary Motor Cortex, 6 Broca's Area |
+| Parietal Lobe | 7 Primary Somatosensory Cortex, 8 Somatosensory Association Cortex, 9 Angular Gyrus, 10 Precuneus |
+| Temporal Lobe | 11 Primary Auditory Cortex, 12 Superior Temporal Gyrus, 13 Wernicke's Area, 14 Inferior Temporal Cortex, 15 Piriform Cortex |
+| Limbic Lobe | 16 Cingulate Cortex |
+| Occipital Lobe | 17 Primary Visual Cortex, 18 Visual Association Cortex |
+| Cerebellum | 19 Cerebellum |
+| Brain Stem | 20 Brain Stem |
 
-**Tier 2 — Functional Zones (14 regions, painted onto meshes via vertex `regionId` attribute):**
+- **Rendering:** a custom engraving shader (`src/shaders/`) reads the etching, ambient occlusion, cavity and curvature maps in `public/maps/`. Region identity comes from the fourth UV channel (`uv3`, `TEXCOORD_3`) and the region-ID texture, read with `flipY = false`, `NoColorSpace`, `NearestFilter` and no mipmaps. A confetti pattern on the brain means the wrong UV channel.
+- **Space and controls:** in model space +x is anatomical left, +y superior, +z anterior. `BrainOrbitControls` (`src/utils/orbitControls.js`) turns the specimen, never the camera; every camera tool drives it. `src/utils/brainScene.js` places the brain on the page: centred on computers (lower for the game), between the title and the conversation on phones.
 
-| ID | Zone | Parent | Function |
-|----|------|--------|----------|
-| 0 | Higher Mental Functions (Prefrontal) | Frontal | Planning, decision-making, personality |
-| 1 | Motor Function Area | Frontal | Voluntary movement initiation |
-| 2 | Broca's Area | Frontal (Left) | Speech production |
-| 3 | Eye Motor Area | Frontal | Voluntary eye movement |
-| 4 | Emotional Area | Frontal | Emotional regulation |
-| 5 | Sensory Area | Parietal | Touch, temperature, pain |
-| 6 | Somatosensory Association | Parietal | Sensory integration, spatial awareness |
-| 7 | Sensory Association | Parietal | Higher-order interpretation |
-| 8 | Auditory Area | Temporal | Sound processing |
-| 9 | Wernicke's Area | Temporal (Left) | Language comprehension |
-| 10 | Olfactory Area | Temporal | Smell processing |
-| 11 | Association Area | Temporal | Memory, object recognition |
-| 12 | Visual Area | Occipital | Visual processing |
-| 13 | Motor Functions | Cerebellum | Balance, coordination, timing |
+### The game
 
-### Shader System
+- **Words:** 53 in `src/data/regions.js`, in four tiers (10, 25, 50 and 100 points). A word whose function genuinely spans regions lists `acceptAlternates`.
+- **Engine:** `src/game/gameEngine.js` finds hits by raycasting onto the painted regions, so it works wherever the brain sits.
+- **Levels:** play starts at Easy (any region in the right lobe scores, colours on). Each step, a quarter faster, colours off or the exact region, is a level: Hard 1, Hard 2 and on (`levels.js`). The coach (`coach.js`) watches streaks and struggles; hints climb from where to look, to the lobe, to the region (`hints.js`); `demo.js` plays the unscored example.
 
-The Victorian engraving effect is a custom GLSL fragment shader, not post-processing. The key insight: tonal value is rendered as layers of crosshatched lines that activate at different darkness thresholds.
+### The voice guide
 
-```
-Layer 1 (lightest shadows):  sparse diagonal lines      activates at dark > 0.06
-Layer 2:                     cross diagonal lines       activates at dark > 0.22
-Layer 3:                     tighter fill lines         activates at dark > 0.38
-Layer 4 (deepest shadows):   dense crosshatch           activates at dark > 0.52
-```
+- **One ElevenLabs agent, two guides:** Sylvi (the default) and Rollo, one British voice each, chosen in Settings. The contract for the agent is [`agent/architect-brief.md`](agent/architect-brief.md): configuration (section 2), the system prompt that is live (section 3), 18 client tools (section 4), the server tool (section 5) and the acceptance conversations (section 6). Every change to the live agent needs Kyle's explicit OK.
+- **Client tools** (the guide acting on the page): `face_region`, `rotate_to_view`, `highlight_region`, `clear_highlight`, `set_colour_regions`, `lookup_region`, `list_regions`, `get_scene_state`, `face_lobe`, `start_tour`, `next_tour_stop`, `end_tour`, `show_section`, `set_game_speed`, `set_difficulty`, `switch_mode`, `give_hint`, `play_example`. They live in `src/voice/clientTools.js`, `sceneCommands.js` and `gameCommands.js`, and refuse with a reason when the mode forbids them.
+- **How the app talks to the guide:** a contextual update is background the guide reads at its next turn (`[player] clicked region 6 (Broca's Area)`, `[app] mode: study`); an `[app]` prompt makes it answer now (a miss, an offer, the first Play, Study opening). All wording is in `src/voice/contextUpdates.js`; prompts wait for the guide to finish its sentence (`guidePrompter.js`).
+- **Client:** `src/voice/VoicePanel.jsx` holds the conversation; `voiceSession.js` runs its phases (idle, requesting, connecting, connected, resting, unavailable); `GuideColumn.jsx` and `transcriptStream.js` draw it; `welcome.js` plays the recorded welcomes; `restWake.js` and `carryOn.js` rest, wake and hand over.
+- **Server** (`server/`, Express): `GET /api/voice/status`, `POST /api/voice/token` (mints a conversation token; the agent id and API key never reach the browser), `GET /api/voice/welcome/:guide` and its `/audio` (with `?kind=study` or `?kind=play`), `POST /api/voice/ended`, `POST /api/voice/release` and the ElevenLabs post-call webhook. Minutes are reserved per conversation and refunded by the webhook (`ledger.js`): 480 seconds per conversation, 900 seconds per device per day, a global daily budget, and at most 10 conversations open at once.
 
-Lighting uses half-lambert (`dot(N,L) * 0.5 + 0.5`) which wraps light around the form. A fresnel term darkens edges for that woodcut silhouette quality. Maximum darkness is capped at 0.90 so linework is always visible, even in the deepest sulci.
+### The knowledge base
 
-**Color mode** overlays muted Victorian palette washes (dusty gold, sage, mauve, slate blue, terra cotta) beneath the persistent linework, exactly like hand-tinted anatomical illustrations. The lines never change; the "paper" color shifts per region.
+`knowledge/` holds the knowledge graph (authoritative for relationships) and the narrative KB that the agent reads for depth; when they disagree, the graph wins. Every fact carries its source and stays proposed until the steward approves it. Spec: [`knowledge/ONTOLOGY.md`](knowledge/ONTOLOGY.md); guide: [`knowledge/README.md`](knowledge/README.md).
 
-### Controls
+### The landing
 
-- Click-drag to orbit (vertical: drag down rotates brain down)
-- Scroll to zoom
-- Auto-rotation from lateral view on load, stops on first interaction
-- Inertia on drag release
-- Region detection via raycasting on hover
+`landing/index.html` and `src/landing/`: the plate (`elevation.js` fits the side view), the drift (`drift.js`), the gaze toward Enter (`gaze.js`) and Enter itself (`enter.js`).
 
 ---
 
-## File Structure
+## Deploying
 
-```
-brain-game/
-├── public/
-│   └── brain.glb              ← YOU MUST ADD THIS (3D brain model)
-├── src/
-│   ├── main.jsx               Entry point
-│   ├── App.jsx                 Victorian UI frame, state management
-│   ├── shaders/
-│   │   ├── index.js            Barrel export
-│   │   ├── vertexShader.js     Passes normals + regionId to fragment
-│   │   └── fragmentShader.js   4-layer crosshatch engraving shader
-│   ├── data/
-│   │   └── regions.js          14 functional zones, colors, word bank
-│   ├── utils/
-│   │   ├── brainLoader.js      GLB loader + binary fallback + region classifier
-│   │   ├── brainScene.js       Three.js scene, camera, renderer, raycasting
-│   │   └── orbitControls.js    Custom spherical orbit with inertia
-│   └── game/
-│       └── gameEngine.js       Word dropping, collision, scoring (scaffolded)
-├── index.html
-├── package.json
-├── vite.config.js
-├── .cursorrules               AI assistant context for Cursor
-└── README.md
-```
+Railway project `accurate-spontaneity`, service `the-brain-game`. Railway builds with `npm run build` and starts with `npm start`.
+
+| Branch | Site |
+|---|---|
+| `staging` | [the-brain-game-staging.up.railway.app](https://the-brain-game-staging.up.railway.app) |
+| `main` | [www.brain-game.io](https://www.brain-game.io) |
+
+We ship staging and main together: the same commit, pushed to both. Railway reports each deploy back to GitHub.
 
 ---
 
-## Game Design
+## Known issues (2026-10-21)
 
-### Core Loop
-
-1. A word or phrase appears at the top and begins falling
-2. Player rotates the brain to position the correct region beneath the falling word
-3. **Correct:** region illuminates with warm glow, word absorbs into brain, score increases, factoid appears
-4. **Incorrect:** word shatters into fragments that tumble off the brain and fall into the void below. Correct region pulses, teaching through failure
-5. Next word drops
-
-### Word Bank Tiers
-
-- **Tier 1 (Obvious):** "VISION" → Occipital. "HEARING" → Auditory.
-- **Tier 2 (Functional):** "PLANNING A TRIP" → Prefrontal. "CATCHING A BALL" → Cerebellum.
-- **Tier 3 (Nuanced):** "UNDERSTANDING SARCASM" → Temporal Association. "PHONE VIBRATING IN POCKET" → Somatosensory.
-- **Tier 4 (Expert):** "PHANTOM LIMB SENSATION" → Somatosensory Association. "TIP-OF-THE-TONGUE" → Wernicke's + Temporal Association.
-
-Words that genuinely involve multiple regions have an `acceptAlternates` array. The science is never sacrificed for clean game design.
-
-### Scoring (V1)
-
-Tier points: Tier 1 = 10, Tier 2 = 25, Tier 3 = 50, Tier 4 = 100. Session accumulation only — no leaderboards, lives, timers, or streaks. Difficulty control (T1–T4) sets the max tier in the word pool.
-
-### Miss vs wrong
-
-- **Miss** (word clears the catch line over empty space): intact fall into the void; correct region pulses.
-- **Wrong** (lands on an incorrect region): letter shatter; correct region pulses; correction annotation.
+1. **Voice on networks that block WebRTC.** On some hotel, café and office wifi the audio link to ElevenLabs never opens, and the page waits on "Waking Sylvi…". Planned: fall back to a secure WebSocket, and say plainly when no route works.
+2. **A heavy first load.** The brain needs about 65 MB (the model 25.7 MB, the maps 38.8 MB), so on a slow connection the landing stays empty for a long time. Planned: show a still engraving at once, and send slimmer copies (about 22 MB) with no visible change.
 
 ---
 
-## Development Workflow
+## How we work
 
-We use TDD:
+Research, then plan, then Kyle's explicit confirmation before any code. Test-driven: write the tests, watch them fail, commit them, then implement until they pass. Every claim gets a number, and renders are checked before they are shown. Stay in scope: no global clean-up passes. The full rules are in [`CLAUDE.md`](CLAUDE.md).
 
-1. Write tests based on expected input/output
-2. Run tests, confirm they fail
-3. Commit tests
-4. Implement until tests pass
+## Neuroscience integrity
 
-### Suggested Next Steps for Cursor
+- Region names are tissue nouns, never functions.
+- No left-brain/right-brain myth: lateralization is taught as it is (language mostly on the left), not as personality.
+- The cerebellum is not just balance; it also serves timing, cognition, emotion and language.
+- Functions are tagged primary or contributing; a function that spans regions is taught as a network.
+- Sources are Kandel, Purves, Nolte or peer-reviewed work, never pop science, Wikipedia or news. No text copies 8 or more consecutive words from a source (a test enforces it).
+- Questions about how the body works get a direct answer. Questions about someone's own symptoms, diagnosis, scan, medication or treatment get one line ("I can't give medical advice; a doctor is the right person to ask."), then the anatomy.
 
-1. **Drop in the Meshy anatomical GLB** at `public/brain.glb` (replace the procedural stand-in). Retune `classifyVertex()` or paint vertex colors in Blender.
-2. **Neuroscience review** of the ~50-word bank and factoids against Kandel / Purves / Nolte.
-3. **Playtest** miss vs wrong feedback, difficulty tiers, and mobile touch orbit.
-4. **Deploy** to Railway when the specimen and word bank are production-ready.
+## Where things live
 
----
-
-## Neuroscience Integrity
-
-- No false simplifications. Multiple regions acknowledged via `acceptAlternates`.
-- No "left brain/right brain" myths. Bilateral architecture teaches actual lateralization.
-- Cerebellum is not just balance. It handles cognitive timing, emotional regulation, and language at higher tiers.
-- Every factoid traceable to Kandel, Purves, or Nolte.
-- Neuroplasticity as meta-lesson: the game is literally doing to the player's brain what it teaches about the brain.
-
----
-
-## Design References
-
-The aesthetic target is Victorian woodblock engraving / hand-tinted anatomical illustration. Think:
-- Henry Gray's *Anatomy* (1858) illustration style
-- Ernst Haeckel's *Kunstformen der Natur* linework
-- Period broadsheet typography and editorial layout
-
-**What this is NOT:** neon, glassmorphism, gradient mesh, modern medical illustration, textbook diagram, or Duolingo-style gamification. Clean, serious, warm. Like holding a beautiful old book.
+| Need | Read |
+|---|---|
+| Rules for anyone working here | [`CLAUDE.md`](CLAUDE.md) |
+| Current state and open decisions | [`docs/claude/CLAUDE_CODE_HANDOFF.md`](docs/claude/CLAUDE_CODE_HANDOFF.md) |
+| The full brief: vision, aesthetic, integrity | [`docs/claude/BRAIN_GAME_PROJECT_INSTRUCTIONS.md`](docs/claude/BRAIN_GAME_PROJECT_INSTRUCTIONS.md) (its 14-zone table is outdated; the 20 regions above are canon) |
+| The agent's contract | [`agent/architect-brief.md`](agent/architect-brief.md) |
+| Voice decisions and history | [`docs/claude/VOICE_CONFIG_UPDATE.md`](docs/claude/VOICE_CONFIG_UPDATE.md), [`docs/claude/VOICE_LAYER_PLAN.md`](docs/claude/VOICE_LAYER_PLAN.md) |
+| Server variables and launch checklist | [`docs/claude/RAILWAY_ENV.md`](docs/claude/RAILWAY_ENV.md) |
+| Product requirements | [`docs/claude/PRD.md`](docs/claude/PRD.md) |
+| Knowledge base | [`knowledge/README.md`](knowledge/README.md), [`knowledge/ONTOLOGY.md`](knowledge/ONTOLOGY.md) |
+| Asset pipeline (Python) and the knowledge base CLI | `scripts/` |
 
 ---
 
-*"The brain is wider than the sky." — Emily Dickinson, c. 1862*
+## Design
+
+Victorian woodblock engraving and hand-tinted anatomical plates: dense hatching that follows the brain's surface, dark ink on warm paper, Playfair Display for titles and EB Garamond for text, and "Colour Regions" spelt the British way. Muted period washes (dusty gold, sage, mauve, slate blue, terra cotta, rose, ochre) sit under the linework, which never changes.
+
+Not neon, glassmorphism, gradient mesh, modern medical illustration or Duolingo-style gamification. Clean, serious and warm, like holding a beautiful old book.
+
+*"The brain is wider than the sky." Emily Dickinson, c. 1862*
