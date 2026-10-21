@@ -51,7 +51,7 @@ export function fakeClock(start = Date.UTC(2026, 9, 5, 12, 0, 0)) {
  * `pages` is a list of conversation arrays, one per page; `listFailures`
  * makes the first N history requests fail.
  */
-export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true, ttsOk = true, rejectModels = [] } = {}) {
+export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: initialPages = [[]], listFailures = 0, details = {}, tokenConversationIds = true, ttsOk = true, rejectModels = [], signedUrl = 'wss://api.elevenlabs.io/v1/convai/conversation?agent_id=agent_test_never_leaks_456&conversation_signature=sig_never_leaks' } = {}) {
   let pages = initialPages;
   const requests = [];
   // `details` maps conversation id -> { status, call_duration_secs }; ids not
@@ -82,6 +82,11 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
           character_end_times_seconds: characters.map((_, i) => (i + 1) * 0.1),
         },
       });
+    }
+    // The signed WebSocket address for the relay (Kyle, 2026-10-21).
+    if (href.includes('/v1/convai/conversation/get-signed-url')) {
+      if (!ok) return reply(500, { detail: 'upstream failure' });
+      return reply(200, { signed_url: signedUrl });
     }
     if (href.includes('/v1/convai/conversation/token')) {
       if (!ok) return reply(500, { detail: 'upstream failure' });
@@ -124,6 +129,7 @@ export function fakeElevenLabs({ ok = true, token = 'conv_token_abc', pages: ini
       pages = next;
     },
     tokenRequests: () => requests.filter(({ url }) => url.includes('/conversation/token')),
+    signedUrlRequests: () => requests.filter(({ url }) => url.includes('/conversation/get-signed-url')),
     ttsRequests: () => requests.filter(({ url }) => url.includes('/v1/text-to-speech/')),
     historyRequests: () => requests.filter(({ url }) => /\/convai\/conversations(\?|$)/.test(url)),
     detailRequests: () => requests.filter(({ url }) => /\/convai\/conversations\/[^/?]+/.test(url)),

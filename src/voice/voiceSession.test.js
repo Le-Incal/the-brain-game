@@ -167,9 +167,12 @@ describe('M4: a conversation that fails to start releases its reservation at onc
     const { session, server } = setup();
     await session.start({ guide: 'rollo' });
     await session.handleDisconnect({ reason: 'error', message: 'Could not establish connection' });
-    expect(server.requests.at(-1)).toMatchObject({ url: '/api/voice/release', body: { reservation: 'resid.sig' } });
-    expect(server.requests.at(-1).init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
-    expect(session.getState()).toMatchObject({ phase: 'unavailable', message: "We couldn't start the conversation. Please try again." });
+    const release = server.requests.find(({ url }) => url === '/api/voice/release');
+    expect(release).toMatchObject({ body: { reservation: 'resid.sig' } });
+    expect(release.init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+    // Kyle, 2026-10-21: then it tries our relay (networkFallback.test.js), rather than giving up.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(server.requests.filter(({ url }) => url === '/api/voice/token').at(-1).body.transport).toBe('websocket');
   });
 
   it('releases it when the player ends before it connects', async () => {
