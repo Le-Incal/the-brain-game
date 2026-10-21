@@ -23,7 +23,7 @@ async function fakeElevenLabsSocket() {
   const wss = new WebSocketServer({ port: 0, host: '127.0.0.1', handleProtocols: (protocols) => (protocols.has('convai') ? 'convai' : false) });
   await new Promise((resolve) => wss.once('listening', resolve));
   wss.on('connection', (socket, req) => {
-    const entry = { socket, url: req.url, protocol: socket.protocol, received: [] };
+    const entry = { socket, url: req.url, protocol: socket.protocol, origin: req.headers.origin, received: [] };
     socket.on('message', (data) => entry.received.push(String(data)));
     connections.push(entry);
   });
@@ -62,7 +62,10 @@ const mint = (app, { cookie, transport = 'websocket' } = {}) => {
 };
 
 function connect(port, path, { cookie, host = HOST } = {}) {
-  const socket = new WebSocket(`ws://127.0.0.1:${port}${path}`, ['convai'], { headers: { Host: host, ...(cookie ? { Cookie: cookie } : {}) } });
+  const socket = new WebSocket(`ws://127.0.0.1:${port}${path}`, ['convai'], {
+    headers: { Host: host, ...(cookie ? { Cookie: cookie } : {}) },
+    origin: `https://${HOST}`,
+  });
   cleanups.push(() => socket.terminate());
   return socket;
 }
@@ -128,6 +131,8 @@ describe('The relay', () => {
     await until(() => elevenLabs.connections.length === 1);
     const [upstream] = elevenLabs.connections;
     expect(upstream.protocol).toBe('convai');
+    // ElevenLabs sees the page the visitor is on, as it would without the relay.
+    expect(upstream.origin).toBe(`https://${HOST}`);
     const target = new URL(upstream.url, 'ws://x');
     expect(target.searchParams.get('agent_id')).toBe(SECRETS.ELEVENLABS_AGENT_ID);
     expect(target.searchParams.get('conversation_signature')).toBe('sig_never_leaks');
@@ -187,8 +192,9 @@ describe('The relay', () => {
     elevenLabs.connections[0].socket.close(1000, 'done');
     expect(await closed).toBe(1000);
 
-    const second = await mint(app, { cookie: cookieFrom(first) });
-    const leaving = connect(port, second.body.relayPath, { cookie: cookieFrom(first) });
+    // One open conversation per browser: the second is another visitor's.
+    const second = await mint(app);
+    const leaving = connect(port, second.body.relayPath, { cookie: cookieFrom(second) });
     await opened(leaving);
     await until(() => elevenLabs.connections.length === 2);
     const upstreamClosed = new Promise((resolve) => elevenLabs.connections[1].socket.once('close', resolve));
