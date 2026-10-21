@@ -31,6 +31,18 @@ describe('M3: serving the game', () => {
     }
   });
 
+  // Kyle, 2026-10-20: a slow connection. The model and data are compressed on
+  // the way; images, already compressed, are not.
+  it('compresses the model on the way, and leaves images alone', async () => {
+    const app = await makeApp();
+    const model = await request(app).get('/web/brain.glb').set('Host', HOST).set('Accept-Encoding', 'gzip');
+    expect(model.status).toBe(200);
+    expect(model.headers['content-encoding']).toBe('gzip');
+    const image = await request(app).get('/web/maps/brain_ao.png').set('Host', HOST).set('Accept-Encoding', 'gzip');
+    expect(image.status).toBe(200);
+    expect(image.headers['content-encoding']).toBeUndefined();
+  });
+
   it('serves built assets', async () => {
     const response = await request(await makeApp()).get('/assets/app.js').set('Host', HOST);
     expect(response.status).toBe(200);

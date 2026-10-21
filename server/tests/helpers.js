@@ -184,6 +184,10 @@ export function tempDist() {
   // The front door (Kyle, 2026-10-17): the landing, built to landing/index.html.
   fs.mkdirSync(path.join(dir, 'landing'));
   fs.writeFileSync(path.join(dir, 'landing', 'index.html'), '<!doctype html><title>Brain Game · A Study in Cognition</title><main class="landing"></main>');
+  // The slim model and a map (Kyle, 2026-10-20): stand-ins of a realistic kind.
+  fs.mkdirSync(path.join(dir, 'web', 'maps'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'web', 'brain.glb'), Buffer.alloc(64 * 1024, 7));
+  fs.writeFileSync(path.join(dir, 'web', 'maps', 'brain_ao.png'), Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64 * 1024, 3)]));
   return dir;
 }
 

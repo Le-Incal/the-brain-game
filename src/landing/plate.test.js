@@ -101,3 +101,29 @@ describe('The landing copy', () => {
     expect(read('./landing.css')).not.toMatch(/\.plate-number|figcaption/);
   });
 });
+
+// Kyle, 2026-10-20: on a slow connection the brain never appeared. A still
+// engraving of the same view shows at once and gives way to the live brain
+// once it is fully drawn; the drift starts then, so nothing jumps.
+describe('The landing on a slow connection', () => {
+  it('shows a still of the brain at once, the same view, light enough to arrive first', () => {
+    expect(pages.C).toMatch(/<div class="plate"[^>]*>\s*<img class="plate-still" src="\/web\/plate\.webp" alt="" aria-hidden="true" \/>\s*<div class="plate-canvas"><\/div>/);
+    const still = readFileSync(at('../../public/web/plate.webp'));
+    expect(still.subarray(0, 4).toString()).toBe('RIFF');
+    expect(still.subarray(8, 12).toString()).toBe('WEBP');
+    expect(still.length).toBeLessThan(300_000);
+  });
+
+  it('cross-fades to the live brain once it is ready, and keeps it still and untouchable until then', () => {
+    const css = read('./landing.css');
+    expect(rule('.plate-still')).toMatch(/position: absolute;[^}]*inset: 0;[^}]*transition: opacity 0\.6s ease;/);
+    expect(css).toMatch(/\.plate\.is-ready \.plate-still \{\s*opacity: 0;/);
+    expect(css).toMatch(/\.plate:not\(\.is-ready\) \.plate-canvas \{\s*opacity: 0;\s*pointer-events: none;/);
+    expect(rule('.plate-canvas')).toMatch(/transition: opacity 0\.6s ease;/);
+  });
+
+  it('is ready only once every map has arrived', () => {
+    const landing = read('./landing.js');
+    expect(landing).toMatch(/await scene\.texturesReady;\s*plate\.classList\.add\('is-ready'\);/);
+  });
+});
