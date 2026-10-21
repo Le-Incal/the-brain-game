@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { REGION_ID_SET, getRegionById } from '../data/regions';
+import { BRAIN_MODEL_URL } from './webAssets.js';
 
 const COLOR_1_ATTRIBUTE_NAMES = [
   '_color_1',
@@ -264,7 +265,7 @@ export function computeCerebrumPivot(meshes) {
  * Load and process the brain model.
  * Returns a Three.js Group containing the processed meshes.
  */
-export async function loadBrainModel(url = '/brain.glb') {
+export async function loadBrainModel(url = BRAIN_MODEL_URL) {
   const loader = new GLTFLoader();
 
   return new Promise((resolve, reject) => {

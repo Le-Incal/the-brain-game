@@ -9,6 +9,7 @@
  */
 import path from 'node:path';
 import express from 'express';
+import compression from 'compression';
 import { readVoiceConfig } from './config.js';
 import { createMinuteLedger, MIN_RESERVATION_SECONDS } from './ledger.js';
 import { createRateLimiter, TOKEN_RATE_LIMIT } from './rateLimit.js';
@@ -166,6 +167,10 @@ export function createApp({
   const config = readVoiceConfig(env);
   const app = express();
   app.disable('x-powered-by');
+  // Kyle, 2026-10-20: a slow connection. The model, its data and the code go
+  // compressed (the model 8.6 MB -> about 4 MB); images are compressed already.
+  const ALWAYS_COMPRESS = /\.(glb|bin|js|css|html|json|svg)$/i;
+  app.use(compression({ filter: (req, res) => ALWAYS_COMPRESS.test(req.path) || compression.filter(req, res) }));
   // Railway's edge always overwrites X-Real-IP with the client's address,
   // while X-Forwarded-For keeps whatever the client sent (Railway staff, May
   // 2026). Railway sets RAILWAY_ENVIRONMENT_ID on every deployment; off

@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { BrainScene } from '../utils/brainScene';
 import { loadBrainModel } from '../utils/brainLoader';
+import { BRAIN_MODEL_URL } from '../utils/webAssets.js';
 import { getViewFrame, orientationForView } from '../voice/orientation.js';
 import { elevationDistance } from './elevation.js';
 import { startDrift } from './drift.js';
@@ -81,8 +82,8 @@ function fit() {
   camera.updateMatrixWorld();
 }
 
-loadBrainModel('/brain.glb')
-  .then(({ group }) => {
+loadBrainModel(BRAIN_MODEL_URL)
+  .then(async ({ group }) => {
     scene.addBrainGeometry(group);
     const { camera, controls } = scene;
     camera.fov = FOV_DEG;
@@ -95,6 +96,8 @@ loadBrainModel('/brain.glb')
     scene.specimenOrientGroup.quaternion.copy(elevation);
     controls.targetQuaternion.copy(elevation);
     fit();
+    // The still gives way once the brain is fully drawn, and the drift starts then (Kyle, 2026-10-20).
+    await scene.texturesReady;
     plate.classList.add('is-ready');
     // The brain drifts from the moment the visitor arrives (Kyle, 2026-10-16).
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;

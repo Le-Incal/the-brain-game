@@ -13,12 +13,14 @@
     "reconcile-id-texture": "python3 scripts/reconcile-id-texture.py",
     "generate-region-geometry": "python3 scripts/generate-region-geometry.py",
     "generate-region-identity": "python3 scripts/generate-region-identity.py",
+    "web-assets": "python3 scripts/build-web-assets.py",
     "preview": "vite preview",
     "test": "vitest",
     "kb": "vite-node scripts/kb.mjs --"
   },
   "dependencies": {
     "@elevenlabs/react": "1.16.0",
+    "compression": "^1.8.2",
     "express": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

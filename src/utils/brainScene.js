@@ -32,6 +32,7 @@ import {
   refineBrainCentre,
   slideLift,
 } from './composition.js';
+import { MAP_URLS } from './webAssets.js';
 
 // Where the orbit target sits. The camera turns about this point, so the
 // specimen is displaced from it rather than moved with it.
@@ -318,15 +319,20 @@ export class BrainScene {
     this._regionMaskPixels = null;
     this._regionMaskWidth = 0;
     this._regionMaskHeight = 0;
-    const textureLoader = new THREE.TextureLoader();
+    // Kyle, 2026-10-20: the landing shows a still until every map has arrived.
+    const textureManager = new THREE.LoadingManager();
+    this.texturesReady = new Promise((resolve) => {
+      textureManager.onLoad = resolve;
+    });
+    const textureLoader = new THREE.TextureLoader(textureManager);
     const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
     const configureDataMap = (texture) =>
       configureMap(texture, maxAnisotropy, THREE.NoColorSpace);
 
-    const aoMap = configureDataMap(textureLoader.load('/maps/brain_ao.png'));
-    const cavityMap = configureDataMap(textureLoader.load('/maps/brain_cavity.png'));
-    const curvatureMap = configureDataMap(textureLoader.load('/maps/brain_curvature.png'));
-    const etchingMap = configureDataMap(textureLoader.load('/maps/brain_etching.png'));
+    const aoMap = configureDataMap(textureLoader.load(MAP_URLS.ao));
+    const cavityMap = configureDataMap(textureLoader.load(MAP_URLS.cavity));
+    const curvatureMap = configureDataMap(textureLoader.load(MAP_URLS.curvature));
+    const etchingMap = configureDataMap(textureLoader.load(MAP_URLS.etching));
     const regionIdMap = configureRegionIdMap(
       textureLoader.load('/maps/brain_region_ids_4096.png', (texture) => {
         this._setRegionMaskImage(texture.image);

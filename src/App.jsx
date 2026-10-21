@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { BrainScene } from './utils/brainScene';
 import { loadBrainModel } from './utils/brainLoader';
+import { BRAIN_MODEL_URL } from './utils/webAssets.js';
 import { GameEngine } from './game/gameEngine';
 import { ShatterWord, splitWordLines } from './components/ShatterWord';
 import { VOICE_ENABLED } from './voice/flags';
@@ -583,7 +584,7 @@ export default function App() {
     // change is checked against the model rather than against a memory of it.
     if (import.meta.env.DEV) window.__brainScene = brainScene;
 
-    loadBrainModel('/brain.glb')
+    loadBrainModel(BRAIN_MODEL_URL)
       .then(({ group, faceCount, vertexCount, atlasVertexAttributesValid }) => {
         brainScene.addBrainGeometry(group);
         console.info(
