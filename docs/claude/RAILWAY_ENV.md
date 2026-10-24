@@ -15,7 +15,7 @@ Values live only in Railway. Never commit them, and never give any of them a `VI
 | `VOICE_SESSION_SECRET` | yes | HMAC key for the anonymous, signed, host-bound device cookie that carries the per-device caps (64 hex chars). |
 | `VOICE_HOSTS` | no | Comma-separated hosts the cookie is bound to: `www.brain-game.io,brain-game.io`. |
 | `VOICE_SESSION_MAX_SECONDS` | no | Per-conversation cap. `480`. |
-| `VOICE_DAILY_MAX_SECONDS` | no | Per-player daily cap across all conversations. `900`. |
+| `VOICE_DAILY_MAX_SECONDS` | no | Per-player daily cap across all conversations. `1800` (30 minutes; was `900` until 2026-10-23, when the conversation began resting after 3 minutes instead of 30 s). |
 | `VOICE_GLOBAL_DAILY_MAX_SECONDS` | no | Global daily minute budget across all players. When spent, voice reports itself unavailable until the next UTC day; the game is unaffected. |
 | `VOICE_MAX_OPEN_RESERVATIONS` | no | Site-wide cap on reservations open at once (minted but not yet settled). `10`, matching the ElevenLabs concurrent call limit. Beyond it, and beyond one per device or two per address, players are told the guide is busy. |
 | `ELEVENLABS_WEBHOOK_SECRET` | yes | HMAC secret of the ElevenLabs post-call webhook. The webhook route verifies every delivery with it before refunding unused minutes. Required in production (without refunds the budget drains about four times too fast); optional elsewhere. |
