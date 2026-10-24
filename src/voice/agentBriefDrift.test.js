@@ -295,6 +295,12 @@ describe("The agent's settings as of 23 October", () => {
     expect(config).toContain("- **Post-call webhook:** set on the agent's Security tab, which overrides the workspace default: Transcript only, to `https://www.brain-game.io/api/voice/webhook/elevenlabs`. Staging receives none.");
   });
 
+  it('tells the guide the conversation rests after 3 minutes of quiet, not 30 seconds', () => {
+    const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+    expect(prompt).toContain('The app rests the conversation after about 3 minutes of quiet and opens a new one when the player speaks or writes again.');
+    expect(brief).not.toContain('after about 30 seconds of quiet');
+  });
+
   it('answers as eagerly as Atlas, and hears both names', () => {
     expect(config).toContain('- **Turn-taking:** allow the user to interrupt the agent. Eagerness: Eager, as on Atlas.');
     expect(config).toContain('- **ASR keywords:** Sylvi, Rollo.');
