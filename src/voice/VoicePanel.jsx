@@ -15,7 +15,7 @@ import { GUIDES } from './guides.js';
 import { createVoiceSession } from './voiceSession.js';
 import { cancelMovesWhenHidden, createClientTools } from './clientTools.js';
 import { createContextReporter, formatCarryOn, formatCoachSignal, formatFirstPlay, formatMissPrompt, formatRegionClicked, formatStudyOffer, isAppPrompt } from './contextUpdates.js';
-import { STUDY_HANDOVER_WAIT_MS, freshSessionOnModeChange, studyEntry, studyHandoverTiming } from './carryOn.js';
+import { studyEntry } from './carryOn.js';
 import { listenForFirstInteraction, listenForFirstTap } from './firstTap.js';
 import { consumeEnteredMark, conversationOnArrival } from './arrivalEnter.js';
 import { choiceWelcomeAction } from './choiceWelcome.js';
@@ -120,13 +120,11 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
   const carryOnRef = useRef(null);
   // When the guide last used a tool: its own switch to Study is followed by speech.
   const lastToolAtRef = useRef(-Infinity);
-  // A fresh Study session waiting for the guide's turn to end.
-  const studyHandoverRef = useRef(null);
   // Kyle, 2026-10-20: once Study has brought her in, she offers a tour or a region.
   const studyOfferRef = useRef(false);
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  // One conversation on screen, many underneath: rest after 30 s of quiet.
+  // One conversation on screen, many underneath: rest after 3 minutes of quiet.
   const restTimer = useMemo(() => createRestTimer({ onRest: () => sessionRef.current?.rest() }), []);
   useEffect(() => () => restTimer.dispose(), [restTimer]);
   const lineIdRef = useRef(0);
@@ -204,12 +202,6 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       restTimer.guideSpeaking(speaking);
       prompter.guideSpeaking(speaking);
       sessionRef.current?.guideSpeaking(speaking);
-      // The guide finished its turn: a fresh Study session can start now.
-      if (!speaking && studyHandoverRef.current) {
-        window.clearTimeout(studyHandoverRef.current);
-        studyHandoverRef.current = null;
-        sessionRef.current?.handOver();
-      }
       activityRef.current?.({ type: 'speaking', value: speaking });
       if (!speaking) {
         stream.guideStopped();
@@ -366,7 +358,7 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
 
   // On connecting, the guide learns what came before: the welcome it need not
   // repeat, the conversation so far if it woke from rest, the mode, and any
-  // click that woke it. Then it rests after 30 s of quiet.
+  // click that woke it. Then it rests after 3 minutes of quiet.
   useEffect(() => {
     restTimer.connected(state.phase === 'connected');
     if (state.phase !== 'connected') return;
@@ -392,8 +384,9 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     }
   }, [state.phase, voiceEventsRef, restTimer, stream, session, prompter]);
 
-  // And whenever the mode changes while connected. Kyle, 2026-10-13: Study
-  // begins with a fresh session, once the guide has finished its turn.
+  // And whenever the mode changes while connected. Kyle, 2026-10-23: Study
+  // keeps the running conversation (a fresh one for Study was refused, and
+  // Sylvi went silent); only the 8-minute cap carries it on.
   const previousModeRef = useRef(mode);
   useEffect(() => {
     const from = previousModeRef.current;
@@ -418,26 +411,15 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
     }
     if (entered.action === 'wake') current.wake();
     else if (entered.action === 'start') current.start({ guide: guideRef.current, mode: 'auto' });
-    if (freshSessionOnModeChange({ from, to: mode, phase: current.getState().phase })) {
-      const timing = studyHandoverTiming({
-        guideSpeaking: guideSpeakingRef.current,
-        msSinceTool: performance.now() - lastToolAtRef.current,
-      });
-      if (timing === 'now') {
-        current.handOver();
-        return;
-      }
-      if (studyHandoverRef.current) window.clearTimeout(studyHandoverRef.current);
-      studyHandoverRef.current = window.setTimeout(() => {
-        studyHandoverRef.current = null;
-        sessionRef.current?.handOver();
-      }, STUDY_HANDOVER_WAIT_MS);
-    }
     if (current.getState().phase === 'connected') voiceEventsRef.current?.modeChanged(mode);
+    // A live conversation stays: she offers at once, after any welcome still playing.
+    if (entered.action === 'stay' && entered.offer) {
+      studyOfferRef.current = false;
+      whenWelcomeDone().then(() => {
+        if (modeRef.current === 'study' && current.getState().phase === 'connected') prompter.prompt(formatStudyOffer());
+      });
+    }
   }, [mode, voiceEventsRef]);
-  useEffect(() => () => {
-    if (studyHandoverRef.current) window.clearTimeout(studyHandoverRef.current);
-  }, []);
 
   // A hidden tab rests the conversation soon after.
   useEffect(() => {

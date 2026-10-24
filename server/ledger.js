@@ -18,8 +18,9 @@ import { randomId } from './signing.js';
 
 export const MIN_RESERVATION_SECONDS = 30;
 // Conversations the page has reported ended but ElevenLabs has not yet
-// settled (about 20 s): they free their slot, and a device may hold one.
-export const MAX_CLOSING_PER_DEVICE = 1;
+// settled (about 20 s): they free their slot, and a device may hold three
+// (Kyle, 2026-10-23: a rest and a carry-on a few seconds apart refused the next).
+export const MAX_CLOSING_PER_DEVICE = 3;
 // A conversation cannot run longer than since its token was minted; a few
 // seconds' slack covers clocks and the handshake.
 export const CLOSING_SLACK_SECONDS = 5;

@@ -1,11 +1,13 @@
 /**
  * One conversation on screen, many sessions underneath (Kyle, 2026-10-11).
- * The live session rests after 30 s with no speech and no writing, or soon
- * after the tab is hidden, and wakes when the visitor speaks or writes.
- * Nothing on screen says it ended.
+ * The live session rests after 3 minutes with no speech and no writing, or
+ * soon after the tab is hidden, and wakes when the visitor speaks or writes.
+ * Nothing on screen says it ended. (Kyle, 2026-10-23: at 30 s it rested while
+ * he was thinking, and the words that woke it were lost. ElevenLabs bills
+ * silence past 10 s at 5%.)
  */
 
-export const REST_AFTER_SILENCE_MS = 30_000;
+export const REST_AFTER_SILENCE_MS = 180_000;
 export const HIDDEN_REST_MS = 10_000;
 // A voice level held this long above this threshold is the visitor speaking.
 export const ONSET_LEVEL = 0.06;

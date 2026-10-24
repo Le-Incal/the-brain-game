@@ -20,11 +20,14 @@ Audience: curious general public, students, educators. English only.
 - **Choosing the guide:** the player picks in the app's Settings, never by talking to the agent. At conversation start the app sends the Voice ID override (`overrides.tts.voiceId`) for the chosen guide, always, for both guides, plus the `guide_name` dynamic variable. There is no voice-switching tool. The voice cannot change inside a running conversation; a switch starts a new conversation.
 - **Dynamic variable:** `guide_name` (`Sylvi` or `Rollo`); dashboard test value `Rollo`, to match the primary voice.
 - **Security overrides:** Voice ID and text only. Everything else off (first message, system prompt, LLM, tools, knowledge base and the rest). Text only lets a visitor without a microphone write to the guide and read its replies.
+- **Authentication:** on. Our server connects with a signed conversation token or signed URL, so the agent id alone opens nothing.
+- **Post-call webhook:** set on the agent's Security tab, which overrides the workspace default: Transcript only, to `https://www.brain-game.io/api/voice/webhook/elevenlabs`. Staging receives none.
 - **Language:** English.
 - **LLM:** Claude Haiku 4.5. Tool-call accuracy matters more than eloquence.
 - **Knowledge base / RAG:** on, with the 21 files from `knowledge/kb/{anatomy,cells,physiology}`, uploaded as `<kb_id>.md`. The graph still reaches the agent only through tools. Never upload `knowledge/data/`, `knowledge/ONTOLOGY.md`, the R1 and R2 reports, `knowledge/kb/README.md`, `SOURCES_AND_CORRECTIONS.md` or `knowledge/kb/sources/`.
 - **Max conversation duration:** 480 seconds (8 minutes). Caps count per player per day across conversations (M3). The app carries the conversation on in a fresh session 12 to 45 seconds before this cap (Kyle, 2026-10-13), so keep `AGENT_MAX_SECONDS` in `src/voice/voiceSession.js` equal to it.
-- **Turn-taking:** allow the user to interrupt the agent.
+- **Turn-taking:** allow the user to interrupt the agent. Eagerness: Eager, as on Atlas.
+- **ASR keywords:** Sylvi, Rollo.
 - **Take turn after silence:** -1. The agent never speaks to fill a silence; the app prompts it when it should speak (a miss, an offer, the first Play). At 7 s the guide kept saying "the game is waiting for you" during play (Kyle, 2026-10-11).
 - **System tools:** End conversation, Detect language and Skip turn. Skip turn lets the guide stay silent when what it hears is not said to it, such as a television or other people in the room.
 - **First message:** (empty). The app plays a recorded welcome before any conversation (`/api/voice/welcome/:guide`), so the agent waits for the player. Wait time: -1 (wait for the player indefinitely; otherwise the agent speaks unprompted after the turn timeout).
@@ -158,7 +161,7 @@ The app rests the conversation after about 30 seconds of quiet and opens a new o
   [app] conversation so far: Visitor: Where do headaches happen? | {{guide_name}}: Not in me, strictly.
 - Carry on from there: no greeting, no recap. Answer what the player says next.
 - When the app says about 30 seconds remain, finish your current thought briefly. The app carries the conversation on.
-- The app also carries a long conversation on in a fresh session before its time runs out, and starts a fresh one when the player enters Study. If it cut you off mid-tour or mid-sentence, it asks you to pick up:
+- The app also carries a long conversation on in a fresh session before its time runs out. If it cut you off mid-tour or mid-sentence, it asks you to pick up:
   [app] the conversation carried on mid-tour, at stop 3 of 7: pick up where you left off, with no greeting
   [app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting
 - On a tour, finish the stop you were on (get_scene_state gives it as tour), then call next_tour_stop.

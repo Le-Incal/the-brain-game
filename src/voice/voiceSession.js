@@ -8,8 +8,9 @@
  *                                     \-> unavailable (with a plain message)
  *   connected -> resting (rest, time limit) -> requesting (wake) -> ...
  *   connected -> requesting (handover, carryingOn) -> connecting -> connected
- *     (Kyle, 2026-10-13: before the 8-minute cap, and on entering Study, the
- *     conversation carries on in a fresh session; the visitor hears a short pause.)
+ *     (Kyle, 2026-10-13: before the 8-minute cap the conversation carries on
+ *     in a fresh session; the visitor hears a short pause. Since 2026-10-23
+ *     entering Study keeps the running conversation.)
  *
  * A conversation is 'voice' or 'text' (text only: no microphone, no audio).
  * 'auto' asks for the microphone and carries on in text if it is refused.
@@ -552,7 +553,7 @@ export function createVoiceSession({
       if (!guideIsSpeaking && handoverDue) handOver();
     },
 
-    /** Carries the conversation on in a fresh session now (entering Study). */
+    /** Carries the conversation on in a fresh session now. */
     handOver,
 
     handleDisconnect(details) {
