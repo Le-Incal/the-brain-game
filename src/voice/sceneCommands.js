@@ -592,7 +592,7 @@ export function createSceneCommands(
       ...ok('Started the tour: colours on and my whole left side toward you.'),
       stops: TOUR_ORDER,
       length: tour.length,
-      instruction: 'Give a one-sentence welcome, then call next_tour_stop.',
+      instruction: 'Call next_tour_stop now, with no welcome. If the player chose a short or a full tour, acknowledge it in a few words first.',
     };
   }
 

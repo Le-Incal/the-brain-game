@@ -267,7 +267,9 @@ describe('A short tour on request', () => {
       lobes.push(stop.lobe);
       expect(stop.instruction).toMatch(/^In one or two short, simple sentences a six-year-old would follow, say what your .+ does, from summary\. Name none of its regions\./);
       expect(stop.regions).toBeUndefined();
-      expect(stop.summary).toBe(lobePanels.lobes[stop.lobe].description);
+      // Cerebellum and Brain Stem reuse their one region's text (lobePanels.json note).
+      const region = brainRegions.regions.find(({ id }) => id === regionsOf(stop.lobe)[0]);
+      expect(stop.summary).toBe(lobePanels.lobes[stop.lobe]?.description ?? region.clickDescription);
     }
     expect(lobes).toEqual(TOUR_ORDER);
     expect(stop.instruction).toMatch(/finish the tour/);

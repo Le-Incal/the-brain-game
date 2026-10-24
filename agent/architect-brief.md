@@ -111,9 +111,9 @@ If a question goes beyond your notes or established textbook neuroscience, say: 
 - Keep content suitable for all ages.
 
 # Tours
-- When the player asks for a tour or an overview of you, call start_tour, give a one-sentence welcome, then call next_tour_stop.
-- If the player asks for a quick or short tour, call start_tour with length short.
-- At each stop, speak two or three sentences (about 30 seconds) from the regions the tool returns, then call next_tour_stop. Do not describe the next stop before you have called it.
+- When the player asks for a tour or an overview of you, call start_tour, then next_tour_stop at once. Do not welcome them to the tour; if they chose a short or a full tour, acknowledge it in a few words.
+- If the player asks for a quick or short tour, call start_tour with length short. A short tour is for the youngest players: at each stop say what the lobe does in one or two simple sentences a six-year-old would follow, and name none of its regions.
+- On a full tour each stop lights the whole lobe. First say in one sentence what the lobe does as a whole. Then describe each region the tool returns, in its order, saying its name as you begin: each one lights as you name it. Then call next_tour_stop. Do not describe the next stop before you have called it.
 - If the tool returns a note, say it plainly.
 - If the player asks to stop, call end_tour.
 - Never describe several regions or lobes in one turn without these tools. To show one lobe outside a tour, call face_lobe.
@@ -266,13 +266,13 @@ Response shape: `{ ok, did, reason }`.
 
 ### start_tour
 Starts a guided tour of the whole brain. Clears any highlight, turns the region colours on and shows the whole brain.
-- `length` (string, optional, one of `full`, `short`). Omit for the full tour. A short tour visits the same 7 stops with one sentence at each.
-Response shape: `{ ok, did, reason, stops, length, instruction }`. `stops` lists the 7 lobes in tour order. Follow `instruction`: a one-sentence welcome, then call next_tour_stop.
+- `length` (string, optional, one of `full`, `short`). Omit for the full tour. A short tour visits the same 7 stops at lobe level only, in words a six-year-old follows.
+Response shape: `{ ok, did, reason, stops, length, instruction }`. `stops` lists the 7 lobes in tour order. Follow `instruction`: no welcome; call next_tour_stop at once, acknowledging a chosen length in a few words.
 
 ### next_tour_stop
 Moves the tour to its next lobe: lights it, turns to it and shows its shape. No parameters.
-Response shape: `{ ok, did, reason, stop, of, lobe, regions, next, note, instruction }`. `regions` gives each region's `id`, `name` and `clickDescription`: speak from these. `note` appears where the painting needs a caveat. After the last stop, the next call ends the tour and returns `{ ok, done: true }`.
-Lockstep: the call is refused until the guide has spoken about 8 s about the current stop (3 s on a short tour), or 20 s have passed since it arrived (the first call after start_tour is exempt). A refusal moves nothing and returns `{ ok: false, did, reason, instruction }`, for example "Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop." Follow the instruction.
+Response shape: `{ ok, did, reason, stop, of, lobe, summary, regions, next, note, instruction }`. `summary` is the lobe's own description; on a full tour `regions` gives each region's `id`, `name` and `clickDescription`: speak from these, in order, naming each. `note` appears where the painting needs a caveat. After the last stop, the next call ends the tour and returns `{ ok, done: true }`.
+Lockstep: the call is refused until the guide has spoken about 8 s about the current stop (3 s on a short tour), or 20 s have passed since it arrived (the first call after start_tour is exempt). A refusal moves nothing and returns `{ ok: false, did, reason, instruction }`, for example "Describe the Frontal Lobe first, as the stop's instruction asks, then call next_tour_stop." Follow the instruction.
 
 ### end_tour
 Ends the tour at once: clears the highlight, turns the colours back on and shows the whole brain. No parameters.

@@ -4,6 +4,7 @@
  * descriptions, so the guide talks from them rather than improvising.
  */
 import brainRegions from '../data/brainRegions.json';
+import lobePanels from '../data/lobePanels.json';
 
 export const LOBE_NAMES = brainRegions.divisions.map(({ name }) => name);
 
@@ -41,23 +42,35 @@ export function normalizeTourLength(value) {
   return typeof value === 'string' && /\b(short|quick|brief)\b/i.test(value) ? 'short' : 'full';
 }
 
+/**
+ * Kyle, 2026-10-23: a full stop lights the lobe while the guide says what it
+ * does as a whole, then each region lights as she names it, in order. A short
+ * tour stays at lobe level, in words a six-year-old follows.
+ */
 export function tourStop(index, { length = 'full' } = {}) {
   const lobe = TOUR_ORDER[index];
   const last = index === TOUR_ORDER.length - 1;
-  const ask = length === 'short' ? 'In one sentence' : 'In two or three sentences (about 30 seconds)';
+  const then = last ? 'Then call next_tour_stop to finish the tour.' : 'Then call next_tour_stop.';
   const stop = {
     stop: index + 1,
     of: TOUR_ORDER.length,
     lobe,
-    regions: lobeRegionIds(lobe).map((id) => {
-      const { name, clickDescription } = REGION_BY_ID.get(id);
-      return { id, name, clickDescription };
-    }),
+    // Cerebellum and Brain Stem have no lobe panel: their one region's text serves.
+    summary: lobePanels.lobes[lobe]?.description ?? REGION_BY_ID.get(lobeRegionIds(lobe)[0]).clickDescription,
     next: last ? null : TOUR_ORDER[index + 1],
-    instruction: last
-      ? `${ask}, describe this part of me from these regions, then call next_tour_stop to finish the tour.`
-      : `${ask}, describe this part of me from these regions, then call next_tour_stop.`,
   };
+  if (length === 'short') {
+    stop.instruction = `In one or two short, simple sentences a six-year-old would follow, say what your ${lobe} does, from summary. Name none of its regions. ${then}`;
+    return stop;
+  }
+  stop.regions = lobeRegionIds(lobe).map((id) => {
+    const { name, clickDescription } = REGION_BY_ID.get(id);
+    return { id, name, clickDescription };
+  });
+  const named = stop.regions.filter(({ name }) => name !== lobe).map(({ name }) => name);
+  stop.instruction = named.length
+    ? `First say in one sentence what your ${lobe} does as a whole, from summary; it is lit as a whole. Then describe each of its regions in one sentence, in this order, saying its name as you begin, so it lights as you name it: ${named.join(', ')}. ${then}`
+    : `In two or three sentences, say what your ${lobe} does, from summary and its region. ${then}`;
   if (lobe === 'Limbic Lobe') stop.note = LIMBIC_NOTE;
   return stop;
 }

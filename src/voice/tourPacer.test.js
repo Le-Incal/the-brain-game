@@ -228,7 +228,7 @@ describe('A short tour needs less speech per stop', () => {
     arrive(1, 'Frontal Lobe');
     speak(2900);
     const refusal = pacer.request();
-    expect(refusal.instruction).toBe('Describe the Frontal Lobe first (one sentence), then call next_tour_stop.');
+    expect(refusal.instruction).toBe("Describe the Frontal Lobe first, as the stop's instruction asks, then call next_tour_stop.");
     speak(100);
     expect(pacer.request()).toBeNull();
   });

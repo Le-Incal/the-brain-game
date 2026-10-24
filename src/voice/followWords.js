@@ -34,13 +34,14 @@ const REPLY_END_GRACE_MS = 300;
 
 // Calls that light the brain themselves; following steps aside for the rest
 // of the reply. rotate_to_view only turns, so the words are still followed.
+// next_tour_stop lights the lobe, and the narration after it is the stop:
+// its regions light as she names them (Kyle, 2026-10-23).
 const SCENE_TOOLS = new Set([
   'face_region',
   'face_lobe',
   'highlight_region',
   'clear_highlight',
   'start_tour',
-  'next_tour_stop',
   'end_tour',
 ]);
 

@@ -77,7 +77,7 @@ export function createTourPacer({ now = Date.now } = {}) {
         const lobe = TOUR_ORDER[tour.index];
         return refusal(
           `The tour waits until I have spoken about my ${lobe}.`,
-          `Describe the ${lobe} first (${short ? 'one sentence' : 'two or three sentences'}), then call next_tour_stop.`,
+          `Describe the ${lobe} first, as the stop's instruction asks, then call next_tour_stop.`,
           spoken
         );
       }
