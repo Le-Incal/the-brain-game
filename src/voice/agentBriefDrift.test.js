@@ -253,6 +253,21 @@ describe('Tonight\'s three prompt changes', () => {
   });
 });
 
+// Kyle, 2026-10-23: "When I said hello to Sylvi, she corrected me and said my
+// name is Sylvi." The agent reads a transcript, never the voice: the speech
+// recogniser spelled the name, and she corrected the spelling.
+describe('The guide never corrects how the player says a word', () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+  const whoYouAre = prompt.slice(prompt.indexOf('# Who you are'), prompt.indexOf('# Arrival'));
+
+  it('answers to any spelling of its name, and corrects no one', () => {
+    expect(whoYouAre).toContain(
+      "- The player's words reach you as a transcript, so your name may arrive as Silvy, Sylvie, Silvia, Rolo or another spelling. Answer to any of them. Never correct how the player says or spells your name or any other word; you cannot hear how they said it. If a word is unclear, use the right term in your reply, or ask what they meant."
+    );
+  });
+});
+
 // The app hands over before the agent's own cap, so the two must agree.
 describe('The session cap the app counts from is the agent\'s', () => {
   it('matches the brief, which says the app carries on before it', async () => {
