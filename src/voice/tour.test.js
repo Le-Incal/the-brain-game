@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import brainRegions from '../data/brainRegions.json';
+import lobePanels from '../data/lobePanels.json';
 import regionGeometry from '../data/regionGeometry.json';
 import { createSceneCommands } from './sceneCommands.js';
 import { createFakeSceneAdapter, installFakeClock, runFrames, toCameraDirection } from '../test/voiceHarness.js';
@@ -87,8 +88,8 @@ describe('The app runs the tour; the guide narrates it', () => {
     state.colourRegions = false;
     const result = await settle(commands.startTour());
     expect(result).toMatchObject({ ok: true, stops: TOUR_ORDER });
-    expect(result.instruction).toMatch(/one-sentence welcome/i);
-    expect(result.instruction).toMatch(/next_tour_stop/);
+    // Kyle, 2026-10-23: "we don't need" a welcome; a chosen length is only acknowledged.
+    expect(result.instruction).toBe('Call next_tour_stop now, with no welcome. If the player chose a short or a full tour, acknowledge it in a few words first.');
     expect(state.highlight).toBeNull();
     expect(state.colourRegions).toBe(true);
     expect(commands.getSceneState().tour).toEqual({ stop: 0, of: 7 });
@@ -243,8 +244,9 @@ describe('Showcase: after arriving, the brain shows the shape of what it lit', (
   });
 });
 
-// Kyle: a shorter tour when the player asks for one. Same seven stops, one
-// sentence each.
+// Kyle: a shorter tour when the player asks for one. Same seven stops.
+// Kyle, 2026-10-23: "a short tour should only talk about the primary lobes and
+// their functions, not the sub regions. Think, 6 year old." 
 describe('A short tour on request', () => {
   it('start_tour takes a length: short when asked, full by default', async () => {
     const { commands, settle } = setup();
@@ -255,7 +257,7 @@ describe('A short tour on request', () => {
     expect(await settle(commands.startTour('nonsense'))).toMatchObject({ length: 'full' });
   });
 
-  it('a short tour visits the same seven stops and asks for one sentence at each', async () => {
+  it('a short tour visits the same seven stops at lobe level, in words a six-year-old follows', async () => {
     const { commands, settle } = setup();
     await settle(commands.startTour('short'));
     const lobes = [];
@@ -263,16 +265,21 @@ describe('A short tour on request', () => {
     for (let i = 0; i < 7; i += 1) {
       stop = await settle(commands.nextTourStop());
       lobes.push(stop.lobe);
-      expect(stop.instruction).toMatch(/^In one sentence, /);
-      expect(stop.instruction).not.toMatch(/two or three/);
+      expect(stop.instruction).toMatch(/^In one or two short, simple sentences a six-year-old would follow, say what your .+ does, from summary\. Name none of its regions\./);
+      expect(stop.regions).toBeUndefined();
+      expect(stop.summary).toBe(lobePanels.lobes[stop.lobe].description);
     }
     expect(lobes).toEqual(TOUR_ORDER);
     expect(stop.instruction).toMatch(/finish the tour/);
   });
 
-  it('a full tour still asks for two or three sentences', async () => {
+  it('a full tour says what the lobe does, then names each region in order as it lights', async () => {
     const { commands, settle } = setup();
     await settle(commands.startTour());
-    expect((await settle(commands.nextTourStop())).instruction).toMatch(/two or three sentences/);
+    const frontal = await settle(commands.nextTourStop());
+    expect(frontal.summary).toBe(lobePanels.lobes['Frontal Lobe'].description);
+    expect(frontal.instruction).toBe(
+      "First say in one sentence what your Frontal Lobe does as a whole, from summary; it is lit as a whole. Then describe each of its regions in one sentence, in this order, saying its name as you begin, so it lights as you name it: Prefrontal Cortex, Orbitofrontal Cortex, Premotor Cortex, Supplementary Motor Area, Primary Motor Cortex, Broca's Area. Then call next_tour_stop."
+    );
   });
 });

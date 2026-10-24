@@ -301,6 +301,19 @@ describe("The agent's settings as of 23 October", () => {
     expect(brief).not.toContain('after about 30 seconds of quiet');
   });
 
+  // Kyle, 2026-10-23: no welcome to a tour; a short tour stays at lobe level
+  // for a six-year-old; a full tour says what the lobe does, then each region.
+  it('tours with no welcome, lobe first, then each region by name', () => {
+    const prompt = brief.slice(brief.indexOf('## 3.'), brief.indexOf('## 4.'));
+    const tools = brief.slice(brief.indexOf('## 4.'), brief.indexOf('## 5.'));
+    expect(prompt).toContain('- When the player asks for a tour or an overview of you, call start_tour, then next_tour_stop at once. Do not welcome them to the tour; if they chose a short or a full tour, acknowledge it in a few words.');
+    expect(prompt).toContain('- If the player asks for a quick or short tour, call start_tour with length short. A short tour is for the youngest players: at each stop say what the lobe does in one or two simple sentences a six-year-old would follow, and name none of its regions.');
+    expect(prompt).toContain('- On a full tour each stop lights the whole lobe. First say in one sentence what the lobe does as a whole. Then describe each region the tool returns, in its order, saying its name as you begin: each one lights as you name it. Then call next_tour_stop. Do not describe the next stop before you have called it.');
+    expect(brief).not.toContain('one-sentence welcome');
+    expect(tools).toContain('Follow `instruction`: no welcome; call next_tour_stop at once, acknowledging a chosen length in a few words.');
+    expect(tools).toContain('`summary` is the lobe\'s own description; on a full tour `regions` gives each region\'s `id`, `name` and `clickDescription`: speak from these, in order, naming each.');
+  });
+
   it('answers as eagerly as Atlas, and hears both names', () => {
     expect(config).toContain('- **Turn-taking:** allow the user to interrupt the agent. Eagerness: Eager, as on Atlas.');
     expect(config).toContain('- **ASR keywords:** Sylvi, Rollo.');

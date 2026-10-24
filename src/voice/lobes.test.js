@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import brainRegions from '../data/brainRegions.json';
+import lobePanels from '../data/lobePanels.json';
 
 const lobesModule = await import('./lobes.js').catch(() => ({}));
 const { LOBE_NAMES, TOUR_ORDER, LIMBIC_NOTE, normalizeLobe, lobeRegionIds, tourStop } = lobesModule;
@@ -56,8 +57,19 @@ describe('The tour: 7 stops in the order of least travel', () => {
         return { id, name: region.name, clickDescription: region.clickDescription };
       })
     );
-    expect(stop.instruction).toMatch(/two or three sentences/i);
+    expect(stop.summary).toBe(lobePanels.lobes['Temporal Lobe'].description);
+    expect(stop.instruction).toMatch(/^First say in one sentence what your Temporal Lobe does as a whole/);
+    expect(stop.instruction).toContain("in this order, saying its name as you begin, so it lights as you name it: Primary Auditory Cortex, Superior Temporal Gyrus, Wernicke's Area, Inferior Temporal Cortex, Piriform Cortex.");
     expect(stop.instruction).toMatch(/next_tour_stop/);
+  });
+
+  it('a lobe that is one region of the same name is told in two or three sentences', () => {
+    expect(tourStop(3).instruction).toBe('In two or three sentences, say what your Cerebellum does, from summary and its region. Then call next_tour_stop.');
+    expect(tourStop(4).instruction).toBe('In two or three sentences, say what your Brain Stem does, from summary and its region. Then call next_tour_stop.');
+  });
+
+  it('the limbic stop names its one painted region after the lobe', () => {
+    expect(tourStop(6).instruction).toContain('in this order, saying its name as you begin, so it lights as you name it: Cingulate Cortex. Then call next_tour_stop to finish the tour.');
   });
 
   it('frames the limbic stop honestly: only the cingulate is painted', () => {

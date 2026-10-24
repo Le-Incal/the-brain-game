@@ -43,7 +43,7 @@ describe('Tour lockstep gate', () => {
     const refusal = pacer.request();
     expect(refusal).toMatchObject({ ok: false, did: '' });
     expect(refusal.reason).toMatch(/Frontal Lobe/);
-    expect(refusal.instruction).toBe('Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop.');
+    expect(refusal.instruction).toBe("Describe the Frontal Lobe first, as the stop's instruction asks, then call next_tour_stop.");
   });
 
   it('lets the tour move on once the guide has spoken 8 s about the stop, across several turns', () => {
@@ -92,7 +92,7 @@ describe('Tour lockstep gate', () => {
     speak(9000);
     expect(pacer.request()).toBeNull();
     arrive(2, 'Parietal Lobe');
-    expect(pacer.request().instruction).toBe('Describe the Parietal Lobe first (two or three sentences), then call next_tour_stop.');
+    expect(pacer.request().instruction).toBe("Describe the Parietal Lobe first, as the stop's instruction asks, then call next_tour_stop.");
   });
 
   it('a refusal does not reset what the guide has already said', () => {
@@ -135,7 +135,7 @@ describe('Tour lockstep gate', () => {
     pacer.tourStarted();
     pacer.request();
     arrive(7, 'Limbic Lobe');
-    expect(pacer.request().instruction).toBe('Describe the Limbic Lobe first (two or three sentences), then call next_tour_stop.');
+    expect(pacer.request().instruction).toBe("Describe the Limbic Lobe first, as the stop's instruction asks, then call next_tour_stop.");
   });
 
   it('a stop that answers without arriving (a failure) frees the gate at the stop it was at', () => {

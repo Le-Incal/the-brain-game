@@ -203,7 +203,7 @@ describe('next_tour_stop waits for the guide (lockstep gate)', () => {
     const refused = JSON.parse(await tools.next_tour_stop({}));
     expect(refused).toMatchObject({
       ok: false,
-      instruction: 'Describe the Frontal Lobe first (two or three sentences), then call next_tour_stop.',
+      instruction: "Describe the Frontal Lobe first, as the stop's instruction asks, then call next_tour_stop.",
     });
     expect(calls.filter(([name]) => name === 'nextTourStop')).toHaveLength(1);
   });

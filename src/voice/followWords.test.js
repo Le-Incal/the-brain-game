@@ -323,6 +323,31 @@ describe('Follow the words: a playback clock for alignment', () => {
   });
 });
 
+// Kyle, 2026-10-23: on the tour Sylvi described each sub-region and none lit.
+// next_tour_stop lights the whole lobe; the narration that follows it is the
+// stop, so its names are followed (the scene keeps the lobe washed behind each).
+describe('Follow the words: a tour stop is followed', () => {
+  it('lights the regions she names after next_tour_stop, as the audio plays', () => {
+    const { follower, acts, advance } = setup();
+    follower.toolCalled('next_tour_stop');
+    advance(1000);
+    follower.alignment(alignmentFor('and my precuneus faces inward'));
+    follower.outputLevel(0.3);
+    advance(5000);
+    expect(acts.map(({ target }) => target)).toEqual([region(10)]);
+  });
+
+  it('still steps aside after a call that lights a region itself', () => {
+    const { follower, acts, advance } = setup();
+    follower.toolCalled('face_region');
+    advance(1000);
+    follower.alignment(alignmentFor('and my precuneus faces inward'));
+    follower.outputLevel(0.3);
+    advance(5000);
+    expect(acts).toEqual([]);
+  });
+});
+
 // Kyle: a subregion Sylvi talks about flashed on and off. rotate_to_view is a
 // turn, not a light: it no longer stops the words being followed.
 describe('Follow the words: a turn does not silence the words', () => {
