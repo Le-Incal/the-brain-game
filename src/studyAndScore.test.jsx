@@ -18,8 +18,9 @@ const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)
 describe('Pressing Study brings Sylvi in', () => {
   const entry = (state) => carryOn.studyEntry({ from: 'explore', to: 'study', msSinceTool: Infinity, ...state });
 
-  it('hands a live conversation over to a fresh Study session, as before, and she offers', () => {
-    expect(entry({ phase: 'connected' })).toEqual({ action: 'handover', offer: true });
+  // Kyle, 2026-10-23: the fresh session for Study was refused and she went silent.
+  it('keeps a live conversation going, and she offers', () => {
+    expect(entry({ phase: 'connected' })).toEqual({ action: 'stay', offer: true });
   });
 
   it('wakes a conversation that has gone quiet', () => {
@@ -41,7 +42,7 @@ describe('Pressing Study brings Sylvi in', () => {
   });
 
   it('makes no offer when Sylvi switched to Study herself: she is already speaking about it', () => {
-    expect(entry({ phase: 'connected', msSinceTool: 500 })).toEqual({ action: 'handover', offer: false });
+    expect(entry({ phase: 'connected', msSinceTool: 500 })).toEqual({ action: 'stay', offer: false });
   });
 
   it('acts only on entering Study', () => {
@@ -62,12 +63,14 @@ describe("Sylvi's offer when Study opens", () => {
     expect(read('../agent/architect-brief.md')).toContain(`  ${line}`);
   });
 
-  it('is wired: Study wakes or starts the conversation, and the offer goes once it connects', () => {
+  it('is wired: Study wakes or starts the conversation, and the offer goes once it connects, or at once if it is live', () => {
     const panel = read('./voice/VoicePanel.jsx');
     expect(panel).toMatch(/studyEntry\(\{/);
     expect(panel).toMatch(/entered\.action === 'wake'\) current\.wake\(\);/);
     expect(panel).toMatch(/entered\.action === 'start'\) current\.start\(\{ guide: guideRef\.current, mode: 'auto' \}\);/);
     expect(panel).toMatch(/studyOfferRef\.current = entered\.offer;/);
+    // A live conversation stays: she offers at once, after any welcome still playing.
+    expect(panel).toMatch(/if \(entered\.action === 'stay' && entered\.offer\) \{\s*studyOfferRef\.current = false;\s*whenWelcomeDone\(\)\.then\(\(\) => \{\s*if \(modeRef\.current === 'study' && current\.getState\(\)\.phase === 'connected'\) prompter\.prompt\(formatStudyOffer\(\)\);/);
     // A conversation carried on mid-tour or mid-sentence picks up instead.
     expect(panel).toMatch(/else if \(studyOfferRef\.current && modeRef\.current === 'study'\) \{\s*studyOfferRef\.current = false;[\s\S]{0,160}whenWelcomeDone\(\)\.then\(\(\) => \{\s*if \(modeRef\.current === 'study' && session\.getState\(\)\.phase === 'connected'\) prompter\.prompt\(formatStudyOffer\(\)\);/);
   });

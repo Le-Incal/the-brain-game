@@ -248,7 +248,9 @@ describe('Tonight\'s three prompt changes', () => {
   it('explains carrying on in a fresh session, and how to pick up', () => {
     expect(prompt).toContain('  [app] the conversation carried on mid-tour, at stop 3 of 7: pick up where you left off, with no greeting');
     expect(prompt).toContain('  [app] the conversation carried on mid-sentence: finish your thought briefly, with no greeting');
-    expect(prompt).toMatch(/^- The app also carries a long conversation on in a fresh session before its time runs out, and starts a fresh one when the player enters Study\./m);
+    // Kyle, 2026-10-23: Study keeps the running conversation; only the cap carries it on.
+    expect(prompt).toMatch(/^- The app also carries a long conversation on in a fresh session before its time runs out\. If it cut you off mid-tour or mid-sentence, it asks you to pick up:$/m);
+    expect(brief).not.toContain('starts a fresh one when the player enters Study');
     expect(prompt).toMatch(/^- On a tour, finish the stop you were on \(get_scene_state gives it as tour\), then call next_tour_stop\./m);
   });
 });
@@ -275,5 +277,26 @@ describe('The session cap the app counts from is the agent\'s', () => {
     const brief = readFileSync(briefPath, 'utf8');
     expect(brief).toContain(`- **Max conversation duration:** ${AGENT_MAX_SECONDS} seconds (8 minutes).`);
     expect(brief).toMatch(/Max conversation duration:\*\*[^\n]*carries the conversation on in a fresh session/);
+  });
+});
+
+// Kyle, 2026-10-23, after Railway was breached: the agent id was among its
+// variables, and the agent let anyone connect with it. Settings compared with
+// Atlas the same evening.
+describe("The agent's settings as of 23 October", () => {
+  const brief = readFileSync(briefPath, 'utf8');
+  const config = brief.slice(brief.indexOf('## 2.'), brief.indexOf('## 3.'));
+
+  it('requires authentication: our server connects with a signed token or URL', () => {
+    expect(config).toContain('- **Authentication:** on. Our server connects with a signed conversation token or signed URL, so the agent id alone opens nothing.');
+  });
+
+  it('sends its post-call reports to production from the agent itself', () => {
+    expect(config).toContain("- **Post-call webhook:** set on the agent's Security tab, which overrides the workspace default: Transcript only, to `https://www.brain-game.io/api/voice/webhook/elevenlabs`. Staging receives none.");
+  });
+
+  it('answers as eagerly as Atlas, and hears both names', () => {
+    expect(config).toContain('- **Turn-taking:** allow the user to interrupt the agent. Eagerness: Eager, as on Atlas.');
+    expect(config).toContain('- **ASR keywords:** Sylvi, Rollo.');
   });
 });

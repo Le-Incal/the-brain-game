@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 const restModule = await import('./restWake.js').catch(() => ({}));
 const { createRestTimer, createSpeechOnset, REST_AFTER_SILENCE_MS, HIDDEN_REST_MS, ONSET_LEVEL, ONSET_HOLD_MS } = restModule;
 
-// Kyle, 2026-10-11: the live session rests after 30 s of silence and wakes
+// Kyle, 2026-10-11: the live session rests after a quiet spell and wakes
 // when the visitor speaks or writes. Nothing on screen says it ended.
+// Kyle, 2026-10-23: at 30 s it rested while he was still thinking, and the
+// words that woke it were lost ("my mic turns off"). Silence past 10 s costs
+// 5% at ElevenLabs, so the conversation now waits 3 minutes.
 
 function clockAndTimers() {
   const clock = { now: 0 };
@@ -47,33 +50,33 @@ function setup() {
 }
 
 describe('When the conversation rests', () => {
-  it('after 30 s with no speech and no writing', () => {
-    expect(REST_AFTER_SILENCE_MS).toBe(30_000);
+  it('after 3 minutes with no speech and no writing', () => {
+    expect(REST_AFTER_SILENCE_MS).toBe(180_000);
     const { timer, rests, advance } = setup();
     timer.connected(true);
-    advance(29_999);
+    advance(179_999);
     expect(rests).toEqual([]);
     advance(1);
-    expect(rests).toEqual([{ at: 30_000, reason: 'silence' }]);
+    expect(rests).toEqual([{ at: 180_000, reason: 'silence' }]);
   });
 
   it('never while the guide is speaking; the count starts when it stops', () => {
     const { timer, rests, advance } = setup();
     timer.connected(true);
     timer.guideSpeaking(true);
-    advance(60_000);
+    advance(REST_AFTER_SILENCE_MS * 2);
     expect(rests).toEqual([]);
     timer.guideSpeaking(false);
-    advance(30_000);
+    advance(REST_AFTER_SILENCE_MS);
     expect(rests).toHaveLength(1);
   });
 
   it('starts the count again on any activity', () => {
     const { timer, rests, advance } = setup();
     timer.connected(true);
-    advance(20_000);
+    advance(REST_AFTER_SILENCE_MS - 10_000);
     timer.activity();
-    advance(20_000);
+    advance(REST_AFTER_SILENCE_MS - 10_000);
     expect(rests).toEqual([]);
     advance(10_000);
     expect(rests).toHaveLength(1);
@@ -90,13 +93,13 @@ describe('When the conversation rests', () => {
 
   it('never when no conversation is connected, and only once per conversation', () => {
     const { timer, rests, advance } = setup();
-    advance(60_000);
+    advance(REST_AFTER_SILENCE_MS * 2);
     expect(rests).toEqual([]);
     timer.connected(true);
-    advance(90_000);
+    advance(REST_AFTER_SILENCE_MS * 3);
     expect(rests).toHaveLength(1);
     timer.connected(false);
-    advance(60_000);
+    advance(REST_AFTER_SILENCE_MS * 2);
     expect(rests).toHaveLength(1);
   });
 });

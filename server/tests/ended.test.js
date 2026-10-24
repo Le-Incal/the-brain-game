@@ -5,7 +5,7 @@ import { HOST, SECRETS, cookieFrom, postCallBody, signWebhook, startApp } from '
 const appModule = await import('../app.js').catch(() => ({}));
 const { createApp } = appModule;
 const ledgerModule = await import('../ledger.js').catch(() => ({}));
-const { CLOSING_SLACK_SECONDS } = ledgerModule;
+const { CLOSING_SLACK_SECONDS, MAX_CLOSING_PER_DEVICE } = ledgerModule;
 
 // Kyle, 2026-10-11: one conversation on screen, many underneath. The live
 // session rests after 30 s of quiet and wakes when the visitor speaks or
@@ -80,16 +80,33 @@ describe('A conversation the page reports ended', () => {
     expect((await ended('forged.signature', cookieFrom(first))).status).toBe(400);
   });
 
-  it('never lets a device pile up conversations that have not been settled', async () => {
+  // Kyle, 2026-10-23, production log: a rest, then the Study handover, and the
+  // next conversation was refused 13 times ("mint refused: busy (device)")
+  // while ElevenLabs' reports had not arrived. A device may now hold three.
+  it('lets a device start again after a few quick endings ElevenLabs has not settled yet', async () => {
+    expect(MAX_CLOSING_PER_DEVICE).toBe(3);
     const { mint, ended } = await setup();
-    const first = await mint();
-    const cookie = cookieFrom(first);
-    await ended(first.body.dynamicVariables.reservation, cookie);
-    const second = await mint(cookie);
-    await ended(second.body.dynamicVariables.reservation, cookie);
-    const third = await mint(cookie);
-    expect(third.status).toBe(429);
-    expect(third.body).toMatchObject({ reason: 'busy' });
+    let cookie;
+    for (let i = 0; i < MAX_CLOSING_PER_DEVICE; i += 1) {
+      const minted = await mint(cookie);
+      expect(minted.status, `conversation ${i + 1}`).toBe(200);
+      cookie ??= cookieFrom(minted);
+      await ended(minted.body.dynamicVariables.reservation, cookie);
+    }
+    expect((await mint(cookie)).status).toBe(200);
+  });
+
+  it('never lets a device pile up more conversations than that', async () => {
+    const { mint, ended } = await setup();
+    let cookie;
+    for (let i = 0; i <= MAX_CLOSING_PER_DEVICE; i += 1) {
+      const minted = await mint(cookie);
+      cookie ??= cookieFrom(minted);
+      await ended(minted.body.dynamicVariables.reservation, cookie);
+    }
+    const next = await mint(cookie);
+    expect(next.status).toBe(429);
+    expect(next.body).toMatchObject({ reason: 'busy' });
   });
 
   it('says so plainly when the conversation has already been settled', async () => {
