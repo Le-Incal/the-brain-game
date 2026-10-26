@@ -6,7 +6,7 @@
  * Presentational only: VoicePanel owns the state and the SDK.
  */
 import quillSource from '../assets/quill.svg?raw';
-import { GUIDE_COLUMN_STYLE } from './voicePanelLayout.js';
+import { GUIDE_COLUMN_STYLE, GUIDE_TEXT_INSET_PX } from './voicePanelLayout.js';
 import { completedSentences } from './transcriptStream.js';
 import { VOICE_UNAVAILABLE } from './voiceAvailability.js';
 
@@ -31,7 +31,7 @@ const STYLES = {
     flexDirection: 'column',
     overflowY: 'auto',
     pointerEvents: 'auto',
-    paddingRight: 10,
+    paddingRight: GUIDE_TEXT_INSET_PX,
     // Earlier lines fade under a soft top edge and return to full contrast
     // as they scroll into the middle of the column.
     maskImage: 'linear-gradient(to bottom, transparent 0, #000 56px)',

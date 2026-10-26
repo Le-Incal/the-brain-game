@@ -10,6 +10,7 @@ import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guide
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { createGameCommands } from './voice/gameCommands';
+import { GUIDE_TEXT_RIGHT } from './voice/voicePanelLayout.js';
 import { createGameCoach } from './game/coach';
 import { missDetails, missGlowMs } from './game/missFeedback';
 import { gameLevel } from './game/levels';
@@ -101,7 +102,8 @@ export function phoneGameClearsAbove({ phone = false, gamePhase }) {
  * paused word; it stays where it stopped, and shows again on the way back.
  */
 export function fallingWordHidden(gamePhase) {
-  return gamePhase === 'study';
+  // Kyle, 2026-10-23: a paused game hides its word too; it returns where it stopped.
+  return gamePhase === 'study' || gamePhase === 'paused';
 }
 
 /**
@@ -336,11 +338,12 @@ export const STYLES = {
     marginBottom: 14,
   },
   // In the bottom bar, after Settings (Kyle, 2026-10-11).
-  // In the top right-hand corner, in line with the guide's column (Kyle, 2026-10-20).
+  // In the top right-hand corner, in line with the guide's column (Kyle, 2026-10-20),
+  // its right edge on the column's text (Kyle, 2026-10-23).
   scoreCorner: {
     position: 'absolute',
     top: 'calc(env(safe-area-inset-top, 0px) + clamp(16px, 3vh, 28px))',
-    right: 'clamp(16px, 4vw, 56px)',
+    right: GUIDE_TEXT_RIGHT,
     zIndex: 12,
     fontFamily: "'EB Garamond', Georgia, serif",
     fontSize: 14,

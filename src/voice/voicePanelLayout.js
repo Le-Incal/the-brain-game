@@ -18,3 +18,8 @@ export const GUIDE_COLUMN_STYLE = {
   color: '#1a1814',
   pointerEvents: 'none',
 };
+
+// The column's text sits this far inside it, leaving room for its scrollbar.
+export const GUIDE_TEXT_INSET_PX = 10;
+// The text's right edge: what the score lines up with (Kyle, 2026-10-23).
+export const GUIDE_TEXT_RIGHT = `calc(${GUIDE_COLUMN_STYLE.right} + ${GUIDE_TEXT_INSET_PX}px)`;
