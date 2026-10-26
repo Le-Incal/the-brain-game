@@ -231,9 +231,11 @@ describe('Recording the welcome as the server starts', () => {
   it('records both guides at once when asked to, every welcome, before any visitor', async () => {
     const { upstream } = await setup({ warmWelcomes: true });
     await new Promise((resolve) => setTimeout(resolve, 20));
+    // The quips are recorded at start too (Kyle, 2026-10-23); quips.test.js checks those.
     const recorded = upstream
       .ttsRequests()
       .map(({ url, init }) => `${url.match(/text-to-speech\/([^/]+)\//)[1]} ${JSON.parse(init.body).text}`)
+      .filter((line) => line.includes('Hello!'))
       .sort();
     const expected = [];
     for (const [voice, name] of [['voice_rollo_test', 'Rollo'], ['voice_sylvi_test', 'Sylvi']]) {
@@ -247,7 +249,7 @@ describe('Recording the welcome as the server starts', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect((await getWelcome(app, 'sylvi')).status).toBe(200);
     expect((await request(app).get('/api/voice/welcome/sylvi?kind=study').set('Host', HOST)).status).toBe(200);
-    expect(upstream.ttsRequests()).toHaveLength(6);
+    expect(upstream.ttsRequests().filter(({ init }) => JSON.parse(init.body).text.includes('Hello!'))).toHaveLength(6);
   });
 
   it('records nothing at start unless asked', async () => {
