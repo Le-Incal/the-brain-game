@@ -18,6 +18,7 @@ import { verifyElevenLabsSignature } from './webhook.js';
 import { fetchConversation, fetchConversationToken, fetchConversationsSince, fetchSignedUrl } from './elevenlabs.js';
 import { createVoiceRelay } from './relay.js';
 import { DEFAULT_WELCOME_MODEL, WELCOME_FALLBACK_MODEL, WELCOME_KINDS, createWelcomeCache, fetchWelcomeRecording, welcomeText } from './welcome.js';
+import { QUIPS } from './quips.js';
 
 export const RESTORE_RETRY_DELAYS_MS = [5_000, 15_000, 60_000, 300_000];
 // A reservation still open this long (token window, plus the 8-minute session
@@ -201,19 +202,21 @@ export function createApp({
   const welcomes = createWelcomeCache({
     now,
     // The agent's model first; the fallback only if ElevenLabs refuses that model.
-    // Keyed "guide" for the arrival welcome, "guide:kind" for a choice's own.
+    // Keyed "guide" for the arrival welcome, "guide:kind" for a choice's own,
+    // "guide:quip:n" for a quip (Kyle, 2026-10-23).
     record: async (key) => {
-      const [guide, kind = 'arrival'] = key.split(':');
+      const [guide, kind = 'arrival', n] = key.split(':');
+      const quip = kind === 'quip';
       for (const [index, modelId] of welcomeModels.entries()) {
         try {
           const recording = await fetchWelcomeRecording({
             fetchImpl,
             apiKey: config.apiKey,
             voiceId: config.voices[guide],
-            text: welcomeText(GUIDE_NAMES[guide], kind),
+            text: quip ? QUIPS[Number(n)] : welcomeText(GUIDE_NAMES[guide], kind),
             modelId,
           });
-          logger.info(`[voice] ${kind === 'arrival' ? 'welcome' : `${kind} welcome`} recorded for ${guide} with ${modelId}`);
+          if (!quip) logger.info(`[voice] ${kind === 'arrival' ? 'welcome' : `${kind} welcome`} recorded for ${guide} with ${modelId}`);
           return recording;
         } catch (error) {
           const next = welcomeModels[index + 1];
@@ -282,6 +285,12 @@ export function createApp({
           const key = kind === 'arrival' ? guide : `${guide}:${kind}`;
           welcomes.get(key).catch((error) => logger.warn(`[voice] welcome not recorded at start for ${key}: ${error.message}`));
         }
+      }
+      // The quips too, so the first catch after a deploy is answered at once.
+      for (const guide of Object.keys(GUIDE_NAMES)) {
+        QUIPS.forEach((_, n) => {
+          welcomes.get(`${guide}:quip:${n}`).catch((error) => logger.warn(`[voice] quip ${n} not recorded at start for ${guide}: ${error.message}`));
+        });
       }
     }
     restoreToday(0);
@@ -458,6 +467,52 @@ export function createApp({
     res.set('Content-Type', 'audio/mpeg');
     res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
     res.send(found.recording.audio);
+  });
+
+  // Kyle, 2026-10-23: a short quip on each catch, recorded once per guide.
+  function quipGuide(req, res) {
+    if (!voiceGate(req, res, { onRefuse: 403 })) return null;
+    const guide = String(req.params.guide ?? '').toLowerCase();
+    if (!GUIDE_NAMES[guide]) {
+      res.status(400).json({ error: 'unknown_guide' });
+      return null;
+    }
+    const limit = welcomeLimiter.take(clientAddress(req));
+    if (!limit.allowed) {
+      res.set('Retry-After', String(limit.retryAfterSeconds));
+      res.status(429).json({ available: false, reason: 'rate_limited' });
+      return null;
+    }
+    return guide;
+  }
+
+  app.get('/api/voice/quips/:guide', (req, res) => {
+    const guide = quipGuide(req, res);
+    if (!guide) return;
+    res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
+    res.json({
+      guideName: GUIDE_NAMES[guide],
+      quips: QUIPS.map((text, n) => ({ text, audioUrl: `/api/voice/quips/${guide}/${n}` })),
+    });
+  });
+
+  app.get('/api/voice/quips/:guide/:n', async (req, res) => {
+    const n = /^\d+$/.test(String(req.params.n)) ? Number(req.params.n) : -1;
+    if (n < 0 || n >= QUIPS.length) {
+      res.status(400).json({ error: 'unknown_quip' });
+      return;
+    }
+    const guide = quipGuide(req, res);
+    if (!guide) return;
+    try {
+      const recording = await welcomes.get(`${guide}:quip:${n}`);
+      res.set('Content-Type', 'audio/mpeg');
+      res.set('Cache-Control', `public, max-age=${WELCOME_CACHE_SECONDS}`);
+      res.send(recording.audio);
+    } catch (error) {
+      logger.warn(`[voice] quip ${n} unavailable for ${guide}: ${error.message}`);
+      res.status(502).json({ available: false, reason: 'upstream' });
+    }
   });
 
   app.post('/api/voice/token', express.json({ limit: '2kb' }), async (req, res) => {

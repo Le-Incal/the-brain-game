@@ -36,6 +36,7 @@ import { isAtBottom } from './transcriptScroll.js';
 import { GuideColumnView, noticeFor, voiceSwitchOn } from './GuideColumn.jsx';
 import { IDLE_TURN_DEGREES_PER_SECOND, createDrift, floatMode, stepDrift } from './floating.js';
 import { createSpinCue, motionControl, welcomeTourTiming } from './welcomeSpin.js';
+import { createQuipPlayer, shouldQuip } from './quips.js';
 
 function browserStorage() {
   try {
@@ -180,6 +181,8 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
 
   // The coach's offers need an answer now, so they go as prompts, never over the guide.
   const prompter = useMemo(() => createGuidePrompter({ send: (text) => sdkRef.current?.sendUserMessage(text) }), []);
+  // Kyle, 2026-10-23: a short recorded quip on each catch.
+  const quips = useMemo(() => createQuipPlayer(), []);
   useEffect(() => () => prompter.dispose(), [prompter]);
 
   const sdk = useConversation({
@@ -337,6 +340,15 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       gameMiss: ({ signal, ...miss }) => promptGuide(formatMissPrompt(miss, signal)),
       // The first Play of a visit: the guide offers an example.
       firstPlay: () => promptGuide(formatFirstPlay()),
+      // A catch: the next quip, spoken if the voice is on, and written; never over other speech.
+      caught: () => {
+        const welcomePlaying = ['greeting', 'audible', 'silent'].includes(welcomeStateRef.current);
+        if (!shouldQuip({ guideSpeaking: guideSpeakingRef.current, welcomePlaying, quipPlaying: quips.playing() })) return;
+        const quip = quips.say({ voice: voiceWantedRef.current });
+        if (!quip) return;
+        stream.addGuide({ id: nextLineId('q'), text: quip.text }, { audible: false });
+        refreshEntries();
+      },
       // A press on Study the Brain or the Brain Game (Kyle, 2026-10-13): that
       // choice's own welcome, if no welcome was heard. Resolves when she finishes.
       choice: (kind) => playChoiceRef.current?.(kind) ?? null,
@@ -420,6 +432,11 @@ function VoicePanelInner({ guide, commands, scene, voiceEventsRef, control, moti
       });
     }
   }, [mode, voiceEventsRef]);
+
+  // The quips load as a game begins, in the chosen guide's voice.
+  useEffect(() => {
+    if (mode === 'game') quips.load(guide);
+  }, [mode, guide, quips]);
 
   // A hidden tab rests the conversation soon after.
   useEffect(() => {

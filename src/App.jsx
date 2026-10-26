@@ -537,10 +537,6 @@ export default function App() {
     colour: liveStateRef.current.colorMode,
     exact: liveStateRef.current.difficulty === 'hard',
   });
-  const coachResult = (outcome) => {
-    const signal = coachRef.current.result(outcome, gameSettings());
-    if (signal) voiceEventsRef.current?.gameSignal?.(signal);
-  };
   // Kyle, 2026-10-11: the guide explains a miss at once (what, where, why);
   // a struggle the miss completes rides in the same prompt.
   const teachMiss = (word, outcome) => {
@@ -620,7 +616,13 @@ export default function App() {
             setCorrection(null);
           },
           onCorrect: ({ factoid: text, region, targetRegion, matchedBy, demo }) => {
-            if (!demo) coachResult('correct');
+            // Kyle, 2026-10-23: a catch earns a short quip, unless the guide
+            // is about to offer the next step for a streak.
+            if (!demo) {
+              const signal = coachRef.current.result('correct', gameSettings());
+              if (signal) voiceEventsRef.current?.gameSignal?.(signal);
+              else voiceEventsRef.current?.caught?.();
+            }
             setFactoid(text);
             setWordAnim('absorb');
             // In easy mode the lobe is enough to score, so name the precise
