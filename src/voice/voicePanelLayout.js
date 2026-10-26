@@ -19,6 +19,12 @@ export const GUIDE_COLUMN_STYLE = {
   pointerEvents: 'none',
 };
 
+// Where the column starts across the page, in CSS px, from its own style:
+// right clamp(16px, 4vw, 56px), 280 px wide. The brain keeps clear of it.
+export function guideColumnLeftPx(width) {
+  return width - Math.min(56, Math.max(16, 0.04 * width)) - GUIDE_COLUMN_STYLE.width;
+}
+
 // The column's text sits this far inside it, leaving room for its scrollbar.
 export const GUIDE_TEXT_INSET_PX = 10;
 // The text's right edge: what the score lines up with (Kyle, 2026-10-23).

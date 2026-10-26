@@ -59,6 +59,28 @@ export function centresOnPage(width) {
   return width > PHONE_MAX_WIDTH;
 }
 
+/*
+ * Kyle, 2026-10-23: "the brain should get shifted over so that the right side
+ * text and brain model never overlap." The brain's size follows the page's
+ * height, so on a narrower page it slid under the conversation. Its outline at
+ * any angle is a circle of `radiusPx` around its centre; it keeps SIDE_GAP_PX
+ * clear of the column, sliding left first, down to SIDE_MARGIN_PX from the
+ * page's edge, then shrinking. Phones lay the conversation out below instead.
+ */
+export const SIDE_GAP_PX = 24;
+export const SIDE_MARGIN_PX = 16;
+
+/** Where the brain's centre sits across the page, and its scale (at most 1). */
+export function sideFit({ width, radiusPx, columnLeftPx, gapPx = SIDE_GAP_PX, marginPx = SIDE_MARGIN_PX }) {
+  const centred = { centreXPx: width / 2, scale: 1, moved: false };
+  if (!centresOnPage(width) || !(radiusPx > 0) || columnLeftPx === null || columnLeftPx === undefined) return centred;
+  const limit = columnLeftPx - gapPx;
+  if (width / 2 + radiusPx <= limit) return centred;
+  const band = limit - marginPx;
+  if (band >= 2 * radiusPx) return { centreXPx: limit - radiusPx, scale: 1, moved: true };
+  return { centreXPx: marginPx + band / 2, scale: Math.max(0.1, band / (2 * radiusPx)), moved: true };
+}
+
 /** CSS pixels on the page as a height at the camera's target. */
 export function cssPxToWorld(px, { height, viewportHeight }) {
   return (px / height) * viewportHeight;

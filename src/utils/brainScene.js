@@ -30,6 +30,7 @@ import {
   composeSpecimenY,
   cssPxToWorld,
   refineBrainCentre,
+  sideFit,
   slideLift,
 } from './composition.js';
 import { MAP_URLS } from './webAssets.js';
@@ -401,6 +402,14 @@ export class BrainScene {
     this._phoneShift = null;
     // A little lower again for the game (Kyle, 2026-10-17).
     this._phoneGameShift = null;
+    // Kyle, 2026-10-23: on a narrower page the brain slides left of the
+    // conversation, then shrinks, never under it. `sideReserve(width)` says
+    // where the column starts (the app only); the radius is the brain's
+    // outline at any angle, measured once it loads.
+    this._sideReserve = typeof options.sideReserve === 'function' ? options.sideReserve : null;
+    this._onSideChange = typeof options.onSideChange === 'function' ? options.onSideChange : null;
+    this._specimenRadius = null;
+    this._side = { centreXPx: null, scale: 1, moved: false };
 
     this._regionPicking = regionPickingEnabled(options);
     this.controls = new BrainOrbitControls(this.camera, this.renderer.domElement, {
@@ -537,6 +546,7 @@ export class BrainScene {
     const pivotOffset = pivot.clone().multiplyScalar(-BRAIN_SCALE);
     brainGroup.position.copy(pivotOffset);
     brainGroup.updateMatrixWorld(true);
+    this._specimenRadius = this._measureSpecimenRadius();
 
     this._brainCentre = this._measureBrainCentre();
     // Twice: the second pass takes up what perspective leaves of the first.
@@ -642,6 +652,45 @@ export class BrainScene {
       viewportHeight,
       scale: this.specimenRotationGroup.scale.y || 1,
     });
+  }
+
+  /**
+   * How far the brain reaches from the point it turns about, in the turning
+   * group's own units: its outline at any angle fits in this circle.
+   */
+  _measureSpecimenRadius() {
+    this.specimenGroup.updateMatrixWorld(true);
+    const point = new THREE.Vector3();
+    let radius = 0;
+    for (const mesh of this.brainMeshes) {
+      const positions = mesh.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i += 3) {
+        point.fromBufferAttribute(positions, i);
+        mesh.localToWorld(point);
+        this.specimenOrientGroup.worldToLocal(point);
+        radius = Math.max(radius, point.length());
+      }
+    }
+    return radius > 0 ? radius : null;
+  }
+
+  /** The brain's centre across the page, 0 to 1: where the words fall. */
+  laneX() {
+    return this._side.centreXPx !== null && this.width ? this._side.centreXPx / this.width : 0.5;
+  }
+
+  _updateSide(side) {
+    const before = this._side;
+    this._side = side;
+    const centreX = side.centreXPx / this.width;
+    const same =
+      before.moved === side.moved &&
+      before.centreXPx !== null &&
+      Math.abs(before.centreXPx / this.width - centreX) < 0.001 &&
+      Math.abs(before.scale - side.scale) < 0.001;
+    if (same) return;
+    this._raycastDirty = true;
+    this._onSideChange?.({ moved: side.moved, centreX, scale: side.scale });
   }
 
   /**
@@ -926,13 +975,20 @@ export class BrainScene {
   }
 
   _positionSpecimen() {
-    this.specimenRotationGroup.scale.setScalar(
-      getResponsiveSpecimenScale(this.width)
-    );
     const distance = this.camera.position.distanceTo(
       new THREE.Vector3(this.controls.target.x, this.controls.target.y, this.controls.target.z)
     );
     const viewportHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    const responsiveScale = getResponsiveSpecimenScale(this.width);
+    // Clear of the conversation: slid left, then smaller (Kyle, 2026-10-23).
+    const side = sideFit({
+      width: this.width,
+      radiusPx: this._specimenRadius === null ? null : (this._specimenRadius * responsiveScale * this.height) / viewportHeight,
+      columnLeftPx: this._sideReserve ? this._sideReserve(this.width) : null,
+    });
+    const scale = responsiveScale * side.scale;
+    this.specimenRotationGroup.scale.setScalar(scale);
+    const sideShift = ((side.centreXPx - this.width / 2) / this.height) * viewportHeight;
     // Moving the orbit target would carry the camera with it and leave the
     // specimen where it was, so the composition shift offsets the specimen from
     // the target, as the responsive offset and pan already do.
@@ -947,7 +1003,7 @@ export class BrainScene {
     const centreShift = centreShiftFor({
       width: this.width,
       brainCentre: this._brainCentre,
-      scale: getResponsiveSpecimenScale(this.width),
+      scale,
       gameShift,
       drop: cssPxToWorld(-this._centreDropPx, { height: this.height, viewportHeight }),
       phoneShift: this._phoneShift,
@@ -964,6 +1020,14 @@ export class BrainScene {
     this.controls.target.y = baseY;
     this.controls.target.z = 0;
     this.controls.updateCamera();
+    // Across the page is the camera's own right, not the world's x: the camera
+    // looks at the brain from its side.
+    this.camera.updateMatrixWorld();
+    this._sideRight ??= new THREE.Vector3();
+    this._sideRight.setFromMatrixColumn(this.camera.matrixWorld, 0).setY(0).normalize();
+    this.specimenGroup.position.x = this._sideRight.x * sideShift;
+    this.specimenGroup.position.z = this._sideRight.z * sideShift;
+    this._updateSide(side);
   }
 
   _panSpecimenVertical(normalizedDelta) {

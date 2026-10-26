@@ -144,6 +144,25 @@
           bottom: calc(clamp(18px, 3vh, 28px) + 342px) !important;
         }
       }
+      /* Kyle, 2026-10-23: once the brain slides left of the conversation, the
+         text on the left drops to the bottom left, as on narrower pages. */
+      [data-side="moved"] .description-panel {
+        top: auto !important;
+        bottom: 62px !important;
+        transform: none !important;
+        width: min(300px, calc(100vw - 48px)) !important;
+      }
+      [data-side="moved"] .arrival-panel {
+        top: auto !important;
+        bottom: 62px !important;
+        width: min(300px, calc(100vw - 48px)) !important;
+      }
+      [data-side="moved"] .arrival-panel[data-region="named"] ~ .description-panel {
+        bottom: 280px !important;
+      }
+      [data-side="moved"] .arrival-panel[data-region="described"] {
+        display: none !important;
+      }
       @media (max-width: 640px) {
         .app-title {
           font-size: 27px !important;
@@ -306,9 +325,6 @@
         .score-display {
           font-size: 10px !important;
           letter-spacing: 0.06em !important;
-        }
-        .game-prompt {
-          top: calc(50% + 70px) !important;
         }
       }
     </style>

@@ -89,6 +89,12 @@ export class GameEngine {
     this.dropNextWord();
   }
 
+  /** The brain's centre across the stage (0 to 1); the middle if the scene does not say. */
+  _laneX() {
+    const x = this.scene?.laneX?.();
+    return Number.isFinite(x) ? x : 0.5;
+  }
+
   dropNextWord() {
     this._missFalling = false;
     this._awaitingShatter = false;
@@ -98,8 +104,9 @@ export class GameEngine {
     if (!this.currentWord) return;
     this.dropCount += 1;
 
+    // Over the brain's centre, wherever the page has placed it (Kyle, 2026-10-23).
     this.wordPosition = {
-      x: 0.5,
+      x: this._laneX(),
       y: 0,
     };
 
@@ -269,7 +276,7 @@ export class GameEngine {
       this._resolved = false;
       this._collisionSampleElapsed = 0;
       this.currentWord = entry;
-      this.wordPosition = { x: 0.5, y: 0 };
+      this.wordPosition = { x: this._laneX(), y: 0 };
       if (this.onWordDrop) this.onWordDrop(entry, { ...this.wordPosition }, { demo: true });
     });
   }

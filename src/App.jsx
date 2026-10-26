@@ -10,7 +10,7 @@ import { GUIDES, normalizeGuide, readSavedGuide, saveGuide } from './voice/guide
 import { createBrainSceneAdapter } from './voice/brainSceneAdapter';
 import { createSceneCommands } from './voice/sceneCommands';
 import { createGameCommands } from './voice/gameCommands';
-import { GUIDE_TEXT_RIGHT } from './voice/voicePanelLayout.js';
+import { GUIDE_TEXT_RIGHT, guideColumnLeftPx } from './voice/voicePanelLayout.js';
 import { createGameCoach } from './game/coach';
 import { missDetails, missGlowMs } from './game/missFeedback';
 import { gameLevel } from './game/levels';
@@ -113,6 +113,21 @@ export function fallingWordHidden(gamePhase) {
  */
 export function scoreShows({ played = false, gamePhase }) {
   return Boolean(played) && sceneModeForPhase(gamePhase) === 'game';
+}
+
+/**
+ * Kyle, 2026-10-23: "the count down should happen above the brain where the
+ * words are going to fall from": near the top, over the brain's centre.
+ */
+export function countdownStyle(centreX = 0.5) {
+  return {
+    position: 'absolute',
+    top: 'clamp(56px, 10vh, 104px)',
+    left: `${centreX * 100}%`,
+    transform: 'translate(-50%, -50%)',
+    zIndex: 12,
+    textAlign: 'center',
+  };
 }
 
 /** The title shows in its phases, unless a region's description has taken its place. */
@@ -385,14 +400,6 @@ export const STYLES = {
     letterSpacing: '0.04em',
     textShadow: '0 0 12px #fff, 0 0 24px #fff',
   },
-  gamePrompt: {
-    position: 'absolute',
-    top: 'calc(50% + 96px)',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 12,
-    textAlign: 'center',
-  },
   studyCaption: {
     position: 'absolute',
     top: 'clamp(16px, 3vh, 28px)',
@@ -474,6 +481,8 @@ export default function App() {
   const [shatter, setShatter] = useState(null);
   const [gamePhase, setGamePhase] = useState('ready');
   const [countdown, setCountdown] = useState(null);
+  // Where the brain sits across the page (Kyle, 2026-10-23), from the scene.
+  const [brainSide, setBrainSide] = useState({ moved: false, centreX: 0.5, scale: 1 });
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Kyle, 2026-10-11: a Motion switch stops the brain turning.
   const [motionOn, setMotionOn] = useState(() => initialMotion(prefersReducedMotion()));
@@ -572,6 +581,9 @@ export default function App() {
     const brainScene = new BrainScene(mountRef.current, {
       // Kyle, 2026-10-17: on a phone the brain sits under the title.
       phoneTop: true,
+      // Kyle, 2026-10-23: on a narrower page the brain keeps clear of the conversation.
+      sideReserve: VOICE_ENABLED ? guideColumnLeftPx : null,
+      onSideChange: setBrainSide,
       onHoverChange: handleHover,
       onRegionSelect: handleRegionSelect,
       onNavigatingChange: handleNavigatingChange,
@@ -1076,7 +1088,7 @@ export default function App() {
   const guideName = VOICE_ENABLED ? GUIDES.find((entry) => entry.id === guide)?.name ?? null : null;
 
   return (
-    <div style={STYLES.container}>
+    <div style={STYLES.container} data-side={brainSide.moved ? 'moved' : undefined}>
       <div style={STYLES.stage}>
         <div
           ref={mountRef}
@@ -1165,7 +1177,7 @@ export default function App() {
       )}
 
       {gamePhase === 'countdown' && (
-        <div className="game-prompt" style={STYLES.gamePrompt} aria-live="assertive">
+        <div className="game-prompt" style={countdownStyle(brainSide.centreX)} aria-live="assertive">
           <div style={STYLES.countdown}>{countdown}</div>
         </div>
       )}
