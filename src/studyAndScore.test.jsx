@@ -76,10 +76,13 @@ describe("Sylvi's offer when Study opens", () => {
   });
 });
 
-describe('The falling word during Study', () => {
-  it('is hidden while Study is open, and returns, still paused, after', () => {
+describe('The falling word during Study and pauses', () => {
+  // Kyle, 2026-10-23: "When you pause the game the falling word should go away
+  // because you are not playing."
+  it('is hidden while Study is open or the game is paused, and returns where it stopped', () => {
     expect(app.fallingWordHidden('study')).toBe(true);
-    for (const phase of ['ready', 'offer', 'countdown', 'playing', 'paused']) {
+    expect(app.fallingWordHidden('paused')).toBe(true);
+    for (const phase of ['ready', 'offer', 'countdown', 'playing']) {
       expect(app.fallingWordHidden(phase), phase).toBe(false);
     }
   });
@@ -105,6 +108,15 @@ describe('The score', () => {
     const bar = source.slice(source.indexOf('<div className="game-controls"'));
     expect(bar.slice(0, bar.indexOf('\n      </div>'))).not.toContain('<ScoreDisplay');
     expect(source).toMatch(/\{scoreShows\(\{ played: choice\.played, gamePhase \}\) && \(\s*<ScoreDisplay/);
-    expect(source).toMatch(/scoreCorner: \{[^}]*position: 'absolute',[^}]*top: 'calc\(env\(safe-area-inset-top, 0px\) \+ clamp\(16px, 3vh, 28px\)\)',[^}]*right: 'clamp\(16px, 4vw, 56px\)',/);
+    expect(source).toMatch(/scoreCorner: \{[^}]*position: 'absolute',[^}]*top: 'calc\(env\(safe-area-inset-top, 0px\) \+ clamp\(16px, 3vh, 28px\)\)',[^}]*right: GUIDE_TEXT_RIGHT,/);
+  });
+
+  // Kyle, 2026-10-23: "the score and the text should share the same padding at
+  // the right side." The column's text sits 10 px inside it, for its scrollbar.
+  it("lines up with the conversation text's right edge", async () => {
+    const layout = await import('./voice/voicePanelLayout.js');
+    expect(layout.GUIDE_TEXT_INSET_PX).toBe(10);
+    expect(layout.GUIDE_TEXT_RIGHT).toBe(`calc(${layout.GUIDE_COLUMN_STYLE.right} + 10px)`);
+    expect(read('./voice/GuideColumn.jsx')).toMatch(/transcript: \{[^}]*paddingRight: GUIDE_TEXT_INSET_PX,/);
   });
 });
