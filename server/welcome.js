@@ -28,7 +28,8 @@ export function welcomeText(guideName, kind = 'arrival') {
   }
   if (kind === 'play') return `Hello! I am ${guideName}. Turn me so each word lands on the part of me that does it.`;
   // "Hello!", as a puppet that turns and suddenly recognizes the visitor (Kyle, 2026-10-13).
-  return `Hello! I am ${guideName}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.`;
+  // It closes by asking, once (Kyle, 2026-11-06): only the arrival welcome asks.
+  return `Hello! I am ${guideName}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions. Tell me what I can help you with today.`;
 }
 
 /** One recording: `{ audio: Buffer, chars, startsMs }`. */
