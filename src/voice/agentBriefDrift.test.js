@@ -120,13 +120,18 @@ describe('The brief tells the guide the welcome has already played', () => {
   it('quotes the welcome and the line that says it played', () => {
     expect(prompt).toContain('# Arrival');
     expect(prompt).toContain(
-      '"Hello! I am {{guide_name}}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions."'
+      '"Hello! I am {{guide_name}}, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions. Tell me what I can help you with today."'
     );
     expect(prompt).toContain('  [app] the welcome has played');
   });
 
   it('never repeats it', () => {
     expect(prompt).toMatch(/^- Never repeat the welcome or introduce yourself again\./m);
+  });
+
+  // Kyle, 2026-11-06: "Just prompt once." The welcome asks; the guide never asks again.
+  it('never asks again what it can help with', () => {
+    expect(prompt).toMatch(/^- The welcome already asked what you can help with\. Never ask it again: answer what they say\./m);
   });
 
   it('says the first message in ElevenLabs is empty', () => {

@@ -20,9 +20,24 @@ describe('The welcome, word for word', () => {
   // turning and suddenly recognizing that a user has arrived.'
   it('says "Hello!", introduces the guide as a human brain and names the three ways in', () => {
     expect(welcomeText('Sylvi')).toBe(
-      'Hello! I am Sylvi, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions.'
+      'Hello! I am Sylvi, a human brain. You can study with me to learn how I work, test your knowledge in the Brain Game, or explore on your own: turn me around and select any of my regions. Tell me what I can help you with today.'
     );
     expect(welcomeText('Rollo')).toContain('I am Rollo, a human brain.');
+  });
+
+  // Kyle, 2026-11-06: "After the introduction, the brain needs to prompt the
+  // user saying 'Tell me what I can help you with today.' Just prompt once."
+  // It closes the arrival welcome, which plays once a visit; the choices'
+  // own welcomes do not ask it.
+  it('ends the arrival welcome, and only the arrival welcome, by asking once', () => {
+    const ask = 'Tell me what I can help you with today.';
+    for (const guide of ['Sylvi', 'Rollo']) {
+      const arrival = welcomeText(guide);
+      expect(arrival.endsWith(` ${ask}`)).toBe(true);
+      expect(arrival.split(ask)).toHaveLength(2);
+      expect(welcomeText(guide, 'study')).not.toContain(ask);
+      expect(welcomeText(guide, 'play')).not.toContain(ask);
+    }
   });
 
   // Kyle, 2026-10-13: "Have a custom welcome for each button if the first
